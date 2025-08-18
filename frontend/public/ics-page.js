@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="text-sm">
                         <p class="font-bold">Received from:</p>
                         <div class="mt-12 text-center">
-                            <p class="font-bold uppercase border-b border-black">JUAN DELA CRUZ</p>
+                            <p class="font-bold uppercase border-b border-black">DR. RAYCHEL B. VALENCIA</p>
                             <p>(Signature Over Printed Name)</p>
                         </div>
                         <div class="mt-4 text-center">
-                            <p class="border-b border-black">General Services Officer</p>
+                            <p class="border-b border-black">Municipal Administrator/OIC GSO</p>
                             <p>(Position/Office)</p>
                         </div>
                         <div class="mt-4 text-center">

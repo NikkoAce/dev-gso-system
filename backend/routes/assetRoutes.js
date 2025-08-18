@@ -23,7 +23,7 @@ router.get('/my-assets', protect, getMyOfficeAssets);
 router.get('/stats', protect, gso, getDashboardStats);
 
 // Route for getting the next property number
-router.get('/next-property-number', protect, gso, getNextPropertyNumber);
+router.get('/next-number', protect, gso, getNextPropertyNumber);
 
 // Route for exporting assets to CSV
 router.get('/export', protect, gso, exportAssetsToCsv);

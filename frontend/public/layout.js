@@ -23,7 +23,7 @@ const GSO_SETTINGS = `
 `;
 
 const VIEW_ONLY_NAV = `
-    <li><a href="https://your-lgu-daet-portal.netlify.app/dashboard.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="arrow-left" class="mr-3 h-5 w-5"></i>Back to Portal</a></li>
+    <li><a href="https://lgu-employee-portal.netlify.app/dashboard.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="arrow-left" class="mr-3 h-5 w-5"></i>Back to Portal</a></li>
     <li><a href="view-assets.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="list" class="mr-3 h-5 w-5"></i>View My Assets</a></li>
     <li><a href="requisition.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="shopping-cart" class="mr-3 h-5 w-5"></i>Request Supplies</a></li>
     <li><a href="my-requisitions.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="history" class="mr-3 h-5 w-5"></i>Requisition History</a></li>
