@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="LGU-DAET-LOGO.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 bg-white text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="space-y-6">
+                    <h1 class="text-3xl font-bold text-gray-800">Reports</h1>
+                    <div class="bg-white p-6 rounded-lg border mb-8 non-printable">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Generate Group Reports</h2>
+                        <div class="flex flex-wrap items-end gap-4">
+                            <div>
+                                <label for="fund-source-filter" class="block text-sm font-medium text-gray-700">Fund Source</label>
+                                <select id="fund-source-filter" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Select a Fund Source</option>
+                                    <option>General Fund</option>
+                                    <option>Special Education Fund</option>
+                                    <option>Trust Fund</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="category-filter" class="block text-sm font-medium text-gray-700">Category</label>
+                                <select id="category-filter" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">All Categories</option>
+                                    <!-- JS will populate this -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="as-at-date" class="block text-sm font-medium text-gray-700">As at Date</label>
+                                <input type="date" id="as-at-date" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <button id="generate-rpcppe" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                                <i data-lucide="file-text"></i> Generate RPCPPE
+                            </button>
+                            <button id="generate-depreciation" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+                                <i data-lucide="file-text"></i> Generate Depreciation Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- UPDATED: Ledger Card Section with Searchable Input -->
+                    <div class="bg-white p-6 rounded-lg border mb-8 non-printable">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Generate Individual Ledger Card</h2>
+                        <div class="flex flex-wrap items-end gap-4">
+                            <div class="relative flex-grow">
+                                <label for="asset-search-input" class="block text-sm font-medium text-gray-700">Select Asset</label>
+                                <input type="text" id="asset-search-input" placeholder="Type to search for an asset..." class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                <div id="asset-search-results" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto"></div>
+                                <input type="hidden" id="selected-asset-id">
+                            </div>
+                            <button id="generate-ledger-card" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                                <i data-lucide="book-marked"></i> Generate Ledger Card
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="report-output" class="hidden bg-white p-6 rounded-lg border printable-area">
+                        <div class="flex justify-between items-center mb-4 non-printable">
+                            <h2 id="report-title" class="text-xl font-bold text-gray-800"></h2>
+                            <button id="print-report-btn" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 flex items-center gap-2">
+                                <i data-lucide="printer"></i> Print Report
+                            </button>
+                        </div>
+                        <div id="report-header" class="text-center mb-4 hidden">
+                            <h3 id="report-header-title" class="font-bold"></h3>
+                            <p class="text-sm">As at <span id="report-as-at-date" class="font-semibold"></span></p>
+                            <p class="text-sm">Fund: <span id="report-fund-source" class="font-semibold"></span></p>
+                        </div>
+                        <div id="report-table-container" class="overflow-x-auto"></div>
+                         <div id="report-footer" class="hidden mt-8 text-xs">
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p class="font-bold">Certified Correct by:</p>
+                                <div class="mt-12 border-t border-black pt-1">
+                                        <p id="signatory-1-name" class="font-bold uppercase text-center"></p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="font-bold">Approved by:</p>
+                                     <div class="mt-12 border-t border-black pt-1">
+                                        <p id="signatory-2-name" class="font-bold uppercase text-center"></p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="font-bold">Verified by:</p>
+                                     <div class="mt-12 border-t border-black pt-1">
+                                        <p id="signatory-3-name" class="font-bold uppercase text-center"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="print-container" class="hidden"></div>
+    <script src="security.js"></script>
+    <script src="layout.js"></script>
+    <script type="module" src="reports.js"></script>
+</body>
+</html>

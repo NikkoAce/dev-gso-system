@@ -1,0 +1,197 @@
+<!-- FILE: frontend/public/asset-registry.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Registry - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="LGU-DAET-LOGO.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 bg-white text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 non-printable">
+                        <h1 class="text-3xl font-bold text-gray-800">Asset Registry</h1>
+                        <div class="flex gap-2">
+                            <button id="generate-par-selected" class="hidden bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+                                <i data-lucide="file-check-2"></i> PAR
+                            </button>
+                            <button id="generate-ics-selected" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet"></i> ICS
+                            </button>
+                            <button id="transfer-selected-btn" class="hidden bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 flex items-center gap-2">
+                                <i data-lucide="arrow-right-left"></i> Transfer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-white rounded-lg border non-printable space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            <div class="lg:col-span-2">
+                                <label for="search-input" class="sr-only">Search</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="w-full pl-10 p-2 border-gray-300 rounded-md shadow-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="category-filter" class="sr-only">Category</label>
+                                <select id="category-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">All Categories</option>
+                                    <!-- JS will populate this -->
+                                </select>
+                            </div>
+                             <div>
+                                <label for="office-filter" class="sr-only">Office</label>
+                                <select id="office-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">All Offices</option>
+                                    <!-- JS will populate this -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="assignment-filter" class="sr-only">Assignment Status</label>
+                                <select id="assignment-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">All Assignments</option>
+                                    <option value="unassigned">Unassigned</option>
+                                    <option value="par">Assigned to PAR</option>
+                                    <option value="ics">Assigned to ICS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="lg:col-span-2 flex flex-col md:flex-row items-center gap-2">
+                                <label for="start-date-filter" class="text-sm font-medium text-gray-700 whitespace-nowrap">Acquired between:</label>
+                                <input type="date" id="start-date-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                <span class="text-gray-500 hidden md:block">-</span>
+                                <input type="date" id="end-date-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                            </div>
+                             <div>
+                                <label for="fund-source-filter" class="sr-only">Fund Source</label>
+                                <select id="fund-source-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">All Fund Sources</option>
+                                    <option>General Fund</option>
+                                    <option>Special Education Fund</option>
+                                    <option>Trust Fund</option>
+                                </select>
+                            </div>
+                            <div>
+                                 <label for="status-filter" class="sr-only">Status</label>
+                                <select id="status-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">All Statuses</option>
+                                    <option>In Use</option>
+                                    <option>In Storage</option>
+                                    <option>For Repair</option>
+                                    <option>Disposed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg border overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 non-printable"><input type="checkbox" id="select-all-assets"></th>
+                                    <th class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="propertyNumber">Property No.</th>
+                                    <th class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="description">Description</th>
+                                    <th class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="category">Category</th>
+                                    <th class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="custodian.name">Custodian</th>
+                                    <th class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="status">Status</th>
+                                    <th data-sort-key="createdAt" class="cursor-pointer hover:bg-gray-100">Date Created</th>
+                                    <th class="px-6 py-3 text-center non-printable">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="asset-table-body">
+                                <tr><td colspan="7" class="text-center p-8">Loading assets...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="pagination-controls" class="flex justify-between items-center non-printable">
+                        <!-- JS will populate this -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Transfer Asset Modal (for single and bulk) -->
+    <div id="transfer-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-center mb-4">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i data-lucide="arrow-right-left" class="h-6 w-6 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 ml-4" id="transfer-modal-title">Transfer Asset(s)</h3>
+                </div>
+                <div class="mt-2 px-7 py-3">
+                    <!-- Info for single asset transfer -->
+                    <p class="text-sm text-gray-600 mb-4" id="transfer-asset-info">Loading asset details...</p>
+                    
+                    <!-- List for bulk asset transfer -->
+                    <div id="bulk-transfer-asset-list-container" class="max-h-48 overflow-y-auto border rounded-md p-2 mb-4 bg-gray-50 hidden">
+                        <!-- List of assets will be populated here for bulk transfers -->
+                    </div>
+
+                    <form id="transfer-modal-form" class="space-y-4 text-left">
+                        <div>
+                            <label for="transfer-modal-office-select" class="block text-sm font-medium text-gray-700">New Office / End-User</label>
+                            <select id="transfer-modal-office-select" name="transfer-office" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="transfer-modal-custodian-select" class="block text-sm font-medium text-gray-700">New Accountable Officer</label>
+                            <select id="transfer-modal-custodian-select" name="transfer-custodian" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="items-center px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="confirm-transfer-modal-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">Confirm Transfer</button>
+                    <button id="cancel-transfer-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="security.js"></script>
+    <script src="layout.js"></script>
+    <script type="module" src="registry.js"></script>
+
+</body>
+</html>

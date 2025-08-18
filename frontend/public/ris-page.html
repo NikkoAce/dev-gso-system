@@ -1,0 +1,63 @@
+<!-- FILE: frontend/public/ris-page.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requisition and Issue Slip - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="LGU-DAET-LOGO.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 bg-white text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="flex justify-between items-center mb-6 non-printable">
+                    <h1 class="text-3xl font-bold text-gray-800">Requisition and Issue Slip</h1>
+                    <div>
+                        <a href="gso-requisitions.html" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 mr-2">Back</a>
+                        <button id="print-ris-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                            <i data-lucide="printer"></i> Print
+                        </button>
+                    </div>
+                </div>
+                <div id="ris-container" class="bg-white p-8 rounded-lg border printable-area">
+                    <!-- JS will populate this -->
+                    <div class="text-center p-8">Loading Requisition Details...</div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="security.js"></script>
+    <script src="layout.js"></script>
+    <script type="module" src="ris-page.js"></script>
+</body>
+</html>

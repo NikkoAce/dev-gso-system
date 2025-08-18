@@ -1,0 +1,114 @@
+<!-- FILE: frontend/public/inventory.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Supplies Inventory - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="LGU-DAET-LOGO.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 bg-white text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="max-w-6xl mx-auto">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Supplies Inventory</h1>
+                    
+                    <div class="bg-white p-6 rounded-lg border mb-8">
+                        <h2 id="stock-item-form-title" class="text-lg font-semibold text-gray-700 mb-4">Add New Stock Item</h2>
+                        <form id="stock-item-form" class="space-y-4">
+                            <input type="hidden" id="stock-item-id">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="stock-number" class="block text-sm font-medium text-gray-700">Stock Number *</label>
+                                    <input type="text" id="stock-number" placeholder="e.g., BP-A4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="description" class="block text-sm font-medium text-gray-700">Description *</label>
+                                    <input type="text" id="description" placeholder="e.g., Bond Paper, A4, 70gsm" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label for="unit-of-measure" class="block text-sm font-medium text-gray-700">Unit of Measure *</label>
+                                    <input type="text" id="unit-of-measure" placeholder="e.g., ream, box, piece" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity on Hand *</label>
+                                    <input type="number" id="quantity" value="0" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label for="reorder-point" class="block text-sm font-medium text-gray-700">Re-order Point</label>
+                                    <input type="number" id="reorder-point" value="0" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                                    <input type="text" id="category" placeholder="e.g., Office Supplies" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                </div>
+                            </div>
+                            <div class="text-right space-x-2">
+                                <button type="button" id="cancel-edit-btn" class="hidden bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
+                                <button type="submit" id="submit-stock-item-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Add Item</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-lg border">
+                        <h2 class="text-lg font-semibold text-gray-700 p-4 border-b">Existing Stock Items</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left">Stock No.</th>
+                                        <th class="px-4 py-2 text-left">Description</th>
+                                        <th class="px-4 py-2 text-left">Unit</th>
+                                        <th class="px-4 py-2 text-center">Quantity</th>
+                                        <th class="px-4 py-2 text-center">Re-order Pt.</th>
+                                        <th class="px-4 py-2 text-left">Category</th>
+                                        <th class="px-4 py-2 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-item-list" class="divide-y">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="security.js"></script>
+    <script src="layout.js"></script>
+    <script type="module" src="inventory.js"></script>
+</body>
+</html>
