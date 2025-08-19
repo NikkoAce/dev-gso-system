@@ -36,6 +36,9 @@ function initializeRegistryPage(currentUser) {
         statusFilter: document.getElementById('status-filter'),
         officeFilter: document.getElementById('office-filter'),
         fundSourceFilter: document.getElementById('fund-source-filter'),
+        moreFiltersBtn: document.getElementById('more-filters-btn'),
+        advancedFilters: document.getElementById('advanced-filters'),
+        resetFiltersBtn: document.getElementById('reset-filters-btn'),
         assignmentFilter: document.getElementById('assignment-filter'),
         startDateFilter: document.getElementById('start-date-filter'),
         endDateFilter: document.getElementById('end-date-filter'),
@@ -117,6 +120,28 @@ function initializeRegistryPage(currentUser) {
         async handleFilterChange() {
             state.currentPage = 1;
             await loadAssets();
+        },
+
+        toggleAdvancedFilters() {
+            const isHidden = DOM.advancedFilters.classList.toggle('hidden');
+            DOM.moreFiltersBtn.setAttribute('aria-expanded', !isHidden);
+            const icon = DOM.moreFiltersBtn.querySelector('i');
+            icon.setAttribute('data-lucide', isHidden ? 'chevron-down' : 'chevron-up');
+            lucide.createIcons();
+        },
+
+        resetAllFilters() {
+            const container = document.getElementById('filter-container');
+            if (!container) return;
+
+            container.querySelectorAll('input[type="text"], input[type="date"], select').forEach(el => {
+                if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else {
+                    el.value = '';
+                }
+            });
+            this.handleFilterChange();
         },
 
         async handlePaginationClick(e) {
@@ -242,6 +267,8 @@ function initializeRegistryPage(currentUser) {
             const filters = [DOM.searchInput, DOM.categoryFilter, DOM.statusFilter, DOM.officeFilter, DOM.fundSourceFilter, DOM.assignmentFilter, DOM.startDateFilter, DOM.endDateFilter];
             filters.forEach(el => el?.addEventListener('input', () => this.handleFilterChange()));
             DOM.paginationControls?.addEventListener('click', e => this.handlePaginationClick(e));
+            DOM.moreFiltersBtn?.addEventListener('click', () => this.toggleAdvancedFilters());
+            DOM.resetFiltersBtn?.addEventListener('click', () => this.resetAllFilters());            
             DOM.tableBody?.parentElement.addEventListener('change', e => this.handleTableChange(e)); // Listen on table for tbody and thead changes
             DOM.tableBody?.addEventListener('click', e => this.handleTableClick(e));
             DOM.tableHeader?.addEventListener('click', (e) => this.handleSort(e));

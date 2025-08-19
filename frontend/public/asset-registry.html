@@ -56,59 +56,25 @@
                         </div>
                     </div>
                     
-                    <div class="p-4 bg-white rounded-lg border non-printable space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                            <div class="lg:col-span-2">
-                                <label for="search-input" class="sr-only">Search</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
-                                    </div>
-                                    <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="w-full pl-10 p-2 border-gray-300 rounded-md shadow-sm">
+                    <div id="filter-container" class="p-4 bg-white rounded-lg border non-printable space-y-4">
+                        <!-- Primary Filters -->
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <!-- Search Input -->
+                            <div class="relative flex-grow">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
                                 </div>
+                                <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="w-full pl-10 p-2 border-gray-300 rounded-md shadow-sm">
                             </div>
-                            <div>
-                                <label for="category-filter" class="sr-only">Category</label>
+                            <!-- Category Filter -->
+                            <div class="w-full md:w-48">
                                 <select id="category-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
                                     <option value="">All Categories</option>
                                     <!-- JS will populate this -->
                                 </select>
                             </div>
-                             <div>
-                                <label for="office-filter" class="sr-only">Office</label>
-                                <select id="office-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">All Offices</option>
-                                    <!-- JS will populate this -->
-                                </select>
-                            </div>
-                            <div>
-                                <label for="assignment-filter" class="sr-only">Assignment Status</label>
-                                <select id="assignment-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">All Assignments</option>
-                                    <option value="unassigned">Unassigned</option>
-                                    <option value="par">Assigned to PAR</option>
-                                    <option value="ics">Assigned to ICS</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div class="lg:col-span-2 flex flex-col md:flex-row items-center gap-2">
-                                <label for="start-date-filter" class="text-sm font-medium text-gray-700 whitespace-nowrap">Acquired between:</label>
-                                <input type="date" id="start-date-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                <span class="text-gray-500 hidden md:block">-</span>
-                                <input type="date" id="end-date-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                            </div>
-                             <div>
-                                <label for="fund-source-filter" class="sr-only">Fund Source</label>
-                                <select id="fund-source-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">All Fund Sources</option>
-                                    <option>General Fund</option>
-                                    <option>Special Education Fund</option>
-                                    <option>Trust Fund</option>
-                                </select>
-                            </div>
-                            <div>
-                                 <label for="status-filter" class="sr-only">Status</label>
+                            <!-- Status Filter -->
+                            <div class="w-full md:w-48">
                                 <select id="status-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
                                     <option value="">All Statuses</option>
                                     <option>In Use</option>
@@ -116,6 +82,55 @@
                                     <option>For Repair</option>
                                     <option>Disposed</option>
                                 </select>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-2">
+                                <button id="more-filters-btn" aria-expanded="false" class="p-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 flex items-center gap-2">
+                                    More Filters <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                                </button>
+                                <button id="export-csv-btn" class="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 flex items-center gap-2">
+                                    <i data-lucide="download" class="h-5 w-5"></i> Export
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Filters (collapsible) -->
+                        <div id="advanced-filters" class="hidden pt-4 border-t border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <!-- Office Filter -->
+                                <div>
+                                    <label for="office-filter" class="block text-sm font-medium text-gray-700">Office</label>
+                                    <select id="office-filter" class="mt-1 w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                        <option value="">All Offices</option>
+                                        <!-- JS will populate this -->
+                                    </select>
+                                </div>
+                                <!-- Fund Source Filter -->
+                                <div>
+                                    <label for="fund-source-filter" class="block text-sm font-medium text-gray-700">Fund Source</label>
+                                    <select id="fund-source-filter" class="mt-1 w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                        <option value="">All Fund Sources</option>
+                                        <option>General Fund</option>
+                                        <option>Special Education Fund</option>
+                                        <option>Trust Fund</option>
+                                    </select>
+                                </div>
+                                <!-- Assignment Filter -->
+                                <div>
+                                    <label for="assignment-filter" class="block text-sm font-medium text-gray-700">Assignment Status</label>
+                                    <select id="assignment-filter" class="mt-1 w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                        <option value="">All Assignments</option>
+                                        <option value="unassigned">Unassigned</option>
+                                        <option value="par">Assigned to PAR</option>
+                                        <option value="ics">Assigned to ICS</option>
+                                    </select>
+                                </div>
+                                <!-- Reset Button -->
+                                <div class="flex items-end">
+                                    <button id="reset-filters-btn" class="w-full md:w-auto p-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 flex items-center justify-center gap-2">
+                                        <i data-lucide="rotate-cw" class="h-5 w-5"></i> Reset
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
