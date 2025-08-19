@@ -101,9 +101,10 @@ function initializeRegistryPage(currentUser) {
                 category: DOM.categoryFilter.value,
                 status: DOM.statusFilter.value,
                 office: DOM.officeFilter.value,
-                fundSource: DOM.fundSourceFilter.value,
-                startDate: DOM.startDateFilter.value,
-                endDate: DOM.endDateFilter.value
+                fundSource: DOM.fundSourceFilter?.value,
+                assignment: DOM.assignmentFilter?.value,
+                startDate: DOM.startDateFilter?.value,
+                endDate: DOM.endDateFilter?.value
             });
 
             const exportUrl = `${BASE_URL}/assets/export?${Array.from(params.entries()).filter(([, value]) => value).map(e => e.join('=')).join('&')}`;
@@ -292,16 +293,16 @@ function initializeRegistryPage(currentUser) {
             const params = {
                 currentPage: state.currentPage,
                 assetsPerPage: state.assetsPerPage,
-            sort: state.sortKey,
-            order: state.sortDirection,
-                search: DOM.searchInput.value,
-                category: DOM.categoryFilter.value,
-                status: DOM.statusFilter.value,
-                office: DOM.officeFilter.value,
-                fundSource: DOM.fundSourceFilter.value,
-                assignment: DOM.assignmentFilter.value,
-                startDate: DOM.startDateFilter.value,
-                endDate: DOM.endDateFilter.value
+                sort: state.sortKey,
+                order: state.sortDirection,
+                search: DOM.searchInput?.value,
+                category: DOM.categoryFilter?.value,
+                status: DOM.statusFilter?.value,
+                office: DOM.officeFilter?.value,
+                fundSource: DOM.fundSourceFilter?.value,
+                assignment: DOM.assignmentFilter?.value,
+                startDate: DOM.startDateFilter?.value,
+                endDate: DOM.endDateFilter?.value
             };
             
             const queryParams = new URLSearchParams(params);
