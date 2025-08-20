@@ -26,7 +26,6 @@ function initializeAssetForm(currentUser) {
         allEmployees: [],
         isEditMode: false,
         assetId: null,
-        tomSelectInstances: {}, // To hold TomSelect instances
     };
 
     // --- MODULE: DOM ELEMENT CACHE ---
@@ -39,10 +38,14 @@ function initializeAssetForm(currentUser) {
         propertyNumberInput: document.getElementById('propertyNumber'),
         propertyNumberLabel: document.getElementById('propertyNumberLabel'),
         descriptionInput: document.getElementById('description'),
-        categorySelect: document.getElementById('category'),
-        officeSelect: document.getElementById('office'),
-        custodianNameSelect: document.getElementById('custodian-name'),
-        custodianOfficeSelect: document.getElementById('custodian-office'),
+        categoryInput: document.getElementById('category'),
+        officeInput: document.getElementById('office'),
+        custodianNameInput: document.getElementById('custodian-name'),
+        custodianOfficeInput: document.getElementById('custodian-office'),
+        categoryDatalist: document.getElementById('category-list'),
+        officeDatalist: document.getElementById('office-list'),
+        custodianNameDatalist: document.getElementById('custodian-name-list'),
+        custodianOfficeDatalist: document.getElementById('custodian-office-list'),
         acquisitionDateInput: document.getElementById('acquisitionDate'),
         fundSourceInput: document.getElementById('fundSource'),
         acquisitionCostInput: document.getElementById('acquisitionCost'),
@@ -115,25 +118,14 @@ function initializeAssetForm(currentUser) {
     // --- MODULE: FORM UI & POPULATION ---
     const formUI = {
         initializeSearchableDropdowns() {
-            const tomSelectSettings = {
-                create: false,
-                sortField: {
-                    field: "text",
-                    direction: "asc"
-                }
-            };
-            // Store instances for later use (e.g., setting values programmatically)
-            state.tomSelectInstances.category = new TomSelect(DOM.categorySelect, tomSelectSettings);
-            state.tomSelectInstances.office = new TomSelect(DOM.officeSelect, tomSelectSettings);
-            state.tomSelectInstances.custodianName = new TomSelect(DOM.custodianNameSelect, tomSelectSettings);
-            state.tomSelectInstances.custodianOffice = new TomSelect(DOM.custodianOfficeSelect, tomSelectSettings);
+            // This function is no longer needed with native datalists.
         },
         populateDropdowns() {
-            const createOption = (value, text) => `<option value="${value}">${text}</option>`;
-            DOM.categorySelect.innerHTML = '<option value="">Select a category...</option>' + state.allCategories.map(c => createOption(c.name, c.name)).join('');
-            DOM.officeSelect.innerHTML = '<option value="">Select an office...</option>' + state.allOffices.map(o => createOption(o.name, o.name)).join('');
-            DOM.custodianNameSelect.innerHTML = '<option value="">Select a custodian...</option>' + state.allEmployees.map(e => createOption(e.name, e.name)).join('');
-            DOM.custodianOfficeSelect.innerHTML = '<option value="">Select an office...</option>' + state.allOffices.map(o => createOption(o.name, o.name)).join('');
+            const createOption = (value) => `<option value="${value}"></option>`;
+            DOM.categoryDatalist.innerHTML = state.allCategories.map(c => createOption(c.name)).join('');
+            DOM.officeDatalist.innerHTML = state.allOffices.map(o => createOption(o.name)).join('');
+            DOM.custodianNameDatalist.innerHTML = state.allEmployees.map(e => createOption(e.name)).join('');
+            DOM.custodianOfficeDatalist.innerHTML = state.allOffices.map(o => createOption(o.name)).join('');
         },
         setFormMode(mode, asset = null) {
             state.isEditMode = mode === 'edit';
@@ -160,10 +152,6 @@ function initializeAssetForm(currentUser) {
             DOM.fundSourceInput.value = asset.fundSource;
             DOM.statusSelect.value = asset.status;
 
-            // Set values using TomSelect API. The `true` flag prevents firing 'change' events.
-            state.tomSelectInstances.category.setValue(asset.category, true);
-            state.tomSelectInstances.office.setValue(asset.office, true);
-            state.tomSelectInstances.custodianName.setValue(asset.custodian.name, true);
             state.tomSelectInstances.custodianOffice.setValue(asset.custodian.office, true);
 
             specificationsManager.clear();
@@ -177,9 +165,6 @@ function initializeAssetForm(currentUser) {
         resetForm() {
             DOM.assetForm.reset();
             DOM.assetIdField.value = '';
-
-            // Clear TomSelect instances
-            Object.values(state.tomSelectInstances).forEach(instance => instance.clear());
 
             specificationsManager.clear();
             specificationsManager.add('Model Number', '');
@@ -213,8 +198,8 @@ function initializeAssetForm(currentUser) {
             if (state.isEditMode) return;
 
             const year = new Date(DOM.acquisitionDateInput.value).getFullYear();
-            const category = state.allCategories.find(c => c.name === DOM.categorySelect.value);
-            const office = state.allOffices.find(o => o.name === DOM.officeSelect.value);
+            const category = state.allCategories.find(c => c.name === DOM.categoryInput.value);
+            const office = state.allOffices.find(o => o.name === DOM.officeInput.value);
 
             if (!year || !category || !office) {
                 DOM.propertyNumberInput.value = 'Select Date, Category, and Office to generate...';
@@ -244,7 +229,7 @@ function initializeAssetForm(currentUser) {
         async handleFormSubmit(e) {
             e.preventDefault();
             const quantity = parseInt(DOM.quantityInput.value, 10);
-            const selectedEmployee = state.allEmployees.find(emp => emp.name === DOM.custodianNameSelect.value);
+            const selectedEmployee = state.allEmployees.find(emp => emp.name === DOM.custodianNameInput.value);
 
             // Adjust date to prevent timezone issues. By setting the time to noon UTC,
             // we ensure that timezone conversions won't shift the date to a different day.
@@ -255,13 +240,13 @@ function initializeAssetForm(currentUser) {
                 user: { name: currentUser.name, office: currentUser.office },
                 description: DOM.descriptionInput.value,
                 specifications: specificationsManager.get(),
-                category: DOM.categorySelect.value,
+                category: DOM.categoryInput.value,
                 fundSource: DOM.fundSourceInput.value,
-                office: DOM.officeSelect.value,
+                office: DOM.officeInput.value,
                 custodian: {
-                    name: DOM.custodianNameSelect.value,
+                    name: DOM.custodianNameInput.value,
                     designation: selectedEmployee ? selectedEmployee.designation : '',
-                    office: DOM.custodianOfficeSelect.value
+                    office: DOM.custodianOfficeInput.value
                 },
                 acquisitionDate: acquisitionDateUTC,
                 acquisitionCost: parseFloat(DOM.acquisitionCostInput.value),
@@ -316,8 +301,8 @@ function initializeAssetForm(currentUser) {
                 const quantity = parseInt(DOM.quantityInput.value, 10);
                 DOM.propertyNumberLabel.textContent = quantity > 1 ? 'Starting Property Number *' : 'Property Number *';
             });
-            [DOM.acquisitionDateInput, DOM.categorySelect, DOM.officeSelect].forEach(el => {
-                el.addEventListener('change', () => this.generatePropertyNumber());
+            [DOM.acquisitionDateInput, DOM.categoryInput, DOM.officeInput].forEach(el => {
+                el.addEventListener('input', () => this.generatePropertyNumber()); // Use 'input' for datalists
             });
             DOM.acquisitionCostInput.addEventListener('input', () => this.calculateSalvageValue());
         }
@@ -328,7 +313,7 @@ function initializeAssetForm(currentUser) {
         try {
             await apiService.fetchInitialData();
             formUI.populateDropdowns();
-            formUI.initializeSearchableDropdowns();
+            // formUI.initializeSearchableDropdowns(); // No longer needed
             await formUI.determineFormMode();
             formLogic.setupEventListeners();
         } catch (error) {

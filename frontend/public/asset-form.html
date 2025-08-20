@@ -7,7 +7,6 @@
     <title>Asset Form - LGU GSO System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="LGU-DAET-LOGO.png" type="image/png">
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     <link href="output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
@@ -77,9 +76,9 @@
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="form-control">
                                     <label for="category" class="label"><span class="label-text">Category</span></label>
-                                    <select id="category" name="category" class="select select-bordered w-full">
-                                        <!-- Options will be populated by JS -->
-                                    </select>
+                                    <input id="category" name="category" type="text" list="category-list" class="input input-bordered w-full" placeholder="Type or select a category...">
+                                    <datalist id="category-list">
+                                    </datalist>
                                 </div>
                                 <div class="form-control">
                                     <label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label>
@@ -115,9 +114,9 @@
                                     </div>
                                      <div class="form-control">
                                         <label for="office" class="label"><span class="label-text">Office *</span></label>
-                                        <select id="office" name="office" class="select select-bordered w-full" required>
-                                            <!-- Options will be populated by JS -->
-                                        </select>
+                                        <input id="office" name="office" type="text" list="office-list" class="input input-bordered w-full" placeholder="Type or select an office..." required>
+                                        <datalist id="office-list">
+                                        </datalist>
                                     </div>
                                     <div class="form-control">
                                         <label for="status" class="label"><span class="label-text">Status</span></label>
@@ -132,15 +131,15 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                      <div class="form-control">
                                         <label for="custodian-name" class="label"><span class="label-text">Custodian *</span></label>
-                                        <select id="custodian-name" name="custodian-name" class="select select-bordered w-full" required>
-                                            <!-- JS will populate this -->
-                                        </select>
+                                        <input id="custodian-name" name="custodian-name" type="text" list="custodian-name-list" class="input input-bordered w-full" placeholder="Type or select a custodian..." required>
+                                        <datalist id="custodian-name-list">
+                                        </datalist>
                                     </div>
                                      <div class="form-control">
                                         <label for="custodian-office" class="label"><span class="label-text">Custodian Office *</span></label>
-                                        <select id="custodian-office" name="custodian-office" class="select select-bordered w-full" required>
-                                            <!-- Options will be populated by JS -->
-                                        </select>
+                                        <input id="custodian-office" name="custodian-office" type="text" list="custodian-office-list" class="input input-bordered w-full" placeholder="Type or select an office..." required>
+                                        <datalist id="custodian-office-list">
+                                        </datalist>
                                     </div>
                                 </div>
                             </div>
@@ -157,7 +156,6 @@
     </div>
     <script src="security.js"></script>
     <script src="layout.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script type="module" src="asset-form.js"></script>
 </body>
 </html>
