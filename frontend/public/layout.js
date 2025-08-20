@@ -47,7 +47,7 @@ function getSidebarHTML(user) {
 
     <!-- Navigation -->
     <nav class="flex-grow">
-      <ul class="menu menu-lg p-4" text-xl>${navLinks}${settings}</ul>
+      <ul class="menu menu-lg p-4">${navLinks}${settings}</ul>
     </nav>
 
     <!-- Footer / User Info -->
@@ -93,7 +93,7 @@ function initializeLayout(user) {
     const navLinks = sidebarContainer.querySelectorAll(".nav-link");
     navLinks.forEach((link) => {
       if (link.getAttribute("href") === currentPage) {
-        link.classList.add("active", "bg-primary", "text-white", "rounded-lg");
+        link.classList.add("active");
       }
     });
 
