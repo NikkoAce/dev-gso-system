@@ -1,32 +1,31 @@
 const GSO_NAV = `
-    <li><a href="dashboard.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="layout-dashboard" class="mr-3 h-5 w-5"></i>Dashboard</a></li>
-    <li><a href="asset-registry.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="list" class="mr-3 h-5 w-5"></i>Asset Registry</a></li>
-    <li><a href="gso-requisitions.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="clipboard-list" class="mr-3 h-5 w-5"></i>Supply Requisitions</a></li>
-    <li><a href="inventory.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="boxes" class="mr-3 h-5 w-5"></i>Supplies Inventory</a></li>
-    <li><a href="asset-form.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="plus-square" class="mr-3 h-5 w-5"></i>Add New Asset</a></li>
-    <li><a href="slip-history.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="history" class="mr-3 h-5 w-5"></i>Slip History</a></li>
-    <li><a href="physical-count.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="clipboard-check" class="mr-3 h-5 w-5"></i>Physical Count</a></li>
-    <li><a href="scanner.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="scan-line" class="mr-3 h-5 w-5"></i>Scanner</a></li>
-    <li><a href="reports.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="file-text" class="mr-3 h-5 w-5"></i>Reports</a></li>
+     <li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+    <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i>Asset Registry</a></li>
+    <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i>Supply Requisitions</a></li>
+    <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i>Supplies Inventory</a></li>
+    <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i>Add New Asset</a></li>
+    <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i>Slip History</a></li>
+    <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i>Physical Count</a></li>
+    <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i>Scanner</a></li>
 `;
 
 const GSO_SETTINGS = `
-    <div class="mt-6">
-        <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Settings & Tools</h3>
-        <ul class="mt-2 space-y-2">
-            <li><a href="categories.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="tags" class="mr-3 h-5 w-5"></i>Categories</a></li>
-            <li><a href="offices.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="map-pin" class="mr-3 h-5 w-5"></i>Offices</a></li>
-            <li><a href="employees.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="users" class="mr-3 h-5 w-5"></i>Employees</a></li>
-            <li><a href="qr-labels.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="qr-code" class="mr-3 h-5 w-5"></i>Print QR Labels</a></li>
+    <li>
+        <h2 class="menu-title">Settings & Tools</h2>
+        <ul>
+            <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i>Categories</a></li>
+            <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i>Offices</a></li>
+            <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i>Employees</a></li>
+            <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i>Print QR Labels</a></li>
         </ul>
-    </div>
+    </li>
 `;
 
 const VIEW_ONLY_NAV = `
-    <li><a href="https://lgu-employee-portal.netlify.app/dashboard.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="arrow-left" class="mr-3 h-5 w-5"></i>Back to Portal</a></li>
-    <li><a href="view-assets.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="list" class="mr-3 h-5 w-5"></i>View My Assets</a></li>
-    <li><a href="requisition.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="shopping-cart" class="mr-3 h-5 w-5"></i>Request Supplies</a></li>
-    <li><a href="my-requisitions.html" class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-lucide="history" class="mr-3 h-5 w-5"></i>Requisition History</a></li>
+    <li><a href="https://lgu-employee-portal.netlify.app/dashboard.html" class="nav-link"><i data-lucide="arrow-left"></i>Back to Portal</a></li>
+    <li><a href="view-assets.html" class="nav-link"><i data-lucide="list"></i>View My Assets</a></li>
+    <li><a href="requisition.html" class="nav-link"><i data-lucide="shopping-cart"></i>Request Supplies</a></li>
+    <li><a href="my-requisitions.html" class="nav-link"><i data-lucide="history"></i>Requisition History</a></li>
 `;
 
 function getSidebarHTML(user) {
