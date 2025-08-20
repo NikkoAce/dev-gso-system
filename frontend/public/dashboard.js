@@ -54,7 +54,7 @@ function initializeDashboard() {
             if (endDate) params.append('endDate', endDate);
 
             const query = params.toString();
-            const endpoint = `dashboard/summary${query ? `?${query}` : ''}`;
+            const endpoint = `assets/dashboard/summary${query ? `?${query}` : ''}`;
             const summaryData = await fetchWithAuth(endpoint);
             
             updateStatCards(summaryData.stats);
