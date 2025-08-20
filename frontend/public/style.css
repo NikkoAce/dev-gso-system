@@ -10,7 +10,4 @@ body { font-family: 'Inter', sans-serif; }
   We use the sidebar's ID to increase specificity, ensuring
   this style is applied correctly over the component library's defaults.
 */
-#sidebar-container .menu li > a.active {
-    background-color: #185de7; /* A nice navy-like dark blue */
-    color: white;
-}
+
