@@ -34,34 +34,32 @@ function getSidebarHTML(user) {
   const userInitial = user.name ? user.name.charAt(0).toUpperCase() : "U";
 
   return `
-    <aside class="w-64 bg-base-200 h-screen flex flex-col">
-      <!-- Header -->
-      <div class="p-6 border-b border-base-300">
-        <h1 class="text-xl font-bold">LGU Daet</h1>
-        <p class="text-sm text-gray-500">GSO System</p>
-      </div>
+    <!-- Header -->
+    <div class="p-6 border-b border-base-300">
+      <h1 class="text-xl font-bold">LGU Daet</h1>
+      <p class="text-sm text-gray-500">GSO System</p>
+    </div>
 
-      <!-- Navigation -->
-      <nav class="flex-grow p-4">
-        <ul class="menu bg-base-100 rounded-box">${navLinks}${settings}</ul>
-      </nav>
+    <!-- Navigation -->
+    <nav class="flex-grow p-4">
+      <ul class="menu bg-base-100 rounded-box">${navLinks}${settings}</ul>
+    </nav>
 
-      <!-- Footer / User Info -->
-      <div class="p-4 border-t border-base-300">
-        <div class="flex items-center gap-3">
-          <div class="avatar placeholder">
-            <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
-              <span>${userInitial}</span>
-            </div>
-          </div>
-          <div>
-            <p id="user-name" class="font-semibold text-sm">${user.name}</p>
-            <p id="user-office" class="text-xs text-gray-500">${user.office}</p>
-            ${logoutButton}
+    <!-- Footer / User Info -->
+    <div class="p-4 border-t border-base-300">
+      <div class="flex items-center gap-3">
+        <div class="avatar placeholder">
+          <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
+            <span>${userInitial}</span>
           </div>
         </div>
+        <div>
+          <p id="user-name" class="font-semibold text-sm">${user.name}</p>
+          <p id="user-office" class="text-xs text-gray-500">${user.office}</p>
+          ${logoutButton}
+        </div>
       </div>
-    </aside>
+    </div>
   `;
 }
 
@@ -70,6 +68,8 @@ function initializeLayout(user) {
 
   const sidebarContainer = document.getElementById("sidebar-container");
   if (sidebarContainer) {
+    // Set the correct classes for the DaisyUI sidebar layout
+    sidebarContainer.className = 'w-64 bg-base-200 h-screen flex flex-col border-r hidden md:flex non-printable';
     sidebarContainer.innerHTML = getSidebarHTML(user);
 
     // Logout
@@ -88,7 +88,7 @@ function initializeLayout(user) {
     const navLinks = sidebarContainer.querySelectorAll(".nav-link");
     navLinks.forEach((link) => {
       if (link.getAttribute("href") === currentPage) {
-        link.classList.add("active", "bg-primary", "text-white", "rounded-lg");
+        link.classList.add("active");
       }
     });
 

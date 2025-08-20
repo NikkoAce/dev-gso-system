@@ -1,10 +1,5 @@
 /* FILE: frontend/public/style.css (New Shared CSS) */
 body { font-family: 'Inter', sans-serif; }
-.nav-link.active {
-    background-color: #2563EB; /* blue-600 */
-    color: white;
-    font-weight: 600;
-}
 @media print {
     .non-printable { display: none !important; }
     #print-container { display: block !important; }
