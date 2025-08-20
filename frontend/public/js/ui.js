@@ -71,96 +71,49 @@ export function createUIManager() {
     }
 
     /**
-     * Renders the main asset table and its pagination controls.
-     * @param {Array<object>} assets - The array of asset objects for the current page.
-     * @param {object} pagination - Pagination info { totalDocs, totalPages, currentPage, assetsPerPage }.
-     * @param {object} domElements - The DOM elements to update { tableBody, paginationControls }.
+     * Displays a loading spinner inside a table body.
+     * @param {boolean} isLoading - Whether to show or hide the loader.
+     * @param {HTMLElement} container - The table body element.
+     * @param {number} colSpan - The number of columns the loader should span.
      */
-    function renderAssetTable(assets, pagination, domElements) {
-        const { tableBody, paginationControls } = domElements;
-        const { totalDocs, totalPages, currentPage, assetsPerPage } = pagination;
-
-        tableBody.innerHTML = '';
-        if (assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-base-content/70">No assets found for the selected criteria.</td></tr>`;
-            renderPagination(0, 0, { paginationControls }); // Clear pagination
-            return;
+    function setLoading(isLoading, container, colSpan) {
+        if (!container) return;
+        if (isLoading) {
+            container.innerHTML = `<tr><td colspan="${colSpan}" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
+            lucide.createIcons();
         }
-
-        const statusMap = {
-            'In Use': 'badge-success',
-            'In Storage': 'badge-info',
-            'For Repair': 'badge-warning',
-            'Disposed': 'badge-error'
-        };
-        const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
-
-        assets.forEach(asset => {
-            const tr = document.createElement('tr');
-            const isAssigned = asset.assignedPAR || asset.assignedICS;
-            const assignedTo = isAssigned ? (asset.assignedPAR || asset.assignedICS) : '';
-            const assignedIndicator = isAssigned ? `<span class="text-xs text-blue-600 block font-normal">Assigned: ${assignedTo}</span>` : '';
-            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm">${asset.status}</span>`;
-
-            tr.innerHTML = `
-                <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isAssigned ? 'disabled' : ''}></td>
-                <td><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
-                <td>${asset.description}</td>
-                <td>${asset.category}</td>
-                <td>
-                    <div>${asset.custodian.name}</div>
-                    <div class="text-xs opacity-70">${asset.custodian.office}</div>
-                </td>
-                <td>${statusBadge}</td>
-                <td>${formatDate(asset.createdAt)}</td>
-                <td class="text-center non-printable">
-                    <div class="dropdown dropdown-end">
-                        <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
-                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><button class="edit-btn" data-id="${asset._id}"><i data-lucide="edit"></i> Edit</button></li>
-                            <li><button class="property-card-btn" data-id="${asset._id}"><i data-lucide="book-user"></i> Property Card</button></li>
-                            <li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i> Transfer</button></li>
-                            <div class="divider my-1"></div>
-                            <li><button class="delete-btn text-red-500" data-id="${asset._id}"><i data-lucide="trash-2"></i> Delete</button></li>
-                        </ul>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(tr);
-        });
-
-        renderPagination(totalPages, totalDocs, { currentPage, assetsPerPage, paginationControls });
     }
 
-    function renderPagination(totalPages, totalItems, { currentPage, assetsPerPage, paginationControls }) {
-        if (!paginationControls) return;
-        paginationControls.innerHTML = '';
-        if (totalPages <= 1) return;
+    /**
+     * Shows a confirmation modal.
+     * @param {string} title - The title of the modal.
+     * @param {string} body - The body text of the modal.
+     * @param {function} onConfirm - The callback function to execute on confirmation.
+     */
+    function showConfirmationModal(title, body, onConfirm) {
+        const modal = document.getElementById('confirmation-modal');
+        if (!modal) return;
 
-        const startItem = (currentPage - 1) * assetsPerPage + 1;
-        const endItem = Math.min(currentPage * assetsPerPage, totalItems);
+        const modalTitle = document.getElementById('modal-title-text');
+        const modalBody = document.getElementById('modal-body-text');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-        paginationControls.innerHTML = `
-            <span class="text-sm text-base-content/70">
-                Showing <span class="font-semibold">${startItem}</span>
-                to <span class="font-semibold">${endItem}</span>
-                of <span class="font-semibold">${totalItems}</span> Results
-            </span>
-            <div class="btn-group">
-                ${currentPage > 1 ? `<button id="prev-page-btn" class="btn btn-sm">Prev</button>` : ''}
-                ${currentPage < totalPages ? `<button id="next-page-btn" class="btn btn-sm">Next</button>` : ''}
-            </div>
-        `;
+        modalTitle.textContent = title;
+        modalBody.textContent = body;
+
+        // Clone and replace the button to remove old event listeners
+        const newConfirmBtn = modalConfirmBtn.cloneNode(true);
+        modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, modalConfirmBtn);
+        
+        newConfirmBtn.addEventListener('click', () => {
+            onConfirm();
+            modal.close();
+        }, { once: true });
+
+        modalCancelBtn.onclick = () => modal.close();
+        modal.showModal();
     }
 
-    function updateSlipButtonVisibility(selectedIds, domElements) {
-        const { generateParBtn, generateIcsBtn, transferSelectedBtn } = domElements;
-        const hasSelection = selectedIds.length > 0;
-
-        generateParBtn.classList.toggle('hidden', !hasSelection);
-        generateIcsBtn.classList.toggle('hidden', !hasSelection);
-        transferSelectedBtn.classList.toggle('hidden', !hasSelection);
-    }
-
-    return { showToast, populateFilters, setLoading, renderAssetTable, updateSlipButtonVisibility };
+    return { showToast, populateFilters, setLoading, renderAssetTable, updateSlipButtonVisibility, showConfirmationModal };
 }
