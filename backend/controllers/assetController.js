@@ -566,11 +566,26 @@ const getDashboardStats = async (req, res) => {
         disposedAssets: current.disposedAssets || 0,
         pendingRequisitions: currentPendingReqs || 0,
         trends: {
-          totalAssetValue: calculateTrend(current.totalAssetValue || 0, previous.totalAssetValue || 0),
-          totalAssets: calculateTrend(current.totalAssets || 0, previous.totalAssets || 0),
-          assetsForRepair: calculateTrend(current.assetsForRepair || 0, previous.assetsForRepair || 0),
-          disposedAssets: calculateTrend(current.disposedAssets || 0, previous.disposedAssets || 0),
-          pendingRequisitions: calculateTrend(currentPendingReqs || 0, previousPendingReqs || 0),
+          totalAssetValue: {
+            percent: calculateTrend(current.totalAssetValue || 0, previous.totalAssetValue || 0),
+            absolute: (current.totalAssetValue || 0) - (previous.totalAssetValue || 0)
+          },
+          totalAssets: {
+            percent: calculateTrend(current.totalAssets || 0, previous.totalAssets || 0),
+            absolute: (current.totalAssets || 0) - (previous.totalAssets || 0)
+          },
+          assetsForRepair: {
+            percent: calculateTrend(current.assetsForRepair || 0, previous.assetsForRepair || 0),
+            absolute: (current.assetsForRepair || 0) - (previous.assetsForRepair || 0)
+          },
+          disposedAssets: {
+            percent: calculateTrend(current.disposedAssets || 0, previous.disposedAssets || 0),
+            absolute: (current.disposedAssets || 0) - (previous.disposedAssets || 0)
+          },
+          pendingRequisitions: {
+            percent: calculateTrend(currentPendingReqs || 0, previousPendingReqs || 0),
+            absolute: (currentPendingReqs || 0) - (previousPendingReqs || 0)
+          },
         }
       },
       charts: {

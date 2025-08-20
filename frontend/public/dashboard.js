@@ -81,20 +81,28 @@ function initializeDashboard() {
         statElements.pendingReqs.textContent = stats.pendingRequisitions.toLocaleString();
 
         // Update trends
-        updateTrend(trendElements.totalValue, stats.trends.totalAssetValue);
-        updateTrend(trendElements.totalAssets, stats.trends.totalAssets);
-        updateTrend(trendElements.forRepair, stats.trends.assetsForRepair);
-        updateTrend(trendElements.disposed, stats.trends.disposedAssets);
-        updateTrend(trendElements.pendingReqs, stats.trends.pendingRequisitions);
+        updateTrend(trendElements.totalValue, stats.trends.totalAssetValue, true);
+        updateTrend(trendElements.totalAssets, stats.trends.totalAssets, false);
+        updateTrend(trendElements.forRepair, stats.trends.assetsForRepair, false);
+        updateTrend(trendElements.disposed, stats.trends.disposedAssets, false);
+        updateTrend(trendElements.pendingReqs, stats.trends.pendingRequisitions, false);
     }
 
-    function updateTrend(element, trendValue) {
-        if (!element || typeof trendValue !== 'number') {
+    function updateTrend(element, trendData, isCurrency = false) {
+        if (!element || typeof trendData?.percent !== 'number') {
             if(element) element.textContent = '';
             return;
         }
-        element.textContent = `${trendValue >= 0 ? '↗︎' : '↘︎'} ${Math.abs(trendValue)}% vs last period`;
-        element.className = `stat-desc ${trendValue >= 0 ? 'text-success' : 'text-error'}`;
+
+        const { percent, absolute } = trendData;
+        const arrow = percent >= 0 ? '↗︎' : '↘︎';
+        const sign = absolute >= 0 ? '+' : '';
+        const formattedAbsolute = isCurrency 
+            ? formatCurrency(absolute) 
+            : absolute.toLocaleString();
+
+        element.textContent = `${arrow} ${Math.abs(percent)}% (${sign}${formattedAbsolute}) vs last period`;
+        element.className = `stat-desc ${percent >= 0 ? 'text-success' : 'text-error'}`;
     }
 
     function renderChart(canvasId, instance, chartConfig) {
