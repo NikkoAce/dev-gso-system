@@ -46,29 +46,24 @@
 
             
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
-                <div class="space-y-8">
+                <div class="space-y-6">
                     <div class="flex justify-between items-center">
                         <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
-                        <a href="asset-form.html" class="btn btn-primary">
-                            <i data-lucide="plus" class="h-5 w-5"></i> Add Asset
-                        </a>
                     </div>
                     <!-- Filters -->
-                    <div class="card bg-base-100 border non-printable">
-                        <div class="card-body p-4">
-                            <div class="flex flex-wrap items-end gap-4">
-                                <div class="form-control">
-                                    <label class="label"><span class="label-text">Start Date</span></label>
-                                    <input type="date" id="filter-start-date" class="input input-bordered">
-                                </div>
-                                <div class="form-control">
-                                    <label class="label"><span class="label-text">End Date</span></label>
-                                    <input type="date" id="filter-end-date" class="input input-bordered">
-                                </div>
-                                <div class="flex gap-2">
-                                    <button id="apply-filter-btn" class="btn btn-primary">Apply</button>
-                                    <button id="reset-filter-btn" class="btn btn-ghost">Reset</button>
-                                </div>
+                    <div class="flex flex-wrap items-end gap-4 non-printable">
+                        <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs">Start Date</span></label>
+                            <input type="date" id="filter-start-date" class="input input-bordered input-sm">
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-1"><span class="label-text text-xs">End Date</span></label>
+                            <input type="date" id="filter-end-date" class="input input-bordered input-sm">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="apply-filter-btn" class="btn btn-primary btn-sm">Apply</button>
+                            <button id="reset-filter-btn" class="btn btn-ghost btn-sm">
+                                <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
                             </div>
                         </div>
                     </div>
@@ -129,48 +124,52 @@
                             <div id="stat-pending-reqs-trend" class="stat-desc"></div>
                         </div>
                     </div>
-                    <!-- Charts Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="card bg-base-100 border">
-                            <div class="card-body">
-                                <h2 class="card-title">Assets by Category</h2>
-                                <canvas id="assetsByCategoryChart"></canvas>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Main content area (2/3 width) -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Monthly Asset Acquisitions (Last 12 Months)</h2>
+                                    <canvas id="monthlyAcquisitionChart"></canvas>
+                                </div>
                             </div>
-                        </div>
-                        <div class="card bg-base-100 border">
-                            <div class="card-body">
-                                <h2 class="card-title">Asset Status Distribution</h2>
-                                <canvas id="assetStatusChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Tables Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="card bg-base-100 border">
-                            <div class="card-body">
-                                <h2 class="card-title">Recently Added Assets</h2>
-                                <div class="overflow-x-auto h-64">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <tbody id="recent-assets-table"></tbody>
-                                    </table>
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Recently Added Assets</h2>
+                                    <div class="overflow-x-auto h-64">
+                                        <table class="table table-zebra table-pin-rows table-sm">
+                                            <tbody id="recent-assets-table"></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card bg-base-100 border">
-                            <div class="card-body">
-                                <h2 class="card-title">Recent Requisitions</h2>
-                                <div class="overflow-x-auto h-64">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <tbody id="recent-requisitions-table"></tbody>
-                                    </table>
+
+                        <!-- Sidebar area (1/3 width) -->
+                        <div class="space-y-6">
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Assets by Category</h2>
+                                    <canvas id="assetsByCategoryChart"></canvas>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="card bg-base-100 border">
-                        <div class="card-body">
-                            <h2 class="card-title">Monthly Asset Acquisitions (Last 12 Months)</h2>
-                            <canvas id="monthlyAcquisitionChart"></canvas>
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Asset Status Distribution</h2>
+                                    <canvas id="assetStatusChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Recent Requisitions</h2>
+                                    <div class="overflow-x-auto h-64">
+                                        <table class="table table-zebra table-pin-rows table-sm">
+                                            <tbody id="recent-requisitions-table"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
