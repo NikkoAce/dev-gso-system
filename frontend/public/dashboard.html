@@ -70,15 +70,18 @@
                             <div id="stat-total-assets" class="stat-value">Loading...</div>
                             <div id="stat-total-assets-trend" class="stat-desc"></div>
                         </div>
-                        <!-- Assets for Repair -->
-                        <div class="stat card bg-base-100 border">
-                            <div class="stat-figure text-accent">
-                                <i data-lucide="wrench" class="h-8 w-8"></i>
+
+                          <!-- Filter Card -->
+                        <div class="card bg-base-100 border">
+                          <div class="card-body">
+                              <h2 class="card-title text-base">Filters</h2>
+                            <div class="flex items-center gap-2">
+                              <input type="date" id="filter-start-date" class="input input-bordered input-sm" />
+                              <input type="date" id="filter-end-date" class="input input-bordered input-sm" />
+                             </div>
                             </div>
-                            <div class="stat-title">Assets for Repair</div>
-                            <div id="stat-for-repair" class="stat-value">Loading...</div>
-                            <div id="stat-for-repair-trend" class="stat-desc"></div>
-                        </div>
+                            </div>
+                   
                         <!-- Disposed Assets -->
                         <div class="stat card bg-base-100 border">
                             <div class="stat-figure text-error">
@@ -88,18 +91,18 @@
                             <div id="stat-disposed" class="stat-value">Loading...</div>
                             <div id="stat-disposed-trend" class="stat-desc"></div>
                         </div>
-                        <!-- Filter Card -->
-                        <div class="card bg-base-100 border">
-                          <div class="card-body">
-                              <h2 class="card-title text-base">Filters</h2>
-                            <div class="flex items-center gap-2">
-                              <input type="date" id="filter-start-date" class="input input-bordered input-sm" />
-                              <input type="date" id="filter-end-date" class="input input-bordered input-sm" />
-                              <button id="reset-filter-btn" class="btn btn-ghost btn-sm">Reset</button>
-                              <button id="apply-filter-btn" class="btn btn-primary btn-sm">Apply</button>
-                             </div>
+     <!-- Assets for Repair -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-accent">
+                                <i data-lucide="wrench" class="h-8 w-8"></i>
                             </div>
-                            </div>
+                            <div class="stat-title">Assets for Repair</div>
+                            <div id="stat-for-repair" class="stat-value">Loading...</div>
+                            <div id="stat-for-repair-trend" class="stat-desc"></div>
+                        </div>
+
+
+                      
                         <!-- Pending Requisitions -->
                         <div class="stat card bg-base-100 border">
                             <div class="stat-figure text-warning">
