@@ -37,7 +37,7 @@ function initializeDashboard() {
         pendingReqs: document.getElementById('stat-pending-reqs-trend'),
     };
 
-    let assetsByCategoryChartInstance = null;
+    let assetsByOfficeChartInstance = null;
     let assetStatusChartInstance = null;
     let monthlyAcquisitionChartInstance = null;
     
@@ -58,7 +58,7 @@ function initializeDashboard() {
             const summaryData = await fetchWithAuth(endpoint);
             
             updateStatCards(summaryData.stats);
-            renderAssetsByCategoryChart(summaryData.charts.assetsByCategory);
+            renderAssetsByOfficeChart(summaryData.charts.assetsByOffice);
             renderAssetStatusChart(summaryData.charts.assetStatus);
             renderMonthlyAcquisitionChart(summaryData.charts.monthlyAcquisitions);
             renderRecentAssetsTable(summaryData.tables.recentAssets);
@@ -105,24 +105,34 @@ function initializeDashboard() {
         return new Chart(ctx, chartConfig);
     }
 
-    function renderAssetsByCategoryChart(data) {
-        assetsByCategoryChartInstance = renderChart('assetsByCategoryChart', assetsByCategoryChartInstance, {
-            type: 'doughnut',
+    function renderAssetsByOfficeChart(data) {
+        assetsByOfficeChartInstance = renderChart('assetsByOfficeChart', assetsByOfficeChartInstance, {
+            type: 'bar',
             data: {
-                labels: data.map(d => d.category),
+                labels: data.map(d => d.office),
                 datasets: [{
-                    label: 'Assets by Category',
+                    label: 'Assets by Office',
                     data: data.map(d => d.count),
-                    backgroundColor: ['#570df8', '#f000b8', '#37cdbe', '#fbbd23', '#3abff8', '#f87272'],
-                    hoverOffset: 4
+                    backgroundColor: 'rgba(240, 0, 184, 0.6)',
+                    borderColor: 'rgba(240, 0, 184, 1)',
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                indexAxis: 'y', // Horizontal bar chart is good for long office names
                 plugins: {
                     legend: {
-                        position: 'top',
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 }
             }
@@ -155,15 +165,17 @@ function initializeDashboard() {
 
     function renderMonthlyAcquisitionChart(data) {
         monthlyAcquisitionChartInstance = renderChart('monthlyAcquisitionChart', monthlyAcquisitionChartInstance, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: data.map(d => d.month), // e.g., ['Jan', 'Feb', ...]
                 datasets: [{
                     label: 'Assets Acquired',
                     data: data.map(d => d.count),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
                     borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
                 }]
             },
             options: {

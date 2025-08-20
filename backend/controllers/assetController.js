@@ -498,10 +498,10 @@ const getDashboardStats = async (req, res) => {
     const getPendingRequisitions = (filter) => Requisition.countDocuments({ ...filter, status: 'Pending' });
 
     // --- Chart Data Pipelines ---
-    const getAssetsByCategory = () => Asset.aggregate([
+    const getAssetsByOffice = () => Asset.aggregate([
       { $match: acquisitionDateFilter },
-      { $group: { _id: '$category', count: { $sum: 1 } } },
-      { $project: { category: '$_id', count: 1, _id: 0 } },
+      { $group: { _id: '$office', count: { $sum: 1 } } },
+      { $project: { office: '$_id', count: 1, _id: 0 } },
       { $sort: { count: -1 } }
     ]);
 
@@ -533,7 +533,7 @@ const getDashboardStats = async (req, res) => {
       previousAssetStats,
       currentPendingReqs,
       previousPendingReqs,
-      assetsByCategory,
+      assetsByOffice,
       assetStatus,
       monthlyAcquisitions,
       recentAssets,
@@ -543,7 +543,7 @@ const getDashboardStats = async (req, res) => {
       getAssetStats(previousAcquisitionFilter),
       getPendingRequisitions(requisitionDateFilter),
       getPendingRequisitions(previousRequisitionFilter),
-      getAssetsByCategory(),
+      getAssetsByOffice(),
       getAssetStatus(),
       getMonthlyAcquisitions(),
       getRecentAssets(),
@@ -570,7 +570,7 @@ const getDashboardStats = async (req, res) => {
         }
       },
       charts: {
-        assetsByCategory,
+        assetsByOffice,
         assetStatus,
         monthlyAcquisitions: monthlyAcquisitions.map(item => ({
           month: new Date(item.month.year, item.month.month - 1).toLocaleString('default', { month: 'short' }),
