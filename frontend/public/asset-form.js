@@ -184,7 +184,10 @@ function initializeAssetForm(currentUser) {
             specificationsManager.clear();
             specificationsManager.add('Model Number', '');
             specificationsManager.add('Serial Number', '');
-            DOM.acquisitionDateInput.value = new Date().toISOString().split('T')[0];
+            // Set to today's date in the user's local timezone to avoid off-by-one day errors.
+            const today = new Date();
+            const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+            DOM.acquisitionDateInput.value = localDate.toISOString().split('T')[0];
             formLogic.generatePropertyNumber();
         },
         async determineFormMode() {
@@ -243,6 +246,11 @@ function initializeAssetForm(currentUser) {
             const quantity = parseInt(DOM.quantityInput.value, 10);
             const selectedEmployee = state.allEmployees.find(emp => emp.name === DOM.custodianNameSelect.value);
 
+            // Adjust date to prevent timezone issues. By setting the time to noon UTC,
+            // we ensure that timezone conversions won't shift the date to a different day.
+            const localDate = DOM.acquisitionDateInput.value;
+            const acquisitionDateUTC = localDate ? new Date(`${localDate}T12:00:00.000Z`) : null;
+
             const assetData = {
                 user: { name: currentUser.name, office: currentUser.office },
                 description: DOM.descriptionInput.value,
@@ -255,7 +263,7 @@ function initializeAssetForm(currentUser) {
                     designation: selectedEmployee ? selectedEmployee.designation : '',
                     office: DOM.custodianOfficeSelect.value
                 },
-                acquisitionDate: DOM.acquisitionDateInput.value,
+                acquisitionDate: acquisitionDateUTC,
                 acquisitionCost: parseFloat(DOM.acquisitionCostInput.value),
                 usefulLife: parseInt(DOM.usefulLifeInput.value),
                 salvageValue: parseFloat(DOM.salvageValueInput.value) || 0,
