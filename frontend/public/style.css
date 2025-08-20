@@ -5,3 +5,12 @@ body { font-family: 'Inter', sans-serif; }
     #print-container { display: block !important; }
 }
 
+/*
+  This rule overrides the default DaisyUI active link color.
+  We use the sidebar's ID to increase specificity, ensuring
+  this style is applied correctly over the component library's defaults.
+*/
+#sidebar-container .menu li > a.active {
+    background-color: #1a202c; /* A nice navy-like dark blue */
+    color: white;
+}

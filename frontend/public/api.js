@@ -1,7 +1,7 @@
 // FILE: frontend/public/api.js (NEW FILE)
 
 // Centralized base URL for the API
-export const BASE_URL = 'https://dev-gso-system.onrender.com';
+export const BASE_URL = 'https://dev-gso-system.onrender.com/api';
 
 /**
  * A generic fetch wrapper that includes authentication and improved error handling.
