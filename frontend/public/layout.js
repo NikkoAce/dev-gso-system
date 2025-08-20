@@ -12,15 +12,13 @@ const GSO_NAV = `
 `;
 
 const GSO_SETTINGS = `
-    <li>
         <h2 class="menu-title">Settings & Tools</h2>
-        <ul>
+        <ul class="menu bg-base-200>
             <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i>Categories</a></li>
             <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i>Offices</a></li>
             <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i>Employees</a></li>
             <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i>Print QR Labels</a></li>
         </ul>
-    </li>
 `;
 
 const VIEW_ONLY_NAV = `
