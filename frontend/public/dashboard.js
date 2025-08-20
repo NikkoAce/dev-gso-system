@@ -227,8 +227,6 @@ function initializeDashboard() {
     function initializeFilters() {
         const startDateInput = document.getElementById('filter-start-date');
         const endDateInput = document.getElementById('filter-end-date');
-        const applyBtn = document.getElementById('apply-filter-btn');
-        const resetBtn = document.getElementById('reset-filter-btn');
 
         // Set default dates to the current year
         const today = new Date();
@@ -236,12 +234,9 @@ function initializeDashboard() {
         startDateInput.value = yearStart.toISOString().split('T')[0];
         endDateInput.value = today.toISOString().split('T')[0];
 
-        applyBtn.addEventListener('click', fetchDashboardData);
-        resetBtn.addEventListener('click', () => {
-            startDateInput.value = yearStart.toISOString().split('T')[0];
-            endDateInput.value = today.toISOString().split('T')[0];
-            fetchDashboardData();
-        });
+        // Fetch data automatically when a date is changed
+        startDateInput.addEventListener('change', fetchDashboardData);
+        endDateInput.addEventListener('change', fetchDashboardData);
     }
 
     initializeFilters();
