@@ -278,9 +278,21 @@ function initializeDashboard() {
         startDateInput.value = yearStart.toISOString().split('T')[0];
         endDateInput.value = today.toISOString().split('T')[0];
 
-        // Fetch data automatically when a date is changed
-        startDateInput.addEventListener('change', fetchDashboardData);
-        endDateInput.addEventListener('change', fetchDashboardData);
+        const handleDateChange = () => {
+            const startValue = startDateInput.value;
+            const endValue = endDateInput.value;
+
+            if (!startValue || !endValue) return; // Don't do anything if a date is cleared
+
+            if (new Date(startValue) > new Date(endValue)) {
+                alert('Start date cannot be after the end date. Adjusting start date.');
+                startDateInput.value = endValue; // Auto-correct the start date
+            }
+            fetchDashboardData();
+        };
+
+        startDateInput.addEventListener('change', handleDateChange);
+        endDateInput.addEventListener('change', handleDateChange);
     }
 
     initializeFilters();
