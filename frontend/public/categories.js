@@ -1,5 +1,6 @@
 // FILE: frontend/public/categories.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -29,6 +30,7 @@ function initializeCategoriesPage(currentUser) {
     const submitBtn = document.getElementById('submit-category-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
     const searchInput = document.getElementById('search-input');
+    const { showToast } = createUIManager();
 
     // Modal DOM elements
     const confirmationModal = document.getElementById('confirmation-modal');
@@ -106,27 +108,6 @@ function initializeCategoriesPage(currentUser) {
         submitBtn.textContent = 'Save Changes';
         cancelBtn.classList.remove('hidden');
         window.scrollTo(0, 0);
-    }
-
-    // --- UI FEEDBACK ---
-    function showToast(message, type = 'info') {
-        const toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) return;
-
-        const alertType = {
-            success: 'alert-success',
-            error: 'alert-error',
-            warning: 'alert-warning',
-            info: 'alert-info',
-        }[type];
-
-        const toast = document.createElement('div');
-        toast.className = `alert ${alertType} shadow-lg transition-opacity duration-300`;
-        toast.innerHTML = `<span>${message}</span>`;
-
-        toastContainer.appendChild(toast);
-        setTimeout(() => toast.classList.add('opacity-0'), 3000);
-        toast.addEventListener('transitionend', () => toast.remove());
     }
 
     // --- EVENT LISTENERS ---

@@ -1,5 +1,6 @@
 // FILE: frontend/public/employees.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -26,6 +27,7 @@ function initializeEmployeesPage(currentUser) {
     const submitBtn = document.getElementById('submit-employee-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
     const searchInput = document.getElementById('search-input');
+    const { showToast } = createUIManager();
 
     // Modal DOM elements
     const confirmationModal = document.getElementById('confirmation-modal');
