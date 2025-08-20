@@ -1,23 +1,39 @@
-const GSO_NAV = `
+const GSO_MAIN_NAV = `
   <li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
-  <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i> Asset Registry</a></li>
-  <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i> Supply Requisitions</a></li>
-  <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i> Supplies Inventory</a></li>
-  <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New Asset</a></li>
-  <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
-  <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i> Physical Count</a></li>
-  <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i> Scanner</a></li>
   <li><a href="reports.html" class="nav-link"><i data-lucide="file-text"></i> Reports</a></li>
 `;
 
-const GSO_SETTINGS = `
+const GSO_ASSETS_NAV = `
   <li>
-    <h2 class="menu-title">Settings & Tools</h2>
+    <h2 class="menu-title">Assets</h2>
+    <ul>
+      <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i> Asset Registry</a></li>
+      <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New Asset</a></li>
+      <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
+      <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i> Physical Count</a></li>
+      <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i> Scanner</a></li>
+      <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
+    </ul>
+  </li>
+`;
+
+const GSO_SUPPLIES_NAV = `
+  <li>
+    <h2 class="menu-title">Supplies</h2>
+    <ul>
+      <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i> Supply Requisitions</a></li>
+      <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i> Supplies Inventory</a></li>
+    </ul>
+  </li>
+`;
+
+const GSO_SETTINGS_NAV = `
+  <li>
+    <h2 class="menu-title">Settings</h2>
     <ul>
       <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
       <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
       <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
-      <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
     </ul>
   </li>
 `;
@@ -31,8 +47,17 @@ const VIEW_ONLY_NAV = `
 
 function getSidebarHTML(user) {
   const isGSO = user.office === "GSO";
-  const navLinks = isGSO ? GSO_NAV : VIEW_ONLY_NAV;
-  const settings = isGSO ? GSO_SETTINGS : "";
+  let navLinks;
+  if (isGSO) {
+    navLinks = `
+      ${GSO_MAIN_NAV}
+      ${GSO_ASSETS_NAV}
+      ${GSO_SUPPLIES_NAV}
+      ${GSO_SETTINGS_NAV}
+    `;
+  } else {
+    navLinks = VIEW_ONLY_NAV;
+  }
   const logoutButton = isGSO
     ? `<button id="logout-button" class="btn btn-error btn-xs mt-2">Logout</button>`
     : "";
@@ -47,7 +72,7 @@ function getSidebarHTML(user) {
 
     <!-- Navigation -->
     <nav class="flex-grow">
-      <ul class="menu menu-lg p-4">${navLinks}${settings}</ul>
+      <ul class="menu menu-lg p-4">${navLinks}</ul>
     </nav>
 
     <!-- Footer / User Info -->
