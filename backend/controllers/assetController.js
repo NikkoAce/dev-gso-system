@@ -448,33 +448,26 @@ const getDashboardStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    // --- 1. Define Date Filters ---
-    // For stats that are a "snapshot in time" (like total assets), we care about everything up to the endDate.
-    // For trends, we compare this snapshot with a snapshot at the beginning of the period.
+    // --- 1. Define Date Filters for the selected period ---
     const end = endDate ? new Date(endDate) : new Date();
     end.setUTCHours(23, 59, 59, 999);
 
-    // Default start date to the beginning of the current year if not provided.
     const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), 0, 1);
     start.setUTCHours(0, 0, 0, 0);
 
     // --- Trend Calculation ---
-    // The end of the "previous" period is the day before our current start date.
+    // Define the previous period for trend comparison.
     const prevPeriodEnd = new Date(start.getTime() - 1);
-
-    // Filter for stats: everything acquired up to the end of the selected period.
-    const currentPeriodStatsFilter = { acquisitionDate: { $lte: end } };
-    // Filter for previous period stats: everything acquired up to the day before the selected period started.
-    const previousPeriodStatsFilter = { acquisitionDate: { $lte: prevPeriodEnd } };
-
-    // For charts and tables showing activity *within* the period.
-    const acquisitionDateRangeFilter = { acquisitionDate: { $gte: start, $lte: end } };
-    const requisitionDateRangeFilter = { dateRequested: { $gte: start, $lte: end } };
-
-    // For calculating the trend of pending requisitions.
     const diff = end.getTime() - start.getTime();
-    const prevReqStart = new Date(prevPeriodEnd.getTime() - diff);
-    const previousRequisitionDateRangeFilter = { dateRequested: { $gte: prevReqStart, $lte: prevPeriodEnd } };
+    const prevPeriodStart = new Date(prevPeriodEnd.getTime() - diff);
+
+    // Filter for activity *within* the selected period.
+    const currentPeriodAssetFilter = { acquisitionDate: { $gte: start, $lte: end } };
+    const currentPeriodRequisitionFilter = { dateRequested: { $gte: start, $lte: end } };
+
+    // Filter for activity *within* the previous period for trend calculation.
+    const previousPeriodAssetFilter = { acquisitionDate: { $gte: prevPeriodStart, $lte: prevPeriodEnd } };
+    const previousPeriodRequisitionFilter = { dateRequested: { $gte: prevPeriodStart, $lte: prevPeriodEnd } };
 
     const calculateTrend = (current, previous) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -484,14 +477,14 @@ const getDashboardStats = async (req, res) => {
     };
 
     // --- Aggregation Pipelines ---
-    // This pipeline now correctly calculates stats as a snapshot in time.
+    // This pipeline now calculates stats for assets *acquired within the filter period*.
     const getAssetStats = (filter) => Asset.aggregate([
       { $match: filter },
       {
         $group: {
           _id: null,
           totalAssetValue: { $sum: '$acquisitionCost' },
-          totalAssets: { $sum: { $cond: [{ $ne: ['$status', 'Disposed'] }, 1, 0] } }, // Only count non-disposed assets
+          totalAssets: { $sum: 1 }, // Total assets acquired in the period
           assetsForRepair: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } },
           disposedAssets: { $sum: { $cond: [{ $eq: ['$status', 'Disposed'] }, 1, 0] } },
         }
@@ -501,35 +494,34 @@ const getDashboardStats = async (req, res) => {
     const getPendingRequisitions = (filter) => Requisition.countDocuments({ ...filter, status: 'Pending' });
 
     // --- Chart Data Pipelines ---
-    // These should reflect activity *within* the selected date range.
     const getAssetsByOffice = () => Asset.aggregate([
-      { $match: acquisitionDateRangeFilter },
+      { $match: currentPeriodAssetFilter },
       { $group: { _id: { $cond: { if: { $in: ['$office', [null, '']] }, then: 'Unassigned', else: '$office' } }, count: { $sum: 1 } } },
       { $project: { office: '$_id', count: 1, _id: 0 } },
       { $sort: { count: -1 } }
     ]);
 
     const getAssetStatus = () => Asset.aggregate([
-      { $match: currentPeriodStatsFilter }, // This is a snapshot of all assets up to the end date
+      { $match: currentPeriodAssetFilter }, // Show status of assets acquired in the period
       { $group: { _id: '$status', count: { $sum: 1 } } },
       { $project: { status: '$_id', count: 1, _id: 0 } }
     ]);
 
     const getMonthlyAcquisitions = () => Asset.aggregate([
-      { $match: acquisitionDateRangeFilter },
+      { $match: currentPeriodAssetFilter },
       {
         $group: {
           _id: { year: { $year: '$acquisitionDate' }, month: { $month: '$acquisitionDate' } },
-          totalValue: { $sum: '$acquisitionCost' }
+          count: { $sum: 1 }
         }
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
-      { $project: { _id: 0, month: '$_id', totalValue: 1 } }
+      { $project: { _id: 0, month: '$_id', count: 1 } }
     ]);
 
     // --- Table Data Pipelines ---
-    const getRecentAssets = () => Asset.find(acquisitionDateRangeFilter).sort({ createdAt: -1 }).limit(5).lean();
-    const getRecentRequisitions = () => Requisition.find(requisitionDateRangeFilter).sort({ dateRequested: -1 }).limit(5).lean();
+    const getRecentAssets = () => Asset.find(currentPeriodAssetFilter).sort({ createdAt: -1 }).limit(5).lean();
+    const getRecentRequisitions = () => Requisition.find(currentPeriodRequisitionFilter).sort({ dateRequested: -1 }).limit(5).lean();
 
     // --- Execute All Queries Concurrently ---
     const [
@@ -543,10 +535,10 @@ const getDashboardStats = async (req, res) => {
       recentAssets,
       recentRequisitions
     ] = await Promise.all([
-      getAssetStats(currentPeriodStatsFilter),
-      getAssetStats(previousPeriodStatsFilter),
-      getPendingRequisitions(requisitionDateRangeFilter),
-      getPendingRequisitions(previousRequisitionDateRangeFilter),
+      getAssetStats(currentPeriodAssetFilter),
+      getAssetStats(previousPeriodAssetFilter),
+      getPendingRequisitions(currentPeriodRequisitionFilter),
+      getPendingRequisitions(previousPeriodRequisitionFilter),
       getAssetsByOffice(),
       getAssetStatus(),
       getMonthlyAcquisitions(),
@@ -566,34 +558,19 @@ const getDashboardStats = async (req, res) => {
         disposedAssets: current.disposedAssets || 0,
         pendingRequisitions: currentPendingReqs || 0,
         trends: {
-          totalAssetValue: {
-            percent: calculateTrend(current.totalAssetValue || 0, previous.totalAssetValue || 0),
-            absolute: (current.totalAssetValue || 0) - (previous.totalAssetValue || 0)
-          },
-          totalAssets: {
-            percent: calculateTrend(current.totalAssets || 0, previous.totalAssets || 0),
-            absolute: (current.totalAssets || 0) - (previous.totalAssets || 0)
-          },
-          assetsForRepair: {
-            percent: calculateTrend(current.assetsForRepair || 0, previous.assetsForRepair || 0),
-            absolute: (current.assetsForRepair || 0) - (previous.assetsForRepair || 0)
-          },
-          disposedAssets: {
-            percent: calculateTrend(current.disposedAssets || 0, previous.disposedAssets || 0),
-            absolute: (current.disposedAssets || 0) - (previous.disposedAssets || 0)
-          },
-          pendingRequisitions: {
-            percent: calculateTrend(currentPendingReqs || 0, previousPendingReqs || 0),
-            absolute: (currentPendingReqs || 0) - (previousPendingReqs || 0)
-          },
+          totalAssetValue: calculateTrend(current.totalAssetValue || 0, previous.totalAssetValue || 0),
+          totalAssets: calculateTrend(current.totalAssets || 0, previous.totalAssets || 0),
+          assetsForRepair: calculateTrend(current.assetsForRepair || 0, previous.assetsForRepair || 0),
+          disposedAssets: calculateTrend(current.disposedAssets || 0, previous.disposedAssets || 0),
+          pendingRequisitions: calculateTrend(currentPendingReqs || 0, previousPendingReqs || 0),
         }
       },
       charts: {
         assetsByOffice,
         assetStatus,
         monthlyAcquisitions: monthlyAcquisitions.map(item => ({
-          month: new Date(item.month.year, item.month.month - 1).toLocaleString('en-US', { month: 'short', year: 'numeric' }),
-          totalValue: item.totalValue
+          month: new Date(item.month.year, item.month.month - 1).toLocaleString('default', { month: 'short' }),
+          count: item.count
         }))
       },
       tables: {
