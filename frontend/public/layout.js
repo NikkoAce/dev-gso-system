@@ -46,8 +46,8 @@ function getSidebarHTML(user) {
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-grow p-4">
-      <ul class="menu bg-base-100 rounded-box">${navLinks}${settings}</ul>
+    <nav class="flex-grow">
+      <ul class="menu p-4">${navLinks}${settings}</ul>
     </nav>
 
     <!-- Footer / User Info -->
