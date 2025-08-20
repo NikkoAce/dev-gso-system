@@ -26,7 +26,6 @@ function initializeDashboard() {
         totalAssets: document.getElementById('stat-total-assets'),
         forRepair: document.getElementById('stat-for-repair'),
         disposed: document.getElementById('stat-disposed'),
-        suppliesValue: document.getElementById('stat-supplies-value'),
         pendingReqs: document.getElementById('stat-pending-reqs'),
     };
 
@@ -35,7 +34,6 @@ function initializeDashboard() {
         totalAssets: document.getElementById('stat-total-assets-trend'),
         forRepair: document.getElementById('stat-for-repair-trend'),
         disposed: document.getElementById('stat-disposed-trend'),
-        suppliesValue: document.getElementById('stat-supplies-value-trend'),
         pendingReqs: document.getElementById('stat-pending-reqs-trend'),
     };
 
@@ -80,7 +78,6 @@ function initializeDashboard() {
         statElements.totalAssets.textContent = stats.totalAssets.toLocaleString();
         statElements.forRepair.textContent = stats.assetsForRepair.toLocaleString();
         statElements.disposed.textContent = stats.disposedAssets.toLocaleString();
-        statElements.suppliesValue.textContent = formatCurrency(stats.suppliesValue);
         statElements.pendingReqs.textContent = stats.pendingRequisitions.toLocaleString();
 
         // Update trends
@@ -88,7 +85,6 @@ function initializeDashboard() {
         updateTrend(trendElements.totalAssets, stats.trends.totalAssets);
         updateTrend(trendElements.forRepair, stats.trends.assetsForRepair);
         updateTrend(trendElements.disposed, stats.trends.disposedAssets);
-        updateTrend(trendElements.suppliesValue, stats.trends.suppliesValue);
         updateTrend(trendElements.pendingReqs, stats.trends.pendingRequisitions);
     }
 
