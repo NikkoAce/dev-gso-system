@@ -53,9 +53,7 @@ const getAssets = async (req, res) => {
       query.acquisitionDate = {};
       if (startDate) query.acquisitionDate.$gte = new Date(startDate);
       if (endDate) {
-        const endOfDay = new Date(endDate);
-        endOfDay.setHours(23, 59, 59, 999);
-        query.acquisitionDate.$lte = endOfDay;
+        query.acquisitionDate.$lte = new Date(endDate);
       }
     }
 
@@ -281,9 +279,7 @@ const exportAssetsToCsv = async (req, res) => {
             query.acquisitionDate = {};
             if (startDate) query.acquisitionDate.$gte = new Date(startDate);
             if (endDate) {
-                const endOfDay = new Date(endDate);
-                endOfDay.setHours(23, 59, 59, 999);
-                query.acquisitionDate.$lte = endOfDay;
+                query.acquisitionDate.$lte = new Date(endDate);
             }
         }
 
