@@ -503,7 +503,7 @@ const getDashboardStats = async (req, res) => {
     // --- Chart Data Pipelines ---
     // These should reflect activity *within* the selected date range.
     const getAssetsByOffice = () => Asset.aggregate([
-      { $match: acquisitionDateFilter },
+      { $match: acquisitionDateRangeFilter },
       { $group: { _id: { $cond: { if: { $in: ['$office', [null, '']] }, then: 'Unassigned', else: '$office' } }, count: { $sum: 1 } } },
       { $project: { office: '$_id', count: 1, _id: 0 } },
       { $sort: { count: -1 } }
