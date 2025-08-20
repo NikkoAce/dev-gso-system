@@ -1,5 +1,6 @@
 // FILE: frontend/public/physical-count.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -17,6 +18,7 @@ function initializePhysicalCountPage(currentUser) {
     let allAssets = [];
     let currentPage = 1;
     const itemsPerPage = 20;
+    const { populateFilters } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('search-input');
@@ -33,22 +35,12 @@ function initializePhysicalCountPage(currentUser) {
             ]);
 
             allAssets = fetchedAssets;
-            populateOfficeFilter(offices);
+            populateFilters({ offices }, { officeFilter });
             renderTable();
         } catch (error)
         {
             console.error('Failed to initialize page:', error);
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
-        }
-    }
-
-    function populateOfficeFilter(offices) {
-        offices.forEach(office => {
-            const option = document.createElement('option');
-            option.value = office.name;
-            option.textContent = office.name;
-            officeFilter.appendChild(option);
-        });
     }
 
     function renderTable() {

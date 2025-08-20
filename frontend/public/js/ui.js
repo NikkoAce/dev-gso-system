@@ -1,6 +1,22 @@
 // FILE: frontend/public/js/ui.js
 
 /**
+ * A reusable helper to populate a <select> element.
+ * @param {HTMLSelectElement} selectElement - The dropdown element to populate.
+ * @param {Array<object>} items - The array of items to add as options.
+ * @param {string} placeholder - The text for the default, disabled option.
+ */
+function populateSelect(selectElement, items, placeholder) {
+    if (!selectElement) return;
+    selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.name; // Assuming 'name' is the value for the option
+        option.textContent = item.name;
+        selectElement.appendChild(option);
+    });
+}
+/**
  * Creates a UI manager with shared components like toast notifications.
  * @returns {{showToast: function}}
  */
@@ -40,5 +56,19 @@ export function createUIManager() {
         setTimeout(() => toast.classList.add('opacity-0'), 2700);
     }
 
-    return { showToast };
+    /**
+     * Populates various filter dropdowns from a data object.
+     * @param {object} data - An object containing arrays of data, e.g., { categories: [], offices: [] }.
+     * @param {object} domElements - An object mapping filter types to their DOM elements.
+     */
+    function populateFilters(data, domElements) {
+        if (domElements.categoryFilter && data.categories) {
+            populateSelect(domElements.categoryFilter, data.categories, 'All Categories');
+        }
+        if (domElements.officeFilter && data.offices) {
+            populateSelect(domElements.officeFilter, data.offices, 'All Offices');
+        }
+    }
+
+    return { showToast, populateFilters };
 }

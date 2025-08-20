@@ -1,5 +1,6 @@
 // FILE: frontend/public/reports.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initializeReportsPage(currentUser) {
     let allAssets = [];
+    const { populateFilters } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const fundSourceFilter = document.getElementById('fund-source-filter');
@@ -41,23 +43,11 @@ function initializeReportsPage(currentUser) {
             ]);
             
             allAssets = fetchedAssets;
-            
-            populateCategoryFilter(categories);
+            populateFilters({ categories }, { categoryFilter });
             asAtDateInput.value = new Date().toISOString().split('T')[0]; // Set default date to today
         } catch (error) {
             console.error('Failed to initialize page:', error);
             alert('Could not load data for reports.');
-        }
-    }
-    
-    function populateCategoryFilter(categories) {
-        if (!categoryFilter) return;
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.name;
-            option.textContent = category.name;
-            categoryFilter.appendChild(option);
-        });
     }
 
     function setReportLoading(isLoading, message = 'Loading...') {
