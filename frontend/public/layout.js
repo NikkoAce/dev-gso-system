@@ -7,14 +7,19 @@ const GSO_NAV = `
   <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
   <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i> Physical Count</a></li>
   <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i> Scanner</a></li>
+  <li><a href="reports.html" class="nav-link"><i data-lucide="file-text"></i> Reports</a></li>
 `;
 
 const GSO_SETTINGS = `
-  <li class="menu-title">Settings & Tools</li>
-  <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
-  <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
-  <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
-  <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
+  <li>
+    <h2 class="menu-title">Settings & Tools</h2>
+    <ul>
+      <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
+      <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
+      <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
+      <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
+    </ul>
+  </li>
 `;
 
 const VIEW_ONLY_NAV = `
