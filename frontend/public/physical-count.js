@@ -42,6 +42,7 @@ function initializePhysicalCountPage(currentUser) {
         {
             console.error('Failed to initialize page:', error);
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
+        }
     }
 
     function renderTable() {
@@ -67,7 +68,12 @@ function initializePhysicalCountPage(currentUser) {
         tableBody.innerHTML = '';
         if (paginatedAssets.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
-            renderPagination(0, 0);
+            renderPagination(paginationControls, {
+                currentPage: 1,
+                totalPages: 0,
+                totalDocs: 0,
+                itemsPerPage
+            });
             return;
         }
 
