@@ -88,9 +88,9 @@ function initializeAssetForm(currentUser) {
             const div = document.createElement('div');
             div.className = 'spec-row flex items-center gap-2';
             div.innerHTML = `
-                <input type="text" placeholder="Specification Name (e.g., Color)" value="${key}" class="spec-key w-1/3 border-gray-300 rounded-md shadow-sm text-sm p-2">
-                <input type="text" placeholder="Value (e.g., Blue)" value="${value}" class="spec-value flex-grow border-gray-300 rounded-md shadow-sm text-sm p-2">
-                <button type="button" class="remove-spec-btn text-red-500 hover:text-red-700"><i data-lucide="x-circle" class="h-5 w-5"></i></button>
+                <input type="text" placeholder="Specification Name (e.g., Color)" value="${key}" class="spec-key input input-bordered input-sm w-1/3">
+                <input type="text" placeholder="Value (e.g., Blue)" value="${value}" class="spec-value input input-bordered input-sm flex-grow">
+                <button type="button" class="remove-spec-btn btn btn-ghost btn-sm btn-square"><i data-lucide="x" class="h-4 w-4"></i></button>
             `;
             DOM.specsContainer.appendChild(div);
             lucide.createIcons();

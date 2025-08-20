@@ -43,86 +43,85 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div id="add-asset" class="page active">
                       <h1 id="form-title" class="text-3xl font-bold text-gray-800 mb-6">Add New Asset</h1>
-                    <div class="bg-white p-8 rounded-lg border max-w-4xl mx-auto">
-                        <form id="asset-form" class="space-y-6">
+                    <div class="card bg-base-100 border max-w-4xl mx-auto">
+                        <form id="asset-form" class="card-body gap-4">
                             <input type="hidden" id="assetId" name="assetId">
                             
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="md:col-span-2">
-                                    <label for="propertyNumber" id="propertyNumberLabel" class="block text-sm font-medium text-gray-700">Property Number *</label>
-                                    <input type="text" name="propertyNumber" id="propertyNumber" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <div class="md:col-span-2 form-control">
+                                    <label for="propertyNumber" id="propertyNumberLabel" class="label"><span class="label-text">Property Number *</span></label>
+                                    <input type="text" name="propertyNumber" id="propertyNumber" class="input input-bordered w-full" required>
                                 </div>
-                                <div>
-                                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity *</label>
-                                    <input type="number" name="quantity" id="quantity" value="1" min="1" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <div class="form-control">
+                                    <label for="quantity" class="label"><span class="label-text">Quantity *</span></label>
+                                    <input type="number" name="quantity" id="quantity" value="1" min="1" class="input input-bordered w-full" required>
                                 </div>
                             </div>
 
-                            <div>
-                                <label for="description" class="block text-sm font-medium text-gray-700">Asset Description *</label>
-                                <input type="text" name="description" id="description" placeholder="e.g., Laptop, Vehicle, Office Chair" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            <div class="form-control">
+                                <label for="description" class="label"><span class="label-text">Asset Description *</span></label>
+                                <input type="text" name="description" id="description" placeholder="e.g., Laptop, Vehicle, Office Chair" class="input input-bordered w-full" required>
                             </div>
                             
-                            <div class="border-t pt-6">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h3 class="text-lg font-medium text-gray-800">Specifications</h3>
-                                    <button type="button" id="add-spec-btn" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 flex items-center gap-1">
-                                        <i data-lucide="plus" class="h-4 w-4"></i> Add
-                                    </button>
-                                </div>
-                                <div id="specifications-container" class="space-y-3">
-                                    <!-- JS will populate this -->
-                                </div>
+                            <div class="divider">Specifications</div>
+                            <div class="flex justify-end -mt-4 -mb-2">
+                                <button type="button" id="add-spec-btn" class="btn btn-sm btn-ghost">
+                                    <i data-lucide="plus" class="h-4 w-4"></i> Add
+                                </button>
+                            </div>
+                            <div id="specifications-container" class="space-y-3">
+                                <!-- JS will populate this -->
                             </div>
 
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
-                                <div>
-                                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                                    <select id="category" name="category" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <div class="divider">Details</div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-control">
+                                    <label for="category" class="label"><span class="label-text">Category</span></label>
+                                    <select id="category" name="category" class="select select-bordered w-full">
                                         <!-- Options will be populated by JS -->
                                     </select>
                                 </div>
-                                <div>
-                                    <label for="acquisitionDate" class="block text-sm font-medium text-gray-700">Acquisition Date</label>
-                                    <input type="date" name="acquisitionDate" id="acquisitionDate" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <div class="form-control">
+                                    <label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label>
+                                    <input type="date" name="acquisitionDate" id="acquisitionDate" class="input input-bordered w-full">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label for="acquisitionCost" class="block text-sm font-medium text-gray-700">Acquisition Cost (PHP) *</label>
-                                    <input type="number" step="0.01" name="acquisitionCost" id="acquisitionCost" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <div class="form-control">
+                                    <label for="acquisitionCost" class="label"><span class="label-text">Acquisition Cost (PHP) *</span></label>
+                                    <input type="number" step="0.01" name="acquisitionCost" id="acquisitionCost" class="input input-bordered w-full" required>
                                 </div>
-                                <div>
-                                    <label for="usefulLife" class="block text-sm font-medium text-gray-700">Useful Life (Years) *</label>
-                                    <input type="number" name="usefulLife" id="usefulLife" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <div class="form-control">
+                                    <label for="usefulLife" class="label"><span class="label-text">Useful Life (Years) *</span></label>
+                                    <input type="number" name="usefulLife" id="usefulLife" class="input input-bordered w-full" required>
                                 </div>
-                                <div>
-                                    <label for="salvageValue" class="block text-sm font-medium text-gray-700">Salvage Value (PHP)</label>
-                                    <input type="number" step="0.01" name="salvageValue" id="salvageValue" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <div class="form-control">
+                                    <label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label>
+                                    <input type="number" step="0.01" name="salvageValue" id="salvageValue" class="input input-bordered w-full">
                                 </div>
                             </div>
                             
-                            <div class="border-t pt-6 space-y-4">
-                                <h3 class="text-lg font-medium text-gray-800">Assignment</h3>
+                            <div class="divider">Assignment</div>
+                            <div class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                     <div>
-                                        <label for="fundSource" class="block text-sm font-medium text-gray-700">Fund Source *</label>
-                                        <select id="fundSource" name="fundSource" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm" required>
+                                     <div class="form-control">
+                                        <label for="fundSource" class="label"><span class="label-text">Fund Source *</span></label>
+                                        <select id="fundSource" name="fundSource" class="select select-bordered w-full" required>
                                             <option value="">Select a Fund Source...</option>
                                             <option>General Fund</option>
                                             <option>Special Education Fund</option>
                                             <option>Trust Fund</option>
                                         </select>
                                     </div>
-                                     <div>
-                                        <label for="office" class="block text-sm font-medium text-gray-700">Office *</label>
-                                        <select id="office" name="office" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                     <div class="form-control">
+                                        <label for="office" class="label"><span class="label-text">Office *</span></label>
+                                        <select id="office" name="office" class="select select-bordered w-full" required>
                                             <!-- Options will be populated by JS -->
                                         </select>
                                     </div>
-                                    <div>
-                                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                                        <select id="status" name="status" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <div class="form-control">
+                                        <label for="status" class="label"><span class="label-text">Status</span></label>
+                                        <select id="status" name="status" class="select select-bordered w-full">
                                             <option>In Use</option>
                                             <option>In Storage</option>
                                             <option>For Repair</option>
@@ -131,24 +130,24 @@
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     <div>
-                                        <label for="custodian-name" class="block text-sm font-medium text-gray-700">Custodian *</label>
-                                        <select id="custodian-name" name="custodian-name" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm" required>
+                                     <div class="form-control">
+                                        <label for="custodian-name" class="label"><span class="label-text">Custodian *</span></label>
+                                        <select id="custodian-name" name="custodian-name" class="select select-bordered w-full" required>
                                             <!-- JS will populate this -->
                                         </select>
                                     </div>
-                                     <div>
-                                        <label for="custodian-office" class="block text-sm font-medium text-gray-700">Custodian Office *</label>
-                                        <select id="custodian-office" name="custodian-office" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm" required>
+                                     <div class="form-control">
+                                        <label for="custodian-office" class="label"><span class="label-text">Custodian Office *</span></label>
+                                        <select id="custodian-office" name="custodian-office" class="select select-bordered w-full" required>
                                             <!-- Options will be populated by JS -->
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex justify-end pt-4">
-                                <button type="button" id="cancel-asset-form" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg mr-4 hover:bg-gray-300">Cancel</button>
-                                <button type="submit" id="submit-asset-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Save Asset</button>
+                            <div class="card-actions justify-end pt-4">
+                                <button type="button" id="cancel-asset-form" class="btn btn-ghost">Cancel</button>
+                                <button type="submit" id="submit-asset-btn" class="btn btn-primary">Save Asset</button>
                             </div>
                         </form>
                     </div>
