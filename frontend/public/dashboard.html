@@ -53,36 +53,76 @@
                             <i data-lucide="plus" class="h-5 w-5"></i> Add Asset
                         </a>
                     </div>
-                    <!-- Stat Cards -->
-                    <div id="stats-container" class="stats shadow w-full">
-                        <div class="stat">
+                    <!-- Stat Cards Grid -->
+                    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Total Asset Value -->
+                        <div class="stat card bg-base-100 border">
                             <div class="stat-figure text-primary">
                                 <i data-lucide="coins" class="h-8 w-8"></i>
                             </div>
                             <div class="stat-title">Total Asset Value</div>
                             <div id="stat-total-value" class="stat-value">Loading...</div>
                         </div>
-                        
-                        <div class="stat">
+                        <!-- Total Assets -->
+                        <div class="stat card bg-base-100 border">
                             <div class="stat-figure text-secondary">
                                 <i data-lucide="archive" class="h-8 w-8"></i>
                             </div>
                             <div class="stat-title">Total Assets</div>
                             <div id="stat-total-assets" class="stat-value">Loading...</div>
                         </div>
-                        
-                        <div class="stat">
+                        <!-- Assets for Repair -->
+                        <div class="stat card bg-base-100 border">
                             <div class="stat-figure text-accent">
                                 <i data-lucide="wrench" class="h-8 w-8"></i>
                             </div>
                             <div class="stat-title">Assets for Repair</div>
                             <div id="stat-for-repair" class="stat-value">Loading...</div>
                         </div>
+                        <!-- Disposed Assets -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-error">
+                                <i data-lucide="trash-2" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Disposed Assets</div>
+                            <div id="stat-disposed" class="stat-value">Loading...</div>
+                        </div>
+                        <!-- Supplies Inventory Value -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-info">
+                                <i data-lucide="dollar-sign" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Supplies Inventory Value</div>
+                            <div id="stat-supplies-value" class="stat-value">Loading...</div>
+                        </div>
+                        <!-- Pending Requisitions -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-warning">
+                                <i data-lucide="clipboard-list" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Pending Requisitions</div>
+                            <div id="stat-pending-reqs" class="stat-value">Loading...</div>
+                        </div>
+                    </div>
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Assets by Category</h2>
+                                <canvas id="assetsByCategoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Asset Status Distribution</h2>
+                                <canvas id="assetStatusChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                     <div class="card bg-base-100 border">
                         <div class="card-body">
-                            <h2 class="card-title">Assets by Category</h2>
-                            <canvas id="assetsByCategoryChart"></canvas>
+                            <h2 class="card-title">Monthly Asset Acquisitions (Last 12 Months)</h2>
+                            <canvas id="monthlyAcquisitionChart"></canvas>
                         </div>
                     </div>
                 </div>
