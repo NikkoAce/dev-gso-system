@@ -148,5 +148,75 @@ export function createUIManager() {
         // No 'else' case needed, as the container will be overwritten with data.
     }
 
-    return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination };
+    /**
+     * Renders the main asset table.
+     * @param {Array<object>} assets - The array of asset objects for the current page.
+     * @param {object} domElements - The DOM elements to update { tableBody }.
+     */
+    function renderAssetTable(assets, domElements) {
+        const { tableBody } = domElements;
+        tableBody.innerHTML = '';
+
+        if (assets.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-base-content/70">No assets found for the selected criteria.</td></tr>`;
+            return;
+        }
+
+        const statusMap = {
+            'In Use': 'badge-success',
+            'In Storage': 'badge-info',
+            'For Repair': 'badge-warning',
+            'Disposed': 'badge-error'
+        };
+        const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
+
+        assets.forEach(asset => {
+            const tr = document.createElement('tr');
+            const isAssigned = asset.assignedPAR || asset.assignedICS;
+            const assignedTo = isAssigned ? (asset.assignedPAR || asset.assignedICS) : '';
+            const assignedIndicator = isAssigned ? `<span class="text-xs text-blue-600 block font-normal">Assigned: ${assignedTo}</span>` : '';
+            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm">${asset.status}</span>`;
+
+            tr.innerHTML = `
+                <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isAssigned ? 'disabled' : ''}></td>
+                <td><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
+                <td>${asset.description}</td>
+                <td>${asset.category}</td>
+                <td>
+                    <div>${asset.custodian.name}</div>
+                    <div class="text-xs opacity-70">${asset.custodian.office}</div>
+                </td>
+                <td>${statusBadge}</td>
+                <td>${formatDate(asset.createdAt)}</td>
+                <td class="text-center non-printable">
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><button class="edit-btn" data-id="${asset._id}"><i data-lucide="edit"></i> Edit</button></li>
+                            <li><button class="property-card-btn" data-id="${asset._id}"><i data-lucide="book-user"></i> Property Card</button></li>
+                            <li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i> Transfer</button></li>
+                            <div class="divider my-1"></div>
+                            <li><button class="delete-btn text-red-500" data-id="${asset._id}"><i data-lucide="trash-2"></i> Delete</button></li>
+                        </ul>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    /**
+     * Shows or hides the action buttons based on selection.
+     * @param {Array<string>} selectedIds - Array of selected asset IDs.
+     * @param {object} domElements - The DOM elements for the buttons.
+     */
+    function updateSlipButtonVisibility(selectedIds, domElements) {
+        const { generateParBtn, generateIcsBtn, transferSelectedBtn } = domElements;
+        const hasSelection = selectedIds.length > 0;
+        generateParBtn.classList.toggle('hidden', !hasSelection);
+        generateIcsBtn.classList.toggle('hidden', !hasSelection);
+        transferSelectedBtn.classList.toggle('hidden', !hasSelection);
+    }
+
+    return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination, renderAssetTable, updateSlipButtonVisibility };
 }

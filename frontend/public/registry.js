@@ -67,7 +67,7 @@ function initializeRegistryPage(currentUser) {
     // --- MODULE: MODAL LOGIC ---
     function openTransferModal(assetIds) {
         if (assetIds.length === 0) {
-            alert('Please select at least one asset to transfer.');
+            uiManager.showToast('Please select at least one asset to transfer.', 'warning');
             return;
         }
         state.assetsToTransfer = state.currentPageAssets.filter(asset => assetIds.includes(asset._id));
@@ -75,7 +75,7 @@ function initializeRegistryPage(currentUser) {
             // This can happen if an asset is on another page. A more robust solution
             // would be to fetch asset details if not present in currentPageAssets.
             // For now, we'll keep it simple.
-            alert('Some selected assets could not be found. Please refresh and try again.');
+            uiManager.showToast('Some selected assets could not be found. Please refresh and try again.', 'error');
             return;
         }
 
@@ -116,7 +116,7 @@ function initializeRegistryPage(currentUser) {
     const slipManager = {
         prepareForSlipGeneration(slipType) {
             if (state.selectedAssetIds.length === 0) {
-                alert(`Please select at least one asset to generate a ${slipType}.`);
+                uiManager.showToast(`Please select at least one asset to generate a ${slipType}.`, 'warning');
                 return;
             }
             const selectedAssets = state.currentPageAssets.filter(asset => state.selectedAssetIds.includes(asset._id));
@@ -125,12 +125,12 @@ function initializeRegistryPage(currentUser) {
             const alreadyAssignedAssets = selectedAssets.filter(asset => asset.assignedPAR || asset.assignedICS);
             if (alreadyAssignedAssets.length > 0) {
                 const assignedNumbers = alreadyAssignedAssets.map(a => a.propertyNumber).join(', ');
-                alert(`Error: The following assets are already assigned to a slip and cannot be added to a new one:\n${assignedNumbers}`);
+                uiManager.showToast(`Error: The following assets are already assigned to a slip and cannot be added to a new one: ${assignedNumbers}`, 'error');
                 return;
             }
             const firstCustodian = selectedAssets[0].custodian.name;
             if (!selectedAssets.every(asset => asset.custodian.name === firstCustodian)) {
-                alert(`Error: All selected assets must belong to the same custodian to be on one ${slipType}.`);
+                uiManager.showToast(`Error: All selected assets must belong to the same custodian to be on one ${slipType}.`, 'error');
                 return;
             }
             localStorage.setItem(`assetsFor${slipType}`, JSON.stringify(selectedAssets));
@@ -219,15 +219,19 @@ function initializeRegistryPage(currentUser) {
             }
             const deleteButton = e.target.closest('.delete-btn');
             if (deleteButton) {
-                if (confirm('Are you sure you want to delete this asset?')) {
-                    try {
-                        await fetchWithAuth(`assets/${deleteButton.dataset.id}`, { method: 'DELETE' });
-                        alert('Asset deleted successfully.');
-                        await loadAssets(); // Just reload the current view
-                    } catch (err) {
-                        alert(err.message);
+                uiManager.showConfirmationModal(
+                    'Delete Asset',
+                    'Are you sure you want to permanently delete this asset?',
+                    async () => {
+                        try {
+                            await fetchWithAuth(`assets/${deleteButton.dataset.id}`, { method: 'DELETE' });
+                            uiManager.showToast('Asset deleted successfully.', 'success');
+                            await loadAssets(); // Just reload the current view
+                        } catch (err) {
+                            uiManager.showToast(err.message, 'error');
+                        }
                     }
-                }
+                );
             }
         },
 
@@ -300,12 +304,12 @@ function initializeRegistryPage(currentUser) {
                         method: 'PUT',
                         body: JSON.stringify(payload)
                     });
-                    alert('Asset transferred successfully!');
+                    uiManager.showToast('Asset transferred successfully!', 'success');
                     DOM.transferModal.close();
                     await loadAssets(); // Refresh current view
                 }
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                uiManager.showToast(`Error: ${error.message}`, 'error');
             } finally {
                 DOM.confirmTransferBtn.disabled = false;
                 DOM.confirmTransferBtn.textContent = 'Confirm Transfer';
@@ -350,7 +354,7 @@ function initializeRegistryPage(currentUser) {
 
     // --- DATA ORCHESTRATOR ---
     async function loadAssets() {
-        uiManager.setLoading(true, DOM.tableBody, 8);
+        uiManager.setLoading(true, DOM.tableBody, { colSpan: 8 });
         DOM.selectAllCheckbox.checked = false;
         state.selectedAssetIds = [];
         try {
@@ -390,18 +394,12 @@ function initializeRegistryPage(currentUser) {
 
             state.currentPageAssets = assets;
             state.totalAssets = totalDocs;
-            uiManager.renderAssetTable(
-                assets,
-                {
-                    totalDocs,
-                    totalPages,
-                    currentPage: state.currentPage,
-                    assetsPerPage: state.assetsPerPage
-                },
-                {
-                    tableBody: DOM.tableBody,
-                    paginationControls: DOM.paginationControls
-                });
+            const paginationInfo = { totalDocs, totalPages, currentPage: state.currentPage, assetsPerPage: state.assetsPerPage };
+            const domElements = { tableBody: DOM.tableBody, paginationControls: DOM.paginationControls };
+
+            uiManager.renderAssetTable(assets, domElements);
+            uiManager.renderPagination(DOM.paginationControls, paginationInfo);
+            uiManager.updateSlipButtonVisibility(state.selectedAssetIds, DOM);
 
             // --- FIX: Manage sort indicators correctly ---
             // This ensures only one sort arrow is visible and on the correct column.
