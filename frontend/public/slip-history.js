@@ -75,19 +75,19 @@ function initializeSlipHistoryPage(currentUser) {
                 `;
             }
             
-            const typeBadgeClass = slip.slipType === 'PAR' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
+            const typeBadgeClass = slip.slipType === 'PAR' ? 'badge-success' : 'badge-info';
 
             rowsHTML += `
-                <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900">${slip.number}</td>
-                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-semibold rounded-full ${typeBadgeClass}">${slip.slipType}</span></td>
-                    <td class="px-6 py-4">${custodianDisplay}</td>
-                    <td class="px-6 py-4">${slip.assets.length}</td>
-                    <td class="px-6 py-4">${formatDate(slip.issuedDate)}</td>
-                    <td class="px-6 py-4 text-center non-printable">
-                        <div class="flex justify-center items-center space-x-3">
-                            <button class="view-slip-btn text-blue-600 hover:text-blue-800" data-id="${slip._id}" title="View Details"><i data-lucide="eye" class="h-5 w-5"></i></button>
-                            <button class="reprint-btn text-gray-600 hover:text-gray-800" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-5 w-5"></i></button>
+                <tr>
+                    <td class="font-medium">${slip.number}</td>
+                    <td><span class="badge ${typeBadgeClass} badge-sm">${slip.slipType}</span></td>
+                    <td>${custodianDisplay}</td>
+                    <td>${slip.assets.length}</td>
+                    <td>${formatDate(slip.issuedDate)}</td>
+                    <td class="text-center non-printable">
+                        <div class="flex justify-center items-center gap-1">
+                            <button class="view-slip-btn btn btn-ghost btn-xs" data-id="${slip._id}" title="View Details"><i data-lucide="eye" class="h-4 w-4"></i></button>
+                            <button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -106,14 +106,14 @@ function initializeSlipHistoryPage(currentUser) {
         const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
         paginationControls.innerHTML = `
-            <span class="text-sm text-gray-700">
+            <span class="text-sm text-base-content/70">
                 Showing <span class="font-semibold">${startItem}</span>
                 to <span class="font-semibold">${endItem}</span>
                 of <span class="font-semibold">${totalItems}</span> Results
             </span>
-            <div class="inline-flex mt-2 xs:mt-0">
-                ${currentPage > 1 ? `<button id="prev-page-btn" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900">Prev</button>` : ''}
-                ${currentPage < totalPages ? `<button id="next-page-btn" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 border-0 border-l border-gray-700 rounded-r hover:bg-gray-900">Next</button>` : ''}
+            <div class="btn-group">
+                ${currentPage > 1 ? `<button id="prev-page-btn" class="btn btn-sm">Prev</button>` : ''}
+                ${currentPage < totalPages ? `<button id="next-page-btn" class="btn btn-sm">Next</button>` : ''}
             </div>
         `;
     }
@@ -138,10 +138,10 @@ function initializeSlipHistoryPage(currentUser) {
                 desc += ` (${specs})`;
             }
             const row = `
-                <tr class="border-b">
-                    <td class="p-4">${asset.propertyNumber}</td>
-                    <td class="p-4">${desc}</td>
-                    <td class="p-4 text-right">${formatCurrency(asset.acquisitionCost)}</td>
+                <tr>
+                    <td>${asset.propertyNumber}</td>
+                    <td>${desc}</td>
+                    <td class="text-right">${formatCurrency(asset.acquisitionCost)}</td>
                 </tr>
             `;
             assetsTableBody.innerHTML += row;
