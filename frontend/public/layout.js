@@ -77,7 +77,7 @@ function getSidebarHTML(user) {
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-grow">
+    <nav class="flex-grow overflow-y-auto">
       <ul class="menu menu-lg p-4">${navLinks}</ul>
     </nav>
 
