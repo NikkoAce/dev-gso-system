@@ -26,6 +26,12 @@ function initializeEmployeesPage(currentUser) {
     const submitBtn = document.getElementById('submit-employee-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
 
+    // Modal DOM elements
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const modalTitle = document.getElementById('modal-title-text');
+    const modalBody = document.getElementById('modal-body-text');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+
     // --- DATA FETCHING & RENDERING ---
     async function fetchAndRenderEmployees() {
         try {
@@ -46,13 +52,19 @@ function initializeEmployeesPage(currentUser) {
         }
         allEmployees.forEach(employee => {
             const tr = document.createElement('tr');
+            const isDeletable = employee.assetCount === 0;
+            const deleteButtonHTML = isDeletable
+                ? `<button class="delete-employee-btn btn btn-ghost btn-xs text-red-500" data-id="${employee._id}" title="Delete Employee"><i data-lucide="trash-2" class="h-4 w-4"></i></button>`
+                : `<div class="tooltip" data-tip="Cannot delete: Employee is a custodian for ${employee.assetCount} asset(s).">
+                       <button class="btn btn-ghost btn-xs" disabled><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                   </div>`;
             tr.innerHTML = `
                 <td>${employee.name}</td>
                 <td>${employee.designation}</td>
                 <td class="text-center">
                     <div class="flex justify-center items-center gap-1">
                         <button class="edit-employee-btn btn btn-ghost btn-xs" data-id="${employee._id}" title="Edit Employee"><i data-lucide="edit" class="h-4 w-4"></i></button>
-                        <button class="delete-employee-btn btn btn-ghost btn-xs text-red-500" data-id="${employee._id}" title="Delete Employee"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                        ${deleteButtonHTML}
                     </div>
                 </td>
             `;
@@ -121,19 +133,37 @@ function initializeEmployeesPage(currentUser) {
         const deleteButton = e.target.closest('.delete-employee-btn');
         if (deleteButton) {
             const employeeId = deleteButton.dataset.id;
-            if (confirm('Are you sure you want to delete this employee?')) {
-                deleteButton.disabled = true;
-                try {
-                    await fetchWithAuth(`${API_ENDPOINT}/${employeeId}`, { method: 'DELETE' });
-                    fetchAndRenderEmployees();
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                } finally {
-                    deleteButton.disabled = false;
+            const employee = allEmployees.find(emp => emp._id === employeeId);
+            showConfirmationModal(
+                `Delete Employee: ${employee.name}`,
+                `Are you sure you want to permanently delete this employee? This action cannot be undone.`,
+                async () => {
+                    deleteButton.disabled = true;
+                    try {
+                        await fetchWithAuth(`${API_ENDPOINT}/${employeeId}`, { method: 'DELETE' });
+                        fetchAndRenderEmployees();
+                    } catch (error) {
+                        alert(`Error: ${error.message}`);
+                    }
                 }
-            }
+            );
         }
     });
+
+    function showConfirmationModal(title, body, onConfirm) {
+        modalTitle.textContent = title;
+        modalBody.textContent = body;
+        
+        const newConfirmBtn = modalConfirmBtn.cloneNode(true);
+        modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, modalConfirmBtn);
+        newConfirmBtn.addEventListener('click', () => {
+            onConfirm();
+            confirmationModal.close();
+        }, { once: true });
+
+        confirmationModal.showModal();
+        document.getElementById('modal-cancel-btn').onclick = () => confirmationModal.close();
+    }
 
     cancelBtn.addEventListener('click', resetForm);
 

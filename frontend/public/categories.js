@@ -29,6 +29,12 @@ function initializeCategoriesPage(currentUser) {
     const submitBtn = document.getElementById('submit-category-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
 
+    // Modal DOM elements
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const modalTitle = document.getElementById('modal-title-text');
+    const modalBody = document.getElementById('modal-body-text');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+
     // --- DATA FETCHING & RENDERING ---
     async function fetchAndRenderCategories() {
         try {
@@ -48,6 +54,12 @@ function initializeCategoriesPage(currentUser) {
         }
         allCategories.forEach(category => {
             const tr = document.createElement('tr');
+            const isDeletable = category.assetCount === 0;
+            const deleteButtonHTML = isDeletable
+                ? `<button class="delete-category-btn btn btn-ghost btn-xs text-red-500" data-id="${category._id}" title="Delete Category"><i data-lucide="trash-2" class="h-4 w-4"></i></button>`
+                : `<div class="tooltip" data-tip="Cannot delete: Category is in use by ${category.assetCount} asset(s).">
+                       <button class="btn btn-ghost btn-xs" disabled><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                   </div>`;
             tr.innerHTML = `
                 <td>${category.name}</td>
                 <td>${category.accountGroup || 'N/A'}</td>
@@ -57,7 +69,7 @@ function initializeCategoriesPage(currentUser) {
                 <td class="text-center">
                     <div class="flex justify-center items-center gap-1">
                         <button class="edit-category-btn btn btn-ghost btn-xs" data-id="${category._id}" title="Edit Category"><i data-lucide="edit" class="h-4 w-4"></i></button>
-                        <button class="delete-category-btn btn btn-ghost btn-xs text-red-500" data-id="${category._id}" title="Delete Category"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                        ${deleteButtonHTML}
                     </div>
                 </td>
             `;
@@ -139,19 +151,39 @@ function initializeCategoriesPage(currentUser) {
         const deleteButton = e.target.closest('.delete-category-btn');
         if (deleteButton) {
             const categoryId = deleteButton.dataset.id;
-            if (confirm('Are you sure you want to delete this category?')) {
-                deleteButton.disabled = true;
-                try {
-                    await fetchWithAuth(`${API_ENDPOINT}/${categoryId}`, { method: 'DELETE' });
-                    fetchAndRenderCategories(); // Refresh list
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                } finally {
-                    deleteButton.disabled = false;
+            const category = allCategories.find(cat => cat._id === categoryId);
+            showConfirmationModal(
+                `Delete Category: ${category.name}`,
+                `Are you sure you want to permanently delete this category? This action cannot be undone.`,
+                async () => {
+                    deleteButton.disabled = true;
+                    try {
+                        await fetchWithAuth(`${API_ENDPOINT}/${categoryId}`, { method: 'DELETE' });
+                        fetchAndRenderCategories(); // Refresh list
+                    } catch (error) {
+                        alert(`Error: ${error.message}`);
+                    } finally {
+                        // The button will be gone on re-render, so no need to re-enable.
+                    }
                 }
-            }
+            );
         }
     });
+
+    function showConfirmationModal(title, body, onConfirm) {
+        modalTitle.textContent = title;
+        modalBody.textContent = body;
+        
+        const newConfirmBtn = modalConfirmBtn.cloneNode(true);
+        modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, modalConfirmBtn);
+        newConfirmBtn.addEventListener('click', () => {
+            onConfirm();
+            confirmationModal.close();
+        }, { once: true });
+
+        confirmationModal.showModal();
+        document.getElementById('modal-cancel-btn').onclick = () => confirmationModal.close();
+    }
 
     cancelBtn.addEventListener('click', resetForm);
 

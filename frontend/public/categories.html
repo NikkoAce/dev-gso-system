@@ -104,6 +104,17 @@
             </main>
         </div>
     </div>
+    <!-- Reusable Confirmation Modal -->
+    <dialog id="confirmation-modal" class="modal">
+        <div class="modal-box">
+            <h3 id="modal-title-text" class="font-bold text-lg">Are you sure?</h3>
+            <p id="modal-body-text" class="py-4">This action cannot be undone.</p>
+            <div class="modal-action">
+                <button id="modal-cancel-btn" class="btn">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-error">Confirm</button>
+            </div>
+        </div>
+    </dialog>
     <script src="security.js"></script>
     <script src="layout.js"></script>
      <script type="module" src="categories.js"></script>

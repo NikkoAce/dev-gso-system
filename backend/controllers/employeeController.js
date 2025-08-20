@@ -1,8 +1,27 @@
 const Employee = require('../models/Employee');
+const Asset = require('../models/Asset');
 
 const getEmployees = async (req, res) => {
     try {
-        const employees = await Employee.find({}).sort({ name: 1 });
+        const employees = await Employee.aggregate([
+            {
+                $lookup: {
+                    from: 'assets',
+                    localField: 'name',
+                    foreignField: 'custodian.name',
+                    as: 'assets'
+                }
+            },
+            {
+                $addFields: {
+                    assetCount: { $size: '$assets' }
+                }
+            },
+            {
+                $project: { assets: 0 }
+            },
+            { $sort: { name: 1 } }
+        ]);
         res.json(employees);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
@@ -39,6 +58,13 @@ const updateEmployee = async (req, res) => {
 const deleteEmployee = async (req, res) => {
     try {
         const employee = await Employee.findById(req.params.id);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        const assetCount = await Asset.countDocuments({ 'custodian.name': employee.name });
+        if (assetCount > 0) {
+            return res.status(400).json({ message: `Cannot delete employee "${employee.name}" because they are assigned as a custodian to ${assetCount} asset(s).` });
+        }
         if (employee) {
             await employee.deleteOne();
             res.json({ message: 'Employee removed' });
