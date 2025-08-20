@@ -93,7 +93,7 @@ function initializeLayout(user) {
     const navLinks = sidebarContainer.querySelectorAll(".nav-link");
     navLinks.forEach((link) => {
       if (link.getAttribute("href") === currentPage) {
-        link.classList.add("active");
+        link.classList.add("active", "bg-primary", "text-white", "rounded-lg");
       }
     });
 
