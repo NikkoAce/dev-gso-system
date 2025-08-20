@@ -71,20 +71,6 @@ export function createUIManager() {
     }
 
     /**
-     * Displays a loading spinner inside a table body.
-     * @param {boolean} isLoading - Whether to show or hide the loader.
-     * @param {HTMLElement} container - The table body element.
-     * @param {number} colSpan - The number of columns the loader should span.
-     */
-    function setLoading(isLoading, container, colSpan) {
-        if (!container) return;
-        if (isLoading) {
-            container.innerHTML = `<tr><td colspan="${colSpan}" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
-            lucide.createIcons();
-        }
-    }
-
-    /**
      * Shows a confirmation modal.
      * @param {string} title - The title of the modal.
      * @param {string} body - The body text of the modal.
@@ -115,5 +101,52 @@ export function createUIManager() {
         modal.showModal();
     }
 
-    return { showToast, populateFilters, setLoading, renderAssetTable, updateSlipButtonVisibility, showConfirmationModal };
+    /**
+     * Renders pagination controls.
+     * @param {HTMLElement} container - The element to render the controls in.
+     * @param {object} pagination - Pagination info { currentPage, totalPages, totalDocs, itemsPerPage }.
+     */
+    function renderPagination(container, pagination) {
+        if (!container) return;
+        container.innerHTML = '';
+        const { currentPage, totalPages, totalDocs, itemsPerPage } = pagination;
+
+        if (totalPages <= 1) return;
+
+        const startItem = (currentPage - 1) * itemsPerPage + 1;
+        const endItem = Math.min(currentPage * itemsPerPage, totalDocs);
+
+        container.innerHTML = `
+            <span class="text-sm text-base-content/70">
+                Showing <span class="font-semibold">${startItem}</span>
+                to <span class="font-semibold">${endItem}</span>
+                of <span class="font-semibold">${totalDocs}</span> Results
+            </span>
+            <div class="btn-group">
+                ${currentPage > 1 ? `<button id="prev-page-btn" class="btn btn-sm">Prev</button>` : ''}
+                ${currentPage < totalPages ? `<button id="next-page-btn" class="btn btn-sm">Next</button>` : ''}
+            </div>
+        `;
+    }
+
+    /**
+     * Displays a loading spinner inside a container.
+     * @param {boolean} isLoading - Whether to show or hide the loader.
+     * @param {HTMLElement} container - The element to display the loader in.
+     * @param {object} options - Configuration options.
+     * @param {boolean} [options.isTable=true] - Whether the container is a <tbody>.
+     * @param {number} [options.colSpan=1] - The colspan for the table cell if isTable is true.
+     */
+    function setLoading(isLoading, container, options = {}) {
+        const { isTable = true, colSpan = 1 } = options;
+        if (!container) return;
+        if (isLoading) {
+            const loaderHTML = `<div class="flex justify-center items-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 text-gray-500"></i></div>`;
+            container.innerHTML = isTable ? `<tr><td colspan="${colSpan}">${loaderHTML}</td></tr>` : loaderHTML;
+            lucide.createIcons();
+        }
+        // No 'else' case needed, as the container will be overwritten with data.
+    }
+
+    return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination };
 }

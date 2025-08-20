@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initializeReportsPage(currentUser) {
     let allAssets = [];
-    const { populateFilters } = createUIManager();
+    const { populateFilters, showToast, setLoading } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const fundSourceFilter = document.getElementById('fund-source-filter');
@@ -47,7 +47,8 @@ function initializeReportsPage(currentUser) {
             asAtDateInput.value = new Date().toISOString().split('T')[0]; // Set default date to today
         } catch (error) {
             console.error('Failed to initialize page:', error);
-            alert('Could not load data for reports.');
+            showToast('Could not load initial data for reports.', 'error');
+        }
     }
 
     function setReportLoading(isLoading, message = 'Loading...') {
@@ -59,11 +60,10 @@ function initializeReportsPage(currentUser) {
 
         if (isLoading) {
             reportTitle.textContent = message;
-            container.innerHTML = `<div class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></div>`;
+            setLoading(true, container, { isTable: false });
             reportHeader.classList.add('hidden');
             reportFooter.classList.add('hidden');
             reportOutput.classList.remove('hidden');
-            lucide.createIcons();
         } else {
             if (container.innerHTML.includes('loader-2')) {
                 reportOutput.classList.add('hidden');
@@ -213,7 +213,7 @@ function initializeReportsPage(currentUser) {
         const asAtDate = asAtDateInput.value;
 
         if (!selectedFundSource || !asAtDate) {
-            alert('Please select a Fund Source and an "As at Date" for the report.');
+            showToast('Please select a Fund Source and an "As at Date" for the report.', 'warning');
             return;
         }
 
@@ -230,7 +230,7 @@ function initializeReportsPage(currentUser) {
             // This would be a new backend endpoint that handles filtering and data preparation.
             const reportData = await fetchWithAuth(`reports/rpcppe?${params}`);
             if (reportData.rows.length === 0) {
-                alert('No assets found for the selected criteria.');
+                showToast('No assets found for the selected criteria.', 'info');
                 return;
             }
 
@@ -244,7 +244,7 @@ function initializeReportsPage(currentUser) {
             );
         } catch (error) {
             console.error('Error generating RPCPPE:', error);
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         } finally {
             setReportLoading(false);
             generateRpcppeBtn.disabled = false;
@@ -257,7 +257,7 @@ function initializeReportsPage(currentUser) {
         const asAtDate = asAtDateInput.value;
 
         if (!selectedFundSource || !asAtDate) {
-            alert('Please select an "As at Date" for the report.');
+            showToast('Please select a Fund Source and an "As at Date" for the report.', 'warning');
             return;
         }
 
@@ -274,7 +274,7 @@ function initializeReportsPage(currentUser) {
             // This would be a new backend endpoint that handles all depreciation calculations.
             const reportData = await fetchWithAuth(`reports/depreciation?${params}`);
             if (reportData.rows.length === 0) {
-                alert('No assets found for the selected criteria.');
+                showToast('No assets found for the selected criteria.', 'info');
                 return;
             }
 
@@ -288,7 +288,7 @@ function initializeReportsPage(currentUser) {
             );
         } catch (error) {
             console.error('Error generating Depreciation Report:', error);
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         } finally {
             setReportLoading(false);
             generateDepreciationBtn.disabled = false;
@@ -298,7 +298,7 @@ function initializeReportsPage(currentUser) {
     function handleGenerateLedger() {
         const selectedAssetId = selectedAssetIdInput.value;
         if (!selectedAssetId) {
-            alert('Please select an asset to generate a ledger card.');
+            showToast('Please select an asset to generate a ledger card.', 'warning');
             return;
         }
         const selectedAsset = allAssets.find(asset => asset._id === selectedAssetId);

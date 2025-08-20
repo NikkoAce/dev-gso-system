@@ -1,5 +1,6 @@
 // FILE: frontend/public/slip-history.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -18,6 +19,7 @@ function initializeSlipHistoryPage(currentUser) {
     let allSlips = [];
     let currentPage = 1;
     const itemsPerPage = 20;
+    const { renderPagination } = createUIManager();
 
     const slipTypeFilter = document.getElementById('slip-type-filter');
     const searchInput = document.getElementById('slip-search-input');
@@ -95,27 +97,12 @@ function initializeSlipHistoryPage(currentUser) {
         });
         tableBody.innerHTML = rowsHTML;
         lucide.createIcons();
-        renderPagination(totalPages, filteredSlips.length);
-    }
-    
-    function renderPagination(totalPages, totalItems) {
-        paginationControls.innerHTML = '';
-        if (totalPages <= 1) return;
-        
-        const startItem = (currentPage - 1) * itemsPerPage + 1;
-        const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
-        paginationControls.innerHTML = `
-            <span class="text-sm text-base-content/70">
-                Showing <span class="font-semibold">${startItem}</span>
-                to <span class="font-semibold">${endItem}</span>
-                of <span class="font-semibold">${totalItems}</span> Results
-            </span>
-            <div class="btn-group">
-                ${currentPage > 1 ? `<button id="prev-page-btn" class="btn btn-sm">Prev</button>` : ''}
-                ${currentPage < totalPages ? `<button id="next-page-btn" class="btn btn-sm">Next</button>` : ''}
-            </div>
-        `;
+        renderPagination(paginationControls, {
+            currentPage,
+            totalPages,
+            totalDocs: filteredSlips.length,
+            itemsPerPage
+        });
     }
 
     // --- MODAL Functionality ---

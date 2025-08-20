@@ -18,7 +18,7 @@ function initializePhysicalCountPage(currentUser) {
     let allAssets = [];
     let currentPage = 1;
     const itemsPerPage = 20;
-    const { populateFilters, setLoading } = createUIManager();
+    const { populateFilters, setLoading, showToast, renderPagination } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('search-input');
@@ -28,7 +28,7 @@ function initializePhysicalCountPage(currentUser) {
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
-        setLoading(true, tableBody, 5);
+        setLoading(true, tableBody, { colSpan: 5 });
         try {
             const [fetchedAssets, offices] = await Promise.all([
                 fetchWithAuth('assets'),
@@ -114,31 +114,12 @@ function initializePhysicalCountPage(currentUser) {
             `;
             tableBody.appendChild(tr);
         });
-        renderPagination(totalPages, filteredAssets.length);
-    }
-    
-    function renderPagination(totalPages, totalItems) {
-        paginationControls.innerHTML = '';
-        if (totalPages <= 1) return;
-
-        let paginationHTML = `
-            <span class="text-sm text-gray-700">
-                Showing <span class="font-semibold">${((currentPage - 1) * itemsPerPage) + 1}</span>
-                to <span class="font-semibold">${Math.min(currentPage * itemsPerPage, totalItems)}</span>
-                of <span class="font-semibold">${totalItems}</span> Results
-            </span>
-            <div class="btn-group">
-        `;
-        
-        if (currentPage > 1) {
-            paginationHTML += `<button id="prev-page-btn" class="btn btn-sm">Prev</button>`;
-        }
-        if (currentPage < totalPages) {
-            paginationHTML += `<button id="next-page-btn" class="btn btn-sm">Next</button>`;
-        }
-        
-        paginationHTML += `</div>`;
-        paginationControls.innerHTML = paginationHTML;
+        renderPagination(paginationControls, {
+            currentPage,
+            totalPages,
+            totalDocs: filteredAssets.length,
+            itemsPerPage
+        });
     }
 
     // --- EVENT LISTENERS ---
@@ -176,7 +157,7 @@ function initializePhysicalCountPage(currentUser) {
         });
 
         if (updates.length === 0) {
-            alert('No assets to update.');
+            showToast('No assets to update.', 'warning');
             return;
         }
 
@@ -189,11 +170,11 @@ function initializePhysicalCountPage(currentUser) {
                 })
             });
 
-            alert('Physical count data saved successfully!');
+            showToast('Physical count data saved successfully!', 'success');
             await initializePage(); // Re-fetch all assets to get the latest data
             renderTable(); // Re-render the table with the latest data
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         }
     });
 
