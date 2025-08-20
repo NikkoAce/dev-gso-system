@@ -64,6 +64,57 @@ function initializeRegistryPage(currentUser) {
     // --- MODULE: UI MANAGER ---
     const uiManager = createUIManager(state, DOM);
 
+    // --- UI RENDERING MODULE ---
+    const renderPagination = (totalDocs, totalPages) => {
+        DOM.paginationControls.innerHTML = '';
+        if (totalDocs === 0) return;
+
+        const startItem = (state.currentPage - 1) * state.assetsPerPage + 1;
+        const endItem = Math.min(state.currentPage * state.assetsPerPage, totalDocs);
+
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'text-sm text-gray-700';
+        infoSpan.innerHTML = `Showing <span class="font-semibold">${startItem}</span> to <span class="font-semibold">${endItem}</span> of <span class="font-semibold">${totalDocs}</span> results`;
+
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'join';
+
+        const prevButton = document.createElement('button');
+        prevButton.id = 'prev-page-btn';
+        prevButton.className = 'join-item btn btn-sm';
+        prevButton.textContent = '«';
+        if (state.currentPage === 1) {
+            prevButton.disabled = true;
+        }
+
+        const pageButton = document.createElement('button');
+        pageButton.className = 'join-item btn btn-sm';
+        pageButton.textContent = `Page ${state.currentPage}`;
+
+        const nextButton = document.createElement('button');
+        nextButton.id = 'next-page-btn';
+        nextButton.className = 'join-item btn btn-sm';
+        nextButton.textContent = '»';
+        if (state.currentPage >= totalPages) {
+            nextButton.disabled = true;
+        }
+
+        buttonsDiv.append(prevButton, pageButton, nextButton);
+        DOM.paginationControls.append(infoSpan, buttonsDiv);
+    };
+
+    const renderAssetTable = (assets) => {
+        DOM.tableBody.innerHTML = '';
+        if (assets.length === 0) {
+            DOM.tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8">No assets found for the selected criteria.</td></tr>`;
+            return;
+        }
+
+        const rowsHTML = assets.map(asset => {
+            const statusMap = { 'In Use': 'badge-success', 'For Repair': 'badge-warning', 'In Storage': 'badge-info', 'Disposed': 'badge-error' };
+            const statusClass = statusMap[asset.status] || 'badge-ghost';
+            const isAssigned = asset.assignedPAR || asset.assignedICS;
+            const rowClass = isAssigned ? 'opacity-6
     // --- MODULE: SLIP MANAGER ---
     const slipManager = {
         prepareForSlipGeneration(slipType) {
