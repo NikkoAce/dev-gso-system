@@ -18,7 +18,7 @@ function initializePhysicalCountPage(currentUser) {
     let allAssets = [];
     let currentPage = 1;
     const itemsPerPage = 20;
-    const { populateFilters } = createUIManager();
+    const { populateFilters, setLoading } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('search-input');
@@ -28,6 +28,7 @@ function initializePhysicalCountPage(currentUser) {
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
+        setLoading(true, tableBody, 5);
         try {
             const [fetchedAssets, offices] = await Promise.all([
                 fetchWithAuth('assets'),

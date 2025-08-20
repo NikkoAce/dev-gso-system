@@ -70,5 +70,20 @@ export function createUIManager() {
         }
     }
 
-    return { showToast, populateFilters };
+    /**
+     * Displays a loading spinner inside a table body.
+     * @param {boolean} isLoading - Whether to show or hide the loader.
+     * @param {HTMLElement} container - The table body element.
+     * @param {number} colSpan - The number of columns the loader should span.
+     */
+    function setLoading(isLoading, container, colSpan) {
+        if (!container) return;
+        if (isLoading) {
+            container.innerHTML = `<tr><td colspan="${colSpan}" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
+            lucide.createIcons();
+        }
+        // No 'else' case needed, as the container will be overwritten with data.
+    }
+
+    return { showToast, populateFilters, setLoading };
 }

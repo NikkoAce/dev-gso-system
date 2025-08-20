@@ -62,7 +62,7 @@ function initializeRegistryPage(currentUser) {
     };
 
     // --- MODULE: UI MANAGER ---
-    const uiManager = createUIManager(state, DOM);
+    const uiManager = createUIManager();
 
     // --- MODULE: MODAL LOGIC ---
     function openTransferModal(assetIds) {
@@ -342,7 +342,7 @@ function initializeRegistryPage(currentUser) {
 
     // --- DATA ORCHESTRATOR ---
     async function loadAssets() {
-        uiManager.setLoading(true);
+        uiManager.setLoading(true, DOM.tableBody, 8);
         DOM.selectAllCheckbox.checked = false;
         state.selectedAssetIds = [];
         try {
@@ -419,7 +419,7 @@ function initializeRegistryPage(currentUser) {
             state.allOffices = offices;
             state.allEmployees = employees;
 
-            uiManager.populateFilters(categories, offices, employees);
+            uiManager.populateFilters({ categories, offices }, { categoryFilter: DOM.categoryFilter, officeFilter: DOM.officeFilter });
             eventManager.setupEventListeners();
             await loadAssets();
         } catch (error) {
