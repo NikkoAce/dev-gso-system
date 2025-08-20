@@ -147,7 +147,7 @@ function initializeSlipHistoryPage(currentUser) {
             assetsTableBody.innerHTML += row;
         });
 
-        slipDetailsModal.classList.remove('hidden');
+        slipDetailsModal.showModal();
     }
 
     // --- EVENT LISTENERS ---
@@ -198,7 +198,7 @@ function initializeSlipHistoryPage(currentUser) {
     });
 
     document.getElementById('close-slip-modal').addEventListener('click', () => {
-        slipDetailsModal.classList.add('hidden');
+        slipDetailsModal.close();
     });
 
     // --- INITIALIZATION ---

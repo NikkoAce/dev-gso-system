@@ -42,30 +42,30 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
                     <h1 class="text-3xl font-bold text-gray-800">Slip History (PAR & ICS)</h1>
-                    <div class="p-4 bg-white rounded-lg border non-printable space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div class="lg:col-span-2">
-                                <label for="slip-search-input" class="sr-only">Search</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body p-4">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="form-control flex-grow">
+                                    <label for="slip-search-input" class="label sr-only"><span class="label-text">Search</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                        </div>
+                                        <input type="text" id="slip-search-input" placeholder="Search by Slip No. or Custodian..." class="input input-bordered w-full pl-10">
                                     </div>
-                                    <input type="text" id="slip-search-input" placeholder="Search by Slip No. or Custodian..." class="w-full pl-10 p-2 border-gray-300 rounded-md shadow-sm">
                                 </div>
-                            </div>
-                            <div>
-                                <label for="slip-type-filter" class="sr-only">Slip Type</label>
-                                <select id="slip-type-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">All Slips</option>
-                                    <option value="PAR">PAR Only</option>
-                                    <option value="ICS">ICS Only</option>
-                                </select>
+                                <div class="form-control w-full md:w-48">
+                                    <label for="slip-type-filter" class="label sr-only"><span class="label-text">Slip Type</span></label>
+                                    <select id="slip-type-filter" class="select select-bordered font-normal">
+                                        <option value="">All Slips</option>
+                                        <option value="PAR">PAR Only</option>
+                                        <option value="ICS">ICS Only</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg border overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <div class="card bg-base-1
                                 <tr>
                                     <th class="px-6 py-3">Slip Number</th>
                                     <th class="px-6 py-3">Type</th>
@@ -106,12 +106,12 @@
                 </div>
                 <h3 class="font-bold text-lg mb-2">Assigned Assets</h3>
                 <div class="border rounded-lg overflow-hidden">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50">
+                    <table class="table table-zebra w-full">
+                        <thead>
                             <tr>
-                                <th class="px-4 py-2 text-left">Property No.</th>
-                                <th class="px-4 py-2 text-left">Description</th>
-                                <th class="px-4 py-2 text-right">Cost</th>
+                                <th>Property No.</th>
+                                <th>Description</th>
+                                <th class="text-right">Cost</th>
                             </tr>
                         </thead>
                         <tbody id="modal-slip-assets-table">
@@ -120,8 +120,11 @@
                     </table>
                 </div>
             </div>
+            <div class="modal-action">
+                <button id="close-slip-modal" class="btn">Close</button>
+            </div>
         </div>
-    </div>
+    </dialog>
 
     <script src="security.js"></script>
     <script src="layout.js"></script>

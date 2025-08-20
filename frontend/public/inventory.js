@@ -52,16 +52,16 @@ function initializeInventoryPage(currentUser) {
             const tr = document.createElement('tr');
             const quantityClass = item.quantity <= item.reorderPoint ? 'text-red-600 font-bold' : '';
             tr.innerHTML = `
-                <td class="p-4 font-mono">${item.stockNumber}</td>
-                <td class="p-4">${item.description}</td>
-                <td class="p-4">${item.unitOfMeasure}</td>
-                <td class="p-4 text-center ${quantityClass}">${item.quantity}</td>
-                <td class="p-4 text-center">${item.reorderPoint}</td>
-                <td class="p-4">${item.category || 'N/A'}</td>
-                <td class="p-4 text-center">
-                    <div class="flex justify-center items-center space-x-3">
-                        <button class="edit-item-btn text-blue-600 hover:text-blue-800" data-id="${item._id}" title="Edit Item"><i data-lucide="edit" class="h-5 w-5"></i></button>
-                        <button class="delete-item-btn text-red-500 hover:text-red-700" data-id="${item._id}" title="Delete Item"><i data-lucide="trash-2" class="h-5 w-5"></i></button>
+                <td class="font-mono">${item.stockNumber}</td>
+                <td>${item.description}</td>
+                <td>${item.unitOfMeasure}</td>
+                <td class="text-center ${quantityClass}">${item.quantity}</td>
+                <td class="text-center">${item.reorderPoint}</td>
+                <td>${item.category || 'N/A'}</td>
+                <td class="text-center">
+                    <div class="flex justify-center items-center gap-1">
+                        <button class="edit-item-btn btn btn-ghost btn-xs" data-id="${item._id}" title="Edit Item"><i data-lucide="edit" class="h-4 w-4"></i></button>
+                        <button class="delete-item-btn btn btn-ghost btn-xs text-red-500" data-id="${item._id}" title="Delete Item"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
                     </div>
                 </td>
             `;
