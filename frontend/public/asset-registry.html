@@ -101,15 +101,15 @@
                                 <div class="lg:col-span-2">
                                     <label for="start-date-filter" class="block text-sm font-medium text-gray-700">Acquired Between</label>
                                     <div class="mt-1 flex items-center gap-2">
-                                        <input type="date" id="start-date-filter" class="input input-bordered w-full">
+                                        <input type="date" id="start-date-filter" class="input input-bordered w-full text-sm">
                                         <span class="text-gray-500">-</span>
-                                        <input type="date" id="end-date-filter" class="input input-bordered w-full">
+                                        <input type="date" id="end-date-filter" class="input input-bordered w-full text-sm">
                                     </div>
                                 </div>
                                 <!-- Office Filter -->
                                 <div>
                                     <label for="office-filter" class="block text-sm font-medium text-gray-700">Office</label>
-                                    <select id="office-filter" class="select select-bordered w-full mt-1">
+                                    <select id="office-filter" class="select select-bordered w-full mt-1 font-normal">
                                         <option value="">All Offices</option>
                                         <!-- JS will populate this -->
                                     </select>
@@ -117,7 +117,7 @@
                                 <!-- Fund Source Filter -->
                                 <div>
                                     <label for="fund-source-filter" class="block text-sm font-medium text-gray-700">Fund Source</label>
-                                    <select id="fund-source-filter" class="select select-bordered w-full mt-1">
+                                    <select id="fund-source-filter" class="select select-bordered w-full mt-1 font-normal">
                                         <option value="">All Fund Sources</option>
                                         <option>General Fund</option>
                                         <option>Special Education Fund</option>
@@ -127,7 +127,7 @@
                                 <!-- Assignment Filter -->
                                 <div>
                                     <label for="assignment-filter" class="block text-sm font-medium text-gray-700">Assignment Status</label>
-                                    <select id="assignment-filter" class="select select-bordered w-full mt-1">
+                                    <select id="assignment-filter" class="select select-bordered w-full mt-1 font-normal">
                                         <option value="">All Assignments</option>
                                         <option value="unassigned">Unassigned</option>
                                         <option value="par">Assigned to PAR</option>
@@ -136,7 +136,7 @@
                                 </div>
                                 <!-- Reset Button -->
                                 <div class="flex items-end">
-                                    <button id="reset-filters-btn" class="btn btn-ghost w-full md:w-auto">
+                                    <button id="reset-filters-btn" class="btn btn-ghost w-full md:w-auto mt-1">
                                         <i data-lucide="rotate-cw" class="h-5 w-5"></i> Reset
                                     </button>
                                 </div>
@@ -173,46 +173,44 @@
     </div>
 
     <!-- Transfer Asset Modal (for single and bulk) -->
-    <div id="transfer-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <div class="flex items-center justify-center mb-4">
-                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <i data-lucide="arrow-right-left" class="h-6 w-6 text-blue-600"></i>
-                    </div>
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 ml-4" id="transfer-modal-title">Transfer Asset(s)</h3>
+    <dialog id="transfer-modal" class="modal">
+        <div class="modal-box">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+                    <i data-lucide="arrow-right-left" class="h-6 w-6 text-blue-600"></i>
                 </div>
-                <div class="mt-2 px-7 py-3">
-                    <!-- Info for single asset transfer -->
-                    <p class="text-sm text-gray-600 mb-4" id="transfer-asset-info">Loading asset details...</p>
-                    
-                    <!-- List for bulk asset transfer -->
-                    <div id="bulk-transfer-asset-list-container" class="max-h-48 overflow-y-auto border rounded-md p-2 mb-4 bg-gray-50 hidden">
-                        <!-- List of assets will be populated here for bulk transfers -->
-                    </div>
+                <h3 class="text-lg font-medium text-gray-900 ml-4" id="transfer-modal-title">Transfer Asset(s)</h3>
+            </div>
 
-                    <form id="transfer-modal-form" class="space-y-4 text-left">
-                        <div>
-                            <label for="transfer-modal-office-select" class="block text-sm font-medium text-gray-700">New Office / End-User</label>
-                            <select id="transfer-modal-office-select" name="transfer-office" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                <!-- Options will be populated by JS -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="transfer-modal-custodian-select" class="block text-sm font-medium text-gray-700">New Accountable Officer</label>
-                            <select id="transfer-modal-custodian-select" name="transfer-custodian" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                <!-- Options will be populated by JS -->
-                            </select>
-                        </div>
-                    </form>
+            <!-- Info for single asset transfer -->
+            <p class="text-sm text-gray-600 mb-4" id="transfer-asset-info">Loading asset details...</p>
+            
+            <!-- List for bulk asset transfer -->
+            <div id="bulk-transfer-asset-list-container" class="max-h-48 overflow-y-auto border rounded-md p-2 mb-4 bg-gray-50 hidden">
+                <!-- List of assets will be populated here for bulk transfers -->
+            </div>
+
+            <form id="transfer-modal-form" class="space-y-4 text-left">
+                <div>
+                    <label for="transfer-modal-office-select" class="block text-sm font-medium text-gray-700">New Office / End-User</label>
+                    <select id="transfer-modal-office-select" name="transfer-office" class="select select-bordered w-full mt-1 font-normal" required>
+                        <!-- Options will be populated by JS -->
+                    </select>
                 </div>
-                <div class="items-center px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button id="confirm-transfer-modal-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">Confirm Transfer</button>
-                    <button id="cancel-transfer-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                <div>
+                    <label for="transfer-modal-custodian-select" class="block text-sm font-medium text-gray-700">New Accountable Officer</label>
+                    <select id="transfer-modal-custodian-select" name="transfer-custodian" class="select select-bordered w-full mt-1 font-normal" required>
+                        <!-- Options will be populated by JS -->
+                    </select>
                 </div>
+            </form>
+            <div class="modal-action">
+                <button id="cancel-transfer-modal-btn" class="btn">Cancel</button>
+                <button id="confirm-transfer-modal-btn" class="btn btn-primary">Confirm Transfer</button>
             </div>
         </div>
-    </div>
+    </dialog>
+
     <script src="security.js"></script>
     <script src="layout.js"></script>
     <script type="module" src="registry.js"></script>
