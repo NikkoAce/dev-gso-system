@@ -445,70 +445,147 @@ const bulkTransferAssets = async (req, res) => {
 };
 
 const getDashboardStats = async (req, res) => {
-    try {
-        const { startDate, endDate } = req.query;
+  try {
+    const { startDate, endDate } = req.query;
 
-        // 1. Define Date Filters
-        const dateFilter = {};
-        if (startDate) dateFilter.$gte = new Date(startDate);
-        if (endDate) dateFilter.$lte = new Date(endDate);
+    // 1. Define Date Filters
+    const dateFilter = {};
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setUTCHours(23, 59, 59, 999); // Include the whole day
+      dateFilter.$lte = end;
+    }
 
-        const hasDateFilter = Object.keys(dateFilter).length > 0;
+    const hasDateFilter = Object.keys(dateFilter).length > 0;
+    const acquisitionDateFilter = hasDateFilter ? { acquisitionDate: dateFilter } : {};
+    const requisitionDateFilter = hasDateFilter ? { dateRequested: dateFilter } : {};
 
-        // --- Trend Calculation ---
-        let previousPeriodFilter = {};
-        if (hasDateFilter) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const diff = end.getTime() - start.getTime();
-            const prevEnd = new Date(start.getTime() - 1);
-            const prevStart = new Date(prevEnd.getTime() - diff);
-            previousPeriodFilter = { $gte: prevStart, $lte: prevEnd };
+    // --- Trend Calculation ---
+    let previousAcquisitionFilter = {};
+    let previousRequisitionFilter = {};
+    if (hasDateFilter) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diff = end.getTime() - start.getTime();
+      const prevEnd = new Date(start.getTime() - 1);
+      const prevStart = new Date(prevEnd.getTime() - diff);
+      previousAcquisitionFilter = { acquisitionDate: { $gte: prevStart, $lte: prevEnd } };
+      previousRequisitionFilter = { dateRequested: { $gte: prevStart, $lte: prevEnd } };
+    }
+
+    const calculateTrend = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      if (current === 0 && previous > 0) return -100;
+      if (current === previous) return 0;
+      return parseFloat((((current - previous) / previous) * 100).toFixed(2));
+    };
+
+    // --- Aggregation Pipelines ---
+    const getAssetStats = (filter) => Asset.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          totalAssetValue: { $sum: '$acquisitionCost' },
+          totalAssets: { $sum: 1 },
+          assetsForRepair: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } },
+          disposedAssets: { $sum: { $cond: [{ $eq: ['$status', 'Disposed'] }, 1, 0] } },
         }
+      }
+    ]);
 
-        const calculateTrend = (current, previous) => {
-            if (previous === 0) return current > 0 ? 100 : 0;
-            if (current === previous) return 0;
-            return parseFloat((((current - previous) / previous) * 100).toFixed(2));
-        };
+    const getPendingRequisitions = (filter) => Requisition.countDocuments({ ...filter, status: 'Pending' });
 
-        // 2. Fetch Data Concurrently
-        const [
-            Asset.aggregate([
-                {
-                    $group: {
-                        _id: null,
-                        totalValue: { $sum: '$acquisitionCost' },
-                        totalCount: { $sum: 1 }
-                    }
-                }
-            ]),
-            Asset.aggregate([
-                { $group: { _id: '$status', count: { $sum: 1 } } },
-                { $project: { _id: 0, k: '$_id', v: '$count' } }
-            ]),
-            Asset.aggregate([
-                { $group: { _id: '$category', count: { $sum: 1 } } },
-                { $project: { _id: 0, k: '$_id', v: '$count' } }
-            ])
-        ]);
+    // --- Chart Data Pipelines ---
+    const getAssetsByCategory = () => Asset.aggregate([
+      { $match: acquisitionDateFilter },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $project: { category: '$_id', count: 1, _id: 0 } },
+      { $sort: { count: -1 } }
+    ]);
 
-        const response = {
-            totalValue: totalStats[0]?.totalValue || 0,
-            totalCount: totalStats[0]?.totalCount || 0,
-            statusCounts: statusCounts.reduce((acc, item) => {
-                if (item.k) acc[item.k] = item.v;
-                return acc;
-            }, {}),
-            categoryCounts: categoryCounts.reduce((acc, item) => {
-                if (item.k) acc[item.k] = item.v;
-                return acc;
-            }, {})
-        };
+    const getAssetStatus = () => Asset.aggregate([
+      { $match: acquisitionDateFilter },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $project: { status: '$_id', count: 1, _id: 0 } }
+    ]);
 
-        res.json(response);
+    const getMonthlyAcquisitions = () => Asset.aggregate([
+      { $match: { acquisitionDate: { $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) } } },
+      {
+        $group: {
+          _id: { year: { $year: '$acquisitionDate' }, month: { $month: '$acquisitionDate' } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      { $project: { _id: 0, month: '$_id', count: 1 } }
+    ]);
 
-    } catch (error) {
+    // --- Table Data Pipelines ---
+    const getRecentAssets = () => Asset.find(acquisitionDateFilter).sort({ createdAt: -1 }).limit(5).lean();
+    const getRecentRequisitions = () => Requisition.find(requisitionDateFilter).sort({ dateRequested: -1 }).limit(5).lean();
+
+    // --- Execute All Queries Concurrently ---
+    const [
+      currentAssetStats,
+      previousAssetStats,
+      currentPendingReqs,
+      previousPendingReqs,
+      assetsByCategory,
+      assetStatus,
+      monthlyAcquisitions,
+      recentAssets,
+      recentRequisitions
+    ] = await Promise.all([
+      getAssetStats(acquisitionDateFilter),
+      getAssetStats(previousAcquisitionFilter),
+      getPendingRequisitions(requisitionDateFilter),
+      getPendingRequisitions(previousRequisitionFilter),
+      getAssetsByCategory(),
+      getAssetStatus(),
+      getMonthlyAcquisitions(),
+      getRecentAssets(),
+      getRecentRequisitions()
+    ]);
+
+    const current = currentAssetStats[0] || {};
+    const previous = previousAssetStats[0] || {};
+
+    // --- Format and Send Response ---
+    const response = {
+      stats: {
+        totalAssetValue: current.totalAssetValue || 0,
+        totalAssets: current.totalAssets || 0,
+        assetsForRepair: current.assetsForRepair || 0,
+        disposedAssets: current.disposedAssets || 0,
+        pendingRequisitions: currentPendingReqs || 0,
+        trends: {
+          totalAssetValue: calculateTrend(current.totalAssetValue || 0, previous.totalAssetValue || 0),
+          totalAssets: calculateTrend(current.totalAssets || 0, previous.totalAssets || 0),
+          assetsForRepair: calculateTrend(current.assetsForRepair || 0, previous.assetsForRepair || 0),
+          disposedAssets: calculateTrend(current.disposedAssets || 0, previous.disposedAssets || 0),
+          pendingRequisitions: calculateTrend(currentPendingReqs || 0, previousPendingReqs || 0),
+        }
+      },
+      charts: {
+        assetsByCategory,
+        assetStatus,
+        monthlyAcquisitions: monthlyAcquisitions.map(item => ({
+          month: new Date(item.month.year, item.month.month - 1).toLocaleString('default', { month: 'short' }),
+          count: item.count
+        }))
+      },
+      tables: {
+        recentAssets,
+        recentRequisitions
+      }
+    };
+
+    res.json(response);
+
+  } catch (error) {
         console.error('Error in getDashboardStats:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
