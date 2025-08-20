@@ -1,7 +1,7 @@
 const GSO_NAV = `
 <ul class="menu bg-base-200 rounded-box w-56">    
-    <li><a href="dashboard.html" class="nav-link" ><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-    <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i>Asset Registry</a></li>
+    <li><a href="dashboard.html" class="nav-link info"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+    <li><a href="asset-registry.html" class="nav-link info"><i data-lucide="list"></i>Asset Registry</a></li>
     <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i>Supply Requisitions</a></li>
     <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i>Supplies Inventory</a></li>
     <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i>Add New Asset</a></li>
