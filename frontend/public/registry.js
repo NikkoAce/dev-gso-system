@@ -79,14 +79,14 @@ function initializeRegistryPage(currentUser) {
             return;
         }
 
-        // Populate and show/hide correct sections
+        // Populate modal content based on single vs bulk transfer
         if (assetIds.length > 1) {
             // Bulk transfer
             DOM.transferAssetInfo.classList.add('hidden');
             DOM.bulkTransferAssetListContainer.classList.remove('hidden');
             DOM.transferModalTitle.textContent = `Transfer ${assetIds.length} Assets`;
-            
-            const listHTML = state.assetsToTransfer.map(asset => 
+
+            const listHTML = state.assetsToTransfer.map(asset =>
                 `<div class="text-xs p-1">${asset.propertyNumber} - ${asset.description}</div>`
             ).join('');
             DOM.bulkTransferAssetListContainer.innerHTML = `<p class="font-bold text-sm mb-1">Assets to Transfer:</p>${listHTML}`;
@@ -103,10 +103,14 @@ function initializeRegistryPage(currentUser) {
             `;
         }
 
-        // Reset form fields
-        DOM.transferOfficeSelect.value = '';
+        // Populate dropdowns
+        DOM.transferOfficeSelect.innerHTML = '<option value="">Select new office...</option>' +
+            state.allOffices.map(o => `<option value="${o.name}">${o.name}</option>`).join('');
+
+        // Clear and disable custodian select initially
         DOM.transferCustodianSelect.innerHTML = '<option value="">Select an office first</option>';
-        
+        DOM.transferCustodianSelect.disabled = true;
+
         DOM.transferModal.showModal();
     }
 
@@ -322,9 +326,29 @@ function initializeRegistryPage(currentUser) {
             DOM.generateIcsBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
             DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(state.selectedAssetIds));
+            DOM.moreFiltersBtn?.addEventListener('click', () => {
+                DOM.advancedFilters.classList.toggle('hidden');
+                const isVisible = !DOM.advancedFilters.classList.contains('hidden');
+                DOM.moreFiltersBtn.setAttribute('aria-expanded', String(isVisible));
+                const icon = DOM.moreFiltersBtn.querySelector('i');
+                if (icon) {
+                    icon.setAttribute('data-lucide', isVisible ? 'chevron-up' : 'chevron-down');
+                    lucide.createIcons();
+                }
+            });
             // Transfer Modal Listeners
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
+            DOM.transferOfficeSelect?.addEventListener('change', () => {
+                const selectedOffice = DOM.transferOfficeSelect.value;
+                const filteredEmployees = state.allEmployees.filter(e => e.office === selectedOffice);
+                
+                DOM.transferCustodianSelect.innerHTML = '<option value="">Select new custodian...</option>';
+                filteredEmployees.forEach(e => {
+                    DOM.transferCustodianSelect.innerHTML += `<option value="${e.name}">${e.name}</option>`;
+                });
+                DOM.transferCustodianSelect.disabled = filteredEmployees.length === 0;
+            });
         }
     };
 
