@@ -516,15 +516,15 @@ const getDashboardStats = async (req, res) => {
     ]);
 
     const getMonthlyAcquisitions = () => Asset.aggregate([
-      { $match: { acquisitionDate: { $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), $lte: new Date() } } },
+      { $match: acquisitionDateRangeFilter },
       {
         $group: {
           _id: { year: { $year: '$acquisitionDate' }, month: { $month: '$acquisitionDate' } },
-          count: { $sum: 1 }
+          totalValue: { $sum: '$acquisitionCost' }
         }
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
-      { $project: { _id: 0, month: '$_id', count: 1 } }
+      { $project: { _id: 0, month: '$_id', totalValue: 1 } }
     ]);
 
     // --- Table Data Pipelines ---
@@ -577,8 +577,8 @@ const getDashboardStats = async (req, res) => {
         assetsByOffice,
         assetStatus,
         monthlyAcquisitions: monthlyAcquisitions.map(item => ({
-          month: new Date(item.month.year, item.month.month - 1).toLocaleString('default', { month: 'short' }),
-          count: item.count
+          month: new Date(item.month.year, item.month.month - 1).toLocaleString('en-US', { month: 'short', year: 'numeric' }),
+          totalValue: item.totalValue
         }))
       },
       tables: {

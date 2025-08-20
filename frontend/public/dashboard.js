@@ -167,10 +167,10 @@ function initializeDashboard() {
         monthlyAcquisitionChartInstance = renderChart('monthlyAcquisitionChart', monthlyAcquisitionChartInstance, {
             type: 'line',
             data: {
-                labels: data.map(d => d.month), // e.g., ['Jan', 'Feb', ...]
+                labels: data.map(d => d.month),
                 datasets: [{
-                    label: 'Assets Acquired',
-                    data: data.map(d => d.count),
+                    label: 'Acquisition Value',
+                    data: data.map(d => d.totalValue),
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 2,
@@ -185,13 +185,31 @@ function initializeDashboard() {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            stepSize: 1
+                            // Format y-axis labels as currency
+                            callback: function(value, index, values) {
+                                if (value >= 1000) {
+                                    return '₱' + (value / 1000) + 'k';
+                                }
+                                return '₱' + value;
+                            }
                         }
                     }
                 },
                 plugins: {
-                    legend: {
-                        display: false
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatCurrency(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
