@@ -45,14 +45,14 @@ function initializeCategoriesPage(currentUser) {
         allCategories.forEach(category => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-4">${category.name}</td>
-                <td class="p-4">${category.accountGroup || 'N/A'}</td>
-                <td class="p-4">${category.majorAccountGroup || 'N/A'}</td>
-                <td class="p-4">${category.subMajorGroup}</td>
-                <td class="p-4">${category.glAccount}</td>
-                <td class="p-4 text-center">
-                    <button class="delete-category-btn text-red-500 hover:text-red-700" data-id="${category._id}" title="Delete Category">
-                        <i data-lucide="trash-2" class="h-5 w-5"></i>
+                <td>${category.name}</td>
+                <td>${category.accountGroup || 'N/A'}</td>
+                <td>${category.majorAccountGroup || 'N/A'}</td>
+                <td>${category.subMajorGroup}</td>
+                <td>${category.glAccount}</td>
+                <td class="text-center">
+                    <button class="delete-category-btn btn btn-ghost btn-xs text-red-500" data-id="${category._id}" title="Delete Category">
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
                     </button>
                 </td>
             `;

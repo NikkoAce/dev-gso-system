@@ -45,10 +45,10 @@
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold text-gray-800">QR Code Scanner</h1>
                     <div class="flex gap-2">
-                        <button id="start-scan-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                        <button id="start-scan-btn" class="btn btn-primary">
                             <i data-lucide="camera"></i> Start Scan
                         </button>
-                        <button id="save-scan-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+                        <button id="save-scan-btn" class="btn btn-success">
                             <i data-lucide="save"></i> Save Scan Results
                         </button>
                     </div>
@@ -56,7 +56,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Scanner Section -->
-                    <div id="scanner-container" class="hidden bg-black rounded-lg p-2 relative">
+                    <div id="scanner-container" class="hidden bg-black rounded-box p-2 relative">
                         <video id="scanner-video" class="w-full h-auto rounded-md" playsinline></video>
                         <canvas id="scanner-canvas" class="hidden"></canvas>
                         <div class="absolute inset-0 flex items-center justify-center">
@@ -65,14 +65,18 @@
                     </div>
 
                     <!-- Asset List Section -->
-                    <div class="bg-white rounded-lg border max-h-[75vh] overflow-y-auto">
-                        <div class="p-4 border-b sticky top-0 bg-white">
-                            <h2 class="text-lg font-semibold text-gray-700">Asset List</h2>
-                            <p class="text-sm text-gray-500">Found: <span id="found-count">0</span> / <span id="total-count">0</span></p>
+                    <div class="card bg-base-100 border max-h-[75vh] flex flex-col">
+                        <div class="card-body p-4 border-b flex-shrink-0">
+                            <h2 class="card-title">Asset List</h2>
+                            <p class="text-sm text-base-content/70">Found: <span id="found-count">0</span> / <span id="total-count">0</span></p>
                         </div>
-                        <ul id="scanner-asset-list" class="divide-y">
-                            <!-- JS will populate this -->
-                        </ul>
+                        <div class="overflow-y-auto flex-grow">
+                            <table class="table w-full">
+                                <tbody id="scanner-asset-list">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>

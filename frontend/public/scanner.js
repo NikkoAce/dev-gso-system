@@ -46,45 +46,45 @@ function initializeScannerPage(currentUser) {
         foundCountEl.textContent = foundAssets.size;
 
         if (allAssets.length === 0) {
-            assetList.innerHTML = `<li class="p-4 text-gray-500">No assets found.</li>`;
+            assetList.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-base-content/70">No assets found.</td></tr>`;
             return;
         }
 
         allAssets.forEach(asset => {
             const isFound = foundAssets.has(asset.propertyNumber);
-            const li = document.createElement('li');
-            li.id = `asset-${asset.propertyNumber}`;
-            li.className = `p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors duration-300 ${isFound ? 'bg-green-100' : ''}`;
+            const tr = document.createElement('tr');
+            tr.id = `asset-${asset.propertyNumber}`;
+            tr.className = isFound ? 'active' : ''; // DaisyUI active class for highlight
             
             const conditionOptions = [
                 'Very Good (VG)', 'Good Condition (G)', 'Fair Condition (F)', 
                 'Poor Condition (P)', 'Scrap Condition (S)'
             ];
             
-            let controlsHTML = `<i data-lucide="circle" class="text-gray-400"></i>`;
+            let controlsHTML = `<i data-lucide="circle" class="text-base-content/40"></i>`;
             if (isFound) {
                 const foundData = foundAssets.get(asset.propertyNumber);
                 const conditionSelect = `
-                    <select class="condition-select w-full md:w-48 border-gray-300 rounded-md shadow-sm text-sm" data-property-number="${asset.propertyNumber}">
+                    <select class="condition-select select select-bordered select-sm w-full max-w-xs font-normal" data-property-number="${asset.propertyNumber}">
                         ${conditionOptions.map(opt => `<option value="${opt}" ${foundData.condition === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                     </select>
                 `;
                 const remarksInput = `
-                    <input type="text" placeholder="Add remarks..." class="remarks-input mt-2 w-full md:w-48 border-gray-300 rounded-md shadow-sm text-sm" data-property-number="${asset.propertyNumber}" value="${foundData.remarks || ''}">
+                    <input type="text" placeholder="Add remarks..." class="remarks-input input input-bordered input-sm w-full max-w-xs" data-property-number="${asset.propertyNumber}" value="${foundData.remarks || ''}">
                 `;
-                controlsHTML = `${conditionSelect}${remarksInput}`;
+                controlsHTML = `<div class="flex flex-col gap-2">${conditionSelect}${remarksInput}</div>`;
             }
 
-            li.innerHTML = `
-                <div class="flex-grow">
+            tr.innerHTML = `
+                <td>
                     <p class="font-medium">${asset.propertyNumber}</p>
-                    <p class="text-sm text-gray-600">${asset.description}</p>
-                </div>
-                <div class="status-controls flex flex-col items-end w-full md:w-auto">
+                    <p class="text-sm text-base-content/70">${asset.description}</p>
+                </td>
+                <td class="status-controls w-48">
                     ${controlsHTML}
-                </div>
+                </td>
             `;
-            assetList.appendChild(li);
+            assetList.appendChild(tr);
         });
         lucide.createIcons();
     }
