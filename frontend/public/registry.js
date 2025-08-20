@@ -106,11 +106,9 @@ function initializeRegistryPage(currentUser) {
         // Populate dropdowns
         DOM.transferOfficeSelect.innerHTML = '<option value="">Select new office...</option>' +
             state.allOffices.map(o => `<option value="${o.name}">${o.name}</option>`).join('');
-
-        // Clear and disable custodian select initially
-        DOM.transferCustodianSelect.innerHTML = '<option value="">Select an office first</option>';
-        DOM.transferCustodianSelect.disabled = true;
-
+        DOM.transferCustodianSelect.innerHTML = '<option value="">Select new custodian...</option>' +
+            state.allEmployees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+        DOM.transferCustodianSelect.disabled = false;
         DOM.transferModal.showModal();
     }
 
@@ -339,16 +337,6 @@ function initializeRegistryPage(currentUser) {
             // Transfer Modal Listeners
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
-            DOM.transferOfficeSelect?.addEventListener('change', () => {
-                const selectedOffice = DOM.transferOfficeSelect.value;
-                const filteredEmployees = state.allEmployees.filter(e => e.office === selectedOffice);
-                
-                DOM.transferCustodianSelect.innerHTML = '<option value="">Select new custodian...</option>';
-                filteredEmployees.forEach(e => {
-                    DOM.transferCustodianSelect.innerHTML += `<option value="${e.name}">${e.name}</option>`;
-                });
-                DOM.transferCustodianSelect.disabled = filteredEmployees.length === 0;
-            });
         }
     };
 
@@ -357,8 +345,15 @@ function initializeRegistryPage(currentUser) {
         uiManager.setLoading(true);
         DOM.selectAllCheckbox.checked = false;
         state.selectedAssetIds = [];
-
         try {
+            let endDateValue = DOM.endDateFilter?.value;
+            if (endDateValue) {
+                // Adjust end date to include the entire day for correct filtering
+                const date = new Date(endDateValue);
+                date.setUTCHours(23, 59, 59, 999);
+                endDateValue = date.toISOString();
+            }
+
             const params = {
                 currentPage: state.currentPage,
                 assetsPerPage: state.assetsPerPage,
@@ -371,7 +366,7 @@ function initializeRegistryPage(currentUser) {
                 fundSource: DOM.fundSourceFilter?.value,
                 assignment: DOM.assignmentFilter?.value,
                 startDate: DOM.startDateFilter?.value,
-                endDate: DOM.endDateFilter?.value
+                endDate: endDateValue
             };
             
             const queryParams = new URLSearchParams(params);
