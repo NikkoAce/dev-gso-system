@@ -500,7 +500,7 @@ const getDashboardStats = async (req, res) => {
     // --- Chart Data Pipelines ---
     const getAssetsByOffice = () => Asset.aggregate([
       { $match: acquisitionDateFilter },
-      { $group: { _id: '$office', count: { $sum: 1 } } },
+      { $group: { _id: { $ifNull: ['$office', 'Unassigned'] }, count: { $sum: 1 } } },
       { $project: { office: '$_id', count: 1, _id: 0 } },
       { $sort: { count: -1 } }
     ]);
