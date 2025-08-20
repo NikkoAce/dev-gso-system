@@ -42,6 +42,9 @@ function initializeDashboard() {
     let assetsByCategoryChartInstance = null;
     let assetStatusChartInstance = null;
     let monthlyAcquisitionChartInstance = null;
+    
+    const recentAssetsTable = document.getElementById('recent-assets-table');
+    const recentRequisitionsTable = document.getElementById('recent-requisitions-table');
 
     async function fetchDashboardData() {
         try {
@@ -60,11 +63,15 @@ function initializeDashboard() {
             renderAssetsByCategoryChart(summaryData.charts.assetsByCategory);
             renderAssetStatusChart(summaryData.charts.assetStatus);
             renderMonthlyAcquisitionChart(summaryData.charts.monthlyAcquisitions);
+            renderRecentAssetsTable(summaryData.tables.recentAssets);
+            renderRecentRequisitionsTable(summaryData.tables.recentRequisitions);
 
         } catch (error) {
             console.error("Failed to fetch dashboard data:", error);
             Object.values(statElements).forEach(el => el.textContent = 'Error');
             Object.values(trendElements).forEach(el => el.textContent = '');
+            recentAssetsTable.innerHTML = `<tr><td class="text-center text-error">Error loading data.</td></tr>`;
+            recentRequisitionsTable.innerHTML = `<tr><td class="text-center text-error">Error loading data.</td></tr>`;
         }
     }
 
@@ -177,6 +184,47 @@ function initializeDashboard() {
                     }
                 }
             }
+        });
+    }
+
+    function renderRecentAssetsTable(assets) {
+        recentAssetsTable.innerHTML = '';
+        if (!assets || assets.length === 0) {
+            recentAssetsTable.innerHTML = `<tr><td class="text-center text-base-content/70">No recent assets.</td></tr>`;
+            return;
+        }
+        assets.forEach(asset => {
+            const row = `
+                <tr>
+                    <td>
+                        <div class="font-bold">${asset.description}</div>
+                        <div class="text-xs opacity-70">${asset.propertyNumber}</div>
+                    </td>
+                    <td>${asset.custodian.name}</td>
+                </tr>
+            `;
+            recentAssetsTable.innerHTML += row;
+        });
+    }
+
+    function renderRecentRequisitionsTable(requisitions) {
+        recentRequisitionsTable.innerHTML = '';
+        if (!requisitions || requisitions.length === 0) {
+            recentRequisitionsTable.innerHTML = `<tr><td class="text-center text-base-content/70">No recent requisitions.</td></tr>`;
+            return;
+        }
+        const statusMap = {
+            'Pending': 'badge-warning',
+            'Issued': 'badge-success',
+        };
+        requisitions.forEach(req => {
+            const row = `
+                <tr>
+                    <td>${req.requestingOffice}</td>
+                    <td><span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span></td>
+                </tr>
+            `;
+            recentRequisitionsTable.innerHTML += row;
         });
     }
 
