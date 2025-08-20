@@ -53,6 +53,25 @@
                             <i data-lucide="plus" class="h-5 w-5"></i> Add Asset
                         </a>
                     </div>
+                    <!-- Filters -->
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body p-4">
+                            <div class="flex flex-wrap items-end gap-4">
+                                <div class="form-control">
+                                    <label class="label"><span class="label-text">Start Date</span></label>
+                                    <input type="date" id="filter-start-date" class="input input-bordered">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label"><span class="label-text">End Date</span></label>
+                                    <input type="date" id="filter-end-date" class="input input-bordered">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button id="apply-filter-btn" class="btn btn-primary">Apply</button>
+                                    <button id="reset-filter-btn" class="btn btn-ghost">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Stat Cards Grid -->
                     <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Total Asset Value -->
@@ -62,6 +81,7 @@
                             </div>
                             <div class="stat-title">Total Asset Value</div>
                             <div id="stat-total-value" class="stat-value">Loading...</div>
+                            <div id="stat-total-value-trend" class="stat-desc"></div>
                         </div>
                         <!-- Total Assets -->
                         <div class="stat card bg-base-100 border">
@@ -70,6 +90,7 @@
                             </div>
                             <div class="stat-title">Total Assets</div>
                             <div id="stat-total-assets" class="stat-value">Loading...</div>
+                            <div id="stat-total-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Assets for Repair -->
                         <div class="stat card bg-base-100 border">
@@ -78,6 +99,7 @@
                             </div>
                             <div class="stat-title">Assets for Repair</div>
                             <div id="stat-for-repair" class="stat-value">Loading...</div>
+                            <div id="stat-for-repair-trend" class="stat-desc"></div>
                         </div>
                         <!-- Disposed Assets -->
                         <div class="stat card bg-base-100 border">
@@ -86,6 +108,7 @@
                             </div>
                             <div class="stat-title">Disposed Assets</div>
                             <div id="stat-disposed" class="stat-value">Loading...</div>
+                            <div id="stat-disposed-trend" class="stat-desc"></div>
                         </div>
                         <!-- Supplies Inventory Value -->
                         <div class="stat card bg-base-100 border">
@@ -94,6 +117,7 @@
                             </div>
                             <div class="stat-title">Supplies Inventory Value</div>
                             <div id="stat-supplies-value" class="stat-value">Loading...</div>
+                            <div id="stat-supplies-value-trend" class="stat-desc"></div>
                         </div>
                         <!-- Pending Requisitions -->
                         <div class="stat card bg-base-100 border">
@@ -102,6 +126,7 @@
                             </div>
                             <div class="stat-title">Pending Requisitions</div>
                             <div id="stat-pending-reqs" class="stat-value">Loading...</div>
+                            <div id="stat-pending-reqs-trend" class="stat-desc"></div>
                         </div>
                     </div>
                     <!-- Charts Grid -->
