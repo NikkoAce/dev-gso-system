@@ -77,9 +77,10 @@
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="form-control">
                                     <label for="category" class="label"><span class="label-text">Category</span></label>
-                                    <select id="category" name="category" class="select select-bordered w-full">
+                                    <input type="text" class="input" placeholder="Select Category" list="category" />
+                                    <datalist id="category" name="category">
                                         <!-- Options will be populated by JS -->
-                                    </select>
+                                    </datalist>
                                 </div>
                                 <div class="form-control">
                                     <label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label>
