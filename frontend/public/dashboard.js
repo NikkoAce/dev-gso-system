@@ -211,7 +211,10 @@ function initializeDashboard() {
                         <div class="font-bold">${asset.description}</div>
                         <div class="text-xs opacity-70">${asset.propertyNumber}</div>
                     </td>
-                    <td>${asset.custodian ? asset.custodian.name : 'Unassigned'}</td>
+                    <td>
+                        <div>${asset.custodian ? asset.custodian.name : 'N/A'}</div>
+                        <div class="text-xs opacity-70">${asset.office || 'Unassigned'}</div>
+                    </td>
                 </tr>
             `;
             recentAssetsTable.innerHTML += row;
