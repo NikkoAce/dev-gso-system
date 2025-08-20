@@ -1,5 +1,5 @@
 const GSO_NAV = `
-<ul class="menu bg-base-200 rounded-box w-56">    
+    
     <li><a href="dashboard.html" class="nav-link info"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
     <li><a href="asset-registry.html" class="nav-link info"><i data-lucide="list"></i>Asset Registry</a></li>
     <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i>Supply Requisitions</a></li>
@@ -8,17 +8,15 @@ const GSO_NAV = `
     <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i>Slip History</a></li>
     <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i>Physical Count</a></li>
     <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i>Scanner</a></li>
-</ul>
 `;
 
 const GSO_SETTINGS = `
         <h2 class="menu-title">Settings & Tools</h2>
-        <ul class="menu bg-base-200 rounded-box w-56">
             <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i>Categories</a></li>
             <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i>Offices</a></li>
             <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i>Employees</a></li>
             <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i>Print QR Labels</a></li>
-        </ul>
+        
 `;
 
 const VIEW_ONLY_NAV = `
@@ -40,8 +38,8 @@ function getSidebarHTML(user) {
             <h1 class="text-xl font-bold text-gray-800">LGU Daet</h1>
             <p class="text-sm text-gray-500">GSO System</p>
         </div>
-        <nav class="flex-grow p-4">
-            <ul class="space-y-2" id="nav-links">${navLinks}</ul>
+        <nav class="navbar flex-grow p-4">
+            <ul class="menu bg-base-200 rounded-box w-56 space-y-2" id="nav-links">${navLinks}</ul>
             ${settings}
         </nav>
         <div class="p-4 border-t">
