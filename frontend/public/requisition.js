@@ -63,13 +63,13 @@ function initializeRequisitionPage(currentUser) {
         requestedItems.forEach((item, index) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-4 font-mono">${item.stockNumber}</td>
-                <td class="p-4">${item.description}</td>
-                <td class="p-4">${item.unitOfMeasure}</td>
-                <td class="p-4 text-center">${item.quantityRequested}</td>
-                <td class="p-4 text-center">
-                    <button type="button" class="remove-item-btn text-red-500 hover:text-red-700" data-index="${index}" title="Remove Item">
-                        <i data-lucide="trash-2" class="h-5 w-5"></i>
+                <td class="font-mono">${item.stockNumber}</td>
+                <td>${item.description}</td>
+                <td>${item.unitOfMeasure}</td>
+                <td class="text-center">${item.quantityRequested}</td>
+                <td class="text-center">
+                    <button type="button" class="remove-item-btn btn btn-ghost btn-xs text-red-500" data-index="${index}" title="Remove Item">
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
                     </button>
                 </td>
             `;

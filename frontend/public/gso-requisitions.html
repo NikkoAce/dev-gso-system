@@ -42,23 +42,25 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-7xl mx-auto">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Supply Requisitions</h1>
-                    
-                    <div class="bg-white rounded-lg border overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50">
+
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left">RIS No.</th>
-                                    <th class="px-4 py-3 text-left">Requesting Office</th>
-                                    <th class="px-4 py-3 text-left">Date Requested</th>
-                                    <th class="px-4 py-3 text-left">Purpose</th>
-                                    <th class="px-4 py-3 text-center">Status</th>
-                                    <th class="px-4 py-3 text-center">Actions</th>
+                                        <th>RIS No.</th>
+                                        <th>Requesting Office</th>
+                                        <th>Date Requested</th>
+                                        <th>Purpose</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Actions</th>
                                 </tr>
-                            </thead>
-                            <tbody id="requisitions-list" class="divide-y">
+                                </thead>
+                                <tbody id="requisitions-list">
                                 <!-- JS will populate this -->
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -66,19 +68,14 @@
     </div>
 
     <!-- Requisition Details Modal -->
-    <div id="requisition-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center pb-3 border-b">
-                <h3 class="text-xl font-bold text-gray-900" id="modal-title">Requisition Details</h3>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
-            </div>
-            <div id="modal-content" class="mt-4 max-h-[75vh] overflow-y-auto">
+    <dialog id="requisition-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <h3 id="modal-title" class="font-bold text-lg">Requisition Details</h3>
+            <div id="modal-content" class="py-4 max-h-[75vh] overflow-y-auto">
                 <!-- JS will populate this -->
             </div>
         </div>
-    </div>
+    </dialog>
 
     <script src="security.js"></script>
     <script src="layout.js"></script>

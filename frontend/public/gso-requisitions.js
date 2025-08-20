@@ -26,14 +26,12 @@ function initializeGsoRequisitionsPage(currentUser) {
     const modal = document.getElementById('requisition-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
-    const closeModalBtn = document.getElementById('close-modal-btn');
 
     const statusMap = {
-        'Pending': 'bg-yellow-100 text-yellow-800',
-        'Approved': 'bg-blue-100 text-blue-800',
-        'Issued': 'bg-green-100 text-green-800',
-        'Rejected': 'bg-red-100 text-red-800',
-        'Cancelled': 'bg-gray-100 text-gray-800'
+        'Pending': 'badge-warning',
+        'Issued': 'badge-success',
+        'Rejected': 'badge-error',
+        'Cancelled': 'badge-ghost'
     };
 
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
@@ -41,7 +39,7 @@ function initializeGsoRequisitionsPage(currentUser) {
     // --- DATA FETCHING & RENDERING ---
     async function fetchAndRenderRequisitions() {
         try {
-            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Loading requisitions...</td></tr>`;
+            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-base-content/70">Loading requisitions...</td></tr>`;
             // No auth headers needed, fetchWithAuth handles it.
             allRequisitions = await fetchWithAuth(API_ENDPOINT);
             renderRequisitionsTable();
@@ -54,22 +52,22 @@ function initializeGsoRequisitionsPage(currentUser) {
     function renderRequisitionsTable() {
         requisitionsList.innerHTML = '';
         if (allRequisitions.length === 0) {
-            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">No requisitions found.</td></tr>`;
+            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-base-content/70">No requisitions found.</td></tr>`;
             return;
         }
         allRequisitions.forEach(req => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-4 font-mono">${req.risNumber}</td>
-                <td class="p-4">${req.requestingOffice}</td>
-                <td class="p-4">${formatDate(req.dateRequested)}</td>
-                <td class="p-4 truncate max-w-xs">${req.purpose}</td>
-                <td class="p-4 text-center">
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusMap[req.status] || 'bg-gray-100'}">${req.status}</span>
+                <td class="font-mono">${req.risNumber}</td>
+                <td>${req.requestingOffice}</td>
+                <td>${formatDate(req.dateRequested)}</td>
+                <td class="truncate max-w-xs">${req.purpose}</td>
+                <td class="text-center">
+                    <span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span>
                 </td>
-                <td class="p-4 text-center">
-                    <button class="view-req-btn text-blue-600 hover:text-blue-800" data-id="${req._id}" title="View Details">
-                        <i data-lucide="eye" class="h-5 w-5"></i>
+                <td class="text-center">
+                    <button class="view-req-btn btn btn-ghost btn-xs" data-id="${req._id}" title="View Details">
+                        <i data-lucide="eye" class="h-4 w-4"></i>
                     </button>
                 </td>
             `;
@@ -80,14 +78,14 @@ function initializeGsoRequisitionsPage(currentUser) {
 
     // --- MODAL LOGIC ---
     function closeModal() {
-        modal.classList.add('hidden');
+        modal.close();
     }
 
     async function openModal(requisitionId) {
         try {
             const requisition = await fetchWithAuth(`${API_ENDPOINT}/${requisitionId}`);
             renderModalContent(requisition);
-            modal.classList.remove('hidden');
+            modal.showModal();
         } catch (error) {
             alert(`Error: ${error.message}`);
         }
@@ -99,30 +97,26 @@ function initializeGsoRequisitionsPage(currentUser) {
 
         const itemsHTML = req.items.map(item => `
                 <tr class="border-b">
-                    <td class="p-2">${item.stockItem?.stockNumber || 'N/A'}</td>
-                    <td class="p-2">${item.description}</td>
-                    <td class="p-2 text-center">${item.quantityRequested}</td>
-                    <td class="p-2 text-center">
-                        <input type="number" class="issued-qty-input w-20 text-center border-gray-300 rounded-md shadow-sm"
+                    <td>${item.stockItem?.stockNumber || 'N/A'}</td>
+                    <td>${item.description}</td>
+                    <td class="text-center">${item.quantityRequested}</td>
+                    <td class="text-center">
+                        <input type="number" class="issued-qty-input input input-bordered input-sm w-24 text-center"
                                data-stock-id="${item.stockItem._id}"
                                data-description="${item.description}"
-                               value="${isActionable ? item.quantityRequested : item.quantityIssued}" 
-                               min="0" max="${item.quantityRequested}" ${!isActionable ? 'readonly' : ''}>
+                               value="${isActionable ? item.quantityRequested : item.quantityIssued}"
+                               min="0" max="${item.quantityRequested}" ${!isActionable ? 'readonly class="bg-base-200"' : ''}>
                     </td>
-                    <td class="p-2 text-center">${item.quantityIssued}</td>
+                    <td class="text-center">${item.quantityIssued}</td>
                 </tr>
             `).join('');
 
         let footerHTML = '';
         if (isActionable) {
             footerHTML = `
-                <div class="pt-4 border-t">
-                    <label for="remarks-input" class="block text-sm font-medium text-gray-700">Remarks</label>
-                    <textarea id="remarks-input" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="Add remarks for rejection or partial issuance...">${req.remarks || ''}</textarea>
-                </div>
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button id="reject-btn" data-id="${req._id}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Reject</button>
-                    <button id="issue-btn" data-id="${req._id}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Issue Items & Approve</button>
+                <div class="form-control pt-4 border-t">
+                    <label for="remarks-input" class="label"><span class="label-text">Remarks</span></label>
+                    <textarea id="remarks-input" rows="2" class="textarea textarea-bordered" placeholder="Add remarks for
                 </div>
             `;
         } else {
@@ -150,19 +144,12 @@ function initializeGsoRequisitionsPage(currentUser) {
                 </div>
                 <p class="text-sm"><strong>Purpose:</strong> ${req.purpose}</p>
                 
-                <h4 class="font-semibold pt-2 border-t">Items Requested</h4>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="p-2 text-left">Stock No.</th>
-                            <th class="p-2 text-left">Description</th>
-                            <th class="p-2 text-center">Qty Requested</th>
-                            <th class="p-2 text-center">Qty to Issue</th>
-                            <th class="p-2 text-center">Previously Issued</th>
-                        </tr>
-                    </thead>
-                    <tbody>${itemsHTML}</tbody>
-                </table>
+                <div class="divider">Items Requested</div>
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th>Stock No.</th>
                 
                 ${footerHTML}
             </div>
