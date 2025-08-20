@@ -1,6 +1,6 @@
 const GSO_NAV = `
 <ul class="menu bg-base-200 rounded-box w-56">    
-<li><a href="dashboard.html" class="nav-link" ><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+    <li><a href="dashboard.html" class="nav-link" ><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
     <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i>Asset Registry</a></li>
     <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i>Supply Requisitions</a></li>
     <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i>Supplies Inventory</a></li>
@@ -13,7 +13,7 @@ const GSO_NAV = `
 
 const GSO_SETTINGS = `
         <h2 class="menu-title">Settings & Tools</h2>
-        <ul class="menu bg-base-200>
+        <ul class="menu bg-base-200 rounded-box w-56">
             <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i>Categories</a></li>
             <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i>Offices</a></li>
             <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i>Employees</a></li>
