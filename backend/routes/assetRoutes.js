@@ -19,8 +19,8 @@ const {
 
 router.get('/my-assets', protect, getMyOfficeAssets);
 
-// Route for dashboard stats
-router.get('/stats', protect, gso, getDashboardStats);
+// Route for dashboard stats - Changed from /stats to /dashboard/summary
+router.get('/dashboard/summary', protect, gso, getDashboardStats);
 
 // Route for getting the next property number
 router.get('/next-number', protect, gso, getNextPropertyNumber);

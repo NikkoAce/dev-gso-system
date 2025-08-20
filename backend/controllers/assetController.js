@@ -1,5 +1,6 @@
 const Asset = require('../models/Asset');
 const Employee = require('../models/Employee');
+const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
 const { Readable } = require('stream');
 
@@ -445,7 +446,34 @@ const bulkTransferAssets = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
     try {
-        const [totalStats, statusCounts, categoryCounts] = await Promise.all([
+        const { startDate, endDate } = req.query;
+
+        // 1. Define Date Filters
+        const dateFilter = {};
+        if (startDate) dateFilter.$gte = new Date(startDate);
+        if (endDate) dateFilter.$lte = new Date(endDate);
+
+        const hasDateFilter = Object.keys(dateFilter).length > 0;
+
+        // --- Trend Calculation ---
+        let previousPeriodFilter = {};
+        if (hasDateFilter) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diff = end.getTime() - start.getTime();
+            const prevEnd = new Date(start.getTime() - 1);
+            const prevStart = new Date(prevEnd.getTime() - diff);
+            previousPeriodFilter = { $gte: prevStart, $lte: prevEnd };
+        }
+
+        const calculateTrend = (current, previous) => {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            if (current === previous) return 0;
+            return parseFloat((((current - previous) / previous) * 100).toFixed(2));
+        };
+
+        // 2. Fetch Data Concurrently
+        const [
             Asset.aggregate([
                 {
                     $group: {
