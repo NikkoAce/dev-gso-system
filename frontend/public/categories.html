@@ -45,7 +45,8 @@
 
                     <div class="card bg-base-100 border mb-8">
                         <form id="add-category-form" class="card-body">
-                            <h2 class="card-title mb-4">Add New Category</h2>
+                            <h2 id="category-form-title" class="card-title mb-4">Add New Category</h2>
+                            <input type="hidden" id="category-id">
                             <div class="form-control">
                                 <label for="new-category-name" class="label"><span class="label-text">Category Name *</span></label>
                                 <input type="text" id="new-category-name" placeholder="e.g., IT Equipment" class="input input-bordered w-full" required>
@@ -71,7 +72,8 @@
                                 </div>
                             </div>
                             <div class="card-actions justify-end">
-                                <button type="submit" class="btn btn-primary">Add Category</button>
+                                <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
+                                <button type="submit" id="submit-category-btn" class="btn btn-primary">Add Category</button>
                             </div>
                         </form>
                     </div>

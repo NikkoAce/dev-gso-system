@@ -85,6 +85,9 @@ function initializeEmployeesPage(currentUser) {
         const method = employeeId ? 'PUT' : 'POST';
         const endpoint = employeeId ? `${API_ENDPOINT}/${employeeId}` : API_ENDPOINT;
 
+        submitBtn.classList.add("loading");
+        submitBtn.disabled = true;
+
         try {
             await fetchWithAuth(endpoint, {
                 method: method,
@@ -94,6 +97,9 @@ function initializeEmployeesPage(currentUser) {
             fetchAndRenderEmployees();
         } catch (error) {
             alert(`Error: ${error.message}`);
+        } finally {
+            submitBtn.classList.remove("loading");
+            submitBtn.disabled = false;
         }
     });
 
@@ -116,11 +122,14 @@ function initializeEmployeesPage(currentUser) {
         if (deleteButton) {
             const employeeId = deleteButton.dataset.id;
             if (confirm('Are you sure you want to delete this employee?')) {
+                deleteButton.disabled = true;
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${employeeId}`, { method: 'DELETE' });
                     fetchAndRenderEmployees();
                 } catch (error) {
                     alert(`Error: ${error.message}`);
+                } finally {
+                    deleteButton.disabled = false;
                 }
             }
         }

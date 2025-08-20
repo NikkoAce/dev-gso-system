@@ -19,11 +19,15 @@ function initializeCategoriesPage(currentUser) {
 
     const categoryList = document.getElementById('category-list');
     const addCategoryForm = document.getElementById('add-category-form');
+    const categoryIdInput = document.getElementById('category-id');
     const newCategoryNameInput = document.getElementById('new-category-name');
     const newAccountGroupInput = document.getElementById('new-account-group');
     const newMajorAccountGroupInput = document.getElementById('new-major-account-group');
     const newSubMajorGroupInput = document.getElementById('new-sub-major-group');
     const newGlAccountInput = document.getElementById('new-gl-account');
+    const formTitle = document.getElementById('category-form-title');
+    const submitBtn = document.getElementById('submit-category-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
 
     // --- DATA FETCHING & RENDERING ---
     async function fetchAndRenderCategories() {
@@ -51,14 +55,37 @@ function initializeCategoriesPage(currentUser) {
                 <td>${category.subMajorGroup}</td>
                 <td>${category.glAccount}</td>
                 <td class="text-center">
-                    <button class="delete-category-btn btn btn-ghost btn-xs text-red-500" data-id="${category._id}" title="Delete Category">
-                        <i data-lucide="trash-2" class="h-4 w-4"></i>
-                    </button>
+                    <div class="flex justify-center items-center gap-1">
+                        <button class="edit-category-btn btn btn-ghost btn-xs" data-id="${category._id}" title="Edit Category"><i data-lucide="edit" class="h-4 w-4"></i></button>
+                        <button class="delete-category-btn btn btn-ghost btn-xs text-red-500" data-id="${category._id}" title="Delete Category"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                    </div>
                 </td>
             `;
             categoryList.appendChild(tr);
         });
         lucide.createIcons();
+    }
+
+    // --- FORM STATE ---
+    function resetForm() {
+        addCategoryForm.reset();
+        categoryIdInput.value = '';
+        formTitle.textContent = 'Add New Category';
+        submitBtn.textContent = 'Add Category';
+        cancelBtn.classList.add('hidden');
+    }
+
+    function populateFormForEdit(category) {
+        categoryIdInput.value = category._id;
+        newCategoryNameInput.value = category.name;
+        newAccountGroupInput.value = category.accountGroup || '';
+        newMajorAccountGroupInput.value = category.majorAccountGroup || '';
+        newSubMajorGroupInput.value = category.subMajorGroup;
+        newGlAccountInput.value = category.glAccount;
+        formTitle.textContent = 'Edit Category';
+        submitBtn.textContent = 'Save Changes';
+        cancelBtn.classList.remove('hidden');
+        window.scrollTo(0, 0);
     }
 
     // --- EVENT LISTENERS ---
@@ -69,38 +96,64 @@ function initializeCategoriesPage(currentUser) {
         const glAccount = newGlAccountInput.value.trim();
         const accountGroup = newAccountGroupInput.value.trim();
         const majorAccountGroup = newMajorAccountGroupInput.value.trim();
+        const categoryId = categoryIdInput.value;
         
         if (!name || !subMajorGroup || !glAccount) {
             alert('Category Name, Sub-Major Group, and GL Account are required.');
             return;
         }
 
+        const method = categoryId ? 'PUT' : 'POST';
+        const endpoint = categoryId ? `${API_ENDPOINT}/${categoryId}` : API_ENDPOINT;
+        const body = { name, subMajorGroup, glAccount, accountGroup, majorAccountGroup };
+
+        submitBtn.classList.add("loading");
+        submitBtn.disabled = true;
+
         try {
-            await fetchWithAuth(API_ENDPOINT, {
-                method: 'POST',
-                body: JSON.stringify({ name, subMajorGroup, glAccount, accountGroup, majorAccountGroup })
+            await fetchWithAuth(endpoint, {
+                method: method,
+                body: JSON.stringify(body)
             });
-            addCategoryForm.reset();
+            resetForm();
             fetchAndRenderCategories(); // Refresh list
         } catch (error) {
             alert(`Error: ${error.message}`);
+        } finally {
+            submitBtn.classList.remove("loading");
+            submitBtn.disabled = false;
         }
     });
 
     categoryList.addEventListener('click', async (e) => {
+        const editButton = e.target.closest('.edit-category-btn');
+        if (editButton) {
+            const categoryId = editButton.dataset.id;
+            const category = allCategories.find(cat => cat._id === categoryId);
+            if (category) {
+                populateFormForEdit(category);
+            }
+            return;
+        }
+
         const deleteButton = e.target.closest('.delete-category-btn');
         if (deleteButton) {
             const categoryId = deleteButton.dataset.id;
             if (confirm('Are you sure you want to delete this category?')) {
+                deleteButton.disabled = true;
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${categoryId}`, { method: 'DELETE' });
                     fetchAndRenderCategories(); // Refresh list
                 } catch (error) {
                     alert(`Error: ${error.message}`);
+                } finally {
+                    deleteButton.disabled = false;
                 }
             }
         }
     });
+
+    cancelBtn.addEventListener('click', resetForm);
 
     // --- INITIALIZATION ---
     fetchAndRenderCategories();

@@ -84,6 +84,9 @@ function initializeOfficesPage(currentUser) {
         const method = officeId ? 'PUT' : 'POST';
         const endpoint = officeId ? `${API_ENDPOINT}/${officeId}` : API_ENDPOINT;
 
+        submitBtn.classList.add("loading");
+        submitBtn.disabled = true;
+
         try {
             await fetchWithAuth(endpoint, {
                 method: method,
@@ -93,6 +96,9 @@ function initializeOfficesPage(currentUser) {
             fetchAndRenderOffices();
         } catch (error) {
             alert(`Error: ${error.message}`);
+        } finally {
+            submitBtn.classList.remove("loading");
+            submitBtn.disabled = false;
         }
     });
 
@@ -115,11 +121,14 @@ function initializeOfficesPage(currentUser) {
         if (deleteButton) {
             const officeId = deleteButton.dataset.id;
             if (confirm('Are you sure you want to delete this office?')) {
+                deleteButton.disabled = true;
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${officeId}`, { method: 'DELETE' });
                     fetchAndRenderOffices();
                 } catch (error) {
                     alert(`Error: ${error.message}`);
+                } finally {
+                    deleteButton.disabled = false;
                 }
             }
         }
