@@ -46,12 +46,12 @@ function initializeOfficesPage(currentUser) {
         allOffices.forEach(office => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-4">${office.name}</td>
-                <td class="p-4">${office.code}</td>
-                <td class="p-4 text-center">
-                    <div class="flex justify-center items-center space-x-3">
-                        <button class="edit-office-btn text-blue-600 hover:text-blue-800" data-id="${office._id}" title="Edit Office"><i data-lucide="edit" class="h-5 w-5"></i></button>
-                        <button class="delete-office-btn text-red-500 hover:text-red-700" data-id="${office._id}" title="Delete Office"><i data-lucide="trash-2" class="h-5 w-5"></i></button>
+                <td>${office.name}</td>
+                <td>${office.code}</td>
+                <td class="text-center">
+                    <div class="flex justify-center items-center gap-1">
+                        <button class="edit-office-btn btn btn-ghost btn-xs" data-id="${office._id}" title="Edit Office"><i data-lucide="edit" class="h-4 w-4"></i></button>
+                        <button class="delete-office-btn btn btn-ghost btn-xs text-red-500" data-id="${office._id}" title="Delete Office"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
                     </div>
                 </td>
             `;

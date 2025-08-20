@@ -47,12 +47,12 @@ function initializeEmployeesPage(currentUser) {
         allEmployees.forEach(employee => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-4">${employee.name}</td>
-                <td class="p-4">${employee.designation}</td>
-                <td class="p-4 text-center">
-                    <div class="flex justify-center items-center space-x-3">
-                        <button class="edit-employee-btn text-blue-600 hover:text-blue-800" data-id="${employee._id}" title="Edit Employee"><i data-lucide="edit" class="h-5 w-5"></i></button>
-                        <button class="delete-employee-btn text-red-500 hover:text-red-700" data-id="${employee._id}" title="Delete Employee"><i data-lucide="trash-2" class="h-5 w-5"></i></button>
+                <td>${employee.name}</td>
+                <td>${employee.designation}</td>
+                <td class="text-center">
+                    <div class="flex justify-center items-center gap-1">
+                        <button class="edit-employee-btn btn btn-ghost btn-xs" data-id="${employee._id}" title="Edit Employee"><i data-lucide="edit" class="h-4 w-4"></i></button>
+                        <button class="delete-employee-btn btn btn-ghost btn-xs text-red-500" data-id="${employee._id}" title="Delete Employee"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
                     </div>
                 </td>
             `;

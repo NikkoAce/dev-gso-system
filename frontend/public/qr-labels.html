@@ -87,26 +87,30 @@
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
-                <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-bold text-gray-800">Select Assets to Print Labels</h1>
-                    <button id="print-labels-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                        <i data-lucide="printer"></i> Print Selected
-                    </button>
-                </div>
-                <div class="bg-white rounded-lg border overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3"><input type="checkbox" id="select-all-assets"></th>
-                                <th class="px-6 py-3">Property No.</th>
-                                <th class="px-6 py-3">Description</th>
-                                <th class="px-6 py-3">Custodian</th>
-                            </tr>
-                        </thead>
-                        <tbody id="asset-selection-table-body">
-                            <!-- JS will populate this -->
-                        </tbody>
-                    </table>
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-3xl font-bold text-gray-800">Select Assets to Print Labels</h1>
+                        <button id="print-labels-btn" class="btn btn-primary">
+                            <i data-lucide="printer"></i> Print Selected
+                        </button>
+                    </div>
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="select-all-assets" class="checkbox checkbox-sm"></th>
+                                        <th>Property No.</th>
+                                        <th>Description</th>
+                                        <th>Custodian</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-selection-table-body">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

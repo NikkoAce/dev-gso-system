@@ -42,38 +42,42 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-2xl mx-auto">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Employees</h1>
-                    
-                    <div class="bg-white p-6 rounded-lg border mb-8">
-                        <h2 id="employee-form-title" class="text-lg font-semibold text-gray-700 mb-4">Add New Employee</h2>
-                        <form id="add-employee-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    <div class="card bg-base-100 border mb-8">
+                        <form id="add-employee-form" class="card-body">
+                            <h2 id="employee-form-title" class="card-title mb-4">Add New Employee</h2>
                             <input type="hidden" id="employee-id">
-                            <div class="md:col-span-2">
-                                <label for="new-employee-name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                                <input type="text" id="new-employee-name" placeholder="e.g., Juan Dela Cruz" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="md:col-span-2 form-control">
+                                    <label for="new-employee-name" class="label"><span class="label-text">Full Name</span></label>
+                                    <input type="text" id="new-employee-name" placeholder="e.g., Juan Dela Cruz" class="input input-bordered w-full" required>
+                                </div>
+                                <div class="form-control">
+                                    <label for="new-employee-designation" class="label"><span class="label-text">Designation</span></label>
+                                    <input type="text" id="new-employee-designation" placeholder="e.g., Municipal Mayor" class="input input-bordered w-full" required>
+                                </div>
                             </div>
-                            <div>
-                                <label for="new-employee-designation" class="block text-sm font-medium text-gray-700">Designation</label>
-                                <input type="text" id="new-employee-designation" placeholder="e.g., Municipal Mayor" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-                            </div>
-                            <div class="md:col-span-3 text-right space-x-2">
-                                <button type="button" id="cancel-edit-btn" class="hidden bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                                <button type="submit" id="submit-employee-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Add Employee</button>
+                            <div class="card-actions justify-end">
+                                <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
+                                <button type="submit" id="submit-employee-btn" class="btn btn-primary">Add Employee</button>
                             </div>
                         </form>
                     </div>
 
-                    <div class="bg-white rounded-lg border">
-                        <h2 class="text-lg font-semibold text-gray-700 p-4 border-b">Existing Employees</h2>
+                    <div class="card bg-base-100 border">
+                        <div class="card-body">
+                            <h2 class="card-title">Existing Employees</h2>
+                        </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-gray-50">
+                            <table class="table table-zebra w-full">
+                                <thead>
                                     <tr>
-                                        <th class="px-4 py-2 text-left">Name</th>
-                                        <th class="px-4 py-2 text-left">Designation</th>
-                                        <th class="px-4 py-2 text-center">Actions</th>
+                                        <th>Name</th>
+                                        <th>Designation</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="employee-list" class="divide-y">
+                                <tbody id="employee-list">
                                     <!-- JS will populate this -->
                                 </tbody>
                             </table>

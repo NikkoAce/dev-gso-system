@@ -43,21 +43,20 @@ function initializeQrLabelsPage(currentUser) {
 
         allAssets.forEach(asset => {
             const tr = document.createElement('tr');
-            tr.className = 'bg-white border-b';
             
             let custodianDisplay = '';
             if (asset.custodian) {
                 custodianDisplay = `
-                    <div class="font-medium text-gray-900">${asset.custodian.name}</div>
-                    <div class="text-gray-500 text-xs">${asset.custodian.office}</div>
+                    <div class="font-medium">${asset.custodian.name}</div>
+                    <div class="text-xs opacity-70">${asset.custodian.office}</div>
                 `;
             }
 
             tr.innerHTML = `
-                <td class="px-4 py-4"><input type="checkbox" class="asset-checkbox" data-id="${asset._id}"></td>
-                <td class="px-6 py-4 font-mono">${asset.propertyNumber}</td>
-                <td class="px-6 py-4">${asset.description}</td>
-                <td class="px-6 py-4">${custodianDisplay}</td>
+                <td><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}"></td>
+                <td class="font-mono">${asset.propertyNumber}</td>
+                <td>${asset.description}</td>
+                <td>${custodianDisplay}</td>
             `;
             assetTableBody.appendChild(tr);
         });
