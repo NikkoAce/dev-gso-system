@@ -41,58 +41,62 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
                     <h1 class="text-3xl font-bold text-gray-800">Reports</h1>
-                    <div class="bg-white p-6 rounded-lg border mb-8 non-printable">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Generate Group Reports</h2>
-                        <div class="flex flex-wrap items-end gap-4">
-                            <div>
-                                <label for="fund-source-filter" class="block text-sm font-medium text-gray-700">Fund Source</label>
-                                <select id="fund-source-filter" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body">
+                            <h2 class="card-title">Generate Group Reports</h2>
+                            <div class="flex flex-wrap items-end gap-4">
+                                <div class="form-control w-full max-w-xs">
+                                    <label for="fund-source-filter" class="label"><span class="label-text">Fund Source</span></label>
+                                    <select id="fund-source-filter" class="select select-bordered font-normal">
                                     <option value="">Select a Fund Source</option>
                                     <option>General Fund</option>
                                     <option>Special Education Fund</option>
                                     <option>Trust Fund</option>
                                 </select>
                             </div>
-                            <div>
-                                <label for="category-filter" class="block text-sm font-medium text-gray-700">Category</label>
-                                <select id="category-filter" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                <div class="form-control w-full max-w-xs">
+                                    <label for="category-filter" class="label"><span class="label-text">Category</span></label>
+                                    <select id="category-filter" class="select select-bordered font-normal">
                                     <option value="">All Categories</option>
                                     <!-- JS will populate this -->
                                 </select>
                             </div>
-                            <div>
-                                <label for="as-at-date" class="block text-sm font-medium text-gray-700">As at Date</label>
-                                <input type="date" id="as-at-date" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                                <div class="form-control w-full max-w-xs">
+                                    <label for="as-at-date" class="label"><span class="label-text">As at Date</span></label>
+                                    <input type="date" id="as-at-date" class="input input-bordered">
                             </div>
-                            <button id="generate-rpcppe" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                                <button id="generate-rpcppe" class="btn btn-primary">
                                 <i data-lucide="file-text"></i> Generate RPCPPE
                             </button>
-                            <button id="generate-depreciation" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+                                <button id="generate-depreciation" class="btn btn-success">
                                 <i data-lucide="file-text"></i> Generate Depreciation Report
                             </button>
                         </div>
                     </div>
+                    </div>
 
                     <!-- UPDATED: Ledger Card Section with Searchable Input -->
-                    <div class="bg-white p-6 rounded-lg border mb-8 non-printable">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Generate Individual Ledger Card</h2>
-                        <div class="flex flex-wrap items-end gap-4">
-                            <div class="relative flex-grow">
-                                <label for="asset-search-input" class="block text-sm font-medium text-gray-700">Select Asset</label>
-                                <input type="text" id="asset-search-input" placeholder="Type to search for an asset..." class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                <div id="asset-search-results" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto"></div>
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body">
+                            <h2 class="card-title">Generate Individual Ledger Card</h2>
+                            <div class="flex flex-wrap items-end gap-4">
+                                <div class="relative flex-grow form-control w-full max-w-md">
+                                    <label for="asset-search-input" class="label"><span class="label-text">Select Asset</span></label>
+                                    <input type="text" id="asset-search-input" placeholder="Type to search for an asset..." class="input input-bordered">
+                                    <div id="asset-search-results" class="hidden absolute z-10 w-full bg-base-100 border border-base-300 rounded-md mt-1 max-h-60 overflow-y-auto top-full"></div>
                                 <input type="hidden" id="selected-asset-id">
                             </div>
-                            <button id="generate-ledger-card" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                                <button id="generate-ledger-card" class="btn btn-accent">
                                 <i data-lucide="book-marked"></i> Generate Ledger Card
                             </button>
                         </div>
+                    </div>
                     </div>
 
                     <div id="report-output" class="hidden bg-white p-6 rounded-lg border printable-area">
                         <div class="flex justify-between items-center mb-4 non-printable">
                             <h2 id="report-title" class="text-xl font-bold text-gray-800"></h2>
-                            <button id="print-report-btn" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 flex items-center gap-2">
+                            <button id="print-report-btn" class="btn btn-ghost">
                                 <i data-lucide="printer"></i> Print Report
                             </button>
                         </div>
