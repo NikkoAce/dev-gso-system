@@ -43,48 +43,52 @@
                 <div class="space-y-6">
                     <div class="flex justify-between items-center">
                         <h1 class="text-3xl font-bold text-gray-800">Annual Physical Count</h1>
-                        <button id="save-count-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                        <button id="save-count-btn" class="btn btn-primary">
                             <i data-lucide="save"></i> Save Physical Count
                         </button>
                     </div>
 
                     <!-- Search and Filter Controls -->
-                    <div class="p-4 bg-white rounded-lg border non-printable space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div class="lg:col-span-2">
-                                <label for="search-input" class="sr-only">Search</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body p-4">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="form-control flex-grow">
+                                    <label for="search-input" class="label sr-only"><span class="label-text">Search</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                        </div>
+                                        <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="input input-bordered w-full pl-10">
                                     </div>
-                                    <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="w-full pl-10 p-2 border-gray-300 rounded-md shadow-sm">
                                 </div>
-                            </div>
-                            <div>
-                                <label for="office-filter" class="sr-only">Office</label>
-                                <select id="office-filter" class="w-full p-2 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">Filter by Office</option>
-                                    <!-- JS will populate this -->
-                                </select>
+                                <div class="form-control w-full md:w-64">
+                                    <label for="office-filter" class="label sr-only"><span class="label-text">Office</span></label>
+                                    <select id="office-filter" class="select select-bordered font-normal">
+                                        <option value="">Filter by Office</option>
+                                        <!-- JS will populate this -->
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-lg border overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
                                 <tr>
-                                    <th class="px-6 py-3">Property No.</th>
-                                    <th class="px-6 py-3">Description</th>
-                                    <th class="px-6 py-3">Custodian</th>
-                                    <th class="px-6 py-3 w-48">Condition</th>
-                                    <th class="px-6 py-3 w-64">Remarks</th>
+                                    <th>Property No.</th>
+                                    <th>Description</th>
+                                    <th>Custodian</th>
+                                    <th class="w-48">Condition</th>
+                                    <th class="w-64">Remarks</th>
                                 </tr>
                             </thead>
                             <tbody id="physical-count-table-body">
                                 <!-- JS will populate this -->
                             </tbody>
                         </table>
+                        </div>
                     </div>
                      <!-- Pagination Controls -->
                     <div id="pagination-controls" class="flex justify-between items-center non-printable">

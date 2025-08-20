@@ -65,20 +65,24 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card bg-base-1
-                                <tr>
-                                    <th class="px-6 py-3">Slip Number</th>
-                                    <th class="px-6 py-3">Type</th>
-                                    <th class="px-6 py-3">Custodian</th>
-                                    <th class="px-6 py-3">No. of Items</th>
-                                    <th class="px-6 py-3">Issued Date</th>
-                                    <th class="px-6 py-3 text-center non-printable">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="slip-history-table-body">
-                                <tr><td colspan="6" class="text-center p-8">Loading slip history...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3">Slip Number</th>
+                                        <th class="px-6 py-3">Type</th>
+                                        <th class="px-6 py-3">Custodian</th>
+                                        <th class="px-6 py-3">No. of Items</th>
+                                        <th class="px-6 py-3">Issued Date</th>
+                                        <th class="px-6 py-3 text-center non-printable">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="slip-history-table-body">
+                                    <tr><td colspan="6" class="text-center p-8">Loading slip history...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div id="pagination-controls" class="flex justify-between items-center non-printable">
                         <!-- JS will populate this -->
@@ -89,14 +93,9 @@
     </div>
 
     <!-- Modal for viewing slip details -->
-    <div id="slip-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 non-printable">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h2 id="modal-title" class="text-xl font-bold text-gray-800">Slip Details</h2>
-                <button id="close-slip-modal" class="text-gray-500 hover:text-gray-800">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
-            </div>
+    <dialog id="slip-details-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <h3 id="modal-title" class="font-bold text-lg">Slip Details</h3>
             <div class="p-6 overflow-y-auto">
                 <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                     <div><strong>Slip Number:</strong> <span id="modal-slip-number"></span></div>

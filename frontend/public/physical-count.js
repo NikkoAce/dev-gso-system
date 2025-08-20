@@ -80,7 +80,7 @@ function initializePhysicalCountPage(currentUser) {
 
         paginatedAssets.forEach(asset => {
             const tr = document.createElement('tr');
-            tr.className = 'bg-white border-b';
+            // tr.className = 'bg-white border-b'; // This is handled by table-zebra
             tr.dataset.assetId = asset._id;
 
             let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
@@ -104,19 +104,19 @@ function initializePhysicalCountPage(currentUser) {
             ];
 
             const selectHTML = `
-                <select class="condition-input w-full border-gray-300 rounded-md shadow-sm text-sm">
+                <select class="condition-input select select-bordered select-sm w-full font-normal">
                     <option value="">Select...</option>
                     ${conditionOptions.map(opt => `<option value="${opt}" ${asset.condition === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
             `;
 
             tr.innerHTML = `
-                <td class="px-6 py-4 font-medium">${asset.propertyNumber}</td>
-                <td class="px-6 py-4">${fullDescription}</td>
-                <td class="px-6 py-4">${custodianDisplay}</td>
-                <td class="px-6 py-4">${selectHTML}</td>
-                <td class="px-6 py-4">
-                    <input type="text" class="remarks-input w-full border-gray-300 rounded-md shadow-sm text-sm" value="${asset.remarks || ''}">
+                <td class="font-medium">${asset.propertyNumber}</td>
+                <td>${fullDescription}</td>
+                <td>${custodianDisplay}</td>
+                <td>${selectHTML}</td>
+                <td>
+                    <input type="text" class="remarks-input input input-bordered input-sm w-full" value="${asset.remarks || ''}">
                 </td>
             `;
             tableBody.appendChild(tr);
@@ -134,14 +134,14 @@ function initializePhysicalCountPage(currentUser) {
                 to <span class="font-semibold">${Math.min(currentPage * itemsPerPage, totalItems)}</span>
                 of <span class="font-semibold">${totalItems}</span> Results
             </span>
-            <div class="inline-flex mt-2 xs:mt-0">
+            <div class="btn-group">
         `;
         
         if (currentPage > 1) {
-            paginationHTML += `<button id="prev-page-btn" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900">Prev</button>`;
+            paginationHTML += `<button id="prev-page-btn" class="btn btn-sm">Prev</button>`;
         }
         if (currentPage < totalPages) {
-            paginationHTML += `<button id="next-page-btn" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 border-0 border-l border-gray-700 rounded-r hover:bg-gray-900">Next</button>`;
+            paginationHTML += `<button id="next-page-btn" class="btn btn-sm">Next</button>`;
         }
         
         paginationHTML += `</div>`;
