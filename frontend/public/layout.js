@@ -5,36 +5,42 @@ const GSO_MAIN_NAV = `
 
 const GSO_ASSETS_NAV = `
   <li>
-    <h2 class="menu-title">Assets</h2>
-    <ul>
-      <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i> Asset Registry</a></li>
-      <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New Asset</a></li>
-      <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
-      <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i> Physical Count</a></li>
-      <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i> Scanner</a></li>
-      <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
-    </ul>
+    <details open>
+      <summary><i data-lucide="archive"></i> Assets</summary>
+      <ul>
+        <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i> Asset Registry</a></li>
+        <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New Asset</a></li>
+        <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
+        <li><a href="physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i> Physical Count</a></li>
+        <li><a href="scanner.html" class="nav-link"><i data-lucide="scan-line"></i> Scanner</a></li>
+        <li><a href="qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
+      </ul>
+    </details>
   </li>
 `;
 
 const GSO_SUPPLIES_NAV = `
   <li>
-    <h2 class="menu-title">Supplies</h2>
-    <ul>
-      <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i> Supply Requisitions</a></li>
-      <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i> Supplies Inventory</a></li>
-    </ul>
+    <details>
+      <summary><i data-lucide="boxes"></i> Supplies</summary>
+      <ul>
+        <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i> Supply Requisitions</a></li>
+        <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i> Supplies Inventory</a></li>
+      </ul>
+    </details>
   </li>
 `;
 
 const GSO_SETTINGS_NAV = `
   <li>
-    <h2 class="menu-title">Settings</h2>
-    <ul>
-      <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
-      <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
-      <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
-    </ul>
+    <details>
+      <summary><i data-lucide="settings"></i> Settings</summary>
+      <ul>
+        <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
+        <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
+        <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
+      </ul>
+    </details>
   </li>
 `;
 
@@ -118,9 +124,14 @@ function initializeLayout(user) {
     const navLinks = sidebarContainer.querySelectorAll(".nav-link");
     navLinks.forEach((link) => {
       if (link.getAttribute("href") === currentPage) {
-        // Keep the .active class for semantic meaning and potential focus-visible styles,
-        // but override the background and text color with specific Tailwind utilities.
-        link.classList.add("active", "bg-gray-800", "text-white");
+        // Just add the active class. The styling will be handled by our custom CSS rule.
+        link.classList.add("active");
+
+        // If the active link is inside a collapsible section, open it.
+        const parentDetails = link.closest('details');
+        if (parentDetails) {
+            parentDetails.setAttribute('open', '');
+        }
       }
     });
 
