@@ -4,12 +4,3 @@ body { font-family: 'Inter', sans-serif; }
     .non-printable { display: none !important; }
     #print-container { display: block !important; }
 }
-
-/*
-  Increase specificity by targeting the sidebar container's ID
-  to ensure this custom style overrides DaisyUI's default active color.
-*/
-#sidebar-container .menu li > a.active {
-    background-color: #1a202c; /* A nice navy-like dark blue */
-    color: white;
-}

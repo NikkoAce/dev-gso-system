@@ -93,7 +93,9 @@ function initializeLayout(user) {
     const navLinks = sidebarContainer.querySelectorAll(".nav-link");
     navLinks.forEach((link) => {
       if (link.getAttribute("href") === currentPage) {
-        link.classList.add("active");
+        // Keep the .active class for semantic meaning and potential focus-visible styles,
+        // but override the background and text color with specific Tailwind utilities.
+        link.classList.add("active", "bg-gray-800", "text-white");
       }
     });
 
