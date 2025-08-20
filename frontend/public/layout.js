@@ -7,7 +7,7 @@ const GSO_ASSETS_NAV = `
   <li>
     <details open>
       <summary><i data-lucide="archive"></i> Assets</summary>
-      <ul>
+      <ul class="text-sm">
         <li><a href="asset-registry.html" class="nav-link"><i data-lucide="list"></i> Asset Registry</a></li>
         <li><a href="asset-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New Asset</a></li>
         <li><a href="slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
@@ -23,7 +23,7 @@ const GSO_SUPPLIES_NAV = `
   <li>
     <details>
       <summary><i data-lucide="boxes"></i> Supplies</summary>
-      <ul>
+      <ul class="text-sm">
         <li><a href="gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i> Supply Requisitions</a></li>
         <li><a href="inventory.html" class="nav-link"><i data-lucide="boxes"></i> Supplies Inventory</a></li>
       </ul>
@@ -35,7 +35,7 @@ const GSO_SETTINGS_NAV = `
   <li>
     <details>
       <summary><i data-lucide="settings"></i> Settings</summary>
-      <ul>
+      <ul class="text-sm">
         <li><a href="categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
         <li><a href="offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
         <li><a href="employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
