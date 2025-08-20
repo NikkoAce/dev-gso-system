@@ -44,21 +44,23 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
                     <h1 class="text-3xl font-bold text-gray-800">My Office's Assets</h1>
-                    <div class="bg-white rounded-lg border overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
                                 <tr>
-                                    <th class="px-6 py-3">Property No.</th>
-                                    <th class="px-6 py-3">Description</th>
-                                    <th class="px-6 py-3">Category</th>
-                                    <th class="px-6 py-3">Custodian</th>
-                                    <th class="px-6 py-3">Status</th>
+                                    <th>Property No.</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Custodian</th>
+                                    <th>Status</th>
                                 </tr>
-                            </thead>
-                            <tbody id="asset-table-body">
-                                <tr><td colspan="5" class="text-center p-8">Loading assets...</td></tr>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="asset-table-body">
+                                    <tr><td colspan="5" class="text-center p-8">Loading assets...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>

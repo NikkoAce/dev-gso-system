@@ -122,16 +122,19 @@ function initializeGsoRequisitionsPage(currentUser) {
         } else {
             let printButtonHTML = '';
             if (req.status === 'Issued') {
-                printButtonHTML = `<a href="ris-page.html?id=${req._id}" target="_blank" class="print-ris-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                    <i data-lucide="printer" class="h-5 w-5"></i> Print RIS
+                printButtonHTML = `<a href="ris-page.html?id=${req._id}" target="_blank" class="print-ris-btn btn btn-info">
+                    <i data-lucide="printer" class="h-4 w-4"></i> Print RIS
                 </a>`;
             }
             footerHTML = `
                 <div class="flex justify-between items-center pt-4 border-t">
-                    <p class="font-semibold text-gray-600">This requisition is already ${req.status} and cannot be modified.</p>
+                    <p class="font-semibold text-base-content/70">This requisition is already ${req.status} and cannot be modified.</p>
                     ${printButtonHTML}
                 </div>
-                ${req.remarks ? `<div class="mt-2 p-2 bg-gray-50 rounded-md text-sm"><strong>Remarks:</strong> ${req.remarks}</div>` : ''}
+                ${req.remarks ? `<div class="mt-2 p-2 bg-base-200 rounded-box text-sm"><strong>Remarks:</strong> ${req.remarks}</div>` : ''}
+                <div class="modal-action mt-4">
+                    <button id="close-modal-btn" class="btn">Close</button>
+                </div>
             `;
         }
 
@@ -159,6 +162,12 @@ function initializeGsoRequisitionsPage(currentUser) {
 
     async function handleModalAction(e) {
         const target = e.target;
+
+        if (target.closest('#close-modal-btn')) {
+            closeModal();
+            return;
+        }
+
         const actionBtn = target.closest('#issue-btn') || target.closest('#reject-btn');
         if (!actionBtn) return;
 
@@ -202,8 +211,15 @@ function initializeGsoRequisitionsPage(currentUser) {
         const viewBtn = e.target.closest('.view-req-btn');
         if (viewBtn) openModal(viewBtn.dataset.id);
     });
-    closeModalBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => e.target === modal && closeModal());
+
+    // The modal itself can be clicked to close (for backdrop clicks)
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Use event delegation for actions inside the modal's content area
     modalContent.addEventListener('click', handleModalAction);
 
     // --- INITIALIZATION ---

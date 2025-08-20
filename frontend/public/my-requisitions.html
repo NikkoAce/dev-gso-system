@@ -42,21 +42,23 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-7xl mx-auto">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">My Requisition History</h1>
-                    
-                    <div class="bg-white rounded-lg border overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50">
+
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left">RIS No.</th>
-                                    <th class="px-4 py-3 text-left">Date Requested</th>
-                                    <th class="px-4 py-3 text-left">Purpose</th>
-                                    <th class="px-4 py-3 text-center">Status</th>
+                                    <th>RIS No.</th>
+                                    <th>Date Requested</th>
+                                    <th>Purpose</th>
+                                    <th class="text-center">Status</th>
                                 </tr>
-                            </thead>
-                            <tbody id="my-requisitions-list" class="divide-y">
+                                </thead>
+                                <tbody id="my-requisitions-list">
                                 <!-- JS will populate this -->
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
