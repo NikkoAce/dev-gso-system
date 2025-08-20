@@ -239,7 +239,11 @@ function initializeRegistryPage(currentUser) {
                 } else {
                     state.selectedAssetIds = state.selectedAssetIds.filter(id => id !== assetId);
                 }
-                uiManager.updateSlipButtonVisibility();
+                uiManager.updateSlipButtonVisibility(state.selectedAssetIds, {
+                    generateParBtn: DOM.generateParBtn,
+                    generateIcsBtn: DOM.generateIcsBtn,
+                    transferSelectedBtn: DOM.transferSelectedBtn
+                });
             }
             if (e.target.id === 'select-all-assets') {
                 const checkboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
@@ -250,7 +254,11 @@ function initializeRegistryPage(currentUser) {
                         state.selectedAssetIds.push(checkbox.dataset.id);
                     }
                 });
-                uiManager.updateSlipButtonVisibility();
+                uiManager.updateSlipButtonVisibility(state.selectedAssetIds, {
+                    generateParBtn: DOM.generateParBtn,
+                    generateIcsBtn: DOM.generateIcsBtn,
+                    transferSelectedBtn: DOM.transferSelectedBtn
+                });
             }
         },
 
@@ -382,7 +390,18 @@ function initializeRegistryPage(currentUser) {
 
             state.currentPageAssets = assets;
             state.totalAssets = totalDocs;
-            uiManager.renderAssetTable(assets, totalDocs, totalPages);
+            uiManager.renderAssetTable(
+                assets,
+                {
+                    totalDocs,
+                    totalPages,
+                    currentPage: state.currentPage,
+                    assetsPerPage: state.assetsPerPage
+                },
+                {
+                    tableBody: DOM.tableBody,
+                    paginationControls: DOM.paginationControls
+                });
 
             // --- FIX: Manage sort indicators correctly ---
             // This ensures only one sort arrow is visible and on the correct column.
