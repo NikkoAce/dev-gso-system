@@ -90,7 +90,7 @@ function initializeAssetForm(currentUser) {
             div.innerHTML = `
                 <input type="text" placeholder="Specification Name (e.g., Color)" value="${key}" class="spec-key input input-bordered input-sm w-1/3">
                 <input type="text" placeholder="Value (e.g., Blue)" value="${value}" class="spec-value input input-bordered input-sm flex-grow">
-                <button type="button" class="remove-spec-btn btn btn-ghost btn-sm btn-square"><i data-lucide="x" class="h-4 w-4"></i></button>
+                <button type="button" class="remove-spec-btn btn btn-ghost btn-sm btn-square"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
             `;
             DOM.specsContainer.appendChild(div);
             lucide.createIcons();
