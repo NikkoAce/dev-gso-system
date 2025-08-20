@@ -448,31 +448,33 @@ const getDashboardStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    // 1. Define Date Filters
-    const dateFilter = {};
-    if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setUTCHours(23, 59, 59, 999); // Include the whole day
-      dateFilter.$lte = end;
-    }
+    // --- 1. Define Date Filters ---
+    // For stats that are a "snapshot in time" (like total assets), we care about everything up to the endDate.
+    // For trends, we compare this snapshot with a snapshot at the beginning of the period.
+    const end = endDate ? new Date(endDate) : new Date();
+    end.setUTCHours(23, 59, 59, 999);
 
-    const hasDateFilter = Object.keys(dateFilter).length > 0;
-    const acquisitionDateFilter = hasDateFilter ? { acquisitionDate: dateFilter } : {};
-    const requisitionDateFilter = hasDateFilter ? { dateRequested: dateFilter } : {};
+    // Default start date to the beginning of the current year if not provided.
+    const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), 0, 1);
+    start.setUTCHours(0, 0, 0, 0);
 
     // --- Trend Calculation ---
-    let previousAcquisitionFilter = {};
-    let previousRequisitionFilter = {};
-    if (hasDateFilter) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const diff = end.getTime() - start.getTime();
-      const prevEnd = new Date(start.getTime() - 1);
-      const prevStart = new Date(prevEnd.getTime() - diff);
-      previousAcquisitionFilter = { acquisitionDate: { $gte: prevStart, $lte: prevEnd } };
-      previousRequisitionFilter = { dateRequested: { $gte: prevStart, $lte: prevEnd } };
-    }
+    // The end of the "previous" period is the day before our current start date.
+    const prevPeriodEnd = new Date(start.getTime() - 1);
+
+    // Filter for stats: everything acquired up to the end of the selected period.
+    const currentPeriodStatsFilter = { acquisitionDate: { $lte: end } };
+    // Filter for previous period stats: everything acquired up to the day before the selected period started.
+    const previousPeriodStatsFilter = { acquisitionDate: { $lte: prevPeriodEnd } };
+
+    // For charts and tables showing activity *within* the period.
+    const acquisitionDateRangeFilter = { acquisitionDate: { $gte: start, $lte: end } };
+    const requisitionDateRangeFilter = { dateRequested: { $gte: start, $lte: end } };
+
+    // For calculating the trend of pending requisitions.
+    const diff = end.getTime() - start.getTime();
+    const prevReqStart = new Date(prevPeriodEnd.getTime() - diff);
+    const previousRequisitionDateRangeFilter = { dateRequested: { $gte: prevReqStart, $lte: prevPeriodEnd } };
 
     const calculateTrend = (current, previous) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -482,13 +484,14 @@ const getDashboardStats = async (req, res) => {
     };
 
     // --- Aggregation Pipelines ---
+    // This pipeline now correctly calculates stats as a snapshot in time.
     const getAssetStats = (filter) => Asset.aggregate([
       { $match: filter },
       {
         $group: {
           _id: null,
           totalAssetValue: { $sum: '$acquisitionCost' },
-          totalAssets: { $sum: 1 },
+          totalAssets: { $sum: { $cond: [{ $ne: ['$status', 'Disposed'] }, 1, 0] } }, // Only count non-disposed assets
           assetsForRepair: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } },
           disposedAssets: { $sum: { $cond: [{ $eq: ['$status', 'Disposed'] }, 1, 0] } },
         }
@@ -498,6 +501,7 @@ const getDashboardStats = async (req, res) => {
     const getPendingRequisitions = (filter) => Requisition.countDocuments({ ...filter, status: 'Pending' });
 
     // --- Chart Data Pipelines ---
+    // These should reflect activity *within* the selected date range.
     const getAssetsByOffice = () => Asset.aggregate([
       { $match: acquisitionDateFilter },
       { $group: { _id: { $cond: { if: { $in: ['$office', [null, '']] }, then: 'Unassigned', else: '$office' } }, count: { $sum: 1 } } },
@@ -506,13 +510,13 @@ const getDashboardStats = async (req, res) => {
     ]);
 
     const getAssetStatus = () => Asset.aggregate([
-      { $match: acquisitionDateFilter },
+      { $match: currentPeriodStatsFilter }, // This is a snapshot of all assets up to the end date
       { $group: { _id: '$status', count: { $sum: 1 } } },
       { $project: { status: '$_id', count: 1, _id: 0 } }
     ]);
 
     const getMonthlyAcquisitions = () => Asset.aggregate([
-      { $match: { acquisitionDate: { $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) } } },
+      { $match: { acquisitionDate: { $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), $lte: new Date() } } },
       {
         $group: {
           _id: { year: { $year: '$acquisitionDate' }, month: { $month: '$acquisitionDate' } },
@@ -524,8 +528,8 @@ const getDashboardStats = async (req, res) => {
     ]);
 
     // --- Table Data Pipelines ---
-    const getRecentAssets = () => Asset.find(acquisitionDateFilter).sort({ createdAt: -1 }).limit(5).lean();
-    const getRecentRequisitions = () => Requisition.find(requisitionDateFilter).sort({ dateRequested: -1 }).limit(5).lean();
+    const getRecentAssets = () => Asset.find(acquisitionDateRangeFilter).sort({ createdAt: -1 }).limit(5).lean();
+    const getRecentRequisitions = () => Requisition.find(requisitionDateRangeFilter).sort({ dateRequested: -1 }).limit(5).lean();
 
     // --- Execute All Queries Concurrently ---
     const [
@@ -539,10 +543,10 @@ const getDashboardStats = async (req, res) => {
       recentAssets,
       recentRequisitions
     ] = await Promise.all([
-      getAssetStats(acquisitionDateFilter),
-      getAssetStats(previousAcquisitionFilter),
-      getPendingRequisitions(requisitionDateFilter),
-      getPendingRequisitions(previousRequisitionFilter),
+      getAssetStats(currentPeriodStatsFilter),
+      getAssetStats(previousPeriodStatsFilter),
+      getPendingRequisitions(requisitionDateRangeFilter),
+      getPendingRequisitions(previousRequisitionDateRangeFilter),
       getAssetsByOffice(),
       getAssetStatus(),
       getMonthlyAcquisitions(),
