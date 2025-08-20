@@ -25,6 +25,7 @@ function initializeOfficesPage(currentUser) {
     const formTitle = document.getElementById('office-form-title');
     const submitBtn = document.getElementById('submit-office-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
+    const searchInput = document.getElementById('search-input');
     
     // Modal DOM elements
     const confirmationModal = document.getElementById('confirmation-modal');
@@ -44,12 +45,20 @@ function initializeOfficesPage(currentUser) {
     }
 
     function renderOfficeList() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredOffices = allOffices.filter(office => 
+            office.name.toLowerCase().includes(searchTerm) ||
+            office.code.toLowerCase().includes(searchTerm)
+        );
+
         officeList.innerHTML = '';
-        if (allOffices.length === 0) {
-            officeList.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500">No offices found.</td></tr>`;
+        if (filteredOffices.length === 0) {
+            const message = allOffices.length === 0 ? 'No offices found.' : 'No offices match your search.';
+            officeList.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-base-content/70">${message}</td></tr>`;
             return;
         }
-        allOffices.forEach(office => {
+
+        filteredOffices.forEach(office => {
             const tr = document.createElement('tr');
             const isDeletable = office.assetCount === 0;
             const deleteButtonHTML = isDeletable
@@ -95,6 +104,27 @@ function initializeOfficesPage(currentUser) {
         }
     }
 
+    // --- UI FEEDBACK ---
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) return;
+
+        const alertType = {
+            success: 'alert-success',
+            error: 'alert-error',
+            warning: 'alert-warning',
+            info: 'alert-info',
+        }[type];
+
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertType} shadow-lg transition-opacity duration-300`;
+        toast.innerHTML = `<span>${message}</span>`;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('opacity-0'), 3000);
+        toast.addEventListener('transitionend', () => toast.remove());
+    }
+
     // --- EVENT LISTENERS ---
     addOfficeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -103,7 +133,7 @@ function initializeOfficesPage(currentUser) {
         const officeId = officeIdInput.value;
         
         if (!name || !code) {
-            alert('Office name and code are required.');
+            showToast('Office name and code are required.', 'error');
             return;
         }
 
@@ -119,9 +149,10 @@ function initializeOfficesPage(currentUser) {
                 body: JSON.stringify({ name, code })
             });
             resetForm();
+            showToast(`Office ${officeId ? 'updated' : 'added'} successfully.`, 'success');
             fetchAndRenderOffices();
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         } finally {
             submitBtn.classList.remove("loading");
             submitBtn.disabled = false;
@@ -145,9 +176,10 @@ function initializeOfficesPage(currentUser) {
                 async () => {
                     try {
                         await fetchWithAuth(`${API_ENDPOINT}/${officeId}`, { method: 'DELETE' });
+                        showToast('Office deleted successfully.', 'success');
                         fetchAndRenderOffices();
                     } catch (error) {
-                        alert(`Error: ${error.message}`);
+                        showToast(`Error: ${error.message}`, 'error');
                     }
                 }
             );
@@ -171,6 +203,7 @@ function initializeOfficesPage(currentUser) {
     }
 
     cancelBtn.addEventListener('click', resetForm);
+    searchInput.addEventListener('input', renderOfficeList);
 
     // --- INITIALIZATION ---
     fetchAndRenderOffices();

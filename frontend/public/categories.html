@@ -79,8 +79,13 @@
                     </div>
 
                     <div class="card bg-base-100 border">
-                        <div class="card-body">
-                            <h2 class="card-title">Existing Categories</h2>
+                        <div class="card-body p-4">
+                            <div class="flex justify-between items-center">
+                                <h2 class="card-title">Existing Categories</h2>
+                                <div class="form-control">
+                                    <input type="text" id="search-input" placeholder="Search categories..." class="input input-bordered input-sm w-full max-w-xs">
+                                </div>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="table table-zebra w-full">
@@ -104,6 +109,9 @@
             </main>
         </div>
     </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast toast-top toast-end"></div>
+
     <!-- Reusable Confirmation Modal -->
     <dialog id="confirmation-modal" class="modal">
         <div class="modal-box">

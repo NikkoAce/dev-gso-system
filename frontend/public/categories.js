@@ -28,6 +28,7 @@ function initializeCategoriesPage(currentUser) {
     const formTitle = document.getElementById('category-form-title');
     const submitBtn = document.getElementById('submit-category-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
+    const searchInput = document.getElementById('search-input');
 
     // Modal DOM elements
     const confirmationModal = document.getElementById('confirmation-modal');
@@ -47,12 +48,19 @@ function initializeCategoriesPage(currentUser) {
     }
 
     function renderCategoryList() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredCategories = allCategories.filter(category => 
+            category.name.toLowerCase().includes(searchTerm)
+        );
+
         categoryList.innerHTML = '';
-        if (allCategories.length === 0) {
-            categoryList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">No categories found.</td></tr>`;
+        if (filteredCategories.length === 0) {
+            const message = allCategories.length === 0 ? 'No categories found.' : 'No categories match your search.';
+            categoryList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-base-content/70">${message}</td></tr>`;
             return;
         }
-        allCategories.forEach(category => {
+
+        filteredCategories.forEach(category => {
             const tr = document.createElement('tr');
             const isDeletable = category.assetCount === 0;
             const deleteButtonHTML = isDeletable
@@ -100,6 +108,27 @@ function initializeCategoriesPage(currentUser) {
         window.scrollTo(0, 0);
     }
 
+    // --- UI FEEDBACK ---
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) return;
+
+        const alertType = {
+            success: 'alert-success',
+            error: 'alert-error',
+            warning: 'alert-warning',
+            info: 'alert-info',
+        }[type];
+
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertType} shadow-lg transition-opacity duration-300`;
+        toast.innerHTML = `<span>${message}</span>`;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('opacity-0'), 3000);
+        toast.addEventListener('transitionend', () => toast.remove());
+    }
+
     // --- EVENT LISTENERS ---
     addCategoryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -111,7 +140,7 @@ function initializeCategoriesPage(currentUser) {
         const categoryId = categoryIdInput.value;
         
         if (!name || !subMajorGroup || !glAccount) {
-            alert('Category Name, Sub-Major Group, and GL Account are required.');
+            showToast('Category Name, Sub-Major Group, and GL Account are required.', 'error');
             return;
         }
 
@@ -128,9 +157,10 @@ function initializeCategoriesPage(currentUser) {
                 body: JSON.stringify(body)
             });
             resetForm();
+            showToast(`Category ${categoryId ? 'updated' : 'added'} successfully.`, 'success');
             fetchAndRenderCategories(); // Refresh list
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         } finally {
             submitBtn.classList.remove("loading");
             submitBtn.disabled = false;
@@ -159,9 +189,10 @@ function initializeCategoriesPage(currentUser) {
                     deleteButton.disabled = true;
                     try {
                         await fetchWithAuth(`${API_ENDPOINT}/${categoryId}`, { method: 'DELETE' });
+                        showToast('Category deleted successfully.', 'success');
                         fetchAndRenderCategories(); // Refresh list
                     } catch (error) {
-                        alert(`Error: ${error.message}`);
+                        showToast(`Error: ${error.message}`, 'error');
                     } finally {
                         // The button will be gone on re-render, so no need to re-enable.
                     }
@@ -186,6 +217,7 @@ function initializeCategoriesPage(currentUser) {
     }
 
     cancelBtn.addEventListener('click', resetForm);
+    searchInput.addEventListener('input', renderCategoryList);
 
     // --- INITIALIZATION ---
     fetchAndRenderCategories();

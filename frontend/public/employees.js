@@ -25,6 +25,7 @@ function initializeEmployeesPage(currentUser) {
     const formTitle = document.getElementById('employee-form-title');
     const submitBtn = document.getElementById('submit-employee-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
+    const searchInput = document.getElementById('search-input');
 
     // Modal DOM elements
     const confirmationModal = document.getElementById('confirmation-modal');
@@ -45,12 +46,20 @@ function initializeEmployeesPage(currentUser) {
     }
 
     function renderEmployeeList() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredEmployees = allEmployees.filter(employee => 
+            employee.name.toLowerCase().includes(searchTerm) ||
+            employee.designation.toLowerCase().includes(searchTerm)
+        );
+
         employeeList.innerHTML = '';
-        if (allEmployees.length === 0) {
-            employeeList.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500">No employees found.</td></tr>`;
+        if (filteredEmployees.length === 0) {
+            const message = allEmployees.length === 0 ? 'No employees found.' : 'No employees match your search.';
+            employeeList.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-base-content/70">${message}</td></tr>`;
             return;
         }
-        allEmployees.forEach(employee => {
+
+        filteredEmployees.forEach(employee => {
             const tr = document.createElement('tr');
             const isDeletable = employee.assetCount === 0;
             const deleteButtonHTML = isDeletable
@@ -90,7 +99,7 @@ function initializeEmployeesPage(currentUser) {
         const employeeId = employeeIdInput.value;
         
         if (!name || !designation) {
-            alert('Employee name and designation are required.');
+            showToast('Employee name and designation are required.', 'error');
             return;
         }
 
@@ -106,9 +115,10 @@ function initializeEmployeesPage(currentUser) {
                 body: JSON.stringify({ name, designation })
             });
             resetForm();
+            showToast(`Employee ${employeeId ? 'updated' : 'added'} successfully.`, 'success');
             fetchAndRenderEmployees();
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         } finally {
             submitBtn.classList.remove("loading");
             submitBtn.disabled = false;
@@ -141,9 +151,10 @@ function initializeEmployeesPage(currentUser) {
                     deleteButton.disabled = true;
                     try {
                         await fetchWithAuth(`${API_ENDPOINT}/${employeeId}`, { method: 'DELETE' });
+                        showToast('Employee deleted successfully.', 'success');
                         fetchAndRenderEmployees();
                     } catch (error) {
-                        alert(`Error: ${error.message}`);
+                        showToast(`Error: ${error.message}`, 'error');
                     }
                 }
             );
@@ -166,6 +177,7 @@ function initializeEmployeesPage(currentUser) {
     }
 
     cancelBtn.addEventListener('click', resetForm);
+    searchInput.addEventListener('input', renderEmployeeList);
 
     // --- INITIALIZATION ---
     fetchAndRenderEmployees();
