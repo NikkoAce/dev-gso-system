@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./public/**/*.{html,js}",
+    './public/**/*.{html,js}',
   ],
   theme: {
     extend: {},
@@ -9,4 +9,20 @@ module.exports = {
   plugins: [
     require('daisyui'),
   ],
+  daisyui: {
+    themes: [
+      'light',
+      'dark',
+      'cupcake',
+      'synthwave',
+      'retro',
+      'cyberpunk',
+      'valentine',
+      'aqua',
+      'lofi',
+      'dracula',
+      'forest',
+      'business'
+    ],
+  },
 }
