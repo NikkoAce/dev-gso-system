@@ -1,5 +1,6 @@
 // FILE: frontend/public/scanner.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -15,10 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initializeScannerPage(currentUser) {
     const API_ENDPOINT = 'assets';
-    let allAssets = [];
+    let allAssets = []; // Assets for the selected office
     let foundAssets = new Map(); // Use a Map to store propertyNumber -> { condition, remarks }
     let videoStream = null;
+    const { populateFilters, setLoading } = createUIManager();
 
+    // --- DOM ELEMENTS ---
     const startScanBtn = document.getElementById('start-scan-btn');
     const saveScanBtn = document.getElementById('save-scan-btn');
     const scannerContainer = document.getElementById('scanner-container');
@@ -28,29 +31,60 @@ function initializeScannerPage(currentUser) {
     const assetList = document.getElementById('scanner-asset-list');
     const foundCountEl = document.getElementById('found-count');
     const totalCountEl = document.getElementById('total-count');
+    const officeFilter = document.getElementById('office-filter');
+    const searchInput = document.getElementById('search-input');
 
     // --- DATA FETCHING & RENDERING ---
-    async function fetchAndRenderAssets() {
+    async function initializePage() {
         try {
-            allAssets = await fetchWithAuth(API_ENDPOINT);
+            const offices = await fetchWithAuth('offices');
+            populateFilters({ offices }, { officeFilter });
+            officeFilter.querySelector('option').textContent = 'Select an Office to load assets'; // Customize placeholder
+            assetList.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-base-content/70">Select an office to begin.</td></tr>`;
+        } catch (error) {
+            console.error('Failed to initialize page:', error);
+            assetList.innerHTML = `<li class="p-4 text-red-500">Error loading initial data.</li>`;
+        }
+    }
+
+    async function loadAssetsForOffice(officeName) {
+        if (!officeName) {
+            allAssets = [];
+            renderAssetList();
+            return;
+        }
+        setLoading(true, assetList, { colSpan: 2, isTable: true });
+        try {
+            const params = new URLSearchParams({ office: officeName, limit: 1000 }); // Get all assets for the office
+            const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
+            allAssets = data.docs || (Array.isArray(data) ? data : []);
+            foundAssets.clear(); // Clear previous scan results
             renderAssetList();
         } catch (error) {
             console.error('Failed to fetch assets:', error);
-            assetList.innerHTML = `<li class="p-4 text-red-500">Error loading assets.</li>`;
+            assetList.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-red-500">Error loading assets for ${officeName}.</td></tr>`;
         }
     }
 
     function renderAssetList() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredAssets = searchTerm 
+            ? allAssets.filter(asset => 
+                asset.propertyNumber.toLowerCase().includes(searchTerm) ||
+                asset.description.toLowerCase().includes(searchTerm)
+              )
+            : allAssets;
+
         assetList.innerHTML = '';
-        totalCountEl.textContent = allAssets.length;
+        totalCountEl.textContent = filteredAssets.length;
         foundCountEl.textContent = foundAssets.size;
 
-        if (allAssets.length === 0) {
-            assetList.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-base-content/70">No assets found.</td></tr>`;
+        if (filteredAssets.length === 0) {
+            assetList.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-base-content/70">No assets to display.</td></tr>`;
             return;
         }
 
-        allAssets.forEach(asset => {
+        filteredAssets.forEach(asset => {
             const isFound = foundAssets.has(asset.propertyNumber);
             const tr = document.createElement('tr');
             tr.id = `asset-${asset.propertyNumber}`;
@@ -215,6 +249,14 @@ function initializeScannerPage(currentUser) {
         }
     });
 
+    officeFilter.addEventListener('change', (e) => {
+        loadAssetsForOffice(e.target.value);
+    });
+
+    searchInput.addEventListener('input', () => {
+        renderAssetList(); // Client-side filtering
+    });
+
     // --- INITIALIZATION ---
-    fetchAndRenderAssets();
+    initializePage();
 }

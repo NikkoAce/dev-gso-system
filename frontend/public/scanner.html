@@ -54,6 +54,28 @@
                     </div>
                 </div>
 
+                <!-- Filter section -->
+                <div class="card bg-base-100 border non-printable mb-6">
+                    <div class="card-body p-4">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="form-control flex-grow">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                    </div>
+                                    <input type="text" id="search-input" placeholder="Filter loaded assets by Property No, Description..." class="input input-bordered w-full pl-10">
+                                </div>
+                            </div>
+                            <div class="form-control w-full md:w-64">
+                                <select id="office-filter" class="select select-bordered font-normal">
+                                    <option value="">Select an Office to load assets</option>
+                                    <!-- JS will populate this -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Scanner Section -->
                     <div id="scanner-container" class="hidden bg-black rounded-box p-2 relative">

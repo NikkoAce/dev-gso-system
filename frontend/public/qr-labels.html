@@ -94,6 +94,33 @@
                             <i data-lucide="printer"></i> Print Selected
                         </button>
                     </div>
+                    <!-- Filter section -->
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body p-4">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="form-control flex-grow">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                        </div>
+                                        <input type="text" id="search-input" placeholder="Search by Property No, Description..." class="input input-bordered w-full pl-10">
+                                    </div>
+                                </div>
+                                <div class="form-control w-full md:w-64">
+                                    <select id="office-filter" class="select select-bordered font-normal">
+                                        <option value="">All Offices</option>
+                                        <!-- JS will populate this -->
+                                    </select>
+                                </div>
+                                <div class="form-control w-full md:w-64">
+                                    <select id="category-filter" class="select select-bordered font-normal">
+                                        <option value="">All Categories</option>
+                                        <!-- JS will populate this -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card bg-base-100 border">
                         <div class="overflow-x-auto">
                             <table class="table table-zebra w-full">

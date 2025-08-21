@@ -1,5 +1,6 @@
 // FILE: frontend/public/qr-labels.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -18,19 +19,42 @@ function initializeQrLabelsPage(currentUser) {
     const assetTableBody = document.getElementById('asset-selection-table-body');
     let allAssets = [];
     let selectedAssetIds = new Set();
+    const { populateFilters, setLoading } = createUIManager();
+
+    // --- DOM ELEMENTS for filters ---
+    const searchInput = document.getElementById('search-input');
+    const officeFilter = document.getElementById('office-filter');
+    const categoryFilter = document.getElementById('category-filter');
 
     // --- UTILITY FUNCTIONS ---
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
     // --- DATA FETCHING & RENDERING ---
-    async function fetchAndRenderAssets() {
+    async function initializePage() {
         try {
-            allAssets = await fetchWithAuth(API_ENDPOINT);
+            const [offices, categories] = await Promise.all([
+                fetchWithAuth('offices'),
+                fetchWithAuth('categories')
+            ]);
+            populateFilters({ offices, categories }, { officeFilter, categoryFilter });
+            await loadAssets();
+        } catch (error) {
+            console.error('Failed to initialize page:', error);
+            assetTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error loading initial data.</td></tr>`;
+        }
+    }
+
+    async function loadAssets() {
+        setLoading(true, assetTableBody, { colSpan: 4 });
+        try {
+            const params = new URLSearchParams({ search: searchInput.value, office: officeFilter.value, category: categoryFilter.value, limit: 1000 });
+            const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
+            allAssets = data.docs || (Array.isArray(data) ? data : []);
             renderAssetSelectionTable();
         } catch (error) {
             console.error('Failed to fetch assets:', error);
-            assetTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error loading assets.</td></tr>`;
+            assetTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error loading assets: ${error.message}</td></tr>`;
         }
     }
 
@@ -181,6 +205,10 @@ function initializeQrLabelsPage(currentUser) {
         }
     });
 
+    [searchInput, officeFilter, categoryFilter].forEach(el => {
+        el.addEventListener('input', loadAssets);
+    });
+
     // --- INITIALIZATION ---
-    fetchAndRenderAssets();
+    initializePage
 }
