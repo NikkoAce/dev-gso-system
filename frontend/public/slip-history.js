@@ -84,7 +84,17 @@ function initializeSlipHistoryPage(currentUser) {
                 slipType: slipTypeFilter.value,
             });
             const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
-            renderSlipTable(data.docs, data);
+            
+            // Defensive check to handle both paginated (object) and non-paginated (array) responses
+            const slips = data?.docs ?? (Array.isArray(data) ? data : []);
+            const pagination = data?.docs ? data : {
+                docs: slips,
+                totalDocs: slips.length,
+                totalPages: Math.ceil(slips.length / itemsPerPage),
+                currentPage: 1,
+                itemsPerPage
+            };
+            renderSlipTable(slips, pagination);
         } catch (error) {
             console.error('Failed to fetch slip history:', error);
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading slip history.</td></tr>`;

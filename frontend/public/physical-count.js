@@ -103,7 +103,17 @@ function initializePhysicalCountPage(currentUser) {
                 physicalCount: true, // Tell backend to only get relevant assets
             });
             const data = await fetchWithAuth(`assets?${params}`);
-            renderTable(data.docs, data);
+
+            // Defensive check to handle both paginated (object) and non-paginated (array) responses
+            const assets = data?.docs ?? (Array.isArray(data) ? data : []);
+            const pagination = data?.docs ? data : {
+                docs: assets,
+                totalDocs: assets.length,
+                totalPages: Math.ceil(assets.length / itemsPerPage),
+                currentPage: 1,
+                itemsPerPage
+            };
+            renderTable(assets, pagination);
         } catch (error) {
             console.error('Failed to load assets:', error);
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
