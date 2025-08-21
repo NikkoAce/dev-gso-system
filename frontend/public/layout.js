@@ -82,7 +82,7 @@ function getSidebarHTML(user) {
     </nav>
 
     <!-- Footer / User Info -->
-    <div class="p-4 border-t border-base-300">
+    <div class="p-4 border-t border-base-300 space-y-4">
       <div class="flex items-center gap-3">
         <div class="avatar placeholder">
           <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
@@ -95,17 +95,53 @@ function getSidebarHTML(user) {
           ${logoutButton}
         </div>
       </div>
+      <!-- NEW: Theme Switcher -->
+      <div class="form-control">
+        <label for="theme-switcher" class="label py-0"><span class="label-text text-xs">Theme</span></label>
+        <select id="theme-switcher" class="select select-bordered select-xs font-normal">
+          <!-- Options will be populated by JS -->
+        </select>
+      </div>
     </div>
   `;
+}
+
+function setupThemeSwitcher() {
+    const themeSwitcher = document.getElementById('theme-switcher');
+    if (!themeSwitcher) return;
+
+    const themes = ['light', 'dark', 'cupcake', 'synthwave', 'retro', 'cyberpunk', 'valentine', 'aqua', 'lofi', 'dracula', 'forest', 'business'];
+
+    // Populate dropdown
+    themes.forEach(theme => {
+        const option = document.createElement('option');
+        option.value = theme;
+        option.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+        themeSwitcher.appendChild(option);
+    });
+
+    // Apply saved theme or default
+    const savedTheme = localStorage.getItem('gso-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeSwitcher.value = savedTheme;
+
+    // Add event listener
+    themeSwitcher.addEventListener('change', (e) => {
+        const selectedTheme = e.target.value;
+        document.documentElement.setAttribute('data-theme', selectedTheme);
+        localStorage.setItem('gso-theme', selectedTheme);
+    });
 }
 
 function initializeLayout(user) {
   if (!user) return;
 
   const sidebarContainer = document.getElementById("sidebar-container");
+  const mobileMenuButton = document.getElementById("mobile-menu-button");
+
   if (sidebarContainer) {
-    // Set the correct classes for the DaisyUI sidebar layout
-    sidebarContainer.className = 'w-64 bg-base-200 h-screen flex flex-col border-r hidden md:flex non-printable';
+    // Updated classes for mobile-friendly slide-out behavior
+    sidebarContainer.className = 'fixed inset-y-0 left-0 z-50 w-64 bg-base-200 h-screen flex flex-col border-r non-printable transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0';
     sidebarContainer.innerHTML = getSidebarHTML(user);
 
     // Logout
@@ -135,7 +171,26 @@ function initializeLayout(user) {
       }
     });
 
-    // Initialize Lucide
+    setupThemeSwitcher();
     lucide.createIcons();
+  }
+
+  // --- Mobile Menu Logic ---
+  if (mobileMenuButton && sidebarContainer) {
+    // Create a backdrop overlay for mobile
+    const backdrop = document.createElement('div');
+    backdrop.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden';
+    document.body.appendChild(backdrop);
+
+    const toggleSidebar = () => {
+      // Check if the sidebar is currently open (i.e., it does NOT have the translate class)
+      const isOpen = !sidebarContainer.classList.contains('-translate-x-full');
+      // Add/remove the class to slide it in or out
+      sidebarContainer.classList.toggle('-translate-x-full', isOpen);
+      backdrop.classList.toggle('hidden', isOpen);
+    };
+
+    mobileMenuButton.addEventListener('click', toggleSidebar);
+    backdrop.addEventListener('click', toggleSidebar);
   }
 }
