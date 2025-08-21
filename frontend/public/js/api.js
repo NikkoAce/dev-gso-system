@@ -1,6 +1,6 @@
 // FILE: frontend/public/js/registry/api.js
 
-const BASE_URL = 'https://lgu-gso-system.onrender.com/api';
+const BASE_URL = 'https://dev-gso-system.onrender.com/api';
 
 /**
  * A generic fetch wrapper.
