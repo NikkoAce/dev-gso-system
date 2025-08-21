@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initializeSlipHistoryPage(currentUser) {
     const API_ENDPOINT = 'slips';
-    let allSlips = [];
     let currentPage = 1;
     const itemsPerPage = 20;
     const { renderPagination } = createUIManager();
@@ -30,45 +29,18 @@ function initializeSlipHistoryPage(currentUser) {
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
-    // --- DATA FETCHING & RENDERING ---
-    async function fetchAndRenderSlips() {
-        try {
-            allSlips = await fetchWithAuth(API_ENDPOINT);
-            renderSlipTable();
-        } catch (error) {
-            console.error('Failed to fetch slip history:', error);
-            const tableBody = document.getElementById('slip-history-table-body');
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading slip history.</td></tr>`;
-        }
-    }
-
-    function renderSlipTable() {
+    function renderSlipTable(slips, pagination) {
         const tableBody = document.getElementById('slip-history-table-body');
-        const selectedType = slipTypeFilter.value;
-        const searchTerm = searchInput.value.toLowerCase();
-
-        const filteredSlips = allSlips.filter(slip => {
-            const matchesType = selectedType === '' || slip.slipType === selectedType;
-            const matchesSearch = searchTerm === '' ||
-                slip.number.toLowerCase().includes(searchTerm) ||
-                (slip.custodian && slip.custodian.name.toLowerCase().includes(searchTerm));
-            return matchesType && matchesSearch;
-        });
-
-        const totalPages = Math.ceil(filteredSlips.length / itemsPerPage);
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedSlips = filteredSlips.slice(startIndex, endIndex);
 
         tableBody.innerHTML = '';
-        if (paginatedSlips.length === 0) {
+        if (slips.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No slips found for the selected criteria.</td></tr>`;
-            renderPagination(0, 0);
+            renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
             return;
         }
 
         let rowsHTML = '';
-        paginatedSlips.forEach(slip => {
+        slips.forEach(slip => {
             let custodianDisplay = '';
             if (slip.custodian) {
                 custodianDisplay = `
@@ -97,19 +69,31 @@ function initializeSlipHistoryPage(currentUser) {
         });
         tableBody.innerHTML = rowsHTML;
         lucide.createIcons();
-        renderPagination(paginationControls, {
-            currentPage,
-            totalPages,
-            totalDocs: filteredSlips.length,
-            itemsPerPage
-        });
+        renderPagination(paginationControls, pagination);
+    }
+
+    async function loadSlips() {
+        const tableBody = document.getElementById('slip-history-table-body');
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
+        lucide.createIcons();
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: itemsPerPage,
+                search: searchInput.value,
+                slipType: slipTypeFilter.value,
+            });
+            const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
+            renderSlipTable(data.docs, data);
+        } catch (error) {
+            console.error('Failed to fetch slip history:', error);
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading slip history.</td></tr>`;
+        }
     }
 
     // --- MODAL Functionality ---
-    function showSlipDetails(slipId) {
-        const slip = allSlips.find(s => s._id === slipId);
-        if (!slip) return;
-
+    async function showSlipDetails(slipId) {
+        const slip = await fetchWithAuth(`${API_ENDPOINT}/${slipId}`);
         document.getElementById('modal-title').textContent = `${slip.slipType} Details`;
         document.getElementById('modal-slip-number').textContent = slip.number;
         document.getElementById('modal-slip-custodian').textContent = slip.custodian.name;
@@ -141,7 +125,7 @@ function initializeSlipHistoryPage(currentUser) {
     [slipTypeFilter, searchInput].forEach(el => {
         el.addEventListener('input', () => {
             currentPage = 1;
-            renderSlipTable();
+            loadSlips();
         });
     });
     
@@ -149,12 +133,12 @@ function initializeSlipHistoryPage(currentUser) {
         if (e.target && e.target.id === 'prev-page-btn') {
             if (currentPage > 1) {
                 currentPage--;
-                renderSlipTable();
+                loadSlips();
             }
         }
         if (e.target && e.target.id === 'next-page-btn') {
             currentPage++;
-            renderSlipTable();
+            loadSlips();
         }
     });
 
@@ -169,10 +153,10 @@ function initializeSlipHistoryPage(currentUser) {
         const reprintButton = e.target.closest('.reprint-btn');
         if (reprintButton) {
             const slipId = reprintButton.dataset.id;
-            const slipType = reprintButton.dataset.type;
-            const slipToReprint = allSlips.find(s => s._id === slipId);
-
-            if (slipToReprint) {
+            // We need to fetch the full slip details for reprinting
+            fetchWithAuth(`${API_ENDPOINT}/${slipId}`).then(slipToReprint => {
+                if (!slipToReprint) return;
+                const slipType = slipToReprint.slipType;
                 if (slipType === 'PAR') {
                     localStorage.setItem('parToReprint', JSON.stringify(slipToReprint));
                     window.location.href = 'par-page.html';
@@ -180,7 +164,7 @@ function initializeSlipHistoryPage(currentUser) {
                     localStorage.setItem('icsToReprint', JSON.stringify(slipToReprint));
                     window.location.href = 'ics-page.html';
                 }
-            }
+            });
         }
     });
 
@@ -189,5 +173,5 @@ function initializeSlipHistoryPage(currentUser) {
     });
 
     // --- INITIALIZATION ---
-    fetchAndRenderSlips();
+    loadSlips();
 }

@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function initializePhysicalCountPage(currentUser) {
-    let allAssets = [];
     let currentPage = 1;
     const itemsPerPage = 20;
     const { populateFilters, setLoading, showToast, renderPagination } = createUIManager();
@@ -28,56 +27,26 @@ function initializePhysicalCountPage(currentUser) {
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
-        setLoading(true, tableBody, { colSpan: 5 });
         try {
-            const [fetchedAssets, offices] = await Promise.all([
-                fetchWithAuth('assets'),
-                fetchWithAuth('offices')
-            ]);
-
-            allAssets = fetchedAssets;
+            const offices = await fetchWithAuth('offices');
             populateFilters({ offices }, { officeFilter });
-            renderTable();
+            await loadAssets();
         } catch (error)
         {
             console.error('Failed to initialize page:', error);
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
         }
     }
-
-    function renderTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const selectedOffice = officeFilter.value;
-
-        const filteredAssets = allAssets.filter(asset => {
-            const matchesSearch = searchTerm === '' ||
-                asset.propertyNumber.toLowerCase().includes(searchTerm) ||
-                asset.description.toLowerCase().includes(searchTerm) ||
-                (asset.custodian && asset.custodian.name.toLowerCase().includes(searchTerm));
-            
-            const matchesOffice = selectedOffice === '' || (asset.custodian && asset.custodian.office === selectedOffice);
-
-            return matchesSearch && matchesOffice;
-        });
-
-        const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedAssets = filteredAssets.slice(startIndex, endIndex);
-
+    
+    function renderTable(assets, pagination) {
         tableBody.innerHTML = '';
-        if (paginatedAssets.length === 0) {
+        if (assets.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
-            renderPagination(paginationControls, {
-                currentPage: 1,
-                totalPages: 0,
-                totalDocs: 0,
-                itemsPerPage
-            });
+            renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
             return;
         }
 
-        paginatedAssets.forEach(asset => {
+        assets.forEach(asset => {
             const tr = document.createElement('tr');
             // tr.className = 'bg-white border-b'; // This is handled by table-zebra
             tr.dataset.assetId = asset._id;
@@ -120,19 +89,32 @@ function initializePhysicalCountPage(currentUser) {
             `;
             tableBody.appendChild(tr);
         });
-        renderPagination(paginationControls, {
-            currentPage,
-            totalPages,
-            totalDocs: filteredAssets.length,
-            itemsPerPage
-        });
+        renderPagination(paginationControls, pagination);
+    }
+
+    async function loadAssets() {
+        setLoading(true, tableBody, { colSpan: 5 });
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: itemsPerPage,
+                search: searchInput.value,
+                office: officeFilter.value,
+                physicalCount: true, // Tell backend to only get relevant assets
+            });
+            const data = await fetchWithAuth(`assets?${params}`);
+            renderTable(data.docs, data);
+        } catch (error) {
+            console.error('Failed to load assets:', error);
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+        }
     }
 
     // --- EVENT LISTENERS ---
     [searchInput, officeFilter].forEach(el => {
         el.addEventListener('input', () => {
             currentPage = 1;
-            renderTable();
+            loadAssets();
         });
     });
 
@@ -140,12 +122,12 @@ function initializePhysicalCountPage(currentUser) {
         if (e.target && e.target.id === 'prev-page-btn') {
             if (currentPage > 1) {
                 currentPage--;
-                renderTable();
+                loadAssets();
             }
         }
         if (e.target && e.target.id === 'next-page-btn') {
             currentPage++;
-            renderTable();
+            loadAssets();
         }
     });
 
@@ -177,8 +159,7 @@ function initializePhysicalCountPage(currentUser) {
             });
 
             showToast('Physical count data saved successfully!', 'success');
-            await initializePage(); // Re-fetch all assets to get the latest data
-            renderTable(); // Re-render the table with the latest data
+            await loadAssets(); // Re-fetch current page data
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         }
