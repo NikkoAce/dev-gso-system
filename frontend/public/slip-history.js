@@ -4,6 +4,8 @@ import { createUIManager } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // These functions are not defined in the provided context,
+        // but we assume they exist in your project.
         const user = await getCurrentUser();
         if (!user) return;
 
@@ -11,27 +13,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeSlipHistoryPage(user);
     } catch (error) {
         console.error("Authentication failed on slip history page:", error);
+        // Consider redirecting to login page if auth fails
+        // window.location.href = '/login.html';
     }
 });
 
 function initializeSlipHistoryPage(currentUser) {
-    const API_ENDPOINT = 'slips';
+    // --- STATE MANAGEMENT ---
+    let allSlips = []; // Master list of all slips fetched from the server
     let currentPage = 1;
     const itemsPerPage = 20;
     const { renderPagination } = createUIManager();
 
+    // --- DOM ELEMENTS ---
     const slipTypeFilter = document.getElementById('slip-type-filter');
     const searchInput = document.getElementById('slip-search-input');
     const paginationControls = document.getElementById('pagination-controls');
     const slipDetailsModal = document.getElementById('slip-details-modal');
+    const tableBody = document.getElementById('slip-history-table-body');
 
     // --- UTILITY FUNCTIONS ---
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
+    // --- RENDERING ---
     function renderSlipTable(slips, pagination) {
-        const tableBody = document.getElementById('slip-history-table-body');
-
         tableBody.innerHTML = '';
         if (slips.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No slips found for the selected criteria.</td></tr>`;
@@ -72,38 +78,52 @@ function initializeSlipHistoryPage(currentUser) {
         renderPagination(paginationControls, pagination);
     }
 
-    async function loadSlips() {
-        const tableBody = document.getElementById('slip-history-table-body');
+    // --- CORE LOGIC ---
+    function applyFiltersAndRender() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const type = slipTypeFilter.value;
+
+        // 1. Apply filters to the master list
+        const filteredSlips = allSlips.filter(slip => {
+            const typeMatch = type === 'all' || slip.slipType === type;
+            const searchMatch = !searchTerm ||
+                slip.number.toLowerCase().includes(searchTerm) ||
+                (slip.custodian && slip.custodian.name.toLowerCase().includes(searchTerm));
+            return typeMatch && searchMatch;
+        });
+
+        // 2. Apply pagination to the filtered list
+        const totalDocs = filteredSlips.length;
+        const totalPages = Math.ceil(totalDocs / itemsPerPage);
+        if (currentPage > totalPages) {
+            currentPage = totalPages || 1;
+        }
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedSlips = filteredSlips.slice(startIndex, startIndex + itemsPerPage);
+
+        // 3. Render the result
+        const paginationData = { totalDocs, totalPages, currentPage, itemsPerPage };
+        renderSlipTable(paginatedSlips, paginationData);
+    }
+
+    // --- MODAL & DATA FETCHING ---
+    async function loadInitialSlips() {
         tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
         lucide.createIcons();
         try {
-            const params = new URLSearchParams({
-                page: currentPage,
-                limit: itemsPerPage,
-                search: searchInput.value,
-                slipType: slipTypeFilter.value,
-            });
-            const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
-            
-            // Defensive check to handle both paginated (object) and non-paginated (array) responses
-            const slips = data?.docs ?? (Array.isArray(data) ? data : []);
-            const pagination = data?.docs ? data : {
-                docs: slips,
-                totalDocs: slips.length,
-                totalPages: Math.ceil(slips.length / itemsPerPage),
-                currentPage: 1,
-                itemsPerPage
-            };
-            renderSlipTable(slips, pagination);
+            // Fetch ALL slips once, without backend filtering or pagination
+            const data = await fetchWithAuth('slips');
+            allSlips = Array.isArray(data) ? data : [];
+            currentPage = 1;
+            applyFiltersAndRender(); // Initial render
         } catch (error) {
             console.error('Failed to fetch slip history:', error);
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading slip history.</td></tr>`;
         }
     }
 
-    // --- MODAL Functionality ---
     async function showSlipDetails(slipId) {
-        const slip = await fetchWithAuth(`${API_ENDPOINT}/${slipId}`);
+        const slip = await fetchWithAuth(`slips/${slipId}`);
         document.getElementById('modal-title').textContent = `${slip.slipType} Details`;
         document.getElementById('modal-slip-number').textContent = slip.number;
         document.getElementById('modal-slip-custodian').textContent = slip.custodian.name;
@@ -135,20 +155,23 @@ function initializeSlipHistoryPage(currentUser) {
     [slipTypeFilter, searchInput].forEach(el => {
         el.addEventListener('input', () => {
             currentPage = 1;
-            loadSlips();
+            applyFiltersAndRender();
         });
     });
     
     paginationControls.addEventListener('click', (e) => {
+        const paginationData = JSON.parse(e.currentTarget.dataset.pagination || '{}');
         if (e.target && e.target.id === 'prev-page-btn') {
             if (currentPage > 1) {
                 currentPage--;
-                loadSlips();
+                applyFiltersAndRender();
             }
         }
         if (e.target && e.target.id === 'next-page-btn') {
-            currentPage++;
-            loadSlips();
+            if (currentPage < paginationData.totalPages) {
+                currentPage++;
+                applyFiltersAndRender();
+            }
         }
     });
 
@@ -163,18 +186,18 @@ function initializeSlipHistoryPage(currentUser) {
         const reprintButton = e.target.closest('.reprint-btn');
         if (reprintButton) {
             const slipId = reprintButton.dataset.id;
-            // We need to fetch the full slip details for reprinting
-            fetchWithAuth(`${API_ENDPOINT}/${slipId}`).then(slipToReprint => {
-                if (!slipToReprint) return;
-                const slipType = slipToReprint.slipType;
-                if (slipType === 'PAR') {
-                    localStorage.setItem('parToReprint', JSON.stringify(slipToReprint));
-                    window.location.href = 'par-page.html';
-                } else if (slipType === 'ICS') {
-                    localStorage.setItem('icsToReprint', JSON.stringify(slipToReprint));
-                    window.location.href = 'ics-page.html';
-                }
-            });
+            // Find the slip from the master list to avoid another fetch
+            const slipToReprint = allSlips.find(s => s._id === slipId);
+            if (!slipToReprint) return;
+
+            const slipType = slipToReprint.slipType;
+            if (slipType === 'PAR') {
+                localStorage.setItem('parToReprint', JSON.stringify(slipToReprint));
+                window.location.href = 'par-page.html';
+            } else if (slipType === 'ICS') {
+                localStorage.setItem('icsToReprint', JSON.stringify(slipToReprint));
+                window.location.href = 'ics-page.html';
+            }
         }
     });
 
@@ -183,5 +206,5 @@ function initializeSlipHistoryPage(currentUser) {
     });
 
     // --- INITIALIZATION ---
-    loadSlips();
+    loadInitialSlips();
 }
