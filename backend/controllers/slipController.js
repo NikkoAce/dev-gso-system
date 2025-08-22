@@ -3,12 +3,9 @@ const PAR = require('../models/PAR');
 const ICS = require('../models/ICS');
 
 const getSlips = asyncHandler(async (req, res) => {
-    // Scope the queries to the logged-in user.
-    // This assumes your PAR and ICS models have a 'user' field referencing the User model.
-    const userFilter = { user: req.user.id };
-
-    const pars = await PAR.find(userFilter).populate('assets').lean();
-    const ics = await ICS.find(userFilter).populate('assets').lean();
+    // Since this is an admin-only page, we fetch all slips.
+    const pars = await PAR.find({}).populate('assets').lean();
+    const ics = await ICS.find({}).populate('assets').lean();
 
     const formattedPars = pars.map(p => ({ ...p, slipType: 'PAR', number: p.parNumber }));
     const formattedIcs = ics.map(i => ({ ...i, slipType: 'ICS', number: i.icsNumber }));
@@ -17,7 +14,7 @@ const getSlips = asyncHandler(async (req, res) => {
 
     allSlips.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    res.json(allSlips);
+    res.status(200).json(allSlips);
 });
 
 /**
@@ -27,7 +24,6 @@ const getSlips = asyncHandler(async (req, res) => {
  */
 const getSlipById = asyncHandler(async (req, res) => {
     const slipId = req.params.id;
-    const userId = req.user.id;
 
     // Query both collections in parallel for better performance
     const [parSlip, icsSlip] = await Promise.all([
@@ -55,12 +51,7 @@ const getSlipById = asyncHandler(async (req, res) => {
         throw new Error('Slip not found');
     }
 
-    // Authorization check: Ensure the slip belongs to the requesting user.
-    if (slipData.user && slipData.user.toString() !== userId) {
-        res.status(403); // 403 Forbidden
-        throw new Error('User not authorized to view this slip');
-    }
-
+    // No user authorization check needed as this is an admin-only route.
     res.status(200).json({ ...slipData, slipType, number: slipNumber });
 });
 
