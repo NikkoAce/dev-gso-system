@@ -113,9 +113,11 @@
                                     </select>
                                 </div>
                                 <div class="form-control w-full md:w-64">
-                                    <select id="category-filter" class="select select-bordered font-normal">
-                                        <option value="">All Categories</option>
-                                        <!-- JS will populate this -->
+                                    <label class="label"><span class="label-text">Filter by Slip Type</span></label>
+                                    <select id="category-filter" class="select select-bordered font-normal w-full">
+                                        <option value="all" selected>All Slip Types</option>
+                                        <option value="PAR">PAR (Property Acknowledgment)</option>
+                                        <option value="ICS">ICS (Inventory Custodian)</option>
                                     </select>
                                 </div>
                             </div>
