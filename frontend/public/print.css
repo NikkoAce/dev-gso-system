@@ -1,0 +1,38 @@
+@media print {
+  /* --- A robust method to isolate the report for printing --- */
+
+  /* 1. Hide everything on the page by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* 2. Make the report container and everything inside it visible */
+  #report-output,
+  #report-output * {
+    visibility: visible;
+  }
+
+  /* 3. Position the report to take up the whole page */
+  #report-output {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 1cm; /* Add some margin for the printer */
+    box-shadow: none;
+    border: none;
+  }
+
+  /* --- Optional but recommended improvements for table printing --- */
+  table {
+    page-break-inside: auto; /* Allow tables to break across pages */
+  }
+  tr {
+    page-break-inside: avoid; /* Avoid breaking a single row across pages */
+  }
+  thead {
+    display: table-header-group; /* Repeat table headers on each new page */
+  }
+}
+
