@@ -1,0 +1,7 @@
+# Ignore all dependency directories
+node_modules/
+
+# Optional: Also ignore build output folders
+dist/
+build/
+.vscode/

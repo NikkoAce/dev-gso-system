@@ -29,10 +29,30 @@ function initializeReportsPage(currentUser) {
     const generateLedgerCardBtn = document.getElementById('generate-ledger-card');
     const asAtDateInput = document.getElementById('as-at-date');
     const printReportBtn = document.getElementById('print-report-btn');
+    const reportOutput = document.getElementById('report-output');
+    const reportTitle = document.getElementById('report-title');
+    const reportTableContainer = document.getElementById('report-table-container');
+    const reportHeader = document.getElementById('report-header');
+    const reportFooter = document.getElementById('report-footer');
+    const reportHeaderTitleEl = document.getElementById('report-header-title');
+    const reportFundSourceEl = document.getElementById('report-fund-source');
+    const reportAsAtDateEl = document.getElementById('report-as-at-date');
+    const signatory1Name = document.getElementById('signatory-1-name');
+    const signatory2Name = document.getElementById('signatory-2-name');
+    const signatory3Name = document.getElementById('signatory-3-name');
 
     // --- UTILITY FUNCTIONS ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    };
 
     // --- DATA FETCHING ---
     async function initializePage() {
@@ -47,26 +67,20 @@ function initializeReportsPage(currentUser) {
             asAtDateInput.value = new Date().toISOString().split('T')[0]; // Set default date to today
         } catch (error) {
             console.error('Failed to initialize page:', error);
-            alert('Could not load data for reports.');
+            showToast('Could not load data for reports.', 'error');
         }
     }
 
     function setReportLoading(isLoading, message = 'Loading...') {
-        const reportOutput = document.getElementById('report-output');
-        const reportTitle = document.getElementById('report-title');
-        const container = document.getElementById('report-table-container');
-        const reportHeader = document.getElementById('report-header');
-        const reportFooter = document.getElementById('report-footer');
-
         if (isLoading) {
             reportTitle.textContent = message;
-            container.innerHTML = `<div class="flex justify-center items-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></div>`;
+            reportTableContainer.innerHTML = `<div class="flex justify-center items-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></div>`;
             reportHeader.classList.add('hidden');
             reportFooter.classList.add('hidden');
             reportOutput.classList.remove('hidden');
             lucide.createIcons();
         } else {
-            if (container.innerHTML.includes('loader-2')) {
+            if (reportTableContainer.innerHTML.includes('loader-2')) {
                 reportOutput.classList.add('hidden');
             }
         }
@@ -79,23 +93,17 @@ function initializeReportsPage(currentUser) {
             approver: { name: 'HEAD OF AGENCY/ENTITY', title: 'Signature over Printed Name' },
             verifier: { name: 'COA REPRESENTATIVE', title: 'Signature over Printed Name' }
         };
-        document.getElementById('signatory-1-name').textContent = signatories.certifier.name;
-        document.getElementById('signatory-2-name').textContent = signatories.approver.name;
-        document.getElementById('signatory-3-name').textContent = signatories.verifier.name;
+        signatory1Name.textContent = signatories.certifier.name;
+        signatory2Name.textContent = signatories.approver.name;
+        signatory3Name.textContent = signatories.verifier.name;
     }
 
     // --- REPORT GENERATION ---
     function generateReportTable(title, headers, rows, fundSource, reportHeaderTitle, asAtDate) {
-        const reportOutput = document.getElementById('report-output');
-        const reportTitle = document.getElementById('report-title');
-        const reportHeader = document.getElementById('report-header');
-        const reportFooter = document.getElementById('report-footer');
-        const container = document.getElementById('report-table-container');
-        
         reportTitle.textContent = title;
-        document.getElementById('report-header-title').textContent = reportHeaderTitle;
-        document.getElementById('report-fund-source').textContent = fundSource.toUpperCase();
-        document.getElementById('report-as-at-date').textContent = formatDate(asAtDate);
+        reportHeaderTitleEl.textContent = reportHeaderTitle;
+        reportFundSourceEl.textContent = fundSource.toUpperCase();
+        reportAsAtDateEl.textContent = formatDate(asAtDate);
         
         let tableHTML = `<table class="w-full text-xs border-collapse border border-black">
             <thead class="bg-gray-100">
@@ -108,7 +116,7 @@ function initializeReportsPage(currentUser) {
             </tbody>
         </table>`;
         
-        container.innerHTML = tableHTML;
+        reportTableContainer.innerHTML = tableHTML;
         populateSignatories();
         reportHeader.classList.remove('hidden');
         reportFooter.classList.remove('hidden');
@@ -117,12 +125,6 @@ function initializeReportsPage(currentUser) {
     }
 
     function generateLedgerCard(asset) {
-        const reportOutput = document.getElementById('report-output');
-        const reportTitle = document.getElementById('report-title');
-        const reportHeader = document.getElementById('report-header');
-        const reportFooter = document.getElementById('report-footer');
-        const container = document.getElementById('report-table-container');
-        
         reportTitle.textContent = `PPE Ledger Card`;
         reportHeader.classList.add('hidden'); // Hide the standard header
         reportFooter.classList.add('hidden'); // Hide the standard footer
@@ -207,99 +209,65 @@ function initializeReportsPage(currentUser) {
         }
     }
 
-    // --- EVENT LISTENERS ---
-    async function generateRpcppeReport() {
+    async function handleGenerateReport(config) {
+        const {
+            button,
+            endpoint,
+            loadingMessage,
+            reportTitle,
+            reportHeaderTitle,
+            fundSourceRequired = true
+        } = config;
+
         const selectedFundSource = fundSourceFilter.value;
         const selectedCategory = categoryFilter.value;
         const asAtDate = asAtDateInput.value;
 
-        if (!selectedFundSource || !asAtDate) {
-            showToast('Please select a Fund Source and an "As at Date" for the report.', 'warning');
+        if ((fundSourceRequired && !selectedFundSource) || !asAtDate) {
+            showToast(`Please select a Fund Source and an "As at Date" for the report.`, 'warning');
             return;
         }
 
-        setReportLoading(true, 'Generating RPCPPE Report...');
-        generateRpcppeBtn.disabled = true;
+        setReportLoading(true, loadingMessage);
+        button.disabled = true;
 
         try {
             const params = new URLSearchParams({
                 fundSource: selectedFundSource,
                 category: selectedCategory,
-                asAtDate: asAtDate,
+                asAtDate: asAtDate
             });
 
-            // This would be a new backend endpoint that handles filtering and data preparation.
-            const reportData = await fetchWithAuth(`reports/rpcppe?${params}`);
+            const reportData = await fetchWithAuth(`reports/${endpoint}?${params}`);
             if (reportData.rows.length === 0) {
                 showToast('No assets found for the selected criteria.', 'info');
+                setReportLoading(false);
                 return;
             }
 
             generateReportTable(
-                'RPCPPE Report',
+                reportTitle,
                 reportData.headers,
                 reportData.rows,
                 selectedFundSource,
-                'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT',
+                reportHeaderTitle,
                 asAtDate
             );
         } catch (error) {
-            console.error('Error generating RPCPPE:', error);
+            console.error(`Error generating ${reportTitle}:`, error);
             showToast(`Error: ${error.message}`, 'error');
-        } finally {
             setReportLoading(false);
-            generateRpcppeBtn.disabled = false;
+        } finally {
+            button.disabled = false;
         }
     }
 
-    async function generateDepreciationReport() {
-        const selectedFundSource = fundSourceFilter.value;
-        const selectedCategory = categoryFilter.value;
-        const asAtDate = asAtDateInput.value;
-
-        if (!selectedFundSource || !asAtDate) {
-            showToast('Please select an "As at Date" for the report.', 'warning');
-            return;
-        }
-
-        setReportLoading(true, 'Generating Depreciation Report...');
-        generateDepreciationBtn.disabled = true;
-
-        try {
-            const params = new URLSearchParams({
-                fundSource: selectedFundSource,
-                category: selectedCategory,
-                asAtDate: asAtDate,
-            });
-
-            // This would be a new backend endpoint that handles all depreciation calculations.
-            const reportData = await fetchWithAuth(`reports/depreciation?${params}`);
-            if (reportData.rows.length === 0) {
-                alert('No assets found for the selected criteria.');
-                return;
-            }
-
-            generateReportTable(
-                'Depreciation Report',
-                reportData.headers,
-                reportData.rows, // Assuming backend sends pre-formatted rows
-                selectedFundSource,
-                'SCHEDULE ON THE LAPSARIAN OF PROPERTY, PLANT AND EQUIPMENT',
-                asAtDate
-            );
-        } catch (error) {
-            console.error('Error generating Depreciation Report:', error);
-            alert(`Error: ${error.message}`);
-        } finally {
-            setReportLoading(false);
-            generateDepreciationBtn.disabled = false;
-        }
-    }
+    // --- EVENT LISTENERS ---
 
     function handleGenerateLedger() {
         const selectedAssetId = selectedAssetIdInput.value;
         if (!selectedAssetId) {
-            alert('Please select an asset to generate a ledger card.');
+            showToast('Please select an asset to generate a ledger card.', 'warning');
             return;
         }
         const selectedAsset = allAssets.find(asset => asset._id === selectedAssetId);
@@ -308,11 +276,26 @@ function initializeReportsPage(currentUser) {
         }
     }
 
-    generateRpcppeBtn.addEventListener('click', generateRpcppeReport);
-    generateDepreciationBtn.addEventListener('click', generateDepreciationReport);
+    generateRpcppeBtn.addEventListener('click', () => handleGenerateReport({
+        button: generateRpcppeBtn,
+        endpoint: 'rpcppe',
+        loadingMessage: 'Generating RPCPPE Report...',
+        reportTitle: 'RPCPPE Report',
+        reportHeaderTitle: 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT'
+    }));
+
+    generateDepreciationBtn.addEventListener('click', () => handleGenerateReport({
+        button: generateDepreciationBtn,
+        endpoint: 'depreciation',
+        loadingMessage: 'Generating Depreciation Report...',
+        reportTitle: 'Depreciation Report',
+        reportHeaderTitle: 'SCHEDULE ON THE LAPSARIAN OF PROPERTY, PLANT AND EQUIPMENT'
+    }));
+
     generateLedgerCardBtn.addEventListener('click', handleGenerateLedger);
 
-    assetSearchInput.addEventListener('input', renderAssetSearchResults);
+    const debouncedRenderAssetSearchResults = debounce(renderAssetSearchResults, 300);
+    assetSearchInput.addEventListener('input', debouncedRenderAssetSearchResults);
     assetSearchInput.addEventListener('focus', renderAssetSearchResults);
 
     assetSearchResults.addEventListener('click', (e) => {
