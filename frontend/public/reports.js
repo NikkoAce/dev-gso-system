@@ -38,8 +38,11 @@ function initializeReportsPage(currentUser) {
     const reportFundSourceEl = document.getElementById('report-fund-source');
     const reportAsAtDateEl = document.getElementById('report-as-at-date');
     const signatory1Name = document.getElementById('signatory-1-name');
+    const signatory1Title = document.getElementById('signatory-1-title');
     const signatory2Name = document.getElementById('signatory-2-name');
+    const signatory2Title = document.getElementById('signatory-2-title');
     const signatory3Name = document.getElementById('signatory-3-name');
+    const signatory3Title = document.getElementById('signatory-3-title');
 
     // --- UTILITY FUNCTIONS ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -94,47 +97,70 @@ function initializeReportsPage(currentUser) {
             verifier: { name: 'COA REPRESENTATIVE', title: 'Signature over Printed Name' }
         };
         signatory1Name.textContent = signatories.certifier.name;
+        signatory1Title.textContent = signatories.certifier.title;
         signatory2Name.textContent = signatories.approver.name;
+        signatory2Title.textContent = signatories.approver.title;
         signatory3Name.textContent = signatories.verifier.name;
+        signatory3Title.textContent = signatories.verifier.title;
     }
 
     // --- REPORT GENERATION ---
-    function generateReportTable(title, headers, rows, fundSource, reportHeaderTitle, asAtDate) {
+    function generateReportTable(title, headers, rows, fundSource, reportHeaderTitle, asAtDate, columnFormatters = {}) {
         reportTitle.textContent = title;
         reportHeaderTitleEl.textContent = reportHeaderTitle;
         reportFundSourceEl.textContent = fundSource.toUpperCase();
         reportAsAtDateEl.textContent = formatDate(asAtDate);
         
-        let tableHTML = `<table class="w-full text-xs border-collapse border border-black">
-            <thead class="bg-gray-100">
-                <tr>${headers.map(h => `<th class="border border-black p-1">${h}</th>`).join('')}</tr>
-            </thead>
-            <tbody>
-                ${rows.map(row => `
-                    <tr class="border-b">${row.map(cell => `<td class="border border-black p-1 align-top">${cell}</td>`).join('')}</tr>
-                `).join('')}
-            </tbody>
-        </table>`;
+        // Clear previous content
+        reportTableContainer.innerHTML = '';
+
+        const table = document.createElement('table');
+        table.className = 'w-full text-xs border-collapse border border-black';
+
+        const thead = table.createTHead();
+        thead.className = 'bg-gray-100';
+        const headerRow = thead.insertRow();
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.className = 'border border-black p-1';
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+
+        const tbody = table.createTBody();
+        rows.forEach(rowData => {
+            const row = tbody.insertRow();
+            row.className = 'border-b';
+            rowData.forEach((cellData, index) => {
+                const cell = row.insertCell();
+                cell.className = 'border border-black p-1 align-top';
+                // Apply formatter if it exists for the current column index
+                if (columnFormatters[index]) {
+                    cell.textContent = columnFormattersindex;
+                } else {
+                    cell.textContent = cellData;
+                }
+            });
+        });
         
-        reportTableContainer.innerHTML = tableHTML;
+        reportTableContainer.appendChild(table);
         populateSignatories();
         reportHeader.classList.remove('hidden');
         reportFooter.classList.remove('hidden');
         reportOutput.classList.remove('hidden');
-        lucide.createIcons();
     }
 
     function generateLedgerCard(asset) {
         reportTitle.textContent = `PPE Ledger Card`;
         reportHeader.classList.add('hidden'); // Hide the standard header
         reportFooter.classList.add('hidden'); // Hide the standard footer
-
+    
         const depreciableCost = asset.acquisitionCost - (asset.salvageValue || 0);
         const annualDepreciation = asset.usefulLife > 0 ? depreciableCost / asset.usefulLife : 0;
         
         let rowsHTML = '';
         let accumulatedDepreciation = 0;
-
+    
         for (let i = 1; i <= asset.usefulLife; i++) {
             accumulatedDepreciation += annualDepreciation;
             const bookValue = asset.acquisitionCost - accumulatedDepreciation;
@@ -147,7 +173,7 @@ function initializeReportsPage(currentUser) {
                 </tr>
             `;
         }
-
+    
         let tableHTML = `
             <div class="text-center mb-4">
                 <h3 class="font-bold">PROPERTY, PLANT AND EQUIPMENT LEDGER CARD</h3>
@@ -172,8 +198,8 @@ function initializeReportsPage(currentUser) {
                 <tbody>${rowsHTML}</tbody>
             </table>
         `;
-
-        container.innerHTML = tableHTML;
+    
+        reportTableContainer.innerHTML = tableHTML;
         reportOutput.classList.remove('hidden');
     }
 
@@ -216,7 +242,8 @@ function initializeReportsPage(currentUser) {
             loadingMessage,
             reportTitle,
             reportHeaderTitle,
-            fundSourceRequired = true
+            fundSourceRequired = true,
+            columnFormatters
         } = config;
 
         const selectedFundSource = fundSourceFilter.value;
@@ -251,7 +278,8 @@ function initializeReportsPage(currentUser) {
                 reportData.rows,
                 selectedFundSource,
                 reportHeaderTitle,
-                asAtDate
+                asAtDate,
+                columnFormatters
             );
         } catch (error) {
             console.error(`Error generating ${reportTitle}:`, error);
@@ -281,7 +309,10 @@ function initializeReportsPage(currentUser) {
         endpoint: 'rpcppe',
         loadingMessage: 'Generating RPCPPE Report...',
         reportTitle: 'RPCPPE Report',
-        reportHeaderTitle: 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT'
+        reportHeaderTitle: 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT',
+        columnFormatters: {
+            3: (data) => formatCurrency(data) // Unit Cost
+        }
     }));
 
     generateDepreciationBtn.addEventListener('click', () => handleGenerateReport({
@@ -289,7 +320,16 @@ function initializeReportsPage(currentUser) {
         endpoint: 'depreciation',
         loadingMessage: 'Generating Depreciation Report...',
         reportTitle: 'Depreciation Report',
-        reportHeaderTitle: 'SCHEDULE ON THE LAPSARIAN OF PROPERTY, PLANT AND EQUIPMENT'
+        reportHeaderTitle: 'DEPRECIATION SCHEDULE FOR PROPERTY, PLANT AND EQUIPMENT',
+        columnFormatters: {
+            2: (data) => formatCurrency(data),      // Acq. Cost
+            3: (data) => formatDate(data),          // Acq. Date
+            4: (data) => data ? `${data} yrs` : 'N/A', // Est. Life
+            5: (data) => formatCurrency(data),      // Accum. Dep., Beg.
+            6: (data) => formatCurrency(data),      // Dep. for the Period
+            7: (data) => formatCurrency(data),      // Accum. Dep., End
+            8: (data) => formatCurrency(data)       // Book Value, End
+        }
     }));
 
     generateLedgerCardBtn.addEventListener('click', handleGenerateLedger);

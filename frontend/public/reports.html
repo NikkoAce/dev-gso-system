@@ -41,98 +41,98 @@
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <h1 class="text-3xl font-bold text-gray-800">Reports</h1>
-                    <div class="card bg-base-100 border non-printable">
+                    <h1 id="page-title" class="text-3xl font-bold text-gray-800">Reports</h1>
+                    
+                    <section aria-labelledby="group-reports-heading" class="card bg-base-100 border non-printable">
                         <div class="card-body">
-                            <h2 class="card-title">Generate Group Reports</h2>
+                            <h2 id="group-reports-heading" class="card-title">Generate Group Reports</h2>
                             <div class="flex flex-wrap items-end gap-4">
                                 <div class="form-control w-full max-w-xs">
                                     <label for="fund-source-filter" class="label"><span class="label-text">Fund Source</span></label>
                                     <select id="fund-source-filter" class="select select-bordered font-normal">
-                                    <option value="">Select a Fund Source</option>
-                                    <option>General Fund</option>
-                                    <option>Special Education Fund</option>
-                                    <option>Trust Fund</option>
-                                </select>
-                            </div>
+                                        <option value="">Select a Fund Source</option>
+                                        <option>General Fund</option>
+                                        <option>Special Education Fund</option>
+                                        <option>Trust Fund</option>
+                                    </select>
+                                </div>
                                 <div class="form-control w-full max-w-xs">
                                     <label for="category-filter" class="label"><span class="label-text">Category</span></label>
                                     <select id="category-filter" class="select select-bordered font-normal">
-                                    <option value="">All Categories</option>
-                                    <!-- JS will populate this -->
-                                </select>
-                            </div>
+                                        <option value="">All Categories</option>
+                                        <!-- JS will populate this -->
+                                    </select>
+                                </div>
                                 <div class="form-control w-full max-w-xs">
                                     <label for="as-at-date" class="label"><span class="label-text">As at Date</span></label>
                                     <input type="date" id="as-at-date" class="input input-bordered">
-                            </div>
+                                </div>
                                 <button id="generate-rpcppe" class="btn btn-primary">
-                                <i data-lucide="file-text"></i> Generate RPCPPE
-                            </button>
+                                    <i data-lucide="file-text"></i> Generate RPCPPE
+                                </button>
                                 <button id="generate-depreciation" class="btn btn-success">
-                                <i data-lucide="file-text"></i> Generate Depreciation Report
-                            </button>
+                                    <i data-lucide="file-text"></i> Generate Depreciation Report
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    </div>
+                    </section>
 
-                    <!-- UPDATED: Ledger Card Section with Searchable Input -->
-                    <div class="card bg-base-100 border non-printable">
+                    <section aria-labelledby="ledger-card-heading" class="card bg-base-100 border non-printable">
                         <div class="card-body">
-                            <h2 class="card-title">Generate Individual Ledger Card</h2>
+                            <h2 id="ledger-card-heading" class="card-title">Generate Individual Ledger Card</h2>
                             <div class="flex flex-wrap items-end gap-4">
                                 <div class="relative flex-grow form-control w-full max-w-md">
                                     <label for="asset-search-input" class="label"><span class="label-text">Select Asset</span></label>
-                                    <input type="text" id="asset-search-input" placeholder="Type to search for an asset..." class="input input-bordered">
-                                    <div id="asset-search-results" class="hidden absolute z-10 w-full bg-base-100 border border-base-300 rounded-md mt-1 max-h-60 overflow-y-auto top-full"></div>
-                                <input type="hidden" id="selected-asset-id">
-                            </div>
+                                    <input type="text" id="asset-search-input" placeholder="Type to search for an asset..." class="input input-bordered" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-autocomplete="list">
+                                    <div id="asset-search-results" class="hidden absolute z-10 w-full bg-base-100 border border-base-300 rounded-md mt-1 max-h-60 overflow-y-auto top-full" role="listbox"></div>
+                                    <input type="hidden" id="selected-asset-id">
+                                </div>
                                 <button id="generate-ledger-card" class="btn btn-accent">
-                                <i data-lucide="book-marked"></i> Generate Ledger Card
-                            </button>
+                                    <i data-lucide="book-marked"></i> Generate Ledger Card
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    </div>
+                    </section>
 
-                    <div id="report-output" class="hidden bg-white p-6 rounded-lg border printable-area">
+                    <section id="report-output" aria-labelledby="report-title" class="hidden bg-white p-6 rounded-lg border printable-area">
                         <div class="flex justify-between items-center mb-4 non-printable">
                             <h2 id="report-title" class="text-xl font-bold text-gray-800"></h2>
                             <button id="print-report-btn" class="btn btn-ghost">
                                 <i data-lucide="printer"></i> Print Report
                             </button>
                         </div>
-                        <div id="report-header" class="text-center mb-4 hidden">
+                        <header id="report-header" class="text-center mb-4 hidden">
                             <h3 id="report-header-title" class="font-bold"></h3>
                             <p class="text-sm">As at <span id="report-as-at-date" class="font-semibold"></span></p>
                             <p class="text-sm">Fund: <span id="report-fund-source" class="font-semibold"></span></p>
-                        </div>
+                        </header>
                         <div id="report-table-container" class="overflow-x-auto"></div>
-                         <div id="report-footer" class="hidden mt-8 text-xs">
+                         <footer id="report-footer" class="hidden mt-8 text-xs">
                             <div class="grid grid-cols-3 gap-4">
                                 <div>
                                     <p class="font-bold">Certified Correct by:</p>
                                 <div class="mt-12 border-t border-black pt-1">
-                                        <p id="signatory-1-name" class="font-bold uppercase text-center">JUAN DELA CRUZ</p>
-                                        <p id="signatory-1-title" class="text-center">General Services Officer</p>
+                                        <p id="signatory-1-name" class="font-bold uppercase text-center"></p>
+                                        <p id="signatory-1-title" class="text-center"></p>
                                     </div>
                                 </div>
                                 <div>
                                     <p class="font-bold">Approved by:</p>
                                      <div class="mt-12 border-t border-black pt-1">
-                                        <p id="signatory-2-name" class="font-bold uppercase text-center">MARIA CLARA</p>
-                                        <p id="signatory-2-title" class="text-center">Municipal Mayor</p>
+                                        <p id="signatory-2-name" class="font-bold uppercase text-center"></p>
+                                        <p id="signatory-2-title" class="text-center"></p>
                                     </div>
                                 </div>
                                 <div>
                                     <p class="font-bold">Verified by:</p>
                                      <div class="mt-12 border-t border-black pt-1">
-                                        <p id="signatory-3-name" class="font-bold uppercase text-center">JOSE RIZAL</p>
-                                        <p id="signatory-3-title" class="text-center">COA Representative</p>
+                                        <p id="signatory-3-name" class="font-bold uppercase text-center"></p>
+                                        <p id="signatory-3-title" class="text-center"></p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </footer>
+                    </section>
                 </div>
             </main>
         </div>

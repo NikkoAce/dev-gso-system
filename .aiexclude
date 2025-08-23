@@ -1,6 +1,9 @@
 # Ignore all dependency directories
 node_modules/
 
+# Ignore the internal Git directory
+.git/
+
 # Optional: Also ignore build output folders
 dist/
 build/
