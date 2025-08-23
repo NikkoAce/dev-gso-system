@@ -19,6 +19,18 @@ const GSO_ASSETS_NAV = `
   </li>
 `;
 
+const GSO_IMMOVABLE_ASSETS_NAV = `
+  <li>
+    <details>
+      <summary><i data-lucide="land-plot"></i> Immovable Assets</summary>
+      <ul class="text-sm">
+        <li><a href="../immovable-assets/immovable-registry.html" class="nav-link"><i data-lucide="list"></i> Registry</a></li>
+        <li><a href="../immovable-assets/immovable-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New</a></li>
+      </ul>
+    </details>
+  </li>
+`;
+
 const GSO_SUPPLIES_NAV = `
   <li>
     <details>
@@ -58,6 +70,7 @@ function getSidebarHTML(user) {
     navLinks = `
       ${GSO_MAIN_NAV}
       ${GSO_ASSETS_NAV}
+      ${GSO_IMMOVABLE_ASSETS_NAV}
       ${GSO_SUPPLIES_NAV}
       ${GSO_SETTINGS_NAV}
     `;
