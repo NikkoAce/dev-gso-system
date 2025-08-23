@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { createICS, getICSs } = require('../controllers/icsController.js');
-const { protect, gsoOnly } = require('../middleware/authMiddleware.js');
+const { protect, gso } = require('../middlewares/authMiddleware.js');
 
-router.route('/').post(protect, gsoOnly, createICS).get(protect, gsoOnly, getICSs);
+router.route('/').post(protect, gso, createICS).get(protect, gso, getICSs);
 
 module.exports = router;

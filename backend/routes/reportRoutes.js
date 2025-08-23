@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { generateRpcppeReport, generateDepreciationReport, testReportRoute } = require('../controllers/reportController.js');
-const { protect, gsoOnly } = require('../middleware/authMiddleware.js');
+const { protect, gso } = require('../middlewares/authMiddleware.js');
 
-router.get('/rpcppe', protect, gsoOnly, generateRpcppeReport);
-router.get('/depreciation', protect, gsoOnly, generateDepreciationReport);
-router.get('/test', protect, gsoOnly, testReportRoute);
+router.get('/rpcppe', protect, gso, generateRpcppeReport);
+router.get('/depreciation', protect, gso, generateDepreciationReport);
+router.get('/test', protect, gso, testReportRoute);
 
 module.exports = router;
   

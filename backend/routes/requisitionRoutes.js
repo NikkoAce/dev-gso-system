@@ -8,17 +8,17 @@ const {
     updateRequisition,
     getMyOfficeRequisitions // Import the new controller
 } = require('../controllers/requisitionController');
-const { protect, gsoOnly } = require('../middleware/authMiddleware'); // Import the middleware
+const { protect, gso } = require('../middlewares/authMiddleware'); // Import the middleware
 
 // This new route is protected and will only return requisitions for the user's office
 router.route('/my-office').get(protect, getMyOfficeRequisitions);
 
 router.route('/')
     .post(protect, createRequisition)
-    .get(protect, gsoOnly, getAllRequisitions);
+    .get(protect, gso, getAllRequisitions);
 
 router.route('/:id')
-    .get(protect, gsoOnly, getRequisitionById)
-    .put(protect, gsoOnly, updateRequisition);
+    .get(protect, gso, getRequisitionById)
+    .put(protect, gso, updateRequisition);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, gsoOnly } = require('../middleware/authMiddleware.js');
+const { protect, gso } = require('../middlewares/authMiddleware.js');
 const {
     getAssets,
     getAssetById,
@@ -20,34 +20,34 @@ const {
 router.get('/my-assets', protect, getMyOfficeAssets);
 
 // Route for dashboard stats - Changed from /stats to /dashboard/summary
-router.get('/dashboard/summary', protect, gsoOnly, getDashboardStats);
+router.get('/dashboard/summary', protect, gso, getDashboardStats);
 
 // Route for getting the next property number
-router.get('/next-number', protect, gsoOnly, getNextPropertyNumber);
+router.get('/next-number', protect, gso, getNextPropertyNumber);
 
 // Route for exporting assets to CSV
-router.get('/export', protect, gsoOnly, exportAssetsToCsv);
+router.get('/export', protect, gso, exportAssetsToCsv);
 
 // Route for bulk asset creation
-router.post('/bulk', protect, gsoOnly, createBulkAssets);
+router.post('/bulk', protect, gso, createBulkAssets);
 
 // Route for bulk asset transfer
-router.post('/bulk-transfer', protect, gsoOnly, bulkTransferAssets);
+router.post('/bulk-transfer', protect, gso, bulkTransferAssets);
 
 // Route for updating physical count
-router.put('/physical-count', protect, gsoOnly, updatePhysicalCount);
+router.put('/physical-count', protect, gso, updatePhysicalCount);
 
 // Route for updating from scanner
-router.post('/scan', protect, gsoOnly, updateScanResults);
+router.post('/scan', protect, gso, updateScanResults);
 
 // Standard CRUD routes for assets
 router.route('/')
     .get(protect, getAssets)
-    .post(protect, gsoOnly, createAsset);
+    .post(protect, gso, createAsset);
 
 router.route('/:id')
     .get(protect, getAssetById)
-    .put(protect, gsoOnly, updateAsset)
-    .delete(protect, gsoOnly, deleteAsset);
+    .put(protect, gso, updateAsset)
+    .delete(protect, gso, deleteAsset);
 
 module.exports = router;
