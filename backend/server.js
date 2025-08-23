@@ -26,6 +26,8 @@ const stockItemRoutes = require('./routes/stockItemRoutes');
 app.use('/api/stock-items', stockItemRoutes);
 const requisitionRoutes = require('./routes/requisitionRoutes');
 app.use('/api/requisitions', requisitionRoutes);
+const immovableAssetRoutes = require('./routes/immovableAssetRoutes');
+app.use('/api/immovable-assets', immovableAssetRoutes);
 
 // Add a 404 handler specifically for API routes
 // This should be after all API routes and before the static file serving
