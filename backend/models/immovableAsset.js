@@ -103,16 +103,4 @@ const immovableAssetSchema = new mongoose.Schema({
     timestamps: true // Adds createdAt and updatedAt fields
 });
 
-// Add an initial history entry on creation
-immovableAssetSchema.pre('save', function(next) {
-    if (this.isNew) {
-        this.history.push({
-            event: 'Asset Created',
-            details: `Initial record for '${this.name}' created.`,
-            user: 'System' // Or get user from request context
-        });
-    }
-    next();
-});
-
 module.exports = mongoose.model('ImmovableAsset', immovableAssetSchema);

@@ -7,5 +7,7 @@
 			"path": "../_LGU EMPLOYEE PORTAL"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "_GSO MANAGEMENT SYSTEM dev"
+	}
 }

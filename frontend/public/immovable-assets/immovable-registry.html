@@ -1,0 +1,120 @@
+<!-- FILE: frontend/public/immovable-assets/immovable-registry.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immovable Asset Registry - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar is dynamically loaded by layout.js -->
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h1 class="text-3xl font-bold text-gray-800">Immovable Asset Registry</h1>
+                        <a href="./immovable-form.html" class="btn btn-primary">
+                            <i data-lucide="plus"></i> Add New Immovable Asset
+                        </a>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="form-control md:col-span-1">
+                                    <label for="search-input" class="label sr-only"><span class="label-text">Search</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                        </div>
+                                        <input type="text" id="search-input" placeholder="Search by Name or PIN..." class="input input-bordered w-full pl-10">
+                                    </div>
+                                </div>
+                                <div class="form-control">
+                                    <label for="type-filter" class="label sr-only"><span class="label-text">Filter by Type</span></label>
+                                    <select id="type-filter" class="select select-bordered font-normal">
+                                        <option value="">All Types</option>
+                                        <option value="Land">Land</option>
+                                        <option value="Building">Building</option>
+                                        <option value="Other Structures">Other Structures</option>
+                                        <option value="Road Network">Road Network</option>
+                                        <option value="Other Public Infrastructure">Other Public Infrastructure</option>
+                                    </select>
+                                </div>
+                                <div class="form-control">
+                                    <label for="status-filter" class="label sr-only"><span class="label-text">Filter by Status</span></label>
+                                    <select id="status-filter" class="select select-bordered font-normal">
+                                        <option value="">All Statuses</option>
+                                        <option value="In Use">In Use</option>
+                                        <option value="Under Construction">Under Construction</option>
+                                        <option value="Idle">Idle</option>
+                                        <option value="For Disposal">For Disposal</option>
+                                        <option value="Disposed">Disposed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Asset Table -->
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Property Index No. (PIN)</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Location</th>
+                                        <th class="text-right">Assessed Value</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center non-printable">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-table-body">
+                                    <tr><td colspan="7" class="text-center p-8">Loading assets...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pagination-controls" class="flex justify-between items-center non-printable">
+                        <!-- JS will populate this -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <dialog id="confirmation-modal" class="modal">
+        <div class="modal-box">
+            <h3 id="modal-title-text" class="font-bold text-lg">Are you sure?</h3>
+            <p id="modal-body-text" class="py-4">This action cannot be undone.</p>
+            <div class="modal-action">
+                <button id="modal-cancel-btn" class="btn">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-error">Confirm</button>
+            </div>
+        </div>
+    </dialog>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast toast-top toast-end"></div>
+
+    <script src="../js/security.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./immovable-registry.js"></script>
+</body>
+</html>
