@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
+const { errorHandler } = require('./middlewares/errorMiddleware');
 
 dotenv.config();
 connectDB();
@@ -42,6 +43,9 @@ app.use(express.static(frontendPath));
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(frontendPath, 'index.html'));
 });
+
+// This must be the last middleware to catch all errors
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

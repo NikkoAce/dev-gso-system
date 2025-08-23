@@ -29,7 +29,7 @@ async function getNextRisNumber() {
 // @desc    Create a new requisition
 // @route   POST /api/requisitions
 // @access  Private
-exports.createRequisition = async (req, res) => {
+const createRequisition = async (req, res) => {
     const { purpose, items } = req.body;
     const { name, office, _id } = req.user; // Get user info from the token via middleware
 
@@ -58,7 +58,7 @@ exports.createRequisition = async (req, res) => {
 // @desc    Get all requisitions
 // @route   GET /api/requisitions
 // @access  Private
-exports.getAllRequisitions = async (req, res) => {
+const getAllRequisitions = async (req, res) => {
     try {
         const requisitions = await Requisition.find()
             .populate('items.stockItem', 'stockNumber unitOfMeasure')
@@ -73,7 +73,7 @@ exports.getAllRequisitions = async (req, res) => {
 // @desc    Get a single requisition by ID
 // @route   GET /api/requisitions/:id
 // @access  Private
-exports.getRequisitionById = async (req, res) => {
+const getRequisitionById = async (req, res) => {
     try {
         const requisition = await Requisition.findById(req.params.id)
             .populate('items.stockItem', 'stockNumber unitOfMeasure quantity');
@@ -92,7 +92,7 @@ exports.getRequisitionById = async (req, res) => {
 // @desc    Update a requisition (status, items issued, etc.)
 // @route   PUT /api/requisitions/:id
 // @access  Private (GSO only)
-exports.updateRequisition = async (req, res) => {
+const updateRequisition = async (req, res) => {
     const { status, items, remarks } = req.body;
 
     const session = await mongoose.startSession();
@@ -148,9 +148,9 @@ const getMyOfficeRequisitions = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-    createRequisition: exports.createRequisition,
-    getAllRequisitions: exports.getAllRequisitions,
-    getRequisitionById: exports.getRequisitionById,
-    updateRequisition: exports.updateRequisition,
+    createRequisition,
+    getAllRequisitions,
+    getRequisitionById,
+    updateRequisition,
     getMyOfficeRequisitions,
 };
