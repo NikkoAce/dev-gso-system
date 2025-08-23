@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./input.css -o ./public/output.css --watch",
-    "build:prod": "tailwindcss -i ./input.css -o ./public/output.css --minify",
+    "build:css": "tailwindcss -i ./input.css -o ./public/css/output.css --watch",
+    "build:prod": "tailwindcss -i ./input.css -o ./public/css/output.css --minify",
     "build": "npm run build:prod"
   },
   "keywords": [],

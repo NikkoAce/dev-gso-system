@@ -1,5 +1,5 @@
 // FILE: frontend/public/js/settingsPageFactory.js
-import { fetchWithAuth } from '../api.js';
+import { fetchWithAuth } from './api.js';
 import { createUIManager } from './ui.js';
 
 /**

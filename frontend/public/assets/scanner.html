@@ -1,0 +1,111 @@
+<!-- FILE: frontend/public/scanner.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Library for reading QR codes from camera -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">QR Code Scanner</h1>
+                    <div class="flex gap-2">
+                        <button id="start-scan-btn" class="btn btn-primary">
+                            <i data-lucide="camera"></i> Start Scan
+                        </button>
+                        <button id="save-scan-btn" class="btn btn-success">
+                            <i data-lucide="save"></i> Save Scan Results
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter section -->
+                <div class="card bg-base-100 border non-printable mb-6">
+                    <div class="card-body p-4">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="form-control flex-grow">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                    </div>
+                                    <input type="text" id="search-input" placeholder="Filter loaded assets by Property No, Description..." class="input input-bordered w-full pl-10">
+                                </div>
+                            </div>
+                            <div class="form-control w-full md:w-64">
+                                <select id="office-filter" class="select select-bordered font-normal">
+                                    <option value="">Select an Office to load assets</option>
+                                    <!-- JS will populate this -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Scanner Section -->
+                    <div id="scanner-container" class="hidden bg-black rounded-box p-2 relative">
+                        <video id="scanner-video" class="w-full h-auto rounded-md" playsinline></video>
+                        <canvas id="scanner-canvas" class="hidden"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-64 h-64 border-4 border-dashed border-green-500 rounded-lg"></div>
+                        </div>
+                    </div>
+
+                    <!-- Asset List Section -->
+                    <div class="card bg-base-100 border max-h-[75vh] flex flex-col">
+                        <div class="card-body p-4 border-b flex-shrink-0">
+                            <h2 class="card-title">Asset List</h2>
+                            <p class="text-sm text-base-content/70">Found: <span id="found-count">0</span> / <span id="total-count">0</span></p>
+                        </div>
+                        <div class="overflow-y-auto flex-grow">
+                            <table class="table w-full">
+                                <tbody id="scanner-asset-list">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../js/security.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./scanner.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!-- FILE: frontend/public/slip-history.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slip History - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="space-y-6">
+                    <h1 class="text-3xl font-bold text-gray-800">Slip History (PAR & ICS)</h1>
+                    <div class="card bg-base-100 border non-printable">
+                        <div class="card-body p-4">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="form-control flex-grow">
+                                    <label for="slip-search-input" class="label sr-only"><span class="label-text">Search</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
+                                        </div>
+                                        <input type="text" id="slip-search-input" placeholder="Search by Slip No. or Custodian..." class="input input-bordered w-full pl-10">
+                                    </div>
+                                </div>
+                                <div class="form-control w-full md:w-48">
+                                    <label for="slip-type-filter" class="label sr-only"><span class="label-text">Slip Type</span></label>
+                                    <select id="slip-type-filter" class="select select-bordered font-normal">
+                                        <option value="">All Slips</option>
+                                        <option value="PAR">PAR Only</option>
+                                        <option value="ICS">ICS Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3">Slip Number</th>
+                                        <th class="px-6 py-3">Type</th>
+                                        <th class="px-6 py-3">Custodian</th>
+                                        <th class="px-6 py-3">No. of Items</th>
+                                        <th class="px-6 py-3">Issued Date</th>
+                                        <th class="px-6 py-3 text-center non-printable">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="slip-history-table-body">
+                                    <tr><td colspan="6" class="text-center p-8">Loading slip history...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pagination-controls" class="flex justify-between items-center non-printable">
+                        <!-- JS will populate this -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for viewing slip details -->
+    <dialog id="slip-details-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <h3 id="modal-title" class="font-bold text-lg">Slip Details</h3>
+            <div class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                    <div><strong>Slip Number:</strong> <span id="modal-slip-number"></span></div>
+                    <div><strong>Custodian:</strong> <span id="modal-slip-custodian"></span></div>
+                    <div><strong>Issued Date:</strong> <span id="modal-slip-issued"></span></div>
+                    <div><strong>Received Date:</strong> <span id="modal-slip-received"></span></div>
+                </div>
+                <h3 class="font-bold text-lg mb-2">Assigned Assets</h3>
+                <div class="border rounded-lg overflow-hidden">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Property No.</th>
+                                <th>Description</th>
+                                <th class="text-right">Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-slip-assets-table">
+                            <!-- JS will populate this -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-action">
+                <button id="close-slip-modal" class="btn">Close</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="../js/security.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./slip-history.js"></script>
+</body>
+</html>

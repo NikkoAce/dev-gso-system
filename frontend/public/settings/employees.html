@@ -1,0 +1,112 @@
+<!-- FILE: frontend/public/employees.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Employees - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <h1 class="text-3xl font-bold text-gray-800">Manage Employees</h1>
+
+                    <div class="card bg-base-100 border">
+                        <form id="add-employee-form" class="card-body">
+                            <h2 id="employee-form-title" class="card-title mb-4">Add New Employee</h2>
+                            <input type="hidden" id="employee-id">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="md:col-span-2 form-control">
+                                    <label for="new-employee-name" class="label"><span class="label-text">Full Name</span></label>
+                                    <input type="text" id="new-employee-name" placeholder="e.g., Juan Dela Cruz" class="input input-bordered w-full" required>
+                                </div>
+                                <div class="form-control">
+                                    <label for="new-employee-designation" class="label"><span class="label-text">Designation</span></label>
+                                    <input type="text" id="new-employee-designation" placeholder="e.g., Municipal Mayor" class="input input-bordered w-full" required>
+                                </div>
+                            </div>
+                            <div class="card-actions justify-end">
+                                <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
+                                <button type="submit" id="submit-employee-btn" class="btn btn-primary">Add Employee</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Existing Employees</h2>
+                        <div class="form-control w-full sm:w-auto">
+                            <input type="text" id="search-input" placeholder="Search employees..." class="input input-bordered input-sm w-full sm:max-w-xs">
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Designation</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employee-list">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast toast-top toast-end"></div>
+
+    <!-- Reusable Confirmation Modal -->
+    <dialog id="confirmation-modal" class="modal">
+        <div class="modal-box">
+            <h3 id="modal-title-text" class="font-bold text-lg">Are you sure?</h3>
+            <p id="modal-body-text" class="py-4">This action cannot be undone.</p>
+            <div class="modal-action">
+                <button id="modal-cancel-btn" class="btn">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-error">Confirm</button>
+            </div>
+        </div>
+    </dialog>
+    <script src="security.js"></script>
+    <script src="layout.js"></script>
+    <script type="module" src="employees.js"></script>
+</body>
+</html>

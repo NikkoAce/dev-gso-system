@@ -1,0 +1,123 @@
+<!-- FILE: frontend/public/par-page.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Acknowledgment Receipt - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="flex justify-between items-center mb-6 non-printable">
+                    <h1 id="par-page-title" class="text-3xl font-bold text-gray-800">Property Acknowledgment Receipt</h1>
+                    <div>
+                        <a href="../assets/asset-registry.html" id="back-from-par-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 mr-2">Back</a>
+                        <button id="save-and-print-par" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                            <i data-lucide="save"></i> Save & Print PAR
+                        </button>
+                         <button id="reprint-par-button" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                            <i data-lucide="printer"></i> Print
+                        </button>
+                    </div>
+                </div>
+                <div id="par-form-container" class="bg-white p-8 rounded-lg border printable-area">
+                     <div class="text-center mb-6">
+                        <h2 class="text-xl font-bold">PROPERTY ACKNOWLEDGMENT RECEIPT</h2>
+                        <h3 class="font-semibold">LGU Daet, Camarines Norte</h3>
+                        <p class="text-sm">Fund: <span id="par-fund-source" class="font-semibold"></span></p>
+                    </div>
+                    <div class="flex justify-between mb-4 text-sm">
+                        <span>Entity Name: LGU Daet</span>
+                        <span class="font-bold">PAR No: <span id="par-no"></span></span>
+                    </div>
+                    <table class="w-full border-collapse border border-gray-400 text-sm">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-400 p-2 text-center" width="10%">Quantity</th>
+                                <th class="border border-gray-400 p-2 text-center" width="10%">Unit</th>
+                                <th class="border border-gray-400 p-2 text-left">Description</th>
+                                <th class="border border-gray-400 p-2 text-center" width="20%">Property Number</th>
+                                <th class="border border-gray-400 p-2 text-center" width="15%">Date Acquired</th>
+                                <th class="border border-gray-400 p-2 text-right" width="15%">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="par-table-body">
+                            <!-- JS will populate this -->
+                        </tbody>
+                        <tfoot id="par-table-footer">
+                            <!-- JS will populate the total row here -->
+                        </tfoot>
+                    </table>
+                    <div class="grid grid-cols-2 gap-4 mt-8 pt-4 border-t-2 border-black">
+                        <div class="text-sm">
+                            <p class="font-bold">Received by:</p>
+                            <div class="mt-12 text-center">
+                                <p class="font-bold uppercase border-b border-black" id="par-custodian-name"></p>
+                                <p>(Signature Over Printed Name of End User)</p>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="border-b border-black" id="par-custodian-designation"></p>
+                                <p>(Position/Office)</p>
+                            </div>
+                            <div class="mt-4 text-center">
+                                 <input type="date" id="par-custodian-date-input" class="border-b border-black text-center w-full">
+                                <p>(Date)</p>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <p class="font-bold">Issued by:</p>
+                            <div class="mt-12 text-center">
+                                <p class="font-bold uppercase border-b border-black">DR. RAYCHEL B. VALENCIA</p>
+                                <p>(Signature Over Printed Name of Supply Officer)</p>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="border-b border-black">Municipal Administrator/OIC GSO</p>
+                                <p>(Position/Office)</p>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <input type="date" id="par-issued-date-input" class="border-b border-black text-center w-full">
+                                <p>(Date)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../js/security.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./par-page.js"></script>
+</body>
+</html>

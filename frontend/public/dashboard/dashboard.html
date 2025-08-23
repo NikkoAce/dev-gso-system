@@ -1,0 +1,178 @@
+<!-- FILE: frontend/public/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+
+
+
+
+            
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+                    </div>
+                    <!-- Stat Cards Grid -->
+                    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Total Asset Value -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-primary">
+                                <i data-lucide="coins" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Total Asset Value</div>
+                            <div id="stat-total-value" class="stat-value">Loading...</div>
+                            <div id="stat-total-value-trend" class="stat-desc"></div>
+                        </div>
+                        <!-- Total Assets -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-secondary">
+                                <i data-lucide="archive" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Total Assets</div>
+                            <div id="stat-total-assets" class="stat-value">Loading...</div>
+                            <div id="stat-total-assets-trend" class="stat-desc"></div>
+                        </div>
+                        <!-- Assets for Repair -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-accent">
+                                <i data-lucide="wrench" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Assets for Repair</div>
+                            <div id="stat-for-repair" class="stat-value">Loading...</div>
+                            <div id="stat-for-repair-trend" class="stat-desc"></div>
+                        </div>
+                        <!-- Disposed Assets -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-error">
+                                <i data-lucide="trash-2" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Disposed Assets</div>
+                            <div id="stat-disposed" class="stat-value">Loading...</div>
+                            <div id="stat-disposed-trend" class="stat-desc"></div>
+                        </div>
+                        <!-- Pending Requisitions -->
+                        <div class="stat card bg-base-100 border">
+                            <div class="stat-figure text-warning">
+                                <i data-lucide="clipboard-list" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Pending Requisitions</div>
+                            <div id="stat-pending-reqs" class="stat-value">Loading...</div>
+                            <div id="stat-pending-reqs-trend" class="stat-desc"></div>
+                        </div>
+                        <!-- Filter Card -->
+                        <div class="card bg-base-100 border">
+                            <div class="card-body p-4">
+                                <h2 class="card-title text-base">Filters</h2>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs">Start Date</span></label>
+                                        <input type="date" id="filter-start-date" class="input input-bordered input-sm" max="9999-12-31">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs">End Date</span></label>
+                                        <input type="date" id="filter-end-date" class="input input-bordered input-sm" max="9999-12-31">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts & Tables Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Monthly Acquisitions Chart -->
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Monthly Asset Acquisitions</h2>
+                                <div class="h-64">
+                                    <canvas id="monthlyAcquisitionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Assets by Category Chart -->
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Assets by Office</h2>
+                                <div class="h-64">
+                                    <canvas id="assetsByOfficeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Asset Status Chart -->
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Asset Status Distribution</h2>
+                                <div class="h-64">
+                                    <canvas id="assetStatusChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Recent Assets Table -->
+                        <div class="lg:col-span-2 card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Recently Added Assets</h2>
+                                <div class="overflow-x-auto h-48">
+                                    <table class="table table-zebra table-pin-rows table-sm">
+                                        <tbody id="recent-assets-table"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Recent Requisitions Table -->
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Recent Requisitions</h2>
+                                <div class="overflow-x-auto h-48">
+                                    <table class="table table-zebra table-pin-rows table-sm">
+                                        <tbody id="recent-requisitions-table"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../js/security.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./dashboard.js"></script>
+</body>
+</html>
