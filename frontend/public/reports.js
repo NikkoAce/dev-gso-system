@@ -136,7 +136,7 @@ function initializeReportsPage(currentUser) {
                 cell.className = 'border border-black p-1 align-top';
                 // Apply formatter if it exists for the current column index
                 if (columnFormatters[index]) {
-                    cell.textContent = columnFormattersindex;
+                    cell.textContent = columnFormatters[index](cellData);
                 } else {
                     cell.textContent = cellData;
                 }
