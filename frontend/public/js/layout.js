@@ -1,6 +1,17 @@
 const GSO_MAIN_NAV = `
   <li><a href="../dashboard/dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
-  <li><a href="../reports/reports.html" class="nav-link"><i data-lucide="file-text"></i> Reports</a></li>
+`;
+
+const GSO_REPORTS_NAV = `
+  <li>
+    <details>
+      <summary><i data-lucide="file-text"></i> Reports</summary>
+      <ul class="text-sm">
+        <li><a href="../reports/reports.html" class="nav-link"><i data-lucide="archive"></i> Movable Assets</a></li>
+        <li><a href="../reports/immovable-reports.html" class="nav-link"><i data-lucide="land-plot"></i> Immovable Assets</a></li>
+      </ul>
+    </details>
+  </li>
 `;
 
 const GSO_ASSETS_NAV = `
@@ -69,6 +80,7 @@ function getSidebarHTML(user) {
   if (isGSO) {
     navLinks = `
       ${GSO_MAIN_NAV}
+      ${GSO_REPORTS_NAV}
       ${GSO_ASSETS_NAV}
       ${GSO_IMMOVABLE_ASSETS_NAV}
       ${GSO_SUPPLIES_NAV}

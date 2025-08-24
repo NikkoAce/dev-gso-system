@@ -1,4 +1,5 @@
 const Asset = require('../models/Asset');
+const ImmovableAsset = require('../models/immovableAsset');
 
 // Helper function to build the base query for asset reports
 const buildAssetQuery = (queryParams) => {
@@ -122,6 +123,37 @@ const generateDepreciationReport = async (req, res) => {
     }
 };
 
+const generateImmovableReport = async (req, res) => {
+    try {
+        const { type, status } = req.query;
+
+        const query = {};
+        if (type) query.type = type;
+        if (status) query.status = status;
+
+        const assets = await ImmovableAsset.find(query).sort({ propertyIndexNumber: 1 }).lean();
+
+        const headers = ['PIN', 'Name', 'Type', 'Location', 'Date Acquired', 'Assessed Value', 'Condition', 'Status'];
+        const rows = assets.map(a => {
+            return [
+                a.propertyIndexNumber,
+                a.name,
+                a.type,
+                a.location,
+                a.dateAcquired ? new Date(a.dateAcquired).toLocaleDateString('en-CA') : 'N/A',
+                a.assessedValue,
+                a.condition || '',
+                a.status || ''
+            ];
+        });
+
+        res.json({ headers, rows });
+    } catch (error) {
+        console.error('Error generating Immovable Property report:', error);
+        res.status(500).json({ message: 'Server error while generating Immovable Property report.' });
+    }
+};
+
 const testReportRoute = (req, res) => {
     console.log('SUCCESS: /api/reports/test endpoint was hit!');
     res.json({ message: 'Report test route is working!' });
@@ -130,5 +162,6 @@ const testReportRoute = (req, res) => {
 module.exports = {
     generateRpcppeReport,
     generateDepreciationReport,
+    generateImmovableReport,
     testReportRoute
 };
