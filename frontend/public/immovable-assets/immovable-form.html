@@ -1,0 +1,181 @@
+<!-- FILE: frontend/public/immovable-assets/immovable-form.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immovable Asset Form - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar is dynamically loaded by layout.js -->
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 id="form-title" class="text-3xl font-bold text-gray-800">Add New Immovable Asset</h1>
+                        <a href="./immovable-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
+                    </div>
+
+                    <form id="asset-form" class="space-y-6">
+                        <!-- Core Details -->
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Core Details</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control md:col-span-2">
+                                        <label for="name" class="label"><span class="label-text">Asset Name</span></label>
+                                        <input type="text" id="name" name="name" class="input input-bordered" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="propertyIndexNumber" class="label"><span class="label-text">Property Index Number (PIN)</span></label>
+                                        <input type="text" id="propertyIndexNumber" name="propertyIndexNumber" class="input input-bordered" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="type" class="label"><span class="label-text">Asset Type</span></label>
+                                        <select id="type" name="type" class="select select-bordered" required>
+                                            <option value="Land">Land</option>
+                                            <option value="Building">Building</option>
+                                            <option value="Other Structures">Other Structures</option>
+                                            <option value="Road Network">Road Network</option>
+                                            <option value="Other Public Infrastructure">Other Public Infrastructure</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-control md:col-span-2">
+                                        <label for="location" class="label"><span class="label-text">Location / Address</span></label>
+                                        <input type="text" id="location" name="location" class="input input-bordered" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="dateAcquired" class="label"><span class="label-text">Date Acquired</span></label>
+                                        <input type="date" id="dateAcquired" name="dateAcquired" class="input input-bordered" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="assessedValue" class="label"><span class="label-text">Assessed Value (PHP)</span></label>
+                                        <input type="number" id="assessedValue" name="assessedValue" class="input input-bordered" required step="0.01">
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="status" class="label"><span class="label-text">Status</span></label>
+                                        <select id="status" name="status" class="select select-bordered" required>
+                                            <option value="In Use">In Use</option>
+                                            <option value="Under Construction">Under Construction</option>
+                                            <option value="Idle">Idle</option>
+                                            <option value="For Disposal">For Disposal</option>
+                                            <option value="Disposed">Disposed</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="acquisitionMethod" class="label"><span class="label-text">Acquisition Method</span></label>
+                                        <select id="acquisitionMethod" name="acquisitionMethod" class="select select-bordered">
+                                            <option value="Purchase">Purchase</option>
+                                            <option value="Donation">Donation</option>
+                                            <option value="Construction">Construction</option>
+                                            <option value="Expropriation">Expropriation</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-control">
+                                        <label for="condition" class="label"><span class="label-text">Condition</span></label>
+                                        <select id="condition" name="condition" class="select select-bordered">
+                                            <option value="Good">Good</option>
+                                            <option value="Fair">Fair</option>
+                                            <option value="Needs Major Repair">Needs Major Repair</option>
+                                            <option value="Condemned">Condemned</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-control md:col-span-2">
+                                        <label for="remarks" class="label"><span class="label-text">Remarks</span></label>
+                                        <textarea id="remarks" name="remarks" class="textarea textarea-bordered"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Land Details -->
+                        <div id="land-details-section" class="card bg-base-100 border hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Land Details</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control"><label for="lotNumber" class="label"><span class="label-text">Lot Number</span></label><input type="text" id="lotNumber" name="landDetails.lotNumber" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="titleNumber" class="label"><span class="label-text">Title Number (TCT/OCT)</span></label><input type="text" id="titleNumber" name="landDetails.titleNumber" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="taxDeclarationNumber" class="label"><span class="label-text">Tax Declaration Number</span></label><input type="text" id="taxDeclarationNumber" name="landDetails.taxDeclarationNumber" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="areaSqm" class="label"><span class="label-text">Area (sqm)</span></label><input type="number" id="areaSqm" name="landDetails.areaSqm" class="input input-bordered" step="0.01"></div>
+                                    <div class="form-control"><label for="classification" class="label"><span class="label-text">Classification</span></label><select id="classification" name="landDetails.classification" class="select select-bordered"><option>Residential</option><option>Commercial</option><option>Agricultural</option><option>Industrial</option><option>Institutional</option><option>Park/Open Space</option><option>Other</option></select></div>
+                                    <div class="md:col-span-2"><p class="font-medium mt-2">Boundaries</p></div>
+                                    <div class="form-control"><label for="boundaryNorth" class="label"><span class="label-text">North</span></label><input type="text" id="boundaryNorth" name="landDetails.boundaries.north" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="boundarySouth" class="label"><span class="label-text">South</span></label><input type="text" id="boundarySouth" name="landDetails.boundaries.south" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="boundaryEast" class="label"><span class="label-text">East</span></label><input type="text" id="boundaryEast" name="landDetails.boundaries.east" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="boundaryWest" class="label"><span class="label-text">West</span></label><input type="text" id="boundaryWest" name="landDetails.boundaries.west" class="input input-bordered"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Building & Other Structures Details -->
+                        <div id="building-details-section" class="card bg-base-100 border hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Building &amp; Structure Details</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control"><label for="numberOfFloors" class="label"><span class="label-text">Number of Floors</span></label><input type="number" id="numberOfFloors" name="buildingAndStructureDetails.numberOfFloors" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="floorArea" class="label"><span class="label-text">Total Floor Area (sqm)</span></label><input type="number" id="floorArea" name="buildingAndStructureDetails.floorArea" class="input input-bordered" step="0.01"></div>
+                                    <div class="form-control"><label for="constructionDate" class="label"><span class="label-text">Construction Date</span></label><input type="date" id="constructionDate" name="buildingAndStructureDetails.constructionDate" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="constructionMaterials" class="label"><span class="label-text">Construction Materials</span></label><input type="text" id="constructionMaterials" name="buildingAndStructureDetails.constructionMaterials" placeholder="e.g., Concrete, Steel, Wood" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="estimatedUsefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="estimatedUsefulLife" name="buildingAndStructureDetails.estimatedUsefulLife" class="input input-bordered"></div>
+                                    <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="number" id="salvageValue" name="buildingAndStructureDetails.salvageValue" class="input input-bordered" step="0.01"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Road Network Details -->
+                        <div id="road-details-section" class="card bg-base-100 border hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Road Network Details</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="form-control"><label for="lengthKm" class="label"><span class="label-text">Length (km)</span></label><input type="number" id="lengthKm" name="roadNetworkDetails.lengthKm" class="input input-bordered" step="0.01"></div>
+                                    <div class="form-control"><label for="widthMeters" class="label"><span class="label-text">Width (meters)</span></label><input type="number" id="widthMeters" name="roadNetworkDetails.widthMeters" class="input input-bordered" step="0.01"></div>
+                                    <div class="form-control"><label for="pavementType" class="label"><span class="label-text">Pavement Type</span></label><select id="pavementType" name="roadNetworkDetails.pavementType" class="select select-bordered"><option>Concrete</option><option>Asphalt</option><option>Gravel</option><option>Earth</option></select></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other Public Infrastructure Details -->
+                        <div id="infra-details-section" class="card bg-base-100 border hidden">
+                            <div class="card-body">
+                                <h2 class="card-title">Other Public Infrastructure Details</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-control"><label for="structureType" class="label"><span class="label-text">Structure Type</span></label><input type="text" id="structureType" name="otherInfrastructureDetails.structureType" placeholder="e.g., Bridge, Water System" class="input input-bordered"></div>
+                                    <div class="form-control md:col-span-2"><label for="technicalSpecifications" class="label"><span class="label-text">Technical Specifications</span></label><textarea id="technicalSpecifications" name="otherInfrastructureDetails.technicalSpecifications" class="textarea textarea-bordered"></textarea></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="flex justify-end gap-4 mt-8">
+                            <a href="./immovable-registry.html" class="btn btn-ghost">Cancel</a>
+                            <button type="submit" id="submit-button" class="btn btn-primary">
+                                <i data-lucide="save"></i> Save Asset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast toast-top toast-end"></div>
+
+    <script src="../js/security.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./immovable-form.js"></script>
+</body>
+</html>
