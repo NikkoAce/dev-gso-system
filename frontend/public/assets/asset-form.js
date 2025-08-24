@@ -25,12 +25,16 @@ function initializeForm() {
     const assetId = urlParams.get('id');
     const isEditMode = !!assetId;
     let employeesData = [];
+    let categoriesData = [];
+    let officesData = [];
 
     // --- DOM ELEMENTS ---
     const form = document.getElementById('asset-form');
     const formTitle = document.getElementById('form-title');
     const submitButton = document.getElementById('submit-button');
     const categorySelect = document.getElementById('category');
+    const propertyNumberInput = document.getElementById('propertyNumber');
+    const generatePropertyNumberBtn = document.getElementById('generate-property-number-btn');
     const officeSelect = document.getElementById('office');
     const custodianNameSelect = document.getElementById('custodianName');
     const custodianDesignationInput = document.getElementById('custodianDesignation');
@@ -131,6 +135,8 @@ function initializeForm() {
                 fetchWithAuth('employees')
             ]);
             employeesData = employees;
+            categoriesData = categories;
+            officesData = offices;
             populateDropdown(categorySelect, categories, 'name', 'name', 'Select a category');
             populateDropdown(officeSelect, offices, 'name', 'name', 'Select an office');
             populateDropdown(custodianNameSelect, employees, 'name', 'name', 'Select a custodian');
@@ -156,6 +162,49 @@ function initializeForm() {
         }
     }
 
+    async function handleGeneratePropertyNumber() {
+        const categoryName = categorySelect.value;
+        const officeName = officeSelect.value;
+        const acquisitionDate = document.getElementById('acquisitionDate').value;
+
+        if (!categoryName || !officeName || !acquisitionDate) {
+            showToast('Please select a Category, Assigned Office, and Acquisition Date first.', 'warning');
+            return;
+        }
+
+        const selectedCategory = categoriesData.find(c => c.name === categoryName);
+        const selectedOffice = officesData.find(o => o.name === officeName);
+        const year = new Date(acquisitionDate).getFullYear();
+
+        if (!selectedCategory || !selectedOffice) {
+            showToast('Could not find data for the selected category or office.', 'error');
+            return;
+        }
+
+        const { subMajorGroup, glAccount } = selectedCategory;
+        const { code: officeCode } = selectedOffice;
+
+        if (!subMajorGroup || !glAccount || !officeCode) {
+            showToast('The selected category or office is missing required code information.', 'error');
+            return;
+        }
+
+        generatePropertyNumberBtn.disabled = true;
+        generatePropertyNumberBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span>`;
+
+        try {
+            const queryParams = new URLSearchParams({ year, subMajorGroup, glAccount, officeCode });
+            const data = await fetchWithAuth(`assets/next-number?${queryParams.toString()}`);
+            propertyNumberInput.value = data.nextPropertyNumber;
+            showToast('Property number generated!', 'success');
+        } catch (error) {
+            showToast(`Error generating number: ${error.message}`, 'error');
+        } finally {
+            generatePropertyNumberBtn.disabled = false;
+            generatePropertyNumberBtn.textContent = 'Generate';
+        }
+    }
+
     async function handleFormSubmit(event) {
         event.preventDefault();
         submitButton.disabled = true;
@@ -163,14 +212,21 @@ function initializeForm() {
         lucide.createIcons();
 
         const formData = new FormData(form);
-        const assetData = Object.fromEntries(formData.entries());
+        const assetData = {};
 
-        // Manually construct nested custodian object
-        assetData.custodian = {
-            name: formData.get('custodian.name'),
-            designation: formData.get('custodian.designation'),
-            office: formData.get('custodian.office')
-        };
+        // Convert FormData to a nested object
+        formData.forEach((value, key) => {
+            const keys = key.split('.');
+            let current = assetData;
+            keys.forEach((k, i) => {
+                if (i === keys.length - 1) {
+                    current[k] = value === '' ? null : value;
+                } else {
+                    current[k] = current[k] || {};
+                    current = current[k];
+                }
+            });
+        });
 
         // Manually gather specifications
         assetData.specifications = [];
@@ -178,7 +234,7 @@ function initializeForm() {
         specRows.forEach(row => {
             const key = row.querySelector('.spec-key').value.trim();
             const value = row.querySelector('.spec-value').value.trim();
-            if (key && value) {
+            if (key) {
                 assetData.specifications.push({ key, value });
             }
         });
@@ -202,6 +258,8 @@ function initializeForm() {
         const selectedEmployee = employeesData.find(emp => emp.name === e.target.value);
         custodianDesignationInput.value = selectedEmployee ? selectedEmployee.designation : '';
     });
+
+    generatePropertyNumberBtn.addEventListener('click', handleGeneratePropertyNumber);
 
     addSpecBtn.addEventListener('click', () => renderSpecification());
     specificationsContainer.addEventListener('click', (e) => {

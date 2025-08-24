@@ -43,7 +43,13 @@
                                     <h2 class="card-title">Core Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="form-control md:col-span-2"><label for="description" class="label"><span class="label-text">Description</span></label><textarea id="description" name="description" class="textarea textarea-bordered" required></textarea></div>
-                                        <div class="form-control"><label for="propertyNumber" class="label"><span class="label-text">Property Number</span></label><input type="text" id="propertyNumber" name="propertyNumber" class="input input-bordered" required></div>
+                                        <div class="form-control">
+                                            <label for="propertyNumber" class="label"><span class="label-text">Property Number</span></label>
+                                            <div class="join w-full">
+                                                <input type="text" id="propertyNumber" name="propertyNumber" class="input input-bordered join-item w-full" required>
+                                                <button type="button" id="generate-property-number-btn" class="btn join-item btn-ghost">Generate</button>
+                                            </div>
+                                        </div>
                                         <div class="form-control"><label for="category" class="label"><span class="label-text">Category</span></label><select id="category" name="category" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
                                         <div class="form-control"><label for="office" class="label"><span class="label-text">Assigned Office</span></label><select id="office" name="office" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
                                         <div class="form-control"><label for="fundSource" class="label"><span class="label-text">Fund Source</span></label><select id="fundSource" name="fundSource" class="select select-bordered" required><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div>
