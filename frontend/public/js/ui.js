@@ -207,15 +207,33 @@ export function createUIManager() {
 
     /**
      * Shows or hides the action buttons based on selection.
-     * @param {Array<string>} selectedIds - Array of selected asset IDs.
+     * @param {Array<object>} selectedAssets - Array of selected asset objects, e.g., [{id, cost}].
      * @param {object} domElements - The DOM elements for the buttons.
      */
-    function updateSlipButtonVisibility(selectedIds, domElements) {
+    function updateSlipButtonVisibility(selectedAssets, domElements) {
         const { generateParBtn, generateIcsBtn, transferSelectedBtn } = domElements;
-        const hasSelection = selectedIds.length > 0;
-        generateParBtn.classList.toggle('hidden', !hasSelection);
-        generateIcsBtn.classList.toggle('hidden', !hasSelection);
-        transferSelectedBtn.classList.toggle('hidden', !hasSelection);
+        const selectionCount = selectedAssets.length;
+
+        // If nothing is selected, hide all buttons
+        if (selectionCount === 0) {
+            generateParBtn.classList.add('hidden');
+            generateIcsBtn.classList.add('hidden');
+            transferSelectedBtn.classList.add('hidden');
+            return;
+        }
+
+        // Transfer button is always visible when there's a selection
+        transferSelectedBtn.classList.remove('hidden');
+
+        const PAR_THRESHOLD = 50000;
+        const allAreForPAR = selectedAssets.every(asset => asset.cost >= PAR_THRESHOLD);
+        const allAreForICS = selectedAssets.every(asset => asset.cost < PAR_THRESHOLD);
+
+        // Show PAR button only if ALL selected items are eligible for PAR
+        generateParBtn.classList.toggle('hidden', !allAreForPAR);
+
+        // Show ICS button only if ALL selected items are eligible for ICS
+        generateIcsBtn.classList.toggle('hidden', !allAreForICS);
     }
 
     return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination, renderAssetTable, updateSlipButtonVisibility };
