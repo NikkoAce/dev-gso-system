@@ -178,7 +178,7 @@ export function createUIManager() {
             const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm">${asset.status}</span>`;
 
             tr.innerHTML = `
-                <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}" ${isAssigned ? 'disabled' : ''}></td>
+                <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}"></td>
                 <td><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
                 <td>${asset.description}</td>
                 <td>${asset.category}</td>
