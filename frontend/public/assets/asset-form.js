@@ -32,13 +32,19 @@ function initializeForm() {
     const form = document.getElementById('asset-form');
     const formTitle = document.getElementById('form-title');
     const submitButton = document.getElementById('submit-button');
-    const categorySelect = document.getElementById('category');
+    const categoryInput = document.getElementById('category');
+    const officeInput = document.getElementById('office');
+    const custodianNameInput = document.getElementById('custodianName');
+    const custodianOfficeInput = document.getElementById('custodianOffice');
+    const acquisitionCostInput = document.getElementById('acquisitionCost');
+    const salvageValueInput = document.getElementById('salvageValue');
     const propertyNumberInput = document.getElementById('propertyNumber');
     const generatePropertyNumberBtn = document.getElementById('generate-property-number-btn');
-    const officeSelect = document.getElementById('office');
-    const custodianNameSelect = document.getElementById('custodianName');
     const custodianDesignationInput = document.getElementById('custodianDesignation');
-    const custodianOfficeSelect = document.getElementById('custodianOffice');
+    const categoryList = document.getElementById('category-list');
+    const officeList = document.getElementById('office-list');
+    const custodianNameList = document.getElementById('custodianName-list');
+    const custodianOfficeList = document.getElementById('custodianOffice-list');
     const specificationsContainer = document.getElementById('specifications-container');
     const addSpecBtn = document.getElementById('add-spec-btn');
     const formTabs = document.getElementById('form-tabs');
@@ -49,13 +55,12 @@ function initializeForm() {
     const historyContainer = document.getElementById('history-container');
 
     // --- UI LOGIC ---
-    function populateDropdown(selectEl, data, valueField, textField, placeholder) {
-        selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+    function populateDatalist(datalistEl, data, valueField) {
+        datalistEl.innerHTML = '';
         data.forEach(item => {
             const option = document.createElement('option');
             option.value = item[valueField];
-            option.textContent = item[textField];
-            selectEl.appendChild(option);
+            datalistEl.appendChild(option);
         });
     }
 
@@ -101,9 +106,9 @@ function initializeForm() {
     function populateForm(asset) {
         Object.keys(asset).forEach(key => {
             if (key === 'custodian') {
-                custodianNameSelect.value = asset.custodian.name;
+                custodianNameInput.value = asset.custodian.name;
                 custodianDesignationInput.value = asset.custodian.designation;
-                custodianOfficeSelect.value = asset.custodian.office;
+                custodianOfficeInput.value = asset.custodian.office;
             } else {
                 const field = form.elements[key];
                 if (field) {
@@ -137,10 +142,10 @@ function initializeForm() {
             employeesData = employees;
             categoriesData = categories;
             officesData = offices;
-            populateDropdown(categorySelect, categories, 'name', 'name', 'Select a category');
-            populateDropdown(officeSelect, offices, 'name', 'name', 'Select an office');
-            populateDropdown(custodianNameSelect, employees, 'name', 'name', 'Select a custodian');
-            populateDropdown(custodianOfficeSelect, offices, 'name', 'name', "Select custodian's office");
+            populateDatalist(categoryList, categories, 'name');
+            populateDatalist(officeList, offices, 'name');
+            populateDatalist(custodianNameList, employees, 'name');
+            populateDatalist(custodianOfficeList, offices, 'name');
 
             if (isEditMode) {
                 formTitle.textContent = 'Edit Asset';
@@ -163,8 +168,8 @@ function initializeForm() {
     }
 
     async function handleGeneratePropertyNumber() {
-        const categoryName = categorySelect.value;
-        const officeName = officeSelect.value;
+        const categoryName = categoryInput.value;
+        const officeName = officeInput.value;
         const acquisitionDate = document.getElementById('acquisitionDate').value;
 
         if (!categoryName || !officeName || !acquisitionDate) {
@@ -254,9 +259,19 @@ function initializeForm() {
     }
 
     // --- EVENT LISTENERS ---
-    custodianNameSelect.addEventListener('change', (e) => {
+    custodianNameInput.addEventListener('input', (e) => {
         const selectedEmployee = employeesData.find(emp => emp.name === e.target.value);
         custodianDesignationInput.value = selectedEmployee ? selectedEmployee.designation : '';
+    });
+
+    acquisitionCostInput.addEventListener('input', (e) => {
+        const cost = parseFloat(e.target.value);
+        if (!isNaN(cost) && cost >= 0) {
+            const salvageValue = (cost * 0.05).toFixed(2);
+            salvageValueInput.value = salvageValue;
+        } else {
+            salvageValueInput.value = '';
+        }
     });
 
     generatePropertyNumberBtn.addEventListener('click', handleGeneratePropertyNumber);

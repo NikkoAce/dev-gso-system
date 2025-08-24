@@ -50,8 +50,16 @@
                                                 <button type="button" id="generate-property-number-btn" class="btn join-item btn-ghost">Generate</button>
                                             </div>
                                         </div>
-                                        <div class="form-control"><label for="category" class="label"><span class="label-text">Category</span></label><select id="category" name="category" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
-                                        <div class="form-control"><label for="office" class="label"><span class="label-text">Assigned Office</span></label><select id="office" name="office" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
+                                        <div class="form-control">
+                                            <label for="category" class="label"><span class="label-text">Category</span></label>
+                                            <input type="text" id="category" name="category" list="category-list" class="input input-bordered w-full" placeholder="Type to search..." required>
+                                            <datalist id="category-list"></datalist>
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="office" class="label"><span class="label-text">Assigned Office</span></label>
+                                            <input type="text" id="office" name="office" list="office-list" class="input input-bordered w-full" placeholder="Type to search..." required>
+                                            <datalist id="office-list"></datalist>
+                                        </div>
                                         <div class="form-control"><label for="fundSource" class="label"><span class="label-text">Fund Source</span></label><select id="fundSource" name="fundSource" class="select select-bordered" required><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div>
                                         <div class="form-control md:col-span-2"><label for="status" class="label"><span class="label-text">Status</span></label><select id="status" name="status" class="select select-bordered" required><option>In Use</option><option>In Storage</option><option>For Repair</option><option>Disposed</option></select></div>
                                     </div>
@@ -89,9 +97,17 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Custodian Information</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control"><label for="custodianName" class="label"><span class="label-text">Custodian Name</span></label><select id="custodianName" name="custodian.name" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
+                                        <div class="form-control">
+                                            <label for="custodianName" class="label"><span class="label-text">Custodian Name</span></label>
+                                            <input type="text" id="custodianName" name="custodian.name" list="custodianName-list" class="input input-bordered w-full" placeholder="Type to search..." required>
+                                            <datalist id="custodianName-list"></datalist>
+                                        </div>
                                         <div class="form-control"><label for="custodianDesignation" class="label"><span class="label-text">Designation</span></label><input type="text" id="custodianDesignation" name="custodian.designation" class="input input-bordered" readonly></div>
-                                        <div class="form-control md:col-span-2"><label for="custodianOffice" class="label"><span class="label-text">Custodian's Office</span></label><select id="custodianOffice" name="custodian.office" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
+                                        <div class="form-control md:col-span-2">
+                                            <label for="custodianOffice" class="label"><span class="label-text">Custodian's Office</span></label>
+                                            <input type="text" id="custodianOffice" name="custodian.office" list="custodianOffice-list" class="input input-bordered w-full" placeholder="Type to search..." required>
+                                            <datalist id="custodianOffice-list"></datalist>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
