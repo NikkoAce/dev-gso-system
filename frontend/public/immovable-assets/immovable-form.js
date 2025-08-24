@@ -30,6 +30,8 @@ function initializeForm() {
     const formTitle = document.getElementById('form-title');
     const submitButton = document.getElementById('submit-button');
     const typeSelect = document.getElementById('type');
+    const componentsContainer = document.getElementById('components-container');
+    const addComponentBtn = document.getElementById('add-component-btn');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -45,6 +47,18 @@ function initializeForm() {
         if (detailSections[selectedType]) {
             detailSections[selectedType].classList.remove('hidden');
         }
+    }
+
+    function renderComponent(component = { name: '', description: '' }) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-[1fr_2fr_auto] gap-2 items-center component-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Component Name" class="input input-bordered input-sm component-name" value="${component.name || ''}" required>
+            <input type="text" placeholder="Description / Details" class="input input-bordered input-sm component-description" value="${component.description || ''}">
+            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-component-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
+        `;
+        componentsContainer.appendChild(div);
+        lucide.createIcons();
     }
 
     function populateForm(asset) {
@@ -88,6 +102,12 @@ function initializeForm() {
             }
         });
 
+        // Populate components
+        if (asset.components && asset.components.length > 0) {
+            componentsContainer.innerHTML = ''; // Clear any empty rows
+            asset.components.forEach(comp => renderComponent(comp));
+        }
+
         toggleTypeSpecificFields(asset.type);
     }
 
@@ -126,6 +146,17 @@ function initializeForm() {
             });
         });
 
+        // Manually gather components, as they are dynamic
+        assetData.components = [];
+        const componentRows = componentsContainer.querySelectorAll('.component-row');
+        componentRows.forEach(row => {
+            const name = row.querySelector('.component-name').value.trim();
+            const description = row.querySelector('.component-description').value.trim();
+            if (name) { // Only add if name is not empty
+                assetData.components.push({ name, description });
+            }
+        });
+
         try {
             const endpoint = isEditMode ? `${API_ENDPOINT}/${assetId}` : API_ENDPOINT;
             const method = isEditMode ? 'PUT' : 'POST';
@@ -149,5 +180,13 @@ function initializeForm() {
     }
 
     typeSelect.addEventListener('change', (e) => toggleTypeSpecificFields(e.target.value));
+    addComponentBtn.addEventListener('click', () => {
+        renderComponent();
+    });
+    componentsContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-component-btn')) {
+            e.target.closest('.component-row').remove();
+        }
+    });
     form.addEventListener('submit', handleFormSubmit);
 }

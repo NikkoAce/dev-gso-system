@@ -21,7 +21,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
     // Destructure all possible fields from the request body
     const {
         name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
-        status, acquisitionMethod, condition, remarks,
+        status, acquisitionMethod, condition, remarks, components,
         landDetails, buildingAndStructureDetails, roadNetworkDetails, otherInfrastructureDetails
     } = req.body;
 
@@ -41,7 +41,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
     // Create a new asset instance
     const asset = new ImmovableAsset({
         name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
-        status, acquisitionMethod, condition, remarks,
+        status, acquisitionMethod, condition, remarks, components,
         landDetails, buildingAndStructureDetails, roadNetworkDetails, otherInfrastructureDetails
     });
 

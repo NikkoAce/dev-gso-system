@@ -7,6 +7,11 @@ const historySchema = new mongoose.Schema({
     user: { type: String, required: true } // Name of the user who made the change, or 'System'
 });
 
+const componentSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    description: { type: String, trim: true }
+}, { _id: false });
+
 const immovableAssetSchema = new mongoose.Schema({
     // --- Core Details ---
     name: {
@@ -98,6 +103,7 @@ const immovableAssetSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    components: [componentSchema],
     history: [historySchema]
 }, {
     timestamps: true // Adds createdAt and updatedAt fields
