@@ -34,6 +34,7 @@ function initializeForm() {
     const officeSelect = document.getElementById('office');
     const custodianNameSelect = document.getElementById('custodianName');
     const custodianDesignationInput = document.getElementById('custodianDesignation');
+    const custodianOfficeSelect = document.getElementById('custodianOffice');
     const specificationsContainer = document.getElementById('specifications-container');
     const addSpecBtn = document.getElementById('add-spec-btn');
     const formTabs = document.getElementById('form-tabs');
@@ -98,6 +99,7 @@ function initializeForm() {
             if (key === 'custodian') {
                 custodianNameSelect.value = asset.custodian.name;
                 custodianDesignationInput.value = asset.custodian.designation;
+                custodianOfficeSelect.value = asset.custodian.office;
             } else {
                 const field = form.elements[key];
                 if (field) {
@@ -132,6 +134,7 @@ function initializeForm() {
             populateDropdown(categorySelect, categories, 'name', 'name', 'Select a category');
             populateDropdown(officeSelect, offices, 'name', 'name', 'Select an office');
             populateDropdown(custodianNameSelect, employees, 'name', 'name', 'Select a custodian');
+            populateDropdown(custodianOfficeSelect, offices, 'name', 'name', "Select custodian's office");
 
             if (isEditMode) {
                 formTitle.textContent = 'Edit Asset';
@@ -166,7 +169,7 @@ function initializeForm() {
         assetData.custodian = {
             name: formData.get('custodian.name'),
             designation: formData.get('custodian.designation'),
-            office: formData.get('office') // Custodian office is the same as asset office
+            office: formData.get('custodian.office')
         };
 
         // Manually gather specifications
