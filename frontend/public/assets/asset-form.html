@@ -1,4 +1,4 @@
-<!-- FILE: frontend/public/asset-form.html -->
+<!-- FILE: frontend/public/assets/asset-form.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,25 +14,7 @@
 <body>
     <div class="flex h-screen">
         <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
-            <!-- Sidebar Skeleton Loader -->
-            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
-                <div class="p-2 border-b">
-                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-                <div class="flex-grow">
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                </div>
-                <div class="p-2 border-t">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
-                    </div>
-                </div>
-            </div>
+            <!-- Sidebar is dynamically loaded -->
         </aside>
         <div class="flex-1 flex flex-col overflow-hidden">
             <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
@@ -40,120 +22,113 @@
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
-                <div id="add-asset" class="page active">
-                      <h1 id="form-title" class="text-3xl font-bold text-gray-800 mb-6">Add New Asset</h1>
-                    <div class="card bg-base-100 border max-w-4xl mx-auto">
-                        <form id="asset-form" class="card-body gap-4">
-                            <input type="hidden" id="assetId" name="assetId">
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="md:col-span-2 form-control">
-                                    <label for="propertyNumber" id="propertyNumberLabel" class="label"><span class="label-text">Property Number *</span></label>
-                                    <input type="text" name="propertyNumber" id="propertyNumber" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="quantity" class="label"><span class="label-text">Quantity *</span></label>
-                                    <input type="number" name="quantity" id="quantity" value="1" min="1" class="input input-bordered w-full" required>
-                                </div>
-                            </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 id="form-title" class="text-3xl font-bold text-gray-800">Add New Asset</h1>
+                        <a href="./asset-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
+                    </div>
 
-                            <div class="form-control">
-                                <label for="description" class="label"><span class="label-text">Asset Description *</span></label>
-                                <input type="text" name="description" id="description" placeholder="e.g., Laptop, Vehicle, Office Chair" class="input input-bordered w-full" required>
-                            </div>
-                            
-                            <div class="divider">Specifications</div>
-                            <div class="flex justify-end -mt-4 -mb-2">
-                                <button type="button" id="add-spec-btn" class="btn btn-outline btn-sm btn-primary">
-                                    <i data-lucide="plus" class="h-4 w-4"></i> Add
-                                </button>
-                            </div>
-                            <div id="specifications-container" class="space-y-3">
-                                <!-- JS will populate this -->
-                            </div>
+                    <!-- Tabs (hidden by default, shown in edit mode) -->
+                    <div id="form-tabs" role="tablist" class="tabs tabs-boxed bg-base-200 hidden mb-6">
+                        <a role="tab" id="details-tab" class="tab tab-active">Details</a>
+                        <a role="tab" id="history-tab" class="tab">History</a>
+                    </div>
 
-                            <div class="divider">Details</div>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="form-control">
-                                    <label for="category" class="label"><span class="label-text">Category</span></label>
-                                    <input id="category" name="category" type="text" list="category-list" class="input input-bordered w-full" placeholder="Type or select a category...">
-                                    <datalist id="category-list">
-                                    </datalist>
-                                </div>
-                                <div class="form-control">
-                                    <label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label>
-                                    <input type="date" name="acquisitionDate" id="acquisitionDate" class="input input-bordered w-full">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="form-control">
-                                    <label for="acquisitionCost" class="label"><span class="label-text">Acquisition Cost (PHP) *</span></label>
-                                    <input type="number" step="0.01" name="acquisitionCost" id="acquisitionCost" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="usefulLife" class="label"><span class="label-text">Useful Life (Years) *</span></label>
-                                    <input type="number" name="usefulLife" id="usefulLife" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label>
-                                    <input type="number" step="0.01" name="salvageValue" id="salvageValue" class="input input-bordered w-full">
-                                </div>
-                            </div>
-                            
-                            <div class="divider">Assignment</div>
-                            <div class="space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                     <div class="form-control">
-                                        <label for="fundSource" class="label"><span class="label-text">Fund Source *</span></label>
-                                        <select id="fundSource" name="fundSource" class="select select-bordered w-full" required>
-                                            <option value="">Select a Fund Source...</option>
-                                            <option>General Fund</option>
-                                            <option>Special Education Fund</option>
-                                            <option>Trust Fund</option>
-                                        </select>
-                                    </div>
-                                     <div class="form-control">
-                                        <label for="office" class="label"><span class="label-text">Office *</span></label>
-                                        <input id="office" name="office" type="text" list="office-list" class="input input-bordered w-full" placeholder="Type or select an office..." required>
-                                        <datalist id="office-list">
-                                        </datalist>
-                                    </div>
-                                    <div class="form-control">
-                                        <label for="status" class="label"><span class="label-text">Status</span></label>
-                                        <select id="status" name="status" class="select select-bordered w-full">
-                                            <option>In Use</option>
-                                            <option>In Storage</option>
-                                            <option>For Repair</option>
-                                            <option>Disposed</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     <div class="form-control">
-                                        <label for="custodian-name" class="label"><span class="label-text">Custodian *</span></label>
-                                        <input id="custodian-name" name="custodian-name" type="text" list="custodian-name-list" class="input input-bordered w-full" placeholder="Type or select a custodian..." required>
-                                        <datalist id="custodian-name-list">
-                                        </datalist>
-                                    </div>
-                                     <div class="form-control">
-                                        <label for="custodian-office" class="label"><span class="label-text">Custodian Office *</span></label>
-                                        <input id="custodian-office" name="custodian-office" type="text" list="custodian-office-list" class="input input-bordered w-full" placeholder="Type or select an office..." required>
-                                        <datalist id="custodian-office-list">
-                                        </datalist>
+                    <!-- Details Panel (contains the form) -->
+                    <div id="details-panel">
+                        <form id="asset-form" class="space-y-6">
+                            <!-- Core Details Card -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Core Details</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-control md:col-span-2"><label for="description" class="label"><span class="label-text">Description</span></label><textarea id="description" name="description" class="textarea textarea-bordered" required></textarea></div>
+                                        <div class="form-control"><label for="propertyNumber" class="label"><span class="label-text">Property Number</span></label><input type="text" id="propertyNumber" name="propertyNumber" class="input input-bordered" required></div>
+                                        <div class="form-control"><label for="category" class="label"><span class="label-text">Category</span></label><select id="category" name="category" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
+                                        <div class="form-control"><label for="fundSource" class="label"><span class="label-text">Fund Source</span></label><select id="fundSource" name="fundSource" class="select select-bordered" required><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div>
+                                        <div class="form-control"><label for="status" class="label"><span class="label-text">Status</span></label><select id="status" name="status" class="select select-bordered" required><option>In Use</option><option>In Storage</option><option>For Repair</option><option>Disposed</option></select></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="card-actions justify-end pt-4">
-                                <button type="button" id="cancel-asset-form" class="btn btn-ghost">Cancel</button>
-                                <button type="submit" id="submit-asset-btn" class="btn btn-primary">Save Asset</button>
+                            <!-- Acquisition Details Card -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Acquisition & Value</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-control"><label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label><input type="date" id="acquisitionDate" name="acquisitionDate" class="input input-bordered" required></div>
+                                        <div class="form-control"><label for="acquisitionCost" class="label"><span class="label-text">Acquisition Cost (PHP)</span></label><input type="number" id="acquisitionCost" name="acquisitionCost" class="input input-bordered" required step="0.01"></div>
+                                        <div class="form-control"><label for="usefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="usefulLife" name="usefulLife" class="input input-bordered" required></div>
+                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="number" id="salvageValue" name="salvageValue" class="input input-bordered" step="0.01"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custodian Information Card -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Custodian Information</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-control"><label for="office" class="label"><span class="label-text">Office</span></label><select id="office" name="office" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
+                                        <div class="form-control"><label for="custodianName" class="label"><span class="label-text">Custodian Name</span></label><select id="custodianName" name="custodian.name" class="select select-bordered" required><option disabled selected>Loading...</option></select></div>
+                                        <div class="form-control"><label for="custodianDesignation" class="label"><span class="label-text">Designation</span></label><input type="text" id="custodianDesignation" name="custodian.designation" class="input input-bordered" readonly></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Specifications Card -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-center">
+                                        <h2 class="card-title">Specifications</h2>
+                                        <button type="button" id="add-spec-btn" class="btn btn-sm btn-ghost"><i data-lucide="plus"></i> Add Specification</button>
+                                    </div>
+                                    <div id="specifications-container" class="space-y-2">
+                                        <!-- Dynamic spec rows will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Condition & Remarks Card -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">Condition & Remarks</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="form-control"><label for="condition" class="label"><span class="label-text">Condition</span></label><input type="text" id="condition" name="condition" class="input input-bordered"></div>
+                                        <div class="form-control md:col-span-2"><label for="remarks" class="label"><span class="label-text">Remarks</span></label><textarea id="remarks" name="remarks" class="textarea textarea-bordered"></textarea></div>
+                                    </div>
+                                </div>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- History Panel (hidden by default) -->
+                    <div id="history-panel" class="hidden">
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Asset History</h2>
+                                <ul id="history-container" class="timeline timeline-snap-icon max-md:timeline-compact timeline-vertical">
+                                    <!-- History items will be dynamically inserted here -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end gap-4 mt-8">
+                        <a href="./asset-registry.html" class="btn btn-ghost">Cancel</a>
+                        <button type="submit" id="submit-button" class="btn btn-primary" form="asset-form">
+                            <i data-lucide="save"></i> Save Asset
+                        </button>
                     </div>
                 </div>
             </main>
         </div>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast toast-top toast-end"></div>
+
     <script src="../js/security.js"></script>
     <script src="../js/layout.js"></script>
     <script type="module" src="./asset-form.js"></script>
