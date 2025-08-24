@@ -13,19 +13,24 @@ const generateUpdateHistory = (original, updates, user) => {
     const user_name = user.name;
 
     const format = (value, field) => {
-        if (value instanceof Date) return value.toLocaleDateString('en-CA');
-        if (field === 'assessedValue' && typeof value === 'number') {
+        if (value instanceof Date) {
+            return value.toLocaleDateString('en-CA');
+        }
+        if (['assessedValue', 'salvageValue', 'floorArea', 'areaSqm', 'lengthKm', 'widthMeters'].includes(field) && typeof value === 'number') {
             return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
         }
-        if (value === null || value === undefined || value === '') return 'empty';
+        if (value === null || value === undefined || value === '') {
+            return 'empty';
+        }
         return `"${value}"`;
     };
 
-    const compareAndLog = (field, fieldName) => {
-        if (updates[field] === undefined) return;
+    // Helper for simple fields
+    const compareAndLog = (field, fieldName, originalObj = original, updatesObj = updates) => {
+        if (updatesObj[field] === undefined) return;
 
-        const originalValue = original[field];
-        let updatedValue = updates[field];
+        const originalValue = originalObj[field];
+        const updatedValue = updatesObj[field];
 
         // Handle date comparison by comparing YYYY-MM-DD strings
         if (originalValue instanceof Date) {
@@ -49,6 +54,56 @@ const generateUpdateHistory = (original, updates, user) => {
         }
     };
 
+    // Helper for nested objects
+    const compareNestedObject = (objKey, objName) => {
+        const originalNested = original[objKey] || {};
+        const updatedNested = updates[objKey];
+
+        if (!updatedNested) return;
+
+        for (const key in updatedNested) {
+            if (key === 'boundaries') { // Special handling for boundaries
+                const originalBoundaries = originalNested.boundaries || {};
+                const updatedBoundaries = updatedNested.boundaries || {};
+                for (const boundaryKey in updatedBoundaries) {
+                    compareAndLog(boundaryKey, `${objName}: Boundary ${boundaryKey.charAt(0).toUpperCase() + boundaryKey.slice(1)}`, originalBoundaries, updatedBoundaries);
+                }
+            } else {
+                const fieldName = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                compareAndLog(key, `${objName}: ${fieldName}`, originalNested, updatedNested);
+            }
+        }
+    };
+
+    // Helper for components array
+    const compareComponents = () => {
+        const originalComponents = original.components || [];
+        const updatedComponents = updates.components;
+
+        if (!updatedComponents) return;
+
+        const originalMap = new Map(originalComponents.map(c => [c.name, c.description]));
+        const updatedMap = new Map(updatedComponents.map(c => [c.name, c.description]));
+
+        // Check for added or modified components
+        updatedMap.forEach((description, name) => {
+            if (!originalMap.has(name)) {
+                historyEntries.push({ event: 'Updated', details: `Component Added: "${name}".`, user: user_name });
+            } else if (originalMap.get(name) !== description) {
+                historyEntries.push({ event: 'Updated', details: `Component "${name}" description updated.`, user: user_name });
+            }
+        });
+
+        // Check for removed components
+        originalMap.forEach((description, name) => {
+            if (!updatedMap.has(name)) {
+                historyEntries.push({ event: 'Updated', details: `Component Removed: "${name}".`, user: user_name });
+            }
+        });
+    };
+
+    // --- Execute Comparisons ---
+
     // Compare core fields
     compareAndLog('name', 'Name');
     compareAndLog('type', 'Type');
@@ -59,6 +114,15 @@ const generateUpdateHistory = (original, updates, user) => {
     compareAndLog('acquisitionMethod', 'Acquisition Method');
     compareAndLog('condition', 'Condition');
     compareAndLog('remarks', 'Remarks');
+
+    // Compare nested detail objects
+    compareNestedObject('landDetails', 'Land Details');
+    compareNestedObject('buildingAndStructureDetails', 'Building Details');
+    compareNestedObject('roadNetworkDetails', 'Road Network Details');
+    compareNestedObject('otherInfrastructureDetails', 'Infrastructure Details');
+
+    // Compare components array
+    compareComponents();
 
     return historyEntries;
 };
