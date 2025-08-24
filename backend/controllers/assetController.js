@@ -123,49 +123,91 @@ const createAsset = async (req, res) => {
   }
 };
 
+/**
+ * Helper function to compare fields and generate history logs for movable assets.
+ */
+const generateMovableAssetUpdateHistory = (original, updates, user) => {
+    const historyEntries = [];
+    const user_name = user.name;
+
+    const format = (value, field) => {
+        if (value instanceof Date) return new Date(value).toLocaleDateString('en-CA');
+        if (['acquisitionCost', 'salvageValue'].includes(field) && typeof value === 'number') {
+            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
+        }
+        if (value === null || value === undefined || value === '') return 'empty';
+        return `"${value}"`;
+    };
+
+    const compareAndLog = (field, fieldName) => {
+        if (updates[field] === undefined) return;
+
+        const originalValue = original[field];
+        const updatedValue = updates[field];
+
+        // Handle date comparison
+        if (originalValue instanceof Date) {
+            if (new Date(originalValue).toISOString().split('T')[0] !== new Date(updatedValue).toISOString().split('T')[0]) {
+                historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(new Date(updatedValue), field)}.`, user: user_name });
+            }
+            return;
+        }
+
+        // Handle numeric comparison
+        if (typeof originalValue === 'number' && parseFloat(originalValue) !== parseFloat(updatedValue)) {
+            historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(parseFloat(updatedValue), field)}.`, user: user_name });
+            return;
+        }
+
+        // Default string comparison
+        if (String(originalValue ?? '') !== String(updatedValue ?? '')) {
+            historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(updatedValue, field)}.`, user: user_name });
+        }
+    };
+
+    // Compare core fields
+    compareAndLog('description', 'Description');
+    compareAndLog('category', 'Category');
+    compareAndLog('fundSource', 'Fund Source');
+    compareAndLog('status', 'Status');
+    compareAndLog('acquisitionDate', 'Acquisition Date');
+    compareAndLog('acquisitionCost', 'Acquisition Cost');
+    compareAndLog('usefulLife', 'Useful Life');
+    compareAndLog('salvageValue', 'Salvage Value');
+    compareAndLog('condition', 'Condition');
+    compareAndLog('remarks', 'Remarks');
+    compareAndLog('office', 'Office');
+
+    // Special handling for custodian transfer
+    if (updates.custodian && updates.custodian.name && original.custodian.name !== updates.custodian.name) {
+        historyEntries.push({ event: 'Transfer', details: `Custodian changed from ${format(original.custodian.name)} to ${format(updates.custodian.name)}.`, user: user_name });
+    }
+
+    return historyEntries;
+};
+
 const updateAsset = async (req, res) => {
   try {
     const assetId = req.params.id;
     const updateData = req.body;
     const user = req.user; // The user performing the action
 
-    // Find the asset *before* the update to compare fields
-    const originalAsset = await Asset.findById(assetId).lean();
-    if (!originalAsset) {
+    const asset = await Asset.findById(assetId);
+    if (!asset) {
       return res.status(404).json({ message: 'Asset not found' });
     }
 
-    const historyEntries = [];
-
-    // Check for Office Transfer
-    if (updateData.office && originalAsset.office !== updateData.office) {
-        historyEntries.push({
-            event: 'Transfer',
-            details: `Office changed from ${originalAsset.office} to ${updateData.office}.`,
-            from: originalAsset.office,
-            to: updateData.office,
-            user: user ? user.name : 'System'
-        });
-    }
-
-    // Check for Custodian Transfer
-    if (updateData.custodian && originalAsset.custodian.name !== updateData.custodian.name) {
-        historyEntries.push({
-            event: 'Transfer',
-            details: `Custodian changed from ${originalAsset.custodian.name} to ${updateData.custodian.name}.`,
-            from: originalAsset.custodian.name,
-            to: updateData.custodian.name,
-            user: user ? user.name : 'System' // Use the name of the user who made the change
-        });
-    }
-
+    // Generate detailed history entries
+    const historyEntries = generateMovableAssetUpdateHistory(asset.toObject(), updateData, user);
     if (historyEntries.length > 0) {
-        updateData.$push = { history: { $each: historyEntries } };
+        asset.history.push(...historyEntries);
     }
 
-    const asset = await Asset.findByIdAndUpdate(assetId, updateData, { new: true, runValidators: true });
-    if (asset) { res.json(asset); } 
-    else { res.status(404).json({ message: 'Asset not found' }); }
+    // Apply updates
+    asset.set(updateData);
+
+    const updatedAsset = await asset.save({ runValidators: true });
+    res.json(updatedAsset);
   } catch (error) { res.status(400).json({ message: 'Invalid asset data', error: error.message }); }
 };
 
@@ -173,8 +215,15 @@ const deleteAsset = async (req, res) => {
   try {
     const asset = await Asset.findById(req.params.id);
     if (asset) {
-      await asset.deleteOne();
-      res.json({ message: 'Asset removed' });
+      // Perform a "soft delete" by changing the status, which is better for auditing.
+      asset.status = 'Disposed';
+      asset.history.push({
+          event: 'Disposed',
+          details: 'Asset marked as disposed.',
+          user: req.user.name
+      });
+      await asset.save();
+      res.json({ message: 'Asset marked as disposed' });
     } else { res.status(404).json({ message: 'Asset not found' }); }
   } catch (error) { res.status(500).json({ message: 'Server Error' }); }
 };

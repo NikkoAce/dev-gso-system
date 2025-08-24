@@ -76,7 +76,7 @@ function initializeForm() {
         sortedHistory.forEach((entry, index) => {
             const li = document.createElement('li');
             const formattedDate = new Date(entry.date).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const iconMap = { 'Created': 'plus', 'Transfer': 'arrow-right-left', 'Physical Count': 'clipboard-check', 'Assignment': 'user-plus' };
+            const iconMap = { 'Created': 'plus', 'Updated': 'edit-3', 'Transfer': 'arrow-right-left', 'Physical Count': 'clipboard-check', 'Assignment': 'user-plus', 'Disposed': 'trash-2' };
             const icon = iconMap[entry.event] || 'history';
             li.innerHTML = `
                 <div class="timeline-middle"><i data-lucide="${icon}" class="h-5 w-5"></i></div>
