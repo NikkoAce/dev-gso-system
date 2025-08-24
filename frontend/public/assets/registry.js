@@ -22,7 +22,7 @@ function initializeRegistryPage(currentUser) {
         allOffices: [],
         allEmployees: [],
         assetsToTransfer: [], // To hold asset objects for the modal
-        selectedAssetIds: [],
+        selectedAssets: [], // Changed from selectedAssetIds to hold {id, cost} objects
         currentPage: 1,
         assetsPerPage: 20,
         sortKey: 'createdAt',
@@ -115,25 +115,25 @@ function initializeRegistryPage(currentUser) {
     // --- MODULE: SLIP MANAGER ---
     const slipManager = {
         prepareForSlipGeneration(slipType) {
-            if (state.selectedAssetIds.length === 0) {
+            if (state.selectedAssets.length === 0) {
                 uiManager.showToast(`Please select at least one asset to generate a ${slipType}.`, 'warning');
                 return;
             }
-            const selectedAssets = state.currentPageAssets.filter(asset => state.selectedAssetIds.includes(asset._id));
+            const selectedAssetsForSlip = state.currentPageAssets.filter(asset => state.selectedAssets.some(sel => sel.id === asset._id));
 
             // NEW CHECK: Ensure selected assets are not already assigned to another slip.
-            const alreadyAssignedAssets = selectedAssets.filter(asset => asset.assignedPAR || asset.assignedICS);
+            const alreadyAssignedAssets = selectedAssetsForSlip.filter(asset => asset.assignedPAR || asset.assignedICS);
             if (alreadyAssignedAssets.length > 0) {
                 const assignedNumbers = alreadyAssignedAssets.map(a => a.propertyNumber).join(', ');
                 uiManager.showToast(`Error: The following assets are already assigned to a slip and cannot be added to a new one: ${assignedNumbers}`, 'error');
                 return;
             }
-            const firstCustodian = selectedAssets[0].custodian.name;
-            if (!selectedAssets.every(asset => asset.custodian.name === firstCustodian)) {
+            const firstCustodian = selectedAssetsForSlip[0].custodian.name;
+            if (!selectedAssetsForSlip.every(asset => asset.custodian.name === firstCustodian)) {
                 uiManager.showToast(`Error: All selected assets must belong to the same custodian to be on one ${slipType}.`, 'error');
                 return;
             }
-            localStorage.setItem(`assetsFor${slipType}`, JSON.stringify(selectedAssets));
+            localStorage.setItem(`assetsFor${slipType}`, JSON.stringify(selectedAssetsForSlip));
             window.location.href = `../slips/${slipType.toLowerCase()}-page.html`;
         }
     };
@@ -236,34 +236,37 @@ function initializeRegistryPage(currentUser) {
         },
 
         handleTableChange(e) {
+            // This function now delegates the main logic to updateSelectionState
             if (e.target.classList.contains('asset-checkbox')) {
-                const assetId = e.target.dataset.id;
-                if (e.target.checked) {
-                    state.selectedAssetIds.push(assetId);
-                } else {
-                    state.selectedAssetIds = state.selectedAssetIds.filter(id => id !== assetId);
-                }
-                uiManager.updateSlipButtonVisibility(state.selectedAssetIds, {
-                    generateParBtn: DOM.generateParBtn,
-                    generateIcsBtn: DOM.generateIcsBtn,
-                    transferSelectedBtn: DOM.transferSelectedBtn
-                });
+                this.updateSelectionState();
+            } else if (e.target.id === 'select-all-assets') {
+                this.handleSelectAll(e.target.checked);
+                this.updateSelectionState();
             }
-            if (e.target.id === 'select-all-assets') {
-                const checkboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
-                state.selectedAssetIds = [];
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = e.target.checked;
-                    if (e.target.checked) {
-                        state.selectedAssetIds.push(checkbox.dataset.id);
-                    }
-                });
-                uiManager.updateSlipButtonVisibility(state.selectedAssetIds, {
-                    generateParBtn: DOM.generateParBtn,
-                    generateIcsBtn: DOM.generateIcsBtn,
-                    transferSelectedBtn: DOM.transferSelectedBtn
-                });
-            }
+        },
+
+        updateSelectionState() {
+            const selectedCheckboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:checked');
+            state.selectedAssets = Array.from(selectedCheckboxes).map(cb => ({
+                id: cb.dataset.id,
+                cost: parseFloat(cb.dataset.cost)
+            }));
+
+            const allCheckboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
+            DOM.selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length;
+
+            uiManager.updateSlipButtonVisibility(state.selectedAssets, {
+                generateParBtn: DOM.generateParBtn,
+                generateIcsBtn: DOM.generateIcsBtn,
+                transferSelectedBtn: DOM.transferSelectedBtn
+            });
+        },
+
+        handleSelectAll(isChecked) {
+            const checkboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
         },
 
         async handleConfirmTransfer() {
@@ -330,12 +333,12 @@ function initializeRegistryPage(currentUser) {
             DOM.paginationControls?.addEventListener('click', e => this.handlePaginationClick(e));
             DOM.resetFiltersBtn?.addEventListener('click', () => this.resetAllFilters());            
             DOM.tableBody?.parentElement.addEventListener('change', e => this.handleTableChange(e)); // Listen on table for tbody and thead changes
-            DOM.tableBody?.addEventListener('click', e => this.handleTableClick(e));
+            DOM.tableBody?.addEventListener('click', e => this.handleTableClick(e)); // For edit, delete, etc.
             DOM.tableHeader?.addEventListener('click', (e) => this.handleSort(e));
             DOM.generateParBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('PAR'));
             DOM.generateIcsBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
-            DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(state.selectedAssetIds));
+            DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(state.selectedAssets.map(a => a.id)));
             DOM.moreFiltersBtn?.addEventListener('click', () => {
                 DOM.advancedFilters.classList.toggle('hidden');
                 const isVisible = !DOM.advancedFilters.classList.contains('hidden');
@@ -356,7 +359,7 @@ function initializeRegistryPage(currentUser) {
     async function loadAssets() {
         uiManager.setLoading(true, DOM.tableBody, { colSpan: 8 });
         DOM.selectAllCheckbox.checked = false;
-        state.selectedAssetIds = [];
+        eventManager.updateSelectionState(); // Clear selection and update buttons
         try {
             let endDateValue = DOM.endDateFilter?.value;
             if (endDateValue) {
@@ -399,7 +402,7 @@ function initializeRegistryPage(currentUser) {
 
             uiManager.renderAssetTable(assets, domElements);
             uiManager.renderPagination(DOM.paginationControls, paginationInfo);
-            uiManager.updateSlipButtonVisibility(state.selectedAssetIds, DOM);
+            eventManager.updateSelectionState(); // Update buttons for the new view
 
             // --- FIX: Manage sort indicators correctly ---
             // This ensures only one sort arrow is visible and on the correct column.
