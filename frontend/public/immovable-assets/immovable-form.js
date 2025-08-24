@@ -32,6 +32,12 @@ function initializeForm() {
     const typeSelect = document.getElementById('type');
     const componentsContainer = document.getElementById('components-container');
     const addComponentBtn = document.getElementById('add-component-btn');
+    const formTabs = document.getElementById('form-tabs');
+    const detailsTab = document.getElementById('details-tab');
+    const historyTab = document.getElementById('history-tab');
+    const detailsPanel = document.getElementById('details-panel');
+    const historyPanel = document.getElementById('history-panel');
+    const historyContainer = document.getElementById('history-container');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -58,6 +64,39 @@ function initializeForm() {
             <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-component-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
         `;
         componentsContainer.appendChild(div);
+        lucide.createIcons();
+    }
+
+    function renderHistory(history = []) {
+        historyContainer.innerHTML = '';
+        if (history.length === 0) {
+            historyContainer.innerHTML = '<li>No history records found.</li>';
+            return;
+        }
+
+        const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        sortedHistory.forEach((entry, index) => {
+            const li = document.createElement('li');
+            const formattedDate = new Date(entry.date).toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            const iconMap = { 'Created': 'plus', 'Updated': 'edit-3', 'Disposed': 'trash-2', 'Asset Created': 'plus' };
+            const icon = iconMap[entry.event] || 'history';
+
+            li.innerHTML = `
+                <div class="timeline-middle"><i data-lucide="${icon}" class="h-5 w-5"></i></div>
+                <div class="timeline-end timeline-box">
+                    <time class="font-mono italic text-xs">${formattedDate}</time>
+                    <div class="text-lg font-black">${entry.event}</div>
+                    <p class="text-sm">${entry.details}</p>
+                    <p class="text-xs text-base-content/70 mt-1">by ${entry.user}</p>
+                </div>
+                ${index < sortedHistory.length - 1 ? '<hr/>' : ''}
+            `;
+            historyContainer.appendChild(li);
+        });
         lucide.createIcons();
     }
 
@@ -108,6 +147,11 @@ function initializeForm() {
             asset.components.forEach(comp => renderComponent(comp));
         }
 
+        // Populate history tab
+        if (asset.history) {
+            renderHistory(asset.history);
+        }
+
         toggleTypeSpecificFields(asset.type);
     }
 
@@ -116,6 +160,7 @@ function initializeForm() {
         try {
             const asset = await fetchWithAuth(`${API_ENDPOINT}/${assetId}`);
             populateForm(asset);
+            formTabs.classList.remove('hidden'); // Show tabs only in edit mode
         } catch (error) {
             showToast(`Error loading asset: ${error.message}`, 'error');
             setTimeout(() => window.location.href = './immovable-registry.html', 2000);
@@ -183,10 +228,28 @@ function initializeForm() {
     addComponentBtn.addEventListener('click', () => {
         renderComponent();
     });
+
     componentsContainer.addEventListener('click', (e) => {
         if (e.target.closest('.remove-component-btn')) {
             e.target.closest('.component-row').remove();
         }
     });
+
+    detailsTab.addEventListener('click', () => {
+        detailsTab.classList.add('tab-active');
+        historyTab.classList.remove('tab-active');
+        detailsPanel.classList.remove('hidden');
+        historyPanel.classList.add('hidden');
+        submitButton.classList.remove('hidden');
+    });
+
+    historyTab.addEventListener('click', () => {
+        historyTab.classList.add('tab-active');
+        detailsTab.classList.remove('tab-active');
+        historyPanel.classList.remove('hidden');
+        detailsPanel.classList.add('hidden');
+        submitButton.classList.add('hidden');
+    });
+
     form.addEventListener('submit', handleFormSubmit);
 }
