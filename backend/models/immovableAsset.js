@@ -12,6 +12,13 @@ const componentSchema = new mongoose.Schema({
     description: { type: String, trim: true }
 }, { _id: false });
 
+const attachmentSchema = new mongoose.Schema({
+    key: { type: String, required: true }, // The key/filename in the S3 bucket
+    url: { type: String, required: true }, // The public URL to access the file
+    originalName: { type: String, required: true },
+    mimeType: { type: String, required: true }
+}, { _id: false });
+
 const immovableAssetSchema = new mongoose.Schema({
     // --- Core Details ---
     name: {
@@ -104,6 +111,7 @@ const immovableAssetSchema = new mongoose.Schema({
         trim: true
     },
     components: [componentSchema],
+    attachments: [attachmentSchema],
     history: [historySchema]
 }, {
     timestamps: true // Adds createdAt and updatedAt fields

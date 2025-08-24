@@ -5,20 +5,25 @@ const {
     getImmovableAssets,
     getImmovableAssetById,
     updateImmovableAsset,
-    deleteImmovableAsset
+    deleteImmovableAsset,
+    deleteImmovableAssetAttachment
 } = require('../controllers/immovableAssetController');
 const { protect, gso } = require('../middlewares/authMiddleware.js');
+const { upload } = require('../middlewares/uploadMiddleware.js');
 
 // Apply the 'protect' and 'gso' middleware to all routes in this file.
 router.use(protect, gso);
 
 router.route('/')
-    .post(createImmovableAsset)
+    .post(upload.array('attachments'), createImmovableAsset)
     .get(getImmovableAssets);
 
 router.route('/:id')
     .get(getImmovableAssetById)
-    .put(updateImmovableAsset)
+    .put(upload.array('attachments'), updateImmovableAsset)
     .delete(deleteImmovableAsset);
+
+// New route for deleting a specific attachment
+router.route('/:id/attachments/:attachmentKey').delete(deleteImmovableAssetAttachment);
 
 module.exports = router;

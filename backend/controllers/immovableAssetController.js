@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const ImmovableAsset = require('../models/immovableAsset');
+const { uploadToS3, s3, DeleteObjectCommand } = require('../middlewares/uploadMiddleware');
 
 /**
  * Helper function to compare fields and generate history logs for immovable assets.
@@ -144,12 +145,19 @@ const getImmovableAssets = asyncHandler(async (req, res) => {
  * @access  Private (GSO)
  */
 const createImmovableAsset = asyncHandler(async (req, res) => {
-    // Destructure all possible fields from the request body
-    const {
-        name, propertyIndexNumber, type, location, dateAcquired, assessedValue, // Core fields
-        status, acquisitionMethod, condition, remarks, components,
-        landDetails, buildingAndStructureDetails, roadNetworkDetails, otherInfrastructureDetails
-    } = req.body;
+    // Since we are using multipart/form-data, nested objects will be stringified.
+    const parsedBody = {};
+    for (const key in req.body) {
+        try {
+            // Attempt to parse fields that might be JSON
+            parsedBody[key] = JSON.parse(req.body[key]);
+        } catch (e) {
+            // If it's not valid JSON, use the original value
+            parsedBody[key] = req.body[key];
+        }
+    }
+
+    const { name, propertyIndexNumber, type, location, dateAcquired, assessedValue } = parsedBody;
 
     // Basic validation for required fields
     if (!name || !propertyIndexNumber || !type || !location || !dateAcquired || !assessedValue) {
@@ -164,12 +172,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
         throw new Error('An asset with this Property Index Number (PIN) already exists.');
     }
 
-    // Create a new asset instance
-    const asset = new ImmovableAsset({
-        name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
-        status, acquisitionMethod, condition, remarks, components,
-        landDetails, buildingAndStructureDetails, roadNetworkDetails, otherInfrastructureDetails
-    });
+    const asset = new ImmovableAsset(parsedBody);
 
     // Add the initial history entry using the authenticated user's name
     asset.history.push({
@@ -179,6 +182,16 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
     });
 
     const createdAsset = await asset.save();
+
+    // --- Handle File Uploads ---
+    if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map(file => uploadToS3(file, createdAsset._id));
+        const uploadedAttachments = await Promise.all(uploadPromises);
+        createdAsset.attachments.push(...uploadedAttachments);
+        createdAsset.history.push({ event: 'Updated', details: `${uploadedAttachments.length} file(s) attached.`, user: req.user.name });
+        await createdAsset.save();
+    }
+
     res.status(201).json(createdAsset);
 });
 
@@ -200,15 +213,34 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
         throw new Error('Asset not found');
     }
 
+    // Since we are using multipart/form-data, nested objects will be stringified.
+    const parsedBody = {};
+    for (const key in req.body) {
+        try {
+            parsedBody[key] = JSON.parse(req.body[key]);
+        } catch (e) {
+            parsedBody[key] = req.body[key];
+        }
+    }
+
     // Generate detailed history entries based on what changed
-    const historyEntries = generateUpdateHistory(asset.toObject(), req.body, req.user);
+    const historyEntries = generateUpdateHistory(asset.toObject(), parsedBody, req.user);
     if (historyEntries.length > 0) {
         asset.history.push(...historyEntries);
     }
 
+    // --- Handle File Uploads ---
+    if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map(file => uploadToS3(file, asset._id));
+        const newAttachments = await Promise.all(uploadPromises);
+        asset.attachments.push(...newAttachments);
+        asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
+    }
+
     // Use asset.set() to apply updates from the request body.
     // This is safer than Object.assign() as it respects schema paths.
-    asset.set(req.body);
+    // We need to handle the attachments array separately.
+    asset.set(parsedBody);
 
     const updatedAsset = await asset.save();
     res.json(updatedAsset);
@@ -232,10 +264,41 @@ const deleteImmovableAsset = asyncHandler(async (req, res) => {
     }
 });
 
+const deleteImmovableAssetAttachment = asyncHandler(async (req, res) => {
+    const { id, attachmentKey } = req.params;
+    const asset = await ImmovableAsset.findById(id);
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    const attachment = asset.attachments.find(att => att.key === decodeURIComponent(attachmentKey));
+    if (!attachment) {
+        res.status(404);
+        throw new Error('Attachment not found');
+    }
+
+    // Delete from S3
+    const deleteCommand = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: attachment.key,
+    });
+    await s3.send(deleteCommand);
+
+    // Remove from MongoDB
+    asset.attachments = asset.attachments.filter(att => att.key !== attachment.key);
+    asset.history.push({ event: 'Updated', details: `File removed: "${attachment.originalName}".`, user: req.user.name });
+    await asset.save();
+
+    res.status(200).json({ message: 'Attachment deleted successfully' });
+});
+
 module.exports = {
     createImmovableAsset,
     getImmovableAssets,
     getImmovableAssetById,
     updateImmovableAsset,
-    deleteImmovableAsset
+    deleteImmovableAsset,
+    deleteImmovableAssetAttachment
 };

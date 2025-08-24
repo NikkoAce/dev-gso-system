@@ -38,6 +38,9 @@ function initializeForm() {
     const detailsPanel = document.getElementById('details-panel');
     const historyPanel = document.getElementById('history-panel');
     const historyContainer = document.getElementById('history-container');
+    const attachmentsInput = document.getElementById('attachments');
+    const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
+    const existingAttachmentsList = document.getElementById('existing-attachments-list');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -100,6 +103,27 @@ function initializeForm() {
         lucide.createIcons();
     }
 
+    function renderAttachments(attachments = []) {
+        if (attachments.length > 0) {
+            existingAttachmentsContainer.classList.remove('hidden');
+            existingAttachmentsList.innerHTML = '';
+            attachments.forEach(att => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center justify-between text-sm';
+                li.innerHTML = `
+                    <a href="${att.url}" target="_blank" class="link link-primary hover:underline">${att.originalName}</a>
+                    <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-attachment-btn" data-key="${att.key}" title="Delete Attachment">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                `;
+                existingAttachmentsList.appendChild(li);
+            });
+            lucide.createIcons();
+        } else {
+            existingAttachmentsContainer.classList.add('hidden');
+        }
+    }
+
     function populateForm(asset) {
         // Populate core fields
         Object.keys(asset).forEach(key => {
@@ -152,6 +176,11 @@ function initializeForm() {
             renderHistory(asset.history);
         }
 
+        // Populate attachments
+        if (asset.attachments) {
+            renderAttachments(asset.attachments);
+        }
+
         toggleTypeSpecificFields(asset.type);
     }
 
@@ -173,22 +202,32 @@ function initializeForm() {
         submitButton.innerHTML = `<i data-lucide="loader-2" class="animate-spin"></i> Saving...`;
         lucide.createIcons();
 
-        const formData = new FormData(form);
-        const assetData = {};
+        const formData = new FormData();
+        const formElements = form.elements;
+        const assetData = {}; // To hold structured data before appending
 
-        // Convert FormData to a nested object
-        formData.forEach((value, key) => {
-            // Handle nested properties like 'landDetails.lotNumber'
+        // 1. Structure the data from form fields
+        for (const element of formElements) {
+            if (!element.name || element.type === 'file') continue;
             const keys = key.split('.');
             let current = assetData;
             keys.forEach((k, i) => {
                 if (i === keys.length - 1) {
-                    current[k] = value === '' ? null : value;
+                    current[k] = element.value === '' ? null : element.value;
                 } else {
                     current[k] = current[k] || {};
                     current = current[k];
                 }
             });
+        }
+
+        // 2. Stringify nested objects and append to FormData
+        Object.keys(assetData).forEach(key => {
+            if (typeof assetData[key] === 'object' && assetData[key] !== null) {
+                formData.append(key, JSON.stringify(assetData[key]));
+            } else if (assetData[key] !== null && assetData[key] !== undefined) {
+                formData.append(key, assetData[key]);
+            }
         });
 
         // Manually gather components, as they are dynamic
@@ -201,11 +240,18 @@ function initializeForm() {
                 assetData.components.push({ name, description });
             }
         });
+        formData.append('components', JSON.stringify(assetData.components));
+
+        // Append new files to be uploaded
+        for (const file of attachmentsInput.files) {
+            formData.append('attachments', file);
+        }
 
         try {
             const endpoint = isEditMode ? `${API_ENDPOINT}/${assetId}` : API_ENDPOINT;
             const method = isEditMode ? 'PUT' : 'POST';
-            await fetchWithAuth(endpoint, { method, body: assetData });
+            // fetchWithAuth is already configured to handle FormData
+            await fetchWithAuth(endpoint, { method, body: formData });
             showToast(`Asset ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
             setTimeout(() => window.location.href = './immovable-registry.html', 1500);
         } catch (error) {
@@ -216,6 +262,23 @@ function initializeForm() {
         }
     }
 
+    async function handleAttachmentDelete(e) {
+        const deleteButton = e.target.closest('.remove-attachment-btn');
+        if (!deleteButton) return;
+
+        const attachmentKey = deleteButton.dataset.key;
+        if (!assetId || !attachmentKey) return;
+
+        if (confirm('Are you sure you want to permanently delete this file?')) {
+            try {
+                await fetchWithAuth(`${API_ENDPOINT}/${assetId}/attachments/${encodeURIComponent(attachmentKey)}`, { method: 'DELETE' });
+                showToast('Attachment deleted successfully.', 'success');
+                loadAssetForEditing(); // Reload the form to show the updated list
+            } catch (error) {
+                showToast(`Error deleting attachment: ${error.message}`, 'error');
+            }
+        }
+    }
     // --- INITIALIZATION ---
     if (isEditMode) {
         formTitle.textContent = 'Edit Immovable Asset';
@@ -234,6 +297,8 @@ function initializeForm() {
             e.target.closest('.component-row').remove();
         }
     });
+
+    existingAttachmentsList.addEventListener('click', handleAttachmentDelete);
 
     detailsTab.addEventListener('click', () => {
         detailsTab.classList.add('tab-active');
