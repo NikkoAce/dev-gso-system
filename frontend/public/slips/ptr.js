@@ -64,14 +64,6 @@ function initializePtrPage(currentUser) {
         }
 
         ptrContainer.innerHTML = `
-            <div class="flex justify-center items-center gap-4 mb-4">
-                <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
-                <div class="text-center">
-                    <p>Republic of the Philippines</p>
-                    <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
-                    <p class="font-bold">MUNICIPALITY OF DAET</p>
-                </div>
-            </div>
             <div class="text-center mb-4">
                 <h2 class="text-xl font-bold">PROPERTY TRANSFER REPORT</h2>
             </div>
