@@ -49,6 +49,7 @@ function initializeRegistryPage(currentUser) {
         generateParBtn: document.getElementById('generate-par-selected'),
         generateIcsBtn: document.getElementById('generate-ics-selected'),
         transferSelectedBtn: document.getElementById('transfer-selected-btn'),
+        transferTooltipWrapper: document.getElementById('transfer-tooltip-wrapper'),
         exportCsvBtn: document.getElementById('export-csv-btn'),
         // Modal elements
         transferModal: document.getElementById('transfer-modal'),
@@ -258,7 +259,8 @@ function initializeRegistryPage(currentUser) {
             uiManager.updateSlipButtonVisibility(state.selectedAssets, {
                 generateParBtn: DOM.generateParBtn,
                 generateIcsBtn: DOM.generateIcsBtn,
-                transferSelectedBtn: DOM.transferSelectedBtn
+                transferSelectedBtn: DOM.transferSelectedBtn,
+                transferTooltipWrapper: DOM.transferTooltipWrapper
             });
         },
 
@@ -284,33 +286,22 @@ function initializeRegistryPage(currentUser) {
                 const selectedEmployee = state.allEmployees.find(emp => emp.name === newCustodianName);
                 const newCustodian = { name: newCustodianName, designation: selectedEmployee?.designation || '', office: newOffice };
                 const user = { name: currentUser.name, office: currentUser.office };
+                // --- UNIFIED TRANSFER LOGIC (for both single and bulk) ---
+                const payload = {
+                    assetIds: state.assetsToTransfer.map(a => a._id),
+                    newOffice,
+                    newCustodian,
+                    user
+                };
 
-                if (state.assetsToTransfer.length > 1) {
-                    // --- BULK ASSET TRANSFER ---
-                    const payload = {
-                        assetIds: state.assetsToTransfer.map(a => a._id),
-                        newOffice,
-                        newCustodian,
-                        user
-                    };
-                    const transferResult = await fetchWithAuth('assets/bulk-transfer', {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-                    localStorage.setItem('transferData', JSON.stringify(transferResult.transferDetails));
-                    window.location.href = '../slips/ptr.html'; // Navigate to the printable PTR page
-                } else {
-                    // --- SINGLE ASSET TRANSFER ---
-                    const assetId = state.assetsToTransfer[0]._id;
-                    const payload = { office: newOffice, custodian: newCustodian, user };
-                    await fetchWithAuth(`assets/${assetId}`, {
-                        method: 'PUT',
-                        body: JSON.stringify(payload)
-                    });
-                    uiManager.showToast('Asset transferred successfully!', 'success');
-                    DOM.transferModal.close();
-                    await loadAssets(); // Refresh current view
-                }
+                const transferResult = await fetchWithAuth('assets/bulk-transfer', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                localStorage.setItem('transferData', JSON.stringify(transferResult.transferDetails));
+                window.location.href = '../slips/ptr.html';
+                
             } catch (error) {
                 uiManager.showToast(`Error: ${error.message}`, 'error');
             } finally {
