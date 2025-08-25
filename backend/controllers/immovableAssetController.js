@@ -185,7 +185,8 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
 
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
-        const uploadPromises = req.files.map(file => uploadToS3(file, createdAsset._id));
+        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
+        const uploadPromises = req.files.map((file, index) => uploadToS3(file, createdAsset._id, attachmentTitles[index]));
         const uploadedAttachments = await Promise.all(uploadPromises);
         createdAsset.attachments.push(...uploadedAttachments);
         createdAsset.history.push({ event: 'Updated', details: `${uploadedAttachments.length} file(s) attached.`, user: req.user.name });
@@ -231,7 +232,8 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
 
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
-        const uploadPromises = req.files.map(file => uploadToS3(file, asset._id));
+        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
+        const uploadPromises = req.files.map((file, index) => uploadToS3(file, asset._id, attachmentTitles[index]));
         const newAttachments = await Promise.all(uploadPromises);
         asset.attachments.push(...newAttachments);
         asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });

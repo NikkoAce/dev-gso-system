@@ -114,9 +114,12 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Attachments</h2>
                                     <p class="text-sm text-base-content/70">Attach relevant documents like land titles, photos, or permits.</p>
+                                    <!-- File Input Button -->
                                     <div class="form-control">
-                                        <input type="file" id="attachments" name="attachments" multiple class="file-input file-input-bordered w-full" />
+                                        <input type="file" id="attachments-input" multiple class="file-input file-input-bordered w-full" />
                                     </div>
+                                    <!-- Container for selected files to be uploaded -->
+                                    <div id="new-attachments-container" class="mt-4 space-y-2"></div>
                                     <!-- Display existing attachments (in edit mode) -->
                                     <div id="existing-attachments-container" class="mt-4 space-y-2 hidden">
                                         <h3 class="font-semibold">Existing Files:</h3>

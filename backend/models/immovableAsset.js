@@ -15,6 +15,7 @@ const componentSchema = new mongoose.Schema({
 const attachmentSchema = new mongoose.Schema({
     key: { type: String, required: true }, // The key/filename in the S3 bucket
     url: { type: String, required: true }, // The public URL to access the file
+    title: { type: String, trim: true }, // User-defined title for the document
     originalName: { type: String, required: true },
     mimeType: { type: String, required: true }
 }, { _id: false });

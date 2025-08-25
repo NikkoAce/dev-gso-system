@@ -23,6 +23,7 @@ function initializeForm() {
     // --- STATE ---
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
+    let selectedFiles = []; // To hold the FileList object for new uploads
     const isEditMode = !!assetId;
 
     // --- DOM ELEMENTS ---
@@ -38,7 +39,8 @@ function initializeForm() {
     const detailsPanel = document.getElementById('details-panel');
     const historyPanel = document.getElementById('history-panel');
     const historyContainer = document.getElementById('history-container');
-    const attachmentsInput = document.getElementById('attachments');
+    const attachmentsInput = document.getElementById('attachments-input');
+    const newAttachmentsContainer = document.getElementById('new-attachments-container');
     const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
 
@@ -103,6 +105,28 @@ function initializeForm() {
         lucide.createIcons();
     }
 
+    function handleFileSelection(event) {
+        selectedFiles = Array.from(event.target.files); // Store files
+        newAttachmentsContainer.innerHTML = ''; // Clear previous selections
+
+        if (selectedFiles.length > 0) {
+            const header = document.createElement('h3');
+            header.className = 'font-semibold text-sm mt-4';
+            header.textContent = 'New files to upload:';
+            newAttachmentsContainer.appendChild(header);
+        }
+
+        selectedFiles.forEach((file) => {
+            const fileRow = document.createElement('div');
+            fileRow.className = 'grid grid-cols-[1fr_2fr] gap-2 items-center';
+            fileRow.innerHTML = `
+                <p class="text-sm truncate" title="${file.name}">${file.name}</p>
+                <input type="text" placeholder="Document Title (e.g., Land Title)" class="input input-bordered input-sm new-attachment-title" value="">
+            `;
+            newAttachmentsContainer.appendChild(fileRow);
+        });
+    }
+
     function renderAttachments(attachments = []) {
         if (attachments.length > 0) {
             existingAttachmentsContainer.classList.remove('hidden');
@@ -111,7 +135,7 @@ function initializeForm() {
                 const li = document.createElement('li');
                 li.className = 'flex items-center justify-between text-sm';
                 li.innerHTML = `
-                    <a href="${att.url}" target="_blank" class="link link-primary hover:underline">${att.originalName}</a>
+                    <a href="${att.url}" target="_blank" class="link link-primary hover:underline">${att.title || att.originalName}</a>
                     <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-attachment-btn" data-key="${att.key}" title="Delete Attachment">
                         <i data-lucide="x" class="h-4 w-4"></i>
                     </button>
@@ -242,9 +266,17 @@ function initializeForm() {
         });
         formData.append('components', JSON.stringify(assetData.components));
 
-        // Append new files to be uploaded
-        for (const file of attachmentsInput.files) {
-            formData.append('attachments', file);
+        // Append new files and their titles
+        const attachmentTitles = [];
+        const titleInputs = newAttachmentsContainer.querySelectorAll('.new-attachment-title');
+        titleInputs.forEach(input => {
+            attachmentTitles.push(input.value.trim());
+        });
+        if (selectedFiles.length > 0) {
+            selectedFiles.forEach(file => {
+                formData.append('attachments', file);
+            });
+            formData.append('attachmentTitles', JSON.stringify(attachmentTitles));
         }
 
         try {
@@ -287,6 +319,7 @@ function initializeForm() {
         toggleTypeSpecificFields(typeSelect.value); // Show default section
     }
 
+    attachmentsInput.addEventListener('change', handleFileSelection);
     typeSelect.addEventListener('change', (e) => toggleTypeSpecificFields(e.target.value));
     addComponentBtn.addEventListener('click', () => {
         renderComponent();

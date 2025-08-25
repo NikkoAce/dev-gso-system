@@ -10,7 +10,7 @@ const s3 = new S3Client({
 });
 
 // Helper function to upload a file buffer to S3
-const uploadToS3 = async (file, assetId) => {
+const uploadToS3 = async (file, assetId, title) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const key = `immovable-assets/${assetId}/${uniqueSuffix}-${file.originalname}`;
 
@@ -26,10 +26,10 @@ const uploadToS3 = async (file, assetId) => {
     return {
         key: key,
         url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+        title: title || file.originalname, // Use provided title or fallback to original name
         originalName: file.originalname,
         mimeType: file.mimetype,
     };
 };
 
 module.exports = { uploadToS3, s3, DeleteObjectCommand };
-
