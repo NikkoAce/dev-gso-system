@@ -47,14 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
 
             icsContainer.innerHTML = `
-                <div class="flex justify-center items-center gap-4 mb-4">
-                    <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
-                    <div class="text-center">
-                        <p>Republic of the Philippines</p>
-                        <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
-                        <p class="font-bold">MUNICIPALITY OF DAET</p>
-                    </div>
-                </div>
                 <div class="text-center mb-6">
                     <h2 class="text-xl font-bold">INVENTORY CUSTODIAN SLIP</h2>
                     <h3 class="font-semibold">LGU Daet, Camarines Norte</h3>
