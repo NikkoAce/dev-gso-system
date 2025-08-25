@@ -536,14 +536,17 @@ const bulkTransferAssets = async (req, res) => {
     }
 
     const session = await mongoose.startSession();
-    session.startTransaction();
 
     try {
+        console.log("Starting bulk transfer transaction...");
+        session.startTransaction();
+
         // Step 1: Fetch assets and validate the transfer request
         const assetsToTransfer = await Asset.find({ '_id': { $in: assetIds } }).session(session);
         if (assetsToTransfer.length !== assetIds.length) {
             throw new Error('One or more assets not found.');
         }
+        console.log(`Found ${assetsToTransfer.length} assets to transfer.`);
 
         // All assets must have the same "from" custodian for a single PTR
         const fromCustodian = assetsToTransfer[0].custodian;
@@ -555,7 +558,7 @@ const bulkTransferAssets = async (req, res) => {
 
         const transferDetails = {
             from: fromCustodian,
-            to: { name: newCustodian.name, designation: newCustodian.designation || 'N/A', office: newOffice },
+            to: { name: newCustodian.name, designation: newCustodian.designation || '', office: newOffice },
             date: new Date(),
             assets: []
         };
@@ -582,6 +585,7 @@ const bulkTransferAssets = async (req, res) => {
             return `PTR-${year}-${String(sequence).padStart(4, '0')}`;
         }
 
+        console.log("Updating assets...");
         // Step 2: Update all assets in a single operation
         const historyEntry = {
             event: 'Transfer',
@@ -602,13 +606,17 @@ const bulkTransferAssets = async (req, res) => {
         if (assetUpdateResult.modifiedCount !== assetIds.length) {
             throw new Error(`Failed to update all assets. Expected ${assetIds.length} updates, but got ${assetUpdateResult.modifiedCount}.`);
         }
+        console.log(`Successfully updated ${assetUpdateResult.modifiedCount} assets.`);
 
         // Step 3: Create and save the PTR document
+        const ptrNumber = await getNextPtrNumber(session);
+        console.log(`Generated new PTR number: ${ptrNumber}`);
+
         const newPTR = new PTR({
-            ptrNumber: await getNextPtrNumber(session), // Use the newly generated sequential number
+            ptrNumber: ptrNumber,
             from: transferDetails.from,
             to: transferDetails.to,
-            assets: transferDetails.assets,
+            assets: [], // Start with an empty array
             date: transferDetails.date,
             user: req.user.name // User who performed the transfer
         });
@@ -616,17 +624,22 @@ const bulkTransferAssets = async (req, res) => {
         assetsToTransfer.forEach(asset => {
             newPTR.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
         });
+        console.log(`Creating PTR with ${newPTR.assets.length} assets.`);
         const savedPTR = await newPTR.save({ session });
+        console.log(`Successfully saved PTR with ID: ${savedPTR._id}`);
 
         // Step 4: If all operations were successful, commit the transaction
         await session.commitTransaction();
+        console.log("Transaction committed successfully.");
         
         res.status(200).json({ message: 'Assets transferred successfully.', transferDetails: { ...transferDetails, assets: newPTR.assets, ptrNumber: savedPTR.ptrNumber } });
     } catch (error) {
+        console.log("An error occurred. Aborting transaction.");
         await session.abortTransaction();
         console.error('Bulk transfer error:', error);
         res.status(500).json({ message: 'Server error during bulk transfer.', error: error.message });
     } finally {
+        console.log("Transaction session ended.");
         session.endSession();
     }
 };
