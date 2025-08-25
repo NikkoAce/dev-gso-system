@@ -2,6 +2,7 @@ const Asset = require('../models/Asset');
 const Employee = require('../models/Employee');
 const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
+const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
 const { Readable } = require('stream');
 
 // Replaces the original getAssets to support server-side pagination, sorting, and filtering.
@@ -95,25 +96,60 @@ const getAssets = async (req, res) => {
 
 const getAssetById = async (req, res) => {
   try {
-    const asset = await Asset.findById(req.params.id);
-    if (asset) { res.json(asset); } 
-    else { res.status(404).json({ message: 'Asset not found' }); }
+    const asset = await Asset.findById(req.params.id).lean();
+    if (asset) {
+        // Generate pre-signed URLs for attachments before sending
+        if (asset.attachments && asset.attachments.length > 0) {
+            asset.attachments = await Promise.all(
+                asset.attachments.map(async (att) => ({
+                    ...att,
+                    url: await generatePresignedUrl(att.key)
+                }))
+            );
+        }
+        res.json(asset);
+    } else {
+        res.status(404).json({ message: 'Asset not found' });
+    }
   } catch (error) { res.status(500).json({ message: 'Server Error' }); }
 };
 
 const createAsset = async (req, res) => {
   try {
+    // Since we are using multipart/form-data, nested objects might be stringified.
+    const assetData = {};
+    for (const key in req.body) {
+        try {
+            assetData[key] = JSON.parse(req.body[key]);
+        } catch (e) {
+            assetData[key] = req.body[key];
+        }
+    }
+
     // Add the initial history entry
-    const assetData = {
-        ...req.body,
+    const assetToCreate = {
+        ...assetData,
         history: [{
             event: 'Created',
-            details: `Asset created with Property Number ${req.body.propertyNumber}.`,
+            details: `Asset created with Property Number ${assetData.propertyNumber}.`,
             user: req.user.name // Use authenticated user
         }]
     };
-    const asset = new Asset(assetData);
+    const asset = new Asset(assetToCreate);
     const createdAsset = await asset.save();
+
+    // --- Handle File Uploads ---
+    if (req.files && req.files.length > 0) {
+        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
+        const uploadPromises = req.files.map((file, index) =>
+            uploadToS3(file, createdAsset._id, attachmentTitles[index] || file.originalname, 'movable-assets')
+        );
+        const uploadedAttachments = await Promise.all(uploadPromises);
+        createdAsset.attachments.push(...uploadedAttachments);
+        createdAsset.history.push({ event: 'Updated', details: `${uploadedAttachments.length} file(s) attached.`, user: req.user.name });
+        await createdAsset.save();
+    }
+
     res.status(201).json(createdAsset);
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.propertyNumber) {
@@ -189,7 +225,16 @@ const generateMovableAssetUpdateHistory = (original, updates, user) => {
 const updateAsset = async (req, res) => {
   try {
     const assetId = req.params.id;
-    const updateData = req.body;
+    
+    // Since we are using multipart/form-data, nested objects might be stringified.
+    const updateData = {};
+    for (const key in req.body) {
+        try {
+            updateData[key] = JSON.parse(req.body[key]);
+        } catch (e) {
+            updateData[key] = req.body[key];
+        }
+    }
     const user = req.user; // The user performing the action
 
     const asset = await Asset.findById(assetId);
@@ -202,6 +247,18 @@ const updateAsset = async (req, res) => {
     if (historyEntries.length > 0) {
         asset.history.push(...historyEntries);
     }
+
+    // --- Handle File Uploads ---
+    if (req.files && req.files.length > 0) {
+        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
+        const uploadPromises = req.files.map((file, index) =>
+            uploadToS3(file, asset._id, attachmentTitles[index] || file.originalname, 'movable-assets')
+        );
+        const newAttachments = await Promise.all(uploadPromises);
+        asset.attachments.push(...newAttachments);
+        asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
+    }
+
 
     // Apply updates
     asset.set(updateData);
@@ -227,6 +284,37 @@ const deleteAsset = async (req, res) => {
     } else { res.status(404).json({ message: 'Asset not found' }); }
   } catch (error) { res.status(500).json({ message: 'Server Error' }); }
 };
+
+const deleteAssetAttachment = async (req, res) => {
+    const { id, attachmentKey } = req.params;
+    const asset = await Asset.findById(id);
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    const attachment = asset.attachments.find(att => att.key === decodeURIComponent(attachmentKey));
+    if (!attachment) {
+        res.status(404);
+        throw new Error('Attachment not found');
+    }
+
+    // Delete from S3
+    const deleteCommand = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: attachment.key,
+    });
+    await s3.send(deleteCommand);
+
+    // Remove from MongoDB
+    asset.attachments = asset.attachments.filter(att => att.key !== attachment.key);
+    asset.history.push({ event: 'Updated', details: `File removed: "${attachment.originalName}".`, user: req.user.name });
+    await asset.save();
+
+    res.status(200).json({ message: 'Attachment deleted successfully' });
+};
+
 
 // NEW: Controller for bulk asset creation
 const createBulkAssets = async (req, res) => {
@@ -672,7 +760,7 @@ const getMyOfficeAssets = async (req, res) => {
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
-    getNextPropertyNumber, updatePhysicalCount,
+    deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount,
     updateScanResults, bulkTransferAssets,
     exportAssetsToCsv, getDashboardStats,
     getMyOfficeAssets

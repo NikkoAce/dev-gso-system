@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { protect, gso } = require('../middlewares/authMiddleware.js');
+const { upload } = require('../middlewares/multer.js');
 const {
     getAssets,
     getAssetById,
     createAsset,
     createBulkAssets,
+    deleteAssetAttachment,
     updateAsset,
     deleteAsset,
     getNextPropertyNumber,
@@ -43,11 +45,14 @@ router.post('/scan', protect, gso, updateScanResults);
 // Standard CRUD routes for assets
 router.route('/')
     .get(protect, getAssets)
-    .post(protect, gso, createAsset);
+    .post(protect, gso, upload.array('attachments'), createAsset);
 
 router.route('/:id')
     .get(protect, getAssetById)
-    .put(protect, gso, updateAsset)
+    .put(protect, gso, upload.array('attachments'), updateAsset)
     .delete(protect, gso, deleteAsset);
+
+// Route for deleting a specific attachment
+router.route('/:id/attachments/:attachmentKey').delete(protect, gso, deleteAssetAttachment);
 
 module.exports = router;

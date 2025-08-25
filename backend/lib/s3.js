@@ -11,9 +11,9 @@ const s3 = new S3Client({
 });
 
 // Helper function to upload a file buffer to S3
-const uploadToS3 = async (file, assetId, title) => {
+const uploadToS3 = async (file, assetId, title, folder = 'attachments') => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const key = `immovable-assets/${assetId}/${uniqueSuffix}-${file.originalname}`;
+    const key = `${folder}/${assetId}/${uniqueSuffix}-${file.originalname}`;
 
     const command = new PutObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,

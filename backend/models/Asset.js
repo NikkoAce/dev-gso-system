@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+const attachmentSchema = new mongoose.Schema({
+    key: { type: String, required: true }, // The key/filename in the S3 bucket
+    title: { type: String, trim: true }, // User-defined title for the document
+    originalName: { type: String, required: true },
+    mimeType: { type: String, required: true }
+}, { _id: false });
+
 const SpecificationSchema = new mongoose.Schema({
     key: { type: String, required: true },
     value: { type: String, required: true },
@@ -45,7 +52,8 @@ const AssetSchema = new mongoose.Schema({
   maintenanceSchedule: { type: Date },
   condition: { type: String, trim: true },
   remarks: { type: String, trim: true },
-  history: [HistorySchema]
+  history: [HistorySchema],
+  attachments: [attachmentSchema]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Asset', AssetSchema);

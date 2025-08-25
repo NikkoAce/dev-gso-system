@@ -53,6 +53,10 @@ function initializeForm() {
     const detailsPanel = document.getElementById('details-panel');
     const historyPanel = document.getElementById('history-panel');
     const historyContainer = document.getElementById('history-container');
+    const addAttachmentBtn = document.getElementById('add-attachment-btn');
+    const newAttachmentsContainer = document.getElementById('new-attachments-container');
+    const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
+    const existingAttachmentsList = document.getElementById('existing-attachments-list');
 
     // --- UI LOGIC ---
     function populateDatalist(datalistEl, data, valueField) {
@@ -74,6 +78,40 @@ function initializeForm() {
         `;
         specificationsContainer.appendChild(div);
         lucide.createIcons();
+    }
+
+    function renderNewAttachmentRow() {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-[1fr_1fr_auto] gap-2 items-center new-attachment-row';
+        div.innerHTML = `
+            <input type="file" class="file-input file-input-bordered file-input-sm new-attachment-file" required>
+            <input type="text" placeholder="Document Title (required)" class="input input-bordered input-sm new-attachment-title" required>
+            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-new-attachment-btn" title="Remove this attachment"><i data-lucide="x" class="h-4 w-4"></i></button>
+        `;
+        newAttachmentsContainer.appendChild(div);
+        lucide.createIcons();
+    }
+
+    function renderAttachments(attachments = []) {
+        if (attachments.length > 0) {
+            existingAttachmentsContainer.classList.remove('hidden');
+            existingAttachmentsList.innerHTML = '';
+            attachments.forEach(att => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center justify-between text-sm';
+                li.innerHTML = `
+                    <a href="${att.url}" target="_blank" class="link link-primary hover:underline">${att.title || att.originalName}</a>
+                    <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-attachment-btn" data-key="${att.key}" title="Delete Attachment">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                `;
+                existingAttachmentsList.appendChild(li);
+            });
+            lucide.createIcons();
+        } else {
+            existingAttachmentsContainer.classList.add('hidden');
+            existingAttachmentsList.innerHTML = '';
+        }
     }
 
     function renderHistory(history = []) {
@@ -128,6 +166,10 @@ function initializeForm() {
 
         if (asset.history) {
             renderHistory(asset.history);
+        }
+
+        if (asset.attachments) {
+            renderAttachments(asset.attachments);
         }
     }
 
@@ -216,38 +258,59 @@ function initializeForm() {
         submitButton.innerHTML = `<i data-lucide="loader-2" class="animate-spin"></i> Saving...`;
         lucide.createIcons();
 
-        const formData = new FormData(form);
+        const formData = new FormData();
         const assetData = {};
 
-        // Convert FormData to a nested object
-        formData.forEach((value, key) => {
-            const keys = key.split('.');
+        // 1. Structure the data from form fields
+        for (const element of form.elements) {
+            if (!element.name || element.type === 'file') continue;
+            const keys = element.name.split('.');
             let current = assetData;
             keys.forEach((k, i) => {
                 if (i === keys.length - 1) {
-                    current[k] = value === '' ? null : value;
+                    current[k] = element.value === '' ? null : element.value;
                 } else {
                     current[k] = current[k] || {};
                     current = current[k];
                 }
             });
-        });
+        }
 
-        // Manually gather specifications
-        assetData.specifications = [];
+        // 2. Manually gather specifications
         const specRows = specificationsContainer.querySelectorAll('.spec-row');
-        specRows.forEach(row => {
-            const key = row.querySelector('.spec-key').value.trim();
-            const value = row.querySelector('.spec-value').value.trim();
-            if (key) {
-                assetData.specifications.push({ key, value });
+        assetData.specifications = Array.from(specRows).map(row => ({
+            key: row.querySelector('.spec-key').value.trim(),
+            value: row.querySelector('.spec-value').value.trim()
+        })).filter(spec => spec.key);
+
+        // 3. Stringify nested objects and append to FormData
+        Object.keys(assetData).forEach(key => {
+            if (typeof assetData[key] === 'object' && assetData[key] !== null) {
+                formData.append(key, JSON.stringify(assetData[key]));
+            } else if (assetData[key] !== null && assetData[key] !== undefined) {
+                formData.append(key, assetData[key]);
             }
         });
+
+        // 4. Append new files and their titles
+        const attachmentTitles = [];
+        const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
+        newAttachmentRows.forEach(row => {
+            const fileInput = row.querySelector('.new-attachment-file');
+            const titleInput = row.querySelector('.new-attachment-title');
+            if (fileInput.files.length > 0) {
+                formData.append('attachments', fileInput.files[0]);
+                attachmentTitles.push(titleInput.value.trim() || fileInput.files[0].name);
+            }
+        });
+        if (formData.has('attachments')) {
+            formData.append('attachmentTitles', JSON.stringify(attachmentTitles));
+        }
 
         try {
             const endpoint = isEditMode ? `${API_ENDPOINT}/${assetId}` : API_ENDPOINT;
             const method = isEditMode ? 'PUT' : 'POST';
-            await fetchWithAuth(endpoint, { method, body: assetData });
+            await fetchWithAuth(endpoint, { method, body: formData });
             showToast(`Asset ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
             setTimeout(() => window.location.href = './asset-registry.html', 1500);
         } catch (error) {
@@ -255,6 +318,24 @@ function initializeForm() {
             submitButton.disabled = false;
             submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
             lucide.createIcons();
+        }
+    }
+
+    async function handleAttachmentDelete(e) {
+        const deleteButton = e.target.closest('.remove-attachment-btn');
+        if (!deleteButton) return;
+
+        const attachmentKey = deleteButton.dataset.key;
+        if (!assetId || !attachmentKey) return;
+
+        if (confirm('Are you sure you want to permanently delete this file?')) {
+            try {
+                await fetchWithAuth(`${API_ENDPOINT}/${assetId}/attachments/${encodeURIComponent(attachmentKey)}`, { method: 'DELETE' });
+                showToast('Attachment deleted successfully.', 'success');
+                loadAssetForEditing(); // Reload the form to show the updated list
+            } catch (error) {
+                showToast(`Error deleting attachment: ${error.message}`, 'error');
+            }
         }
     }
 
@@ -282,6 +363,15 @@ function initializeForm() {
             e.target.closest('.spec-row').remove();
         }
     });
+
+    addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
+    newAttachmentsContainer.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove-new-attachment-btn');
+        if (removeBtn) {
+            removeBtn.closest('.new-attachment-row').remove();
+        }
+    });
+    existingAttachmentsList.addEventListener('click', handleAttachmentDelete);
 
     detailsTab.addEventListener('click', () => {
         detailsTab.classList.add('tab-active');
