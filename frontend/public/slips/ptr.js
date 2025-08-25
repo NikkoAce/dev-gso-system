@@ -63,10 +63,10 @@ function initializePtrPage(currentUser) {
         ptrContainer.innerHTML = `
             <div class="text-center mb-4">
                 <h2 class="text-xl font-bold">PROPERTY TRANSFER REPORT</h2>
-            </div>` + (ptrNumber ? `<div class="text-center mb-4 text-sm font-bold">PTR No: ${ptrNumber}</div>` : '') + `
+            </div>
             <div class="text-sm mb-4">
                 <p><strong>Entity Name:</strong> LGU of Daet</p>
-                <p><strong>PTR No.:</strong> <span class="font-semibold">PTR-${new Date(date).getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}</span></p>
+                <p><strong>PTR No.:</strong> <span class="font-semibold">${ptrNumber || 'Pending...'}</span></p>
             </div>
             <div class="grid grid-cols-2 gap-4 text-sm mb-4 border-t border-b border-black py-2">
                 <div>
@@ -98,7 +98,7 @@ function initializePtrPage(currentUser) {
                     </tr>
                 </thead>
                 <tbody>
-                    
+                    ${assetRows}
                 </tbody>
             </table>
 

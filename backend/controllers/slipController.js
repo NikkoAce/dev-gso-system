@@ -28,33 +28,36 @@ const getSlips = asyncHandler(async (req, res) => {
 const getSlipById = asyncHandler(async (req, res) => {
     const slipId = req.params.id;
 
-    // Query both collections in parallel for better performance
-    const [parSlip, icsSlip] = await Promise.all([
+    // Query all three collections in parallel for better performance
+    const [parSlip, icsSlip, ptrSlip] = await Promise.all([
         PAR.findById(slipId).populate('assets').lean(),
-        ICS.findById(slipId).populate('assets').lean()
+        ICS.findById(slipId).populate('assets').lean(),
+        PTR.findById(slipId).lean() // PTR assets are embedded, no need to populate
     ]);
 
     let slipData = null;
     let slipType = null;
     let slipNumber = null;
 
-    if (parSlip) {
+    if (parSlip) { // Found in PAR
         slipData = parSlip;
         slipType = 'PAR';
         slipNumber = parSlip.parNumber;
-    } else if (icsSlip) {
+    } else if (icsSlip) { // Found in ICS
         slipData = icsSlip;
         slipType = 'ICS';
         slipNumber = icsSlip.icsNumber;
+    } else if (ptrSlip) { // Found in PTR
+        slipData = ptrSlip;
+        slipType = 'PTR';
+        slipNumber = ptrSlip.ptrNumber;
     }
 
-    // If no slip was found in either collection
     if (!slipData) {
         res.status(404);
         throw new Error('Slip not found');
     }
 
-    // No user authorization check needed as this is an admin-only route.
     res.status(200).json({ ...slipData, slipType, number: slipNumber });
 });
 
