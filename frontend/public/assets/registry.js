@@ -59,6 +59,7 @@ function initializeRegistryPage(currentUser) {
         transferCustodianSelect: document.getElementById('transfer-modal-custodian-select'),
         confirmTransferBtn: document.getElementById('confirm-transfer-modal-btn'),
         cancelTransferBtn: document.getElementById('cancel-transfer-modal-btn'),
+        transferModalDate: document.getElementById('transfer-modal-date'),
         bulkTransferAssetListContainer: document.getElementById('bulk-transfer-asset-list-container'),
     };
 
@@ -110,6 +111,9 @@ function initializeRegistryPage(currentUser) {
         DOM.transferCustodianSelect.innerHTML = '<option value="">Select new custodian...</option>' +
             state.allEmployees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
         DOM.transferCustodianSelect.disabled = false;
+
+        // Set today's date as the default for the transfer
+        DOM.transferModalDate.value = new Date().toISOString().split('T')[0];
         DOM.transferModal.showModal();
     }
 
@@ -278,19 +282,20 @@ function initializeRegistryPage(currentUser) {
             try {
                 const newOffice = DOM.transferOfficeSelect.value;
                 const newCustodianName = DOM.transferCustodianSelect.value;
+                const transferDate = DOM.transferModalDate.value;
 
-                if (!newOffice || !newCustodianName) {
-                    throw new Error('Please select a new office and custodian.');
+                if (!newOffice || !newCustodianName || !transferDate) {
+                    throw new Error('Please select a new office, custodian, and transfer date.');
                 }
 
                 const selectedEmployee = state.allEmployees.find(emp => emp.name === newCustodianName);
                 const newCustodian = { name: newCustodianName, designation: selectedEmployee?.designation || '', office: newOffice };
                 const user = { name: currentUser.name, office: currentUser.office };
-                // --- UNIFIED TRANSFER LOGIC (for both single and bulk) ---
                 const payload = {
                     assetIds: state.assetsToTransfer.map(a => a._id),
                     newOffice,
                     newCustodian,
+                    transferDate,
                     user
                 };
 

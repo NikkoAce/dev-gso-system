@@ -526,13 +526,16 @@ const updateScanResults = async (req, res) => {
 };
 
 const bulkTransferAssets = async (req, res) => {
-    const { assetIds, newOffice, newCustodian } = req.body;
+    const { assetIds, newOffice, newCustodian, transferDate } = req.body;
 
     if (!assetIds || !Array.isArray(assetIds) || assetIds.length === 0) {
         return res.status(400).json({ message: 'Asset IDs must be provided as an array.' });
     }
     if (!newOffice || !newCustodian || !newCustodian.name) {
         return res.status(400).json({ message: 'New office and custodian are required.' });
+    }
+    if (!transferDate) {
+        return res.status(400).json({ message: 'Transfer date is required.' });
     }
 
     const session = await mongoose.startSession();
@@ -559,7 +562,7 @@ const bulkTransferAssets = async (req, res) => {
         const transferDetails = {
             from: fromCustodian,
             to: { name: newCustodian.name, designation: newCustodian.designation || '', office: newOffice },
-            date: new Date(),
+            date: new Date(transferDate),
             assets: []
         };
 
