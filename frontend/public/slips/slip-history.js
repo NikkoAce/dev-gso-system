@@ -30,17 +30,28 @@ function initializeSlipHistoryPage(currentUser) {
     const searchInput = document.getElementById('slip-search-input');
     const paginationControls = document.getElementById('pagination-controls');
     const slipDetailsModal = document.getElementById('slip-details-modal');
+    const modalCustodianRow = document.getElementById('modal-custodian-row');
+    const modalFromToRow = document.getElementById('modal-from-to-row');
+    const modalTransferDateRow = document.getElementById('modal-transfer-date-row');
     const tableBody = document.getElementById('slip-history-table-body');
 
     // --- UTILITY FUNCTIONS ---
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
+    const formatDateTime = (dateString) => dateString ? new Date(dateString).toLocaleString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
 
     // --- RENDERING ---
     function renderSlipTable(slips, pagination) {
         tableBody.innerHTML = '';
         if (slips.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No slips found for the selected criteria.</td></tr>`;
+            // Ensure pagination controls are cleared if no slips are found
+            renderPagination(paginationControls, {
+                currentPage: 1,
+                totalPages: 0,
+                totalDocs: 0,
+                itemsPerPage
+            });
             renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
             return;
         }
@@ -48,14 +59,22 @@ function initializeSlipHistoryPage(currentUser) {
         let rowsHTML = '';
         slips.forEach(slip => {
             let custodianDisplay = '';
-            if (slip.custodian) {
+            if (slip.slipType === 'PTR') {
+                custodianDisplay = `
+                    <div class="font-medium text-gray-900">From: ${slip.from.name}</div>
+                    <div class="font-medium text-gray-900">To: ${slip.to.name}</div>
+                    <div class="text-gray-500 text-xs">${slip.from.office} &rarr; ${slip.to.office}</div>
+                `;
+            } else if (slip.custodian) {
                 custodianDisplay = `
                     <div class="font-medium text-gray-900">${slip.custodian.name}</div>
                     <div class="text-gray-500 text-xs">${slip.custodian.office}</div>
                 `;
             }
             
-            const typeBadgeClass = slip.slipType === 'PAR' ? 'badge-success' : 'badge-info';
+            const typeBadgeClass = slip.slipType === 'PAR' ? 'badge-success' :
+                                   slip.slipType === 'ICS' ? 'badge-info' :
+                                   'badge-warning'; // For PTR
 
             rowsHTML += `
                 <tr>
@@ -87,7 +106,8 @@ function initializeSlipHistoryPage(currentUser) {
         const filteredSlips = allSlips.filter(slip => {
             const typeMatch = type === 'all' || slip.slipType === type;
             const searchMatch = !searchTerm ||
-                slip.number.toLowerCase().includes(searchTerm) ||
+                (slip.number && slip.number.toLowerCase().includes(searchTerm)) ||
+                (slip.ptrNumber && slip.ptrNumber.toLowerCase().includes(searchTerm)) || // For PTRs
                 (slip.custodian && slip.custodian.name.toLowerCase().includes(searchTerm));
             return typeMatch && searchMatch;
         });
@@ -197,6 +217,9 @@ function initializeSlipHistoryPage(currentUser) {
             } else if (slipType === 'ICS') {
                 localStorage.setItem('icsToReprint', JSON.stringify(slipToReprint));
                 window.location.href = './ics-page.html';
+            } else if (slipType === 'PTR') {
+                localStorage.setItem('ptrToReprint', JSON.stringify(slipToReprint));
+                window.location.href = './ptr.html'; // Navigate to the PTR page
             }
         }
     });

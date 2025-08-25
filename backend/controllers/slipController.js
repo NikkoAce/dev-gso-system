@@ -1,16 +1,19 @@
 const asyncHandler = require('express-async-handler');
 const PAR = require('../models/PAR');
 const ICS = require('../models/ICS');
+const PTR = require('../models/PTR');
 
 const getSlips = asyncHandler(async (req, res) => {
     // Since this is an admin-only page, we fetch all slips.
     const pars = await PAR.find({}).populate('assets').lean();
     const ics = await ICS.find({}).populate('assets').lean();
+    const ptrs = await PTR.find({}).lean();
 
     const formattedPars = pars.map(p => ({ ...p, slipType: 'PAR', number: p.parNumber }));
     const formattedIcs = ics.map(i => ({ ...i, slipType: 'ICS', number: i.icsNumber }));
+    const formattedPtrs = ptrs.map(ptr => ({ ...ptr, slipType: 'PTR', number: ptr.ptrNumber, custodian: {name: ptr.from.name, office: ptr.from.office}}));
 
-    const allSlips = [...formattedPars, ...formattedIcs];
+    const allSlips = [...formattedPars, ...formattedIcs, ...formattedPtrs];
 
     allSlips.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 

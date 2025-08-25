@@ -2,6 +2,7 @@ const Asset = require('../models/Asset');
 const Employee = require('../models/Employee');
 const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
+const PTR = require('../models/PTR'); // Import the new PTR model
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
 const { Readable } = require('stream');
 
@@ -569,6 +570,17 @@ const bulkTransferAssets = async (req, res) => {
 
             transferDetails.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
         }
+
+        // Save the PTR to the database
+        const newPTR = new PTR({
+            ptrNumber: `PTR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, // Generate a simple PTR number
+            from: transferDetails.from,
+            to: transferDetails.to,
+            assets: transferDetails.assets,
+            date: transferDetails.date,
+            user: req.user.name // User who performed the transfer
+        });
+        await newPTR.save({ session });
 
         await session.commitTransaction();
         session.endSession();

@@ -19,15 +19,25 @@ function initializePtrPage(currentUser) {
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
 
+    // Check for reprint data first, then for new transfer data
     function renderPTR() {
+        let ptrData = null;
+        const reprintDataString = localStorage.getItem('ptrToReprint');
         const transferDataString = localStorage.getItem('transferData');
-        if (!transferDataString) {
+
+        if (reprintDataString) {
+            ptrData = JSON.parse(reprintDataString);
+            localStorage.removeItem('ptrToReprint'); // Clean up after use
+        } else if (transferDataString) {
+            ptrData = JSON.parse(transferDataString);
+            localStorage.removeItem('transferData'); // Clean up after use
+        }
+
+        if (!ptrData) {
             ptrContainer.innerHTML = `<p class="text-center text-red-500">No transfer data found. Please initiate a transfer from the Asset Registry.</p>`;
             return;
         }
-
-        const transferData = JSON.parse(transferDataString);
-        const { from, to, assets, date } = transferData;
+        const { from, to, assets, date, ptrNumber } = ptrData;
 
         let assetRows = '';
         let totalAmount = 0;
@@ -53,7 +63,7 @@ function initializePtrPage(currentUser) {
         ptrContainer.innerHTML = `
             <div class="text-center mb-4">
                 <h2 class="text-xl font-bold">PROPERTY TRANSFER REPORT</h2>
-            </div>
+            </div>` + (ptrNumber ? `<div class="text-center mb-4 text-sm font-bold">PTR No: ${ptrNumber}</div>` : '') + `
             <div class="text-sm mb-4">
                 <p><strong>Entity Name:</strong> LGU of Daet</p>
                 <p><strong>PTR No.:</strong> <span class="font-semibold">PTR-${new Date(date).getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}</span></p>

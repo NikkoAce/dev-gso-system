@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getSlips, getSlipById } = require('../controllers/slipController.js');
+const { getSlips, getSlipById } = require('../controllers/slipController');
 const { protect, gso } = require('../middlewares/authMiddleware.js');
 
 router.route('/').get(protect, gso, getSlips);

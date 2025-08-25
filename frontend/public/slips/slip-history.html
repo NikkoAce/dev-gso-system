@@ -59,6 +59,7 @@
                                     <select id="slip-type-filter" class="select select-bordered font-normal">
                                         <option value="">All Slips</option>
                                         <option value="PAR">PAR Only</option>
+                                        <option value="PTR">PTR Only</option>
                                         <option value="ICS">ICS Only</option>
                                     </select>
                                 </div>
@@ -72,7 +73,7 @@
                                     <tr>
                                         <th class="px-6 py-3">Slip Number</th>
                                         <th class="px-6 py-3">Type</th>
-                                        <th class="px-6 py-3">Custodian</th>
+                                        <th class="px-6 py-3">Custodian / From-To</th>
                                         <th class="px-6 py-3">No. of Items</th>
                                         <th class="px-6 py-3">Issued Date</th>
                                         <th class="px-6 py-3 text-center non-printable">Actions</th>
@@ -97,10 +98,12 @@
         <div class="modal-box w-11/12 max-w-4xl">
             <h3 id="modal-title" class="font-bold text-lg">Slip Details</h3>
             <div class="p-6 overflow-y-auto">
-                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                <div class="grid grid-cols-2 gap-4 mb-4 text-sm" id="modal-slip-details-grid">
                     <div><strong>Slip Number:</strong> <span id="modal-slip-number"></span></div>
-                    <div><strong>Custodian:</strong> <span id="modal-slip-custodian"></span></div>
+                    <div id="modal-custodian-row"><strong>Custodian:</strong> <span id="modal-slip-custodian"></span></div>
+                    <div id="modal-from-to-row" class="hidden"><strong>From:</strong> <span id="modal-slip-from"></span><br><strong>To:</strong> <span id="modal-slip-to"></span></div>
                     <div><strong>Issued Date:</strong> <span id="modal-slip-issued"></span></div>
+                    <div id="modal-transfer-date-row" class="hidden"><strong>Transfer Date:</strong> <span id="modal-slip-transfer-date"></span></div>
                     <div><strong>Received Date:</strong> <span id="modal-slip-received"></span></div>
                 </div>
                 <h3 class="font-bold text-lg mb-2">Assigned Assets</h3>
