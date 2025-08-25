@@ -11,7 +11,7 @@ const getSlips = asyncHandler(async (req, res) => {
 
     const formattedPars = pars.map(p => ({ ...p, slipType: 'PAR', number: p.parNumber }));
     const formattedIcs = ics.map(i => ({ ...i, slipType: 'ICS', number: i.icsNumber }));
-    const formattedPtrs = ptrs.map(ptr => ({ ...ptr, slipType: 'PTR', number: ptr.ptrNumber }));
+    const formattedPtrs = ptrs.map(ptr => ({ ...ptr, slipType: 'PTR', number: ptr.ptrNumber, issuedDate: ptr.date }));
 
     const allSlips = [...formattedPars, ...formattedIcs, ...formattedPtrs];
 

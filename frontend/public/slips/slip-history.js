@@ -144,11 +144,33 @@ function initializeSlipHistoryPage(currentUser) {
 
     async function showSlipDetails(slipId) {
         const slip = await fetchWithAuth(`slips/${slipId}`);
+        
+        // Populate common fields
         document.getElementById('modal-title').textContent = `${slip.slipType} Details`;
         document.getElementById('modal-slip-number').textContent = slip.number;
-        document.getElementById('modal-slip-custodian').textContent = slip.custodian.name;
-        document.getElementById('modal-slip-issued').textContent = formatDate(slip.issuedDate);
-        document.getElementById('modal-slip-received').textContent = formatDate(slip.receivedDate);
+
+        // Toggle visibility and populate based on slip type
+        if (slip.slipType === 'PTR') {
+            modalCustodianRow.classList.add('hidden');
+            modalFromToRow.classList.remove('hidden');
+            modalTransferDateRow.classList.remove('hidden');
+            document.querySelector('#modal-slip-issued').parentElement.classList.add('hidden');
+            document.querySelector('#modal-slip-received').parentElement.classList.add('hidden');
+
+            document.getElementById('modal-slip-from').textContent = `${slip.from.name} (${slip.from.office})`;
+            document.getElementById('modal-slip-to').textContent = `${slip.to.name} (${slip.to.office})`;
+            document.getElementById('modal-slip-transfer-date').textContent = formatDate(slip.date);
+        } else {
+            modalCustodianRow.classList.remove('hidden');
+            modalFromToRow.classList.add('hidden');
+            modalTransferDateRow.classList.add('hidden');
+            document.querySelector('#modal-slip-issued').parentElement.classList.remove('hidden');
+            document.querySelector('#modal-slip-received').parentElement.classList.remove('hidden');
+
+            document.getElementById('modal-slip-custodian').textContent = slip.custodian.name;
+            document.getElementById('modal-slip-issued').textContent = formatDate(slip.issuedDate);
+            document.getElementById('modal-slip-received').textContent = formatDate(slip.receivedDate);
+        }
 
         const assetsTableBody = document.getElementById('modal-slip-assets-table');
         assetsTableBody.innerHTML = '';
