@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const ImmovableAsset = require('../models/immovableAsset');
-const { uploadToS3, s3, DeleteObjectCommand } = require('../middlewares/uploadMiddleware.js');
+const { uploadToS3, s3, DeleteObjectCommand } = require('../lib/s3.js');
 
 /**
  * Helper function to compare fields and generate history logs for immovable assets.
