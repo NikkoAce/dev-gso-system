@@ -223,9 +223,14 @@ export function createUIManager() {
         }
 
         // --- Transfer Button Logic ---
-        const firstCustodian = selectedAssets[0].custodian;
-        const allHaveSameCustodian = selectedAssets.every(asset =>
-            asset.custodian.name === firstCustodian.name && asset.custodian.office === firstCustodian.office
+        const firstAsset = selectedAssets[0];
+        const firstCustodian = firstAsset.custodian;
+
+        // Check if all selected assets have the same, non-null custodian.
+        const allHaveSameCustodian = firstCustodian && selectedAssets.every(asset =>
+            asset.custodian &&
+            asset.custodian.name === firstCustodian.name &&
+            asset.custodian.office === firstCustodian.office
         );
 
         transferSelectedBtn.classList.remove('hidden');
