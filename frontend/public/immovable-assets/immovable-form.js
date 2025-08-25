@@ -23,7 +23,6 @@ function initializeForm() {
     // --- STATE ---
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
-    let selectedFiles = []; // To hold the FileList object for new uploads
     const isEditMode = !!assetId;
 
     // --- DOM ELEMENTS ---
@@ -39,7 +38,7 @@ function initializeForm() {
     const detailsPanel = document.getElementById('details-panel');
     const historyPanel = document.getElementById('history-panel');
     const historyContainer = document.getElementById('history-container');
-    const attachmentsInput = document.getElementById('attachments-input');
+    const addAttachmentBtn = document.getElementById('add-attachment-btn');
     const newAttachmentsContainer = document.getElementById('new-attachments-container');
     const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
@@ -105,26 +104,16 @@ function initializeForm() {
         lucide.createIcons();
     }
 
-    function handleFileSelection(event) {
-        selectedFiles = Array.from(event.target.files); // Store files
-        newAttachmentsContainer.innerHTML = ''; // Clear previous selections
-
-        if (selectedFiles.length > 0) {
-            const header = document.createElement('h3');
-            header.className = 'font-semibold text-sm mt-4';
-            header.textContent = 'New files to upload:';
-            newAttachmentsContainer.appendChild(header);
-        }
-
-        selectedFiles.forEach((file) => {
-            const fileRow = document.createElement('div');
-            fileRow.className = 'grid grid-cols-[1fr_2fr] gap-2 items-center';
-            fileRow.innerHTML = `
-                <p class="text-sm truncate" title="${file.name}">${file.name}</p>
-                <input type="text" placeholder="Document Title (e.g., Land Title)" class="input input-bordered input-sm new-attachment-title" value="">
-            `;
-            newAttachmentsContainer.appendChild(fileRow);
-        });
+    function renderNewAttachmentRow() {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-[1fr_1fr_auto] gap-2 items-center new-attachment-row';
+        div.innerHTML = `
+            <input type="file" class="file-input file-input-bordered file-input-sm new-attachment-file" required>
+            <input type="text" placeholder="Document Title (required)" class="input input-bordered input-sm new-attachment-title" required>
+            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-new-attachment-btn" title="Remove this attachment"><i data-lucide="x" class="h-4 w-4"></i></button>
+        `;
+        newAttachmentsContainer.appendChild(div);
+        lucide.createIcons();
     }
 
     function renderAttachments(attachments = []) {
@@ -268,14 +257,20 @@ function initializeForm() {
 
         // Append new files and their titles
         const attachmentTitles = [];
-        const titleInputs = newAttachmentsContainer.querySelectorAll('.new-attachment-title');
-        titleInputs.forEach(input => {
-            attachmentTitles.push(input.value.trim());
+        const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
+        
+        newAttachmentRows.forEach(row => {
+            const fileInput = row.querySelector('.new-attachment-file');
+            const titleInput = row.querySelector('.new-attachment-title');
+            if (fileInput.files.length > 0) {
+                formData.append('attachments', fileInput.files[0]);
+                // Push the corresponding title. Use filename as a fallback.
+                attachmentTitles.push(titleInput.value.trim() || fileInput.files[0].name);
+            }
         });
-        if (selectedFiles.length > 0) {
-            selectedFiles.forEach(file => {
-                formData.append('attachments', file);
-            });
+
+        // Only append the titles array if at least one file was appended.
+        if (formData.has('attachments')) {
             formData.append('attachmentTitles', JSON.stringify(attachmentTitles));
         }
 
@@ -319,10 +314,17 @@ function initializeForm() {
         toggleTypeSpecificFields(typeSelect.value); // Show default section
     }
 
-    attachmentsInput.addEventListener('change', handleFileSelection);
+    addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
     typeSelect.addEventListener('change', (e) => toggleTypeSpecificFields(e.target.value));
     addComponentBtn.addEventListener('click', () => {
         renderComponent();
+    });
+
+    newAttachmentsContainer.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove-new-attachment-btn');
+        if (removeBtn) {
+            removeBtn.closest('.new-attachment-row').remove();
+        }
     });
 
     componentsContainer.addEventListener('click', (e) => {
