@@ -539,6 +539,7 @@ const bulkTransferAssets = async (req, res) => {
     session.startTransaction();
 
     try {
+        // Step 1: Fetch assets and validate the transfer request
         const assetsToTransfer = await Asset.find({ '_id': { $in: assetIds } }).session(session);
         if (assetsToTransfer.length !== assetIds.length) {
             throw new Error('One or more assets not found.');
@@ -546,7 +547,7 @@ const bulkTransferAssets = async (req, res) => {
 
         // All assets must have the same "from" custodian for a single PTR
         const fromCustodian = assetsToTransfer[0].custodian;
-        for (const asset of assetsToTransfer) {
+        for (const asset of assetsToTransfer) { // This loop is just for validation
             if (asset.custodian.name !== fromCustodian.name || asset.custodian.office !== fromCustodian.office) {
                 throw new Error('All selected assets must have the same current custodian and office to be transferred together.');
             }
@@ -554,22 +555,10 @@ const bulkTransferAssets = async (req, res) => {
 
         const transferDetails = {
             from: fromCustodian,
-            to: { name: newCustodian.name, designation: newCustodian.designation || '', office: newOffice },
+            to: { name: newCustodian.name, designation: newCustodian.designation || 'N/A', office: newOffice },
             date: new Date(),
             assets: []
         };
-
-        for (const asset of assetsToTransfer) {
-            const oldCustodianName = asset.custodian.name;
-            const oldOffice = asset.office;
-
-            asset.office = newOffice;
-            asset.custodian = { name: newCustodian.name, designation: newCustodian.designation || '', office: newOffice };
-            asset.history.push({ event: 'Transfer', details: `Transferred from ${oldCustodianName} (${oldOffice}) to ${newCustodian.name} (${newOffice}).`, from: `${oldCustodianName} (${oldOffice})`, to: `${newCustodian.name} (${newOffice})`, user: req.user ? req.user.name : 'System' });
-            await asset.save({ session });
-
-            transferDetails.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
-        }
 
         /**
          * Generates the next sequential PTR number for the current year.
@@ -593,7 +582,28 @@ const bulkTransferAssets = async (req, res) => {
             return `PTR-${year}-${String(sequence).padStart(4, '0')}`;
         }
 
-        // Create and save the PTR to the database
+        // Step 2: Update all assets in a single operation
+        const historyEntry = {
+            event: 'Transfer',
+            details: `Transferred from ${fromCustodian.name} (${fromCustodian.office}) to ${newCustodian.name} (${newOffice}).`,
+            from: `${fromCustodian.name} (${fromCustodian.office})`,
+            to: `${newCustodian.name} (${newOffice})`,
+            user: req.user ? req.user.name : 'System'
+        };
+
+        const assetUpdateResult = await Asset.updateMany(
+            { '_id': { $in: assetIds } },
+            {
+                $set: { office: newOffice, custodian: transferDetails.to },
+                $push: { history: historyEntry }
+            }
+        ).session(session);
+
+        if (assetUpdateResult.modifiedCount !== assetIds.length) {
+            throw new Error(`Failed to update all assets. Expected ${assetIds.length} updates, but got ${assetUpdateResult.modifiedCount}.`);
+        }
+
+        // Step 3: Create and save the PTR document
         const newPTR = new PTR({
             ptrNumber: await getNextPtrNumber(session), // Use the newly generated sequential number
             from: transferDetails.from,
@@ -602,18 +612,22 @@ const bulkTransferAssets = async (req, res) => {
             date: transferDetails.date,
             user: req.user.name // User who performed the transfer
         });
+        // Populate the assets for the PTR details
+        assetsToTransfer.forEach(asset => {
+            newPTR.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
+        });
         const savedPTR = await newPTR.save({ session });
 
+        // Step 4: If all operations were successful, commit the transaction
         await session.commitTransaction();
-        session.endSession();
-        // Add the actual ptrNumber from the saved document to the response
-        transferDetails.ptrNumber = savedPTR.ptrNumber;
-        res.status(200).json({ message: 'Assets transferred successfully.', transferDetails });
+        
+        res.status(200).json({ message: 'Assets transferred successfully.', transferDetails: { ...transferDetails, assets: newPTR.assets, ptrNumber: savedPTR.ptrNumber } });
     } catch (error) {
         await session.abortTransaction();
-        session.endSession();
         console.error('Bulk transfer error:', error);
         res.status(500).json({ message: 'Server error during bulk transfer.', error: error.message });
+    } finally {
+        session.endSession();
     }
 };
 
