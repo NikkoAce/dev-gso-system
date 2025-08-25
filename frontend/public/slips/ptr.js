@@ -29,9 +29,8 @@ function initializePtrPage(currentUser) {
             ptrData = JSON.parse(reprintDataString);
             localStorage.removeItem('ptrToReprint'); // Clean up after use
         } else if (transferDataString) {
-            // The data from a new transfer is nested inside the 'transferDetails' property
-            const responseData = JSON.parse(transferDataString);
-            ptrData = responseData.transferDetails;
+            // The data from a new transfer is the transferDetails object itself.
+            ptrData = JSON.parse(transferDataString);
             localStorage.removeItem('transferData'); // Clean up after use
         }
 

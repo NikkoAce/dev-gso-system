@@ -211,8 +211,8 @@ export function createUIManager() {
      * @param {object} domElements - The DOM elements for the buttons.
      */
     function updateSlipButtonVisibility(selectedAssets, domElements) {
-        const { generateParBtn, generateIcsBtn, transferSelectedBtn } = domElements;
-        const selectionCount = selectedAssets.length;
+        const { generateParBtn, generateIcsBtn, transferSelectedBtn, transferTooltipWrapper } = domElements;
+        const selectionCount = selectedAssets.length; // selectedAssets now contains full asset objects
 
         // If nothing is selected, hide all buttons
         if (selectionCount === 0) {
@@ -222,12 +222,26 @@ export function createUIManager() {
             return;
         }
 
-        // Transfer button is always visible when there's a selection
+        // --- Transfer Button Logic ---
+        const firstCustodian = selectedAssets[0].custodian;
+        const allHaveSameCustodian = selectedAssets.every(asset =>
+            asset.custodian.name === firstCustodian.name && asset.custodian.office === firstCustodian.office
+        );
+
         transferSelectedBtn.classList.remove('hidden');
+        if (allHaveSameCustodian) {
+            transferTooltipWrapper.classList.remove('tooltip');
+            transferTooltipWrapper.removeAttribute('data-tip');
+            transferSelectedBtn.disabled = false;
+        } else {
+            transferTooltipWrapper.classList.add('tooltip');
+            transferTooltipWrapper.dataset.tip = 'Select assets with the same custodian to transfer.';
+            transferSelectedBtn.disabled = true;
+        }
 
         const PAR_THRESHOLD = 50000;
-        const allAreForPAR = selectedAssets.every(asset => asset.cost >= PAR_THRESHOLD);
-        const allAreForICS = selectedAssets.every(asset => asset.cost < PAR_THRESHOLD);
+        const allAreForPAR = selectedAssets.every(asset => asset.acquisitionCost >= PAR_THRESHOLD);
+        const allAreForICS = selectedAssets.every(asset => asset.acquisitionCost < PAR_THRESHOLD);
 
         // Show PAR button only if ALL selected items are eligible for PAR
         generateParBtn.classList.toggle('hidden', !allAreForPAR);
