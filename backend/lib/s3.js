@@ -1,4 +1,5 @@
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 // Configure the S3 client
 const s3 = new S3Client({
@@ -24,12 +25,24 @@ const uploadToS3 = async (file, assetId, title) => {
     await s3.send(command);
 
     return {
-        key: key,
-        url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+        key: key, // Only store the key in DB
         title: title || file.originalname, // Use provided title or fallback to original name
         originalName: file.originalname,
         mimeType: file.mimetype,
     };
 };
 
-module.exports = { uploadToS3, s3, DeleteObjectCommand };
+// Helper function to generate a pre-signed URL for a private S3 object
+const generatePresignedUrl = async (key, expiresIn = 3600) => { // expiresIn in seconds (default 1 hour)
+    const command = new GetObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key,
+    });
+    return getSignedUrl(s3, command, { expiresIn });
+};
+
+module.exports = {
+    uploadToS3,
+    generatePresignedUrl, // Export the new function
+    s3, DeleteObjectCommand
+};

@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const ImmovableAsset = require('../models/immovableAsset');
-const { uploadToS3, s3, DeleteObjectCommand } = require('../lib/s3.js');
+const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
 
 /**
  * Helper function to compare fields and generate history logs for immovable assets.
@@ -186,7 +186,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
         const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
-        const uploadPromises = req.files.map((file, index) => uploadToS3(file, createdAsset._id, attachmentTitles[index]));
+        const uploadPromises = req.files.map((file, index) => uploadToS3(file, createdAsset._id, attachmentTitles[index] || file.originalname));
         const uploadedAttachments = await Promise.all(uploadPromises);
         createdAsset.attachments.push(...uploadedAttachments);
         createdAsset.history.push({ event: 'Updated', details: `${uploadedAttachments.length} file(s) attached.`, user: req.user.name });
@@ -198,7 +198,14 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
 
 const getImmovableAssetById = asyncHandler(async (req, res) => {
     const asset = await ImmovableAsset.findById(req.params.id);
-    if (asset) {
+    if (asset) { // Generate pre-signed URLs for attachments before sending
+        const attachmentsWithSignedUrls = await Promise.all(
+            asset.attachments.map(async (att) => ({
+                ...att.toObject(), // Convert Mongoose subdocument to plain object
+                url: await generatePresignedUrl(att.key)
+            }))
+        );
+        asset.attachments = attachmentsWithSignedUrls; // Replace with objects containing signed URLs
         res.json(asset);
     } else {
         res.status(404);
@@ -233,7 +240,7 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
         const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
-        const uploadPromises = req.files.map((file, index) => uploadToS3(file, asset._id, attachmentTitles[index]));
+        const uploadPromises = req.files.map((file, index) => uploadToS3(file, asset._id, attachmentTitles[index] || file.originalname));
         const newAttachments = await Promise.all(uploadPromises);
         asset.attachments.push(...newAttachments);
         asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
