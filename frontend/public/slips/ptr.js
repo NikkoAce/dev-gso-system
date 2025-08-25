@@ -29,8 +29,10 @@ function initializePtrPage(currentUser) {
             ptrData = JSON.parse(reprintDataString);
             localStorage.removeItem('ptrToReprint'); // Clean up after use
         } else if (transferDataString) {
-            // The data from a new transfer is the transferDetails object itself.
-            ptrData = JSON.parse(transferDataString);
+            const responseData = JSON.parse(transferDataString);
+            // Make it robust: handle cases where the whole response is stored
+            // or just the transferDetails object.
+            ptrData = responseData.transferDetails ? responseData.transferDetails : responseData;
             localStorage.removeItem('transferData'); // Clean up after use
         }
 
