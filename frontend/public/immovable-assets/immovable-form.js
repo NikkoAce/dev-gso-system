@@ -209,7 +209,7 @@ function initializeForm() {
         // 1. Structure the data from form fields
         for (const element of formElements) {
             if (!element.name || element.type === 'file') continue;
-            const keys = key.split('.');
+            const keys = element.name.split('.');
             let current = assetData;
             keys.forEach((k, i) => {
                 if (i === keys.length - 1) {

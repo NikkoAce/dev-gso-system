@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { upload } = require('../middlewares/uploadMiddleware.js');
+const { protect, gso } = require('../middlewares/authMiddleware.js');
 const {
     createImmovableAsset,
     getImmovableAssets,
@@ -7,9 +9,7 @@ const {
     updateImmovableAsset,
     deleteImmovableAsset,
     deleteImmovableAssetAttachment
-} = require('../controllers/immovableAssetController');
-const { protect, gso } = require('../middlewares/authMiddleware.js');
-const { upload } = require('../middlewares/uploadMiddleware.js');
+} = require('../controllers/immovableAssetController.js');
 
 // Apply the 'protect' and 'gso' middleware to all routes in this file.
 router.use(protect, gso);
