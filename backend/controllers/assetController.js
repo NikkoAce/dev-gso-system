@@ -571,9 +571,31 @@ const bulkTransferAssets = async (req, res) => {
             transferDetails.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
         }
 
+        /**
+         * Generates the next sequential PTR number for the current year.
+         * Example: PTR-2024-0001
+         */
+        async function getNextPtrNumber(session) {
+            const year = new Date().getFullYear();
+            const startOfYear = new Date(year, 0, 1);
+        
+            const lastPTR = await PTR.findOne({
+                createdAt: { $gte: startOfYear }
+            }).sort({ createdAt: -1 }).session(session); // Use session for consistency
+        
+            let sequence = 1;
+            if (lastPTR && lastPTR.ptrNumber) {
+                const lastSequence = parseInt(lastPTR.ptrNumber.split('-').pop(), 10);
+                if (!isNaN(lastSequence)) {
+                    sequence = lastSequence + 1;
+                }
+            }
+            return `PTR-${year}-${String(sequence).padStart(4, '0')}`;
+        }
+
         // Create and save the PTR to the database
         const newPTR = new PTR({
-            ptrNumber: `PTR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`, // Generate a simple PTR number
+            ptrNumber: await getNextPtrNumber(session), // Use the newly generated sequential number
             from: transferDetails.from,
             to: transferDetails.to,
             assets: transferDetails.assets,
