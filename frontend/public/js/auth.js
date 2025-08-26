@@ -26,8 +26,8 @@ async function exchangeToken(portalToken) {
         console.error('SSO Token Exchange Error:', error);
         // If exchange fails, clear any potentially bad tokens and redirect to portal
         localStorage.removeItem('gsoAuthToken');
-        window.location.href = PORTAL_LOGIN_URL;
-        // console.error("Redirect to login page has been paused for debugging. Check the network tab for the 'sso-login' request failure.");
+        //window.location.href = PORTAL_LOGIN_URL;
+         console.error("Redirect to login page has been paused for debugging. Check the network tab for the 'sso-login' request failure.");
     }
 }
 
