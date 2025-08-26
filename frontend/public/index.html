@@ -1,12 +1,43 @@
-<!-- FILE: frontend/public/index.html (This is just a redirect now) -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=./dashboard/dashboard.html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSO System - Authenticating...</title>
+    <link href="./css/output.css" rel="stylesheet">
+    <script type="module">
+        // This script acts as the single entry point for the GSO application.
+        // It handles the SSO token and redirects the user to the correct page.
+        import { getCurrentUser } from './js/auth.js';
+
+        (async () => {
+            try {
+                // getCurrentUser now handles the entire SSO flow, including token exchange.
+                const user = await getCurrentUser();
+
+                if (user) {
+                    // User is authenticated, redirect to the correct page based on their role.
+                    // The destination pages will re-authenticate using the token in localStorage.
+                    if (user.role === 'GSO Admin') {
+                        window.location.replace('/dashboard/dashboard.html');
+                    } else {
+                        window.location.replace('/portal/view-assets.html');
+                    }
+                }
+                // If user is null, getCurrentUser() will have already initiated a redirect to the portal login.
+            } catch (error) {
+                // This catch block is a fallback for unexpected errors.
+                console.error("Critical authentication error on entry:", error);
+                // Redirect to the main portal to re-authenticate.
+                window.location.href = 'https://lgu-employee-portal.netlify.app/index.html';
+            }
+        })();
+    </script>
 </head>
-<body>
-    <p>If you are not redirected automatically, follow this <a href="./dashboard/dashboard.html">link to the dashboard</a>.</p>
+<body class="flex items-center justify-center h-screen bg-base-200">
+    <div class="text-center">
+        <span class="loading loading-dots loading-lg text-primary"></span>
+        <p class="text-base-content/70">Authenticating, please wait...</p>
+    </div>
 </body>
 </html>
