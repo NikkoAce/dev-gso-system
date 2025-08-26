@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-function initializeForm() {
+function initializeForm(user) {
     const API_ENDPOINT = 'assets';
     const { showToast } = createUIManager();
 
@@ -445,6 +445,6 @@ function initializeForm() {
     form.addEventListener('submit', handleFormSubmit);
 
     // --- INITIALIZATION ---
-    loadInitialData(user);
+    loadInitialData();
     console.log(`Page initialized for user: ${user.name}`);
 }
