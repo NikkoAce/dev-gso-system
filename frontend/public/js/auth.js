@@ -26,7 +26,8 @@ async function exchangeToken(portalToken) {
         console.error('SSO Token Exchange Error:', error);
         // If exchange fails, clear any potentially bad tokens and redirect to portal
         localStorage.removeItem('gsoAuthToken');
-        window.location.href = PORTAL_LOGIN_URL;
+        // window.location.href = PORTAL_LOGIN_URL; // Temporarily disabled for debugging.
+        console.error("Redirect to login page has been paused for debugging. Check the network tab for the 'sso-login' request failure.");
     }
 }
 
@@ -51,7 +52,8 @@ async function handleSsoLogin() {
     if (!gsoToken) {
         // If no token exists after checking URL and storage, the user is not authenticated.
         // Redirect them back to the central login page.
-        window.location.href = PORTAL_LOGIN_URL;
+        // window.location.href = PORTAL_LOGIN_URL; // Temporarily disabled for debugging.
+        console.error("Redirect to login page paused: No GSO token found after SSO attempt.");
     }
     // If we reach here, the user has a valid GSO token and can view the page.
 }
@@ -91,7 +93,8 @@ export async function getCurrentUser() {
     const payload = parseJwt(token);
     if (!payload || !payload.user) {
         localStorage.removeItem('gsoAuthToken');
-        window.location.href = PORTAL_LOGIN_URL;
+        // window.location.href = PORTAL_LOGIN_URL; // Temporarily disabled for debugging.
+        console.error("Redirect to login page paused: The GSO token is invalid or malformed.");
         throw new Error('Invalid GSO token payload.');
     }
     return payload.user;
