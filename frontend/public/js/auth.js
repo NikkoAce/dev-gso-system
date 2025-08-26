@@ -1,8 +1,13 @@
 // FILE: /_GSO MANAGEMENT SYSTEM dev/frontend/public/js/auth.js
 
 // --- CONFIGURATION ---
-// Use environment variables in a real-world scenario
-const API_BASE_URL = 'https://dev-gso-system.onrender.com';
+const isProduction = window.location.hostname === 'lgudaet-gso-system.netlify.app';
+
+// IMPORTANT: Replace with your actual production backend URL
+const PROD_API_URL = 'https://lgu-gso-system.onrender.com'; // This is a placeholder, please verify.
+const DEV_API_URL = 'https://dev-gso-system.onrender.com';
+
+const API_BASE_URL = isProduction ? PROD_API_URL : DEV_API_URL;
 const PORTAL_LOGIN_URL = 'https://lgu-employee-portal.netlify.app/index.html';
 
 /**
@@ -14,54 +19,64 @@ export function gsoLogout() {
 }
 
 /**
- * Gets the current user. Handles the complete SSO flow.
- * 1. Checks for an existing GSO token in localStorage.
- * 2. If not found, checks for a portal token in the URL.
- * 3. Exchanges the portal token for a GSO token via the backend.
+ * Gets the current user. Handles the complete SSO flow by prioritizing a fresh login from the portal.
+ * 1. Prioritizes portal token from URL for fresh sessions.
+ * 2. Exchanges the portal token for a GSO token via the backend.
+ * 3. Falls back to the GSO token in localStorage if no portal token is present.
  * 4. Stores the GSO token and cleans the URL.
  * 5. Decodes the token to return the user object.
  * 6. Handles token expiration and errors by logging out.
  * @returns {Promise<object|null>} The user object or null if not authenticated.
  */
 export async function getCurrentUser() {
-    let token = localStorage.getItem('gsoAuthToken');
+    const urlParams = new URLSearchParams(window.location.search);
+    const portalToken = urlParams.get('token');
+    let gsoToken;
 
-    // If no GSO token, check for a portal token in the URL to initiate SSO
-    if (!token) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const portalToken = urlParams.get('token');
-
-        if (portalToken) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/sso-login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: portalToken })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'SSO Login Failed');
-                
-                token = data.token; // This is the new GSO token
-                localStorage.setItem('gsoAuthToken', token);
-
-                // Clean the token from the URL to prevent reuse
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } catch (error) {
-                console.error('SSO login failed:', error);
-                gsoLogout(); // Redirect to portal on failure
-                return null;
+    // If a portal token exists in the URL, it's a new login attempt from the portal.
+    // This should always be prioritized to get a fresh GSO session and overwrite any old local token.
+    if (portalToken) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/auth/sso-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: portalToken })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                // Pass the specific error message from the backend
+                throw new Error(data.message || 'SSO Login Failed');
             }
+            
+            gsoToken = data.token; // This is the new GSO token
+            localStorage.setItem('gsoAuthToken', gsoToken);
+
+            // Clean the token from the URL to prevent reuse
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+            // The backend error will be caught here.
+            // We can alert the user with the specific message.
+            alert(`Authentication Error: ${error.message}`);
+            console.error('SSO login failed:', error);
+            gsoLogout(); // Redirect to portal on failure
+            return null;
         }
+    } else {
+        // If no portal token in URL, try to use the one from localStorage.
+        gsoToken = localStorage.getItem('gsoAuthToken');
     }
 
-    if (!token) {
-        // If after all checks, there's still no token, redirect to login.
+    // If after all checks, there's still no token, the user is not authenticated.
+    if (!gsoToken) {
+        console.error("No GSO token available. Redirecting to portal.");
         gsoLogout();
         return null;
     }
 
+    // Now, validate the GSO token we have.
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const payload = JSON.parse(atob(gsoToken.split('.')[1]));
+        // Check for expiration
         if (payload.exp * 1000 < Date.now()) {
             console.log("GSO token expired. Logging out.");
             gsoLogout();
@@ -73,12 +88,4 @@ export async function getCurrentUser() {
         gsoLogout();
         return null;
     }
-}
-
-/**
- * Gets the stored GSO authentication token.
- * @returns {string|null} The token or null if not found.
- */
-export function getGsoToken() {
-    return localStorage.getItem('gsoAuthToken');
 }

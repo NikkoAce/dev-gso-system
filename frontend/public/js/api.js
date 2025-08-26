@@ -1,8 +1,15 @@
 // FILE: frontend/public/js/api.js
 import { getGsoToken } from './auth.js';
 
+// --- CONFIGURATION ---
+const isProduction = window.location.hostname === 'lgudaet-gso-system.netlify.app';
+
+// IMPORTANT: Replace with your actual production backend URL
+const PROD_API_URL = 'https://lgu-gso-system.onrender.com'; // This is a placeholder, please verify.
+const DEV_API_URL = 'https://dev-gso-system.onrender.com';
+
 // Centralized base URL for the API
-export const BASE_URL = 'https://dev-gso-system.onrender.com/api';
+export const BASE_URL = isProduction ? `${PROD_API_URL}/api` : `${DEV_API_URL}/api`;
 
 /**
  * A generic fetch wrapper that includes authentication and improved error handling.
