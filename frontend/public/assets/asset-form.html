@@ -42,8 +42,7 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Core Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control md:col-span-2"><label for="description" class="label"><span class="label-text">Description</span></label><textarea id="description" name="description" class="textarea textarea-bordered" required></textarea></div>
-                                        <div class="form-control">
+                                        <div class="form-control md:col-span-2"><label for="description" class="label"><span class="label-text">Description</span></label><textarea id="description" name="description" class="textarea textarea-bordered" required></textarea></div><div id="property-number-container" class="form-control">
                                             <label for="propertyNumber" class="label"><span class="label-text">Property Number</span></label>
                                             <div class="join w-full">
                                                 <input type="text" id="propertyNumber" name="propertyNumber" class="input input-bordered join-item w-full" required>
@@ -62,6 +61,22 @@
                                         </div>
                                         <div class="form-control"><label for="fundSource" class="label"><span class="label-text">Fund Source</span></label><select id="fundSource" name="fundSource" class="select select-bordered" required><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div>
                                         <div class="form-control md:col-span-2"><label for="status" class="label"><span class="label-text">Status</span></label><select id="status" name="status" class="select select-bordered" required><option>In Use</option><option>In Storage</option><option>For Repair</option><option>Disposed</option></select></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bulk Creation Card -->
+                            <div id="bulk-create-card" class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <div class="form-control">
+                                        <label class="label cursor-pointer justify-start gap-4">
+                                            <input type="checkbox" id="bulk-create-toggle" class="checkbox" />
+                                            <span class="label-text font-semibold">Create Multiple Assets</span>
+                                        </label>
+                                        <div id="bulk-create-fields" class="hidden form-control">
+                                            <label for="bulk-quantity" class="label"><span class="label-text">Quantity</span></label>
+                                            <input type="number" id="bulk-quantity" min="1" value="1" class="input input-bordered">
+                                        </div>
                                     </div>
                                 </div>
                             </div>

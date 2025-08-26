@@ -39,6 +39,7 @@ function initializeForm() {
     const acquisitionCostInput = document.getElementById('acquisitionCost');
     const salvageValueInput = document.getElementById('salvageValue');
     const propertyNumberInput = document.getElementById('propertyNumber');
+    const propertyNumberLabel = document.querySelector('#property-number-container .label-text');
     const generatePropertyNumberBtn = document.getElementById('generate-property-number-btn');
     const custodianDesignationInput = document.getElementById('custodianDesignation');
     const categoryList = document.getElementById('category-list');
@@ -57,6 +58,10 @@ function initializeForm() {
     const newAttachmentsContainer = document.getElementById('new-attachments-container');
     const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
+    const bulkCreateCard = document.getElementById('bulk-create-card');
+    const bulkCreateToggle = document.getElementById('bulk-create-toggle');
+    const bulkCreateFields = document.getElementById('bulk-create-fields');
+    const bulkQuantityInput = document.getElementById('bulk-quantity');
 
     // --- UI LOGIC ---
     function populateDatalist(datalistEl, data, valueField) {
@@ -192,6 +197,7 @@ function initializeForm() {
             if (isEditMode) {
                 formTitle.textContent = 'Edit Asset';
                 await loadAssetForEditing();
+                bulkCreateCard.classList.add('hidden'); // Hide bulk create in edit mode
             }
         } catch (error) {
             showToast(`Error loading form data: ${error.message}`, 'error');
@@ -257,13 +263,15 @@ function initializeForm() {
         submitButton.disabled = true;
         submitButton.innerHTML = `<i data-lucide="loader-2" class="animate-spin"></i> Saving...`;
         lucide.createIcons();
+        
+        const isBulkCreate = bulkCreateToggle.checked && !isEditMode;
 
-        const formData = new FormData();
+        // --- GATHER COMMON ASSET DATA ---
         const assetData = {};
-
-        // 1. Structure the data from form fields
         for (const element of form.elements) {
-            if (!element.name || element.type === 'file') continue;
+            // Skip files, and propertyNumber if in bulk mode
+            if (!element.name || element.type === 'file' || (isBulkCreate && element.name === 'propertyNumber')) continue;
+            
             const keys = element.name.split('.');
             let current = assetData;
             keys.forEach((k, i) => {
@@ -276,45 +284,168 @@ function initializeForm() {
             });
         }
 
-        // 2. Manually gather specifications
+        // Gather specifications
         const specRows = specificationsContainer.querySelectorAll('.spec-row');
         assetData.specifications = Array.from(specRows).map(row => ({
             key: row.querySelector('.spec-key').value.trim(),
             value: row.querySelector('.spec-value').value.trim()
         })).filter(spec => spec.key);
 
-        // 3. Stringify nested objects and append to FormData
-        Object.keys(assetData).forEach(key => {
-            if (typeof assetData[key] === 'object' && assetData[key] !== null) {
-                formData.append(key, JSON.stringify(assetData[key]));
-            } else if (assetData[key] !== null && assetData[key] !== undefined) {
-                formData.append(key, assetData[key]);
-            }
-        });
+        // --- HANDLE BULK vs SINGLE ---
+        if (isBulkCreate) {
+            // --- BULK CREATE ---
+            const payload = {
+                assetData: assetData,
+                quantity: parseInt(bulkQuantityInput.value, 10),
+                startNumber: propertyNumberInput.value.trim()
+            };
 
-        // 4. Append new files and their titles
-        const attachmentTitles = [];
-        const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
-        newAttachmentRows.forEach(row => {
-            const fileInput = row.querySelector('.new-attachment-file');
-            const titleInput = row.querySelector('.new-attachment-title');
-            if (fileInput.files.length > 0) {
-                formData.append('attachments', fileInput.files[0]);
-                attachmentTitles.push(titleInput.value.trim() || fileInput.files[0].name);
+            if (!payload.quantity || payload.quantity < 1 || !payload.startNumber) {
+                showToast('Please provide a valid quantity and starting property number for bulk creation.', 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
+                lucide.createIcons();
+                return;
             }
-        });
-        if (formData.has('attachments')) {
-            formData.append('attachmentTitles', JSON.stringify(attachmentTitles));
+
+            try {
+                await fetchWithAuth('assets/bulk', { method: 'POST', body: payload });
+                showToast(`${payload.quantity} assets created successfully!`, 'success');
+                setTimeout(() => window.location.href = './asset-registry.html', 1500);
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
+                lucide.createIcons();
+            }
+        } else {
+            // --- SINGLE CREATE / UPDATE ---
+            const formData = new FormData();
+
+            // Append structured data to FormData
+            Object.keys(assetData).forEach(key => {
+                if (typeof assetData[key] === 'object' && assetData[key] !== null) {
+                    formData.append(key, JSON.stringify(assetData[key]));
+                } else if (assetData[key] !== null && assetData[key] !== undefined) {
+                    formData.append(key, assetData[key]);
+                }
+            });
+
+            // Append new files and their titles
+            const attachmentTitles = [];
+            const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
+            newAttachmentRows.forEach(row => {
+                const fileInput = row.querySelector('.new-attachment-file');
+                const titleInput = row.querySelector('.new-attachment-title');
+                if (fileInput.files.length > 0) {
+                    formData.append('attachments', fileInput.files[0]);
+                    attachmentTitles.push(titleInput.value.trim() || fileInput.files[0].name);
+                }
+            });
+            if (formData.has('attachments')) {
+                formData.append('attachmentTitles', JSON.stringify(attachmentTitles));
+            }
+
+            try {
+                const endpoint = isEditMode ? `${API_ENDPOINT}/${assetId}` : API_ENDPOINT;
+                const method = isEditMode ? 'PUT' : 'POST';
+                await fetchWithAuth(endpoint, { method, body: formData });
+                showToast(`Asset ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+                setTimeout(() => window.location.href = './asset-registry.html', 1500);
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
+                lucide.createIcons();
+            }
         }
+    }
 
-        try {
-            const endpoint = isEditMode ? `${API_ENDPOINT}/${assetId}` : API_ENDPOINT;
-            const method = isEditMode ? 'PUT' : 'POST';
-            await fetchWithAuth(endpoint, { method, body: formData });
-            showToast(`Asset ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
-            setTimeout(() => window.location.href = './asset-registry.html', 1500);
-        } catch (error) {
-            showToast(`Error: ${error.message}`, 'error');
+    async function handleAttachmentDelete(e) {
+        const deleteButton = e.target.closest('.remove-attachment-btn');
+        if (!deleteButton) return;
+
+        const attachmentKey = deleteButton.dataset.key;
+        if (!assetId || !attachmentKey) return;
+
+        if (confirm('Are you sure you want to permanently delete this file?')) {
+            try {
+                await fetchWithAuth(`${API_ENDPOINT}/${assetId}/attachments/${encodeURIComponent(attachmentKey)}`, { method: 'DELETE' });
+                showToast('Attachment deleted successfully.', 'success');
+                loadAssetForEditing(); // Reload the form to show the updated list
+            } catch (error) {
+                showToast(`Error deleting attachment: ${error.message}`, 'error');
+            }
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    bulkCreateToggle.addEventListener('change', (e) => {
+        const isBulk = e.target.checked;
+        bulkCreateFields.classList.toggle('hidden', !isBulk);
+
+        // Change the label for the main property number input
+        if (isBulk) {
+            propertyNumberLabel.textContent = 'Starting Property Number';
+        } else {
+            propertyNumberLabel.textContent = 'Property Number';
+        }
+    });
+
+    custodianNameInput.addEventListener('input', (e) => {
+        const selectedEmployee = employeesData.find(emp => emp.name === e.target.value);
+        custodianDesignationInput.value = selectedEmployee ? selectedEmployee.designation : '';
+    });
+
+    acquisitionCostInput.addEventListener('input', (e) => {
+        const cost = parseFloat(e.target.value);
+        if (!isNaN(cost) && cost >= 0) {
+            const salvageValue = (cost * 0.05).toFixed(2);
+            salvageValueInput.value = salvageValue;
+        } else {
+            salvageValueInput.value = '';
+        }
+    });
+
+    generatePropertyNumberBtn.addEventListener('click', handleGeneratePropertyNumber);
+
+    addSpecBtn.addEventListener('click', () => renderSpecification());
+    specificationsContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-spec-btn')) {
+            e.target.closest('.spec-row').remove();
+        }
+    });
+
+    addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
+    newAttachmentsContainer.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove-new-attachment-btn');
+        if (removeBtn) {
+            removeBtn.closest('.new-attachment-row').remove();
+        }
+    });
+    existingAttachmentsList.addEventListener('click', handleAttachmentDelete);
+
+    detailsTab.addEventListener('click', () => {
+        detailsTab.classList.add('tab-active');
+        historyTab.classList.remove('tab-active');
+        detailsPanel.classList.remove('hidden');
+        historyPanel.classList.add('hidden');
+        submitButton.classList.remove('hidden');
+    });
+
+    historyTab.addEventListener('click', () => {
+        historyTab.classList.add('tab-active');
+        detailsTab.classList.remove('tab-active');
+        historyPanel.classList.remove('hidden');
+        detailsPanel.classList.add('hidden');
+        submitButton.classList.add('hidden');
+    });
+
+    form.addEventListener('submit', handleFormSubmit);
+
+    // --- INITIALIZATION ---
+    loadInitialData();
+}
             submitButton.disabled = false;
             submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
             lucide.createIcons();
