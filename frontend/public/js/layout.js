@@ -75,8 +75,11 @@ const VIEW_ONLY_NAV = `
 `;
 
 function getSidebarHTML(user) {
-  const isGSO = user.office === "GSO";
+  // Make the check more robust by looking for multiple possible names.
+  const gsoOfficeNames = ['GSO', 'General Service Office'];
+  const isGSO = gsoOfficeNames.includes(user.office);
   let navLinks;
+
   if (isGSO) {
     navLinks = `
       ${GSO_MAIN_NAV}
