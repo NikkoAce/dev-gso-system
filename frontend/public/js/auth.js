@@ -89,3 +89,11 @@ export async function getCurrentUser() {
         return null;
     }
 }
+
+/**
+ * Gets the stored GSO authentication token.
+ * @returns {string|null} The token or null if not found.
+ */
+export function getGsoToken() {
+    return localStorage.getItem('gsoAuthToken');
+}
