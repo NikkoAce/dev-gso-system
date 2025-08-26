@@ -58,8 +58,8 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     let gsoRole = 'Employee'; // Default GSO role
     let permissions = [];
 
-    // List of office names that should be considered GSO Admins
-    const gsoOfficeNames = ['GSO', 'General Service Office'];
+    // List of office names that should be considered GSO Admins.
+    const gsoOfficeNames = ['GSO', 'General Service Office', 'IT'];
 
     // IMPORTANT: Customize these permission mappings based on your actual requirements
     if (gsoOfficeNames.includes(lguUser.office)) {

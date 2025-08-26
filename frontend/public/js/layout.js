@@ -75,12 +75,12 @@ const VIEW_ONLY_NAV = `
 `;
 
 function getSidebarHTML(user) {
-  // Make the check more robust by looking for multiple possible names.
-  const gsoOfficeNames = ['GSO', 'General Service Office'];
-  const isGSO = gsoOfficeNames.includes(user.office);
+  // List of offices that should have administrative access.
+  const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
+  const isAdmin = adminOfficeNames.includes(user.office);
   let navLinks;
 
-  if (isGSO) {
+  if (isAdmin) {
     navLinks = `
       ${GSO_MAIN_NAV}
       ${GSO_REPORTS_NAV}
@@ -92,7 +92,7 @@ function getSidebarHTML(user) {
   } else {
     navLinks = VIEW_ONLY_NAV;
   }
-  const logoutButton = isGSO
+  const logoutButton = isAdmin
     ? `<button id="logout-button" class="btn btn-error btn-xs mt-2">Logout</button>`
     : "";
   const userInitial = user.name ? user.name.charAt(0).toUpperCase() : "U";
