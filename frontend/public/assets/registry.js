@@ -291,13 +291,13 @@ function initializeRegistryPage(user) {
 
                 const selectedEmployee = state.allEmployees.find(emp => emp.name === newCustodianName);
                 const newCustodian = { name: newCustodianName, designation: selectedEmployee?.designation || '', office: newOffice };
-                const user = { name: currentUser.name, office: currentUser.office };
+                const userPayload = { name: user.name, office: user.office };
                 const payload = {
                     assetIds: state.assetsToTransfer.map(a => a._id),
                     newOffice,
                     newCustodian,
                     transferDate,
-                    user
+                    user: userPayload
                 };
 
                 const transferResult = await fetchWithAuth('assets/bulk-transfer', {

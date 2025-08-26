@@ -1,20 +1,23 @@
 // FILE: frontend/public/reports.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user) return;
-
-        initializeLayout(user);
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
+        initializeLayout(user, gsoLogout);
         initializeReportsPage(user);
     } catch (error) {
         console.error("Authentication failed on reports page:", error);
     }
 });
 
-function initializeReportsPage(currentUser) {
+function initializeReportsPage(user) {
     let allAssets = [];
     const { populateFilters, showToast } = createUIManager();
 

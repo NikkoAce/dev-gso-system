@@ -1,4 +1,5 @@
 // FILE: frontend/public/scanner.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -7,14 +8,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user,gsoLogout);
         initializeScannerPage(user);
     } catch (error) {
         console.error("Authentication failed on scanner page:", error);
     }
 });
 
-function initializeScannerPage(currentUser) {
+function initializeScannerPage(user) {
     const API_ENDPOINT = 'assets';
     let allAssets = []; // Assets for the selected office
     let foundAssets = new Map(); // Use a Map to store propertyNumber -> { condition, remarks }
@@ -219,7 +220,7 @@ function initializeScannerPage(currentUser) {
                     method: 'PUT',
                     body: JSON.stringify({
                         updates: updates,
-                        user: { name: currentUser.name }
+                        user: { name: user.name }
                     })
                 });
 

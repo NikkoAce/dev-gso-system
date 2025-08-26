@@ -1,4 +1,5 @@
 // FILE: frontend/public/my-requisitions.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -6,14 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeMyRequisitionsPage(user);
     } catch (error) {
         console.error("Authentication failed on my-requisitions page:", error);
     }
 });
 
-function initializeMyRequisitionsPage(currentUser) {
+function initializeMyRequisitionsPage(user) {
     const API_ENDPOINT = 'requisitions/my-office';
     const requisitionsList = document.getElementById('my-requisitions-list');
 

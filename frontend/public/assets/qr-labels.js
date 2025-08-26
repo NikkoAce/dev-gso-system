@@ -1,4 +1,4 @@
-// FILE: frontend/public/qr-labels.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user,gsoLogout);
         initializeQrLabelsPage(user);
     } catch (error) {
          console.error("Authentication or layout initialization failed:", error);
     }
 });
 
-function initializeQrLabelsPage(currentUser) {
+function initializeQrLabelsPage(user) {
  
     
     const assetTableBody = document.getElementById('asset-selection-table-body');

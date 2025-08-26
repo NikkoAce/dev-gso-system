@@ -1,4 +1,5 @@
 // FILE: frontend/public/physical-count.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -7,14 +8,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializePhysicalCountPage(user);
     } catch (error) {
         console.error("Authentication failed on physical count page:", error);
     }
 });
 
-function initializePhysicalCountPage(currentUser) {
+function initializePhysicalCountPage(user) {
     let currentPage = 1;
     const itemsPerPage = 20;
     const { populateFilters, setLoading, showToast, renderPagination } = createUIManager();
@@ -164,7 +165,7 @@ function initializePhysicalCountPage(currentUser) {
                 method: 'PUT',
                 body: JSON.stringify({
                     updates: updates,
-                    user: { name: currentUser.name }
+                    user: { name: user.name }
                 })
             });
 
@@ -177,4 +178,5 @@ function initializePhysicalCountPage(currentUser) {
 
     // --- INITIALIZATION ---
     initializePage();
+    
 }

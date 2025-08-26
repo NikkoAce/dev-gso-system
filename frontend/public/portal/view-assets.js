@@ -1,19 +1,19 @@
+import { getCurrentUser, gsoLogout } from '../js/auth.js'
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    let currentUser;
     try {
-        currentUser = await getCurrentUser();
-        if (!currentUser) return;
+        const user = await getCurrentUser();
+        if (!user) return;
 
-        initializeLayout(currentUser);
-        initializeViewPage(currentUser);
+        initializeLayout(user, gsoLogout);
+        initializeViewPage(user);
     } catch (error) {
         console.error("Authentication failed:", error);
     }
 });
 
-function initializeViewPage(currentUser) {
+function initializeViewPage(user) {
     const API_ENDPOINT = 'assets/my-assets'; // More secure endpoint
     const tableBody = document.getElementById('asset-table-body');
 

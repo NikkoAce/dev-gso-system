@@ -1,4 +1,5 @@
 // FILE: frontend/public/immovable-assets/immovable-registry.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -9,14 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '../dashboard/dashboard.html';
             return;
         }
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeRegistryPage(user);
     } catch (error) {
         console.error("Authentication failed on immovable asset registry page:", error);
     }
 });
 
-function initializeRegistryPage(currentUser) {
+function initializeRegistryPage(user) {
     const API_ENDPOINT = 'immovable-assets';
     const { renderPagination, showToast, openConfirmationModal } = createUIManager();
 

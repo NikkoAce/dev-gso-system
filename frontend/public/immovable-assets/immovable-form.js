@@ -1,4 +1,5 @@
 // FILE: frontend/public/immovable-assets/immovable-form.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -9,14 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '../dashboard/dashboard.html';
             return;
         }
-        initializeLayout(user);
-        initializeForm();
+        initializeLayout(user, gsoLogout);
+        initializeForm(user);
     } catch (error) {
         console.error("Authentication failed on immovable asset form page:", error);
     }
 });
 
-function initializeForm() {
+function initializeForm(user) {
     const API_ENDPOINT = 'immovable-assets';
     const { showToast } = createUIManager();
 

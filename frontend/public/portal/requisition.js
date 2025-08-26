@@ -1,4 +1,5 @@
 // FILE: frontend/public/requisition.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -6,14 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeRequisitionPage(user);
     } catch (error) {
         console.error("Authentication failed on requisition page:", error);
     }
 });
 
-function initializeRequisitionPage(currentUser) {
+function initializeRequisitionPage(user) {
     const STOCK_API_ENDPOINT = 'stock-items';
     const REQ_API_ENDPOINT = 'requisitions';
     let allStockItems = [];
@@ -31,7 +32,7 @@ function initializeRequisitionPage(currentUser) {
 
     // --- DATA FETCHING & INITIALIZATION ---
     async function initializePage() {
-        requestingOfficeInput.value = currentUser.office;
+        requestingOfficeInput.value = user.office;
         try {
             allStockItems = await fetchWithAuth(STOCK_API_ENDPOINT);
             populateStockItemSelect();
@@ -144,8 +145,8 @@ function initializeRequisitionPage(currentUser) {
 
         const payload = {
             purpose,
-            requestingOffice: currentUser.office,
-            requestingUser: { name: currentUser.name, office: currentUser.office },
+            requestingOffice: user.office,
+            requestingUser: { name: user.name, office: user.office },
             items: requestedItems.map(({ stockItem, description, quantityRequested }) => ({ stockItem, description, quantityRequested }))
         };
 
@@ -159,7 +160,7 @@ function initializeRequisitionPage(currentUser) {
             form.reset();
             requestedItems = [];
             renderRequestedItems();
-            requestingOfficeInput.value = currentUser.office;
+            requestingOfficeInput.value = user.office;
         } catch (error) {
             alert(`Error: ${error.message}`);
         } finally {
