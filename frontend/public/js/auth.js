@@ -1,7 +1,7 @@
 // This script handles the entire authentication flow for the GSO System.
 // It should be included in every HTML page of this application.
 
-const GSO_API_BASE_URL = 'https://gso-system-backend.onrender.com'; // IMPORTANT: Replace with your GSO backend's deployed URL
+const GSO_API_BASE_URL = 'https://dev-gso-system.onrender.com'; // IMPORTANT: Replace with your GSO backend's deployed URL
 const PORTAL_LOGIN_URL = 'https://lgu-employee-portal.netlify.app/index.html'; // IMPORTANT: Replace with your Portal's login page URL
 
 /**
