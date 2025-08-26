@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, gso } = require('../middlewares/authMiddleware.js');
+const { protect, checkPermission } = require('../middlewares/authMiddleware.js');
 const {
     createImmovableAsset,
     getImmovableAssets,
@@ -11,19 +11,16 @@ const {
 } = require('../controllers/immovableAssetController.js');
 const { upload } = require('../middlewares/multer.js');
 
-// Apply the 'protect' and 'gso' middleware to all routes in this file.
-router.use(protect, gso);
-
 router.route('/')
-    .post(upload.array('attachments'), createImmovableAsset)
-    .get(getImmovableAssets);
+    .post(protect, checkPermission('immovable:create'), upload.array('attachments'), createImmovableAsset)
+    .get(protect, checkPermission('immovable:read'), getImmovableAssets);
 
 router.route('/:id')
-    .get(getImmovableAssetById)
-    .put(upload.array('attachments'), updateImmovableAsset)
-    .delete(deleteImmovableAsset);
+    .get(protect, checkPermission('immovable:read'), getImmovableAssetById)
+    .put(protect, checkPermission('immovable:update'), upload.array('attachments'), updateImmovableAsset)
+    .delete(protect, checkPermission('immovable:delete'), deleteImmovableAsset);
 
 // New route for deleting a specific attachment
-router.route('/:id/attachments/:attachmentKey').delete(deleteImmovableAssetAttachment);
+router.route('/:id/attachments/:attachmentKey').delete(protect, checkPermission('immovable:update'), deleteImmovableAssetAttachment);
 
 module.exports = router;

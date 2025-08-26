@@ -8,17 +8,17 @@ const {
     updateStockItem,
     deleteStockItem
 } = require('../controllers/stockItemController');
-const { protect, gso } = require('../middlewares/authMiddleware.js');
+const { protect, checkPermission } = require('../middlewares/authMiddleware.js');
 
 // @route   GET & POST /api/stock-items
 router.route('/')
-    .get(protect, getAllStockItems)
-    .post(protect, gso, createStockItem);
+    .get(protect, checkPermission('stock:read'), getAllStockItems)
+    .post(protect, checkPermission('stock:manage'), createStockItem);
 
 // @route   GET, PUT, DELETE /api/stock-items/:id
 router.route('/:id')
-    .get(protect, getStockItemById)
-    .put(protect, gso, updateStockItem)
-    .delete(protect, gso, deleteStockItem);
+    .get(protect, checkPermission('stock:read'), getStockItemById)
+    .put(protect, checkPermission('stock:manage'), updateStockItem)
+    .delete(protect, checkPermission('stock:manage'), deleteStockItem);
 
 module.exports = router;

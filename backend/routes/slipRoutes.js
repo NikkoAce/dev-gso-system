@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { getSlips, getSlipById } = require('../controllers/slipController');
-const { protect, gso } = require('../middlewares/authMiddleware.js');
+const { protect, checkPermission } = require('../middlewares/authMiddleware.js');
 
-router.route('/').get(protect, gso, getSlips);
+router.route('/').get(protect, checkPermission('slip:read'), getSlips);
 
 // This new route will handle GET requests like /api/slips/some-id-here
-router.route('/:id').get(protect, gso, getSlipById);
+router.route('/:id').get(protect, checkPermission('slip:read'), getSlipById);
 
 module.exports = router;
