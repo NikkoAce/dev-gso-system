@@ -1,13 +1,13 @@
 // FILE: frontend/public/dashboard.js
 import { fetchWithAuth } from '../js/api.js';
-import { getCurrentUser } from '../js/auth.js';
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout); // Pass the logout function to the layout script
         if (user.office === 'GSO') {
             initializeDashboard();
         } else {

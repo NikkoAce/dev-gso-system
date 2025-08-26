@@ -14,7 +14,7 @@ export const BASE_URL = 'https://dev-gso-system.onrender.com/api';
 export async function fetchWithAuth(endpoint, options = {}) {
     const token = getGsoToken();
     if (!token) {
-        // This case is handled by security.js, but it's good practice to have it here.
+        // This case is handled by auth.js, but it's good practice to have a check here.
         throw new Error('Authentication token not found. Please log in again.');
     }
 

@@ -158,25 +158,24 @@ function setupThemeSwitcher() {
     });
 }
 
-function initializeLayout(user) {
+function initializeLayout(user, logoutFunction) {
   if (!user) return;
 
   const sidebarContainer = document.getElementById("sidebar-container");
   const mobileMenuButton = document.getElementById("mobile-menu-button");
 
   if (sidebarContainer) {
-    // Updated classes for mobile-friendly slide-out behavior
     sidebarContainer.className = 'fixed inset-y-0 left-0 z-50 w-64 bg-base-200 h-screen flex flex-col border-r non-printable transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0';
     sidebarContainer.innerHTML = getSidebarHTML(user);
 
-    // Logout
+    // Attach the passed logout function to the button
     const logoutButton = document.getElementById("logout-button");
     if (logoutButton) {
       logoutButton.addEventListener("click", (e) => {
         e.preventDefault();
-        localStorage.removeItem("portalAuthToken");
-        window.location.href =
-          "https://lgu-employee-portal.netlify.app/index.html";
+        if (typeof logoutFunction === 'function') {
+            logoutFunction();
+        }
       });
     }
 

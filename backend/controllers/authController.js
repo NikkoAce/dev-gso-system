@@ -1,68 +1,87 @@
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // GSO User model
-const Role = require('../models/Role'); // GSO Role model
+const User = require('../models/User'); // GSO's internal User model
+const asyncHandler = require('express-async-handler');
 
-// Helper function to generate the GSO-specific token with permissions
-const generateGsoToken = (user) => {
+// Define the URL of the LGU Employee Portal's backend
+// IMPORTANT: Ensure this matches your deployed LGU Portal backend URL
+const LGU_PORTAL_API_URL = process.env.PORTAL_API_URL || 'https://lgu-helpdesk-copy.onrender.com/api';
+
+// Helper function to generate a GSO JWT
+const generateGsoToken = (gsoUserRecord) => {
+    // The payload for the GSO token should directly contain the user object
+    // with the GSO-specific permissions, as expected by GSO's authMiddleware.
     const payload = {
-        user: {
-            id: user._id,
-            name: user.name,
-            office: user.office,
-            role: user.role.name, // Include role name for display
-            permissions: user.role.permissions // **Crucially, embed the permissions**
+        user: { // This 'user' object will be assigned to req.user in GSO's protect middleware
+            id: gsoUserRecord._id, // GSO's internal user ID
+            externalId: gsoUserRecord.externalId, // LGU Portal's user ID
+            name: gsoUserRecord.name,
+            office: gsoUserRecord.office,
+            role: gsoUserRecord.role, // GSO-specific role
+            permissions: gsoUserRecord.permissions // GSO-specific permissions array
         }
     };
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+    return jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: '1h' // GSO token expiration
+    });
 };
 
 /**
  * Handles the Single Sign-On (SSO) login process.
- * 1. Verifies the token from the LGU Employee Portal.
- * 2. Finds or creates a user in the GSO system (Just-In-Time Provisioning).
- * 3. Issues a new, GSO-specific JWT containing GSO roles and permissions.
+ * @desc    Handle SSO login from LGU Employee Portal
+ * @route   POST /api/auth/sso-login
+ * @access  Public (initially, then verified by LGU Portal)
  */
-exports.ssoLogin = async (req, res) => {
-    const { token: portalToken } = req.body;
+exports.ssoLogin = asyncHandler(async (req, res) => {
+    const { token: portalToken } = req.body; // Token from LGU Employee Portal
 
     if (!portalToken) {
-        return res.status(400).json({ message: 'Portal token is required.' });
+        res.status(400);
+        throw new Error('No portal token provided.');
     }
 
+    let lguUser;
     try {
         // Step 1: Verify the external token by calling the Portal's /me endpoint
-        const portalApiUrl = process.env.PORTAL_API_URL || 'https://lgu-helpdesk-copy.onrender.com/api';
         const response = await axios.get(`${portalApiUrl}/users/me`, {
             headers: { 'Authorization': `Bearer ${portalToken}` }
         });
 
-        const portalUser = response.data;
-        if (!portalUser || !portalUser.employeeId) {
-            return res.status(401).json({ message: 'Invalid user data received from portal.' });
-        }
-
-        // Step 2: Find or create a "shadow" user in the GSO database
-        let gsoUser = await User.findOne({ externalId: portalUser.employeeId }).populate('role');
-
-        if (!gsoUser) {
-            // User is logging in for the first time. Provision with a default role.
-            let defaultRole = await Role.findOne({ name: 'Department Viewer' });
-            if (!defaultRole) {
-                // If default role doesn't exist, create it with minimal permissions
-                defaultRole = await Role.create({ name: 'Department Viewer', permissions: ['asset:read:own_office'] });
-            }
-
-            gsoUser = await User.create({ externalId: portalUser.employeeId, name: portalUser.name, office: portalUser.office, role: defaultRole._id });
-            gsoUser = await gsoUser.populate('role'); // Populate the role for the new user
-        }
-
-        // Step 3: Generate and return the GSO-specific JWT
-        const gsoToken = generateGsoToken(gsoUser);
-        res.status(200).json({ message: 'GSO login successful', token: gsoToken });
-
+        lguUser = response.data; // This is the user object from the LGU Portal
     } catch (error) {
-        console.error('SSO Login Error:', error.response ? error.response.data : error.message);
-        res.status(401).json({ message: 'Authentication with portal failed. The token may be invalid or expired.' });
+        console.error('Error verifying portal token with LGU Portal:', error.response ? error.response.data : error.message);
+        res.status(401);
+        throw new Error('Invalid or expired portal token. Please log in again through the LGU Portal.');
     }
-};
+
+    // Step 2: Find or create a "shadow" user in the GSO database and assign permissions
+    let gsoUserRecord = await User.findOne({ externalId: lguUser._id });
+
+    // Define GSO-specific roles and permissions based on LGU user's role/office
+    let gsoRole = 'Employee'; // Default GSO role
+    let permissions = [];
+
+    // IMPORTANT: Customize these permission mappings based on your actual requirements
+    if (lguUser.office === 'GSO') {
+        gsoRole = 'GSO Admin';
+        permissions = [
+            'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
+            'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete', 'slip:generate', 'slip:read', 'stock:read', 'stock:manage',
+            'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage', 'user:manage'
+        ];
+    } else { // Regular Employee or Department Head
+        gsoRole = lguUser.role === 'Department Head' ? 'Department Head' : 'Employee';
+        permissions = ['dashboard:view', 'asset:read:own_office', 'requisition:create', 'requisition:read:own_office'];
+    }
+
+    if (gsoUserRecord) {
+        gsoUserRecord.set({ name: lguUser.name, office: lguUser.office, role: gsoRole, permissions });
+        await gsoUserRecord.save();
+    } else {
+        gsoUserRecord = await User.create({ externalId: lguUser._id, name: lguUser.name, office: lguUser.office, role: gsoRole, permissions });
+    }
+
+    // Step 3: Generate and send back the GSO-specific token
+    const gsoToken = generateGsoToken(gsoUserRecord);
+    res.status(200).json({ token: gsoToken });
+});
