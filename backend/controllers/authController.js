@@ -43,7 +43,7 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     let lguUser;
     try {
         // Step 1: Verify the external token by calling the Portal's /me endpoint
-        const response = await axios.get(`${portalApiUrl}/users/me`, {
+        const response = await axios.get(`${LGU_PORTAL_API_URL}/users/me`, {
             headers: { 'Authorization': `Bearer ${portalToken}` }
         });
 
