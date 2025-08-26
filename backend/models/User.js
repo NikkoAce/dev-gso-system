@@ -1,24 +1,21 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-    externalId: { // This will store the employeeId from the Portal system
+const gsoUserSchema = new mongoose.Schema({
+    externalId: { // This will store the _id from the LGU Portal's user record
         type: String,
         required: true,
         unique: true,
+        index: true,
     },
-    name: {
+    name: { type: String, required: true },
+    office: { type: String, required: true },
+    role: { // The role within the GSO system (e.g., 'GSO Admin', 'Employee')
         type: String,
         required: true,
     },
-    office: {
+    permissions: [{ // An array of permission strings
         type: String,
-        required: true,
-    },
-    role: { // This links to the GSO-specific Role model
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-        required: true,
-    }
+    }],
 }, { timestamps: true });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', gsoUserSchema);
