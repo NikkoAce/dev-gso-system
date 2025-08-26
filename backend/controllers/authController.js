@@ -33,7 +33,7 @@ exports.ssoLogin = async (req, res) => {
     try {
         // Step 1: Verify the external token by calling the Portal's /me endpoint
         const portalApiUrl = process.env.PORTAL_API_URL || 'https://lgu-helpdesk-copy.onrender.com/api';
-        const response = await axios.get(`${portalApiUrl}/auth/me`, {
+        const response = await axios.get(`${portalApiUrl}/users/me`, {
             headers: { 'Authorization': `Bearer ${portalToken}` }
         });
 
