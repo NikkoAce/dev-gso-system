@@ -1,4 +1,4 @@
-
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth, BASE_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeRegistryPage(user);
     } catch (error) {
         console.error("Authentication failed on registry page:", error);
     }
 });
 
-function initializeRegistryPage(currentUser) {
+function initializeRegistryPage(user) {
     // --- MODULE: STATE MANAGEMENT ---
     const state = {
         currentPageAssets: [], // Holds only the assets for the current page
