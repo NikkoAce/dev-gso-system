@@ -52,8 +52,8 @@ async function handleSsoLogin() {
     if (!gsoToken) {
         // If no token exists after checking URL and storage, the user is not authenticated.
         // Redirect them back to the central login page.
-        window.location.href = PORTAL_LOGIN_URL;
-        // console.error("Redirect to login page paused: No GSO token found after SSO attempt.");
+        // window.location.href = PORTAL_LOGIN_URL; // Temporarily disabled for debugging
+        console.error("Redirect to login page paused: No GSO token found after SSO attempt.");
     }
     // If we reach here, the user has a valid GSO token and can view the page.
 }
@@ -93,8 +93,8 @@ export async function getCurrentUser() {
     const payload = parseJwt(token);
     if (!payload || !payload.user) {
         localStorage.removeItem('gsoAuthToken');
-        window.location.href = PORTAL_LOGIN_URL;
-        // console.error("Redirect to login page paused: The GSO token is invalid or malformed.");
+        // window.location.href = PORTAL_LOGIN_URL; // Temporarily disabled for debugging
+        console.error("Redirect to login page paused: The GSO token is invalid or malformed.");
         throw new Error('Invalid GSO token payload.');
     }
     return payload.user;
