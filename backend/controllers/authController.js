@@ -54,9 +54,6 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         throw new Error('Invalid or expired portal token. Please log in again through the LGU Portal.');
     }
 
-    // Step 2: Find or create a "shadow" user in the GSO database and assign permissions
-    let gsoUserRecord = await User.findOne({ externalId: lguUser._id });
-
     // Define GSO-specific roles and permissions based on LGU user's role/office
     let gsoRole = 'Employee'; // Default GSO role
     let permissions = [];
@@ -74,12 +71,23 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         permissions = ['dashboard:view', 'asset:read:own_office', 'requisition:create', 'requisition:read:own_office'];
     }
 
-    if (gsoUserRecord) {
-        gsoUserRecord.set({ name: lguUser.name, office: lguUser.office, role: gsoRole, permissions });
-        await gsoUserRecord.save();
-    } else {
-        gsoUserRecord = await User.create({ externalId: lguUser._id, name: lguUser.name, office: lguUser.office, role: gsoRole, permissions });
-    }
+    // Step 2: Use findOneAndUpdate with upsert to atomically find and update, or create the user.
+    // This is more robust than a separate find and create/update, preventing duplicate key errors.
+    const gsoUserRecord = await User.findOneAndUpdate(
+        { externalId: lguUser._id }, // Find user by their portal ID
+        { // Data to set on update or insert
+            name: lguUser.name,
+            office: lguUser.office,
+            role: gsoRole,
+            permissions: permissions,
+            externalId: lguUser._id
+        },
+        {
+            new: true, // Return the modified document rather than the original
+            upsert: true, // Create a new document if no matching document is found
+            setDefaultsOnInsert: true
+        }
+    );
 
     // Step 3: Generate and send back the GSO-specific token
     const gsoToken = generateGsoToken(gsoUserRecord);
