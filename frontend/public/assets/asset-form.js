@@ -1,4 +1,5 @@
 // FILE: frontend/public/assets/asset-form.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -9,8 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '../dashboard/dashboard.html';
             return;
         }
-        initializeLayout(user);
-        initializeForm();
+        initializeLayout(user, gsoLogout);
+        initializeForm(user);
     } catch (error) {
         console.error("Authentication failed on asset form page:", error);
     }
@@ -444,5 +445,6 @@ function initializeForm() {
     form.addEventListener('submit', handleFormSubmit);
 
     // --- INITIALIZATION ---
-    loadInitialData();
+    loadInitialData(user);
+    console.log(`Page initialized for user: ${user.name}`);
 }
