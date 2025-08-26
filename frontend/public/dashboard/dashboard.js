@@ -1,5 +1,6 @@
 // FILE: frontend/public/dashboard.js
 import { fetchWithAuth } from '../js/api.js';
+import { getCurrentUser } from '../js/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {

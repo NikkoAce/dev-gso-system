@@ -59,21 +59,59 @@ async function handleSsoLogin() {
 // --- Exportable Helper Functions for other scripts ---
 
 /**
+ * Safely decodes a JWT payload. Handles Base64Url encoding.
+ * @param {string} token The JWT string.
+ * @returns {object|null} The decoded payload object or null if decoding fails.
+ */
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Error decoding JWT:", e);
+        return null;
+    }
+}
+
+/**
+ * Gets the current user by decoding the GSO JWT.
+ * @returns {Promise<object>} A promise that resolves with the user object.
+ */
+export async function getCurrentUser() {
+    const token = getGsoToken();
+    if (!token) {
+        handleSsoLogin(); // Re-run the auth check which will redirect if needed
+        throw new Error('No GSO token found.');
+    }
+    const payload = parseJwt(token);
+    if (!payload || !payload.user) {
+        localStorage.removeItem('gsoAuthToken');
+        window.location.href = PORTAL_LOGIN_URL;
+        throw new Error('Invalid GSO token payload.');
+    }
+    return payload.user;
+}
+
+/**
  * Gets the stored GSO authentication token.
  * @returns {string|null} The token or null if not found.
  */
-function getGsoToken() {
+export function getGsoToken() {
     return localStorage.getItem('gsoAuthToken');
 }
 
 /**
  * Logs the user out by removing the GSO token and redirecting to the portal.
  */
-function gsoLogout() {
+export function gsoLogout() {
     localStorage.removeItem('gsoAuthToken');
     window.location.href = PORTAL_LOGIN_URL;
 }
 
 // Run the authentication check as soon as the script loads.
 handleSsoLogin();
-

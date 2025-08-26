@@ -1,17 +1,18 @@
 // FILE: frontend/public/js/api.js
+import { getGsoToken } from './auth.js';
 
 // Centralized base URL for the API
 export const BASE_URL = 'https://dev-gso-system.onrender.com/api';
 
 /**
  * A generic fetch wrapper that includes authentication and improved error handling.
- * @param {string} endpoint The API endpoint to fetch from (e.g., 'assets').
+ * @param {string} endpoint - The API endpoint to fetch from (e.g., 'assets').
  * @param {object} options Standard fetch options object.
  * @returns {Promise<any>} The JSON response.
  * @throws {Error} Throws an error with a detailed message on failure.
  */
 export async function fetchWithAuth(endpoint, options = {}) {
-    const token = localStorage.getItem('portalAuthToken');
+    const token = getGsoToken();
     if (!token) {
         // This case is handled by security.js, but it's good practice to have it here.
         throw new Error('Authentication token not found. Please log in again.');
