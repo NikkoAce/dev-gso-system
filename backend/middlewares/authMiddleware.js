@@ -29,14 +29,20 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 });
 
-const gso = (req, res, next) => {
-    // This middleware assumes the `protect` middleware has already run
-    // and attached the user object to the request.
-    if (req.user && req.user.office === 'GSO') {
-        next();
-    } else {
-        res.status(403).json({ message: 'Not authorized. GSO access required.' });
-    }
+/**
+ * Middleware factory to check for a specific permission.
+ * @param {string} requiredPermission - The permission string to check for (e.g., 'asset:create').
+ */
+const checkPermission = (requiredPermission) => {
+    return (req, res, next) => {
+        // The `protect` middleware should have already run and populated req.user
+        // with a payload that includes a `permissions` array.
+        if (req.user && req.user.permissions && req.user.permissions.includes(requiredPermission)) {
+            next();
+        } else {
+            res.status(403).json({ message: 'Forbidden: You do not have the required permission.' });
+        }
+    };
 };
 
-module.exports = { protect, gso };
+module.exports = { protect, checkPermission };

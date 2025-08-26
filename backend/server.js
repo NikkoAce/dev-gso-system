@@ -14,6 +14,7 @@ app.use(cors());
 app.use(express.json()); 
 
 // --- API Routes ---
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/assets', require('./routes/assetRoutes'));
 app.use('/api/pars', require('./routes/parRoutes'));
 app.use('/api/ics', require('./routes/icsRoutes'));
