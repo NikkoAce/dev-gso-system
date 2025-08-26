@@ -75,9 +75,8 @@ const VIEW_ONLY_NAV = `
 `;
 
 function getSidebarHTML(user) {
-  // List of offices that should have administrative access.
-  const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
-  const isAdmin = adminOfficeNames.includes(user.office);
+  // Check if the user has the GSO Admin role, which is assigned by the backend.
+  const isAdmin = user.role === 'GSO Admin';
   let navLinks;
 
   if (isAdmin) {

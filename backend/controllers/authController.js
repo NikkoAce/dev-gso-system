@@ -58,11 +58,13 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     let gsoRole = 'Employee'; // Default GSO role
     let permissions = [];
 
-    // List of office names that should be considered GSO Admins.
-    const gsoOfficeNames = ['GSO', 'General Service Office', 'IT'];
+    // Define which offices and roles from the LGU Portal should get GSO Admin privileges.
+    const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
+    const adminRoleNames = ['IT']; // e.g., a user with role 'IT' from any office is an admin.
 
     // IMPORTANT: Customize these permission mappings based on your actual requirements
-    if (gsoOfficeNames.includes(lguUser.office)) {
+    // A user is an admin if their office is in the admin list OR their role is in the admin list.
+    if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
         gsoRole = 'GSO Admin';
         permissions = [
             'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
