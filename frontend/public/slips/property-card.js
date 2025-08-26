@@ -1,19 +1,23 @@
 // FILE: frontend/public/property-card.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user) return;
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializePropertyCardPage(user);
     } catch (error) {
         console.error("Authentication failed on property card page:", error);
     }
 });
 
-function initializePropertyCardPage(currentUser) {
+function initializePropertyCardPage(user) {
     const cardContainer = document.getElementById('property-card-container');
     const printButton = document.getElementById('print-card-btn');
 

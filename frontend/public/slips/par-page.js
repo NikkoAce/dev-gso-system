@@ -5,7 +5,10 @@ import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') return;
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
 
         initializeLayout(user, gsoLogout);
 

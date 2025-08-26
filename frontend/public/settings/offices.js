@@ -1,11 +1,16 @@
 // FILE: frontend/public/offices.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { createSettingsPage } from '../js/settingsPageFactory.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user) return;
-        initializeLayout(user);
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
+
+        initializeLayout(user, gsoLogout);
 
         createSettingsPage({
             apiEndpoint: 'offices',

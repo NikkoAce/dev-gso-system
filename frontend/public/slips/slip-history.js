@@ -1,24 +1,24 @@
 // FILE: frontend/public/slip-history.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // These functions are not defined in the provided context,
-        // but we assume they exist in your project.
         const user = await getCurrentUser();
-        if (!user) return;
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeSlipHistoryPage(user);
     } catch (error) {
         console.error("Authentication failed on slip history page:", error);
-        // Consider redirecting to login page if auth fails
-        // window.location.href = '/login.html';
     }
 });
 
-function initializeSlipHistoryPage(currentUser) {
+function initializeSlipHistoryPage(user) {
     // --- STATE MANAGEMENT ---
     let allSlips = []; // Master list of all slips fetched from the server
     let currentPage = 1;

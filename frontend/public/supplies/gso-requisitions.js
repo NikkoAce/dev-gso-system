@@ -1,4 +1,5 @@
 // FILE: frontend/public/gso-requisitions.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -10,14 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeGsoRequisitionsPage(user);
     } catch (error) {
         console.error("Authentication failed on GSO requisitions page:", error);
     }
 });
 
-function initializeGsoRequisitionsPage(currentUser) {
+function initializeGsoRequisitionsPage(user) {
     const API_ENDPOINT = 'requisitions';
     let allRequisitions = [];
 

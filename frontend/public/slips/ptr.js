@@ -1,18 +1,22 @@
 // FILE: frontend/public/ptr.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user) return;
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializePtrPage(user);
     } catch (error) {
         console.error("Authentication failed on PTR page:", error);
     }
 });
 
-function initializePtrPage(currentUser) {
+function initializePtrPage(user) {
     const ptrContainer = document.getElementById('ptr-container');
     const printButton = document.getElementById('print-btn');
 

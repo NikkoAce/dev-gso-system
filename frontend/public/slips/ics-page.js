@@ -1,12 +1,16 @@
 // FILE: frontend/public/ics-page.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user) return;
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
 
         // The populateIcsForm function is passed as a callback to the shared initializer.
         // It contains only the logic specific to rendering the ICS form itself.

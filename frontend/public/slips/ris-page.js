@@ -1,19 +1,23 @@
 // FILE: frontend/public/ris-page.js
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user) return;
+        if (!user || user.office !== 'GSO') {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
 
-        initializeLayout(user);
+        initializeLayout(user, gsoLogout);
         initializeRisPage(user);
     } catch (error) {
         console.error("Authentication failed on RIS page:", error);
     }
 });
 
-function initializeRisPage(currentUser) {
+function initializeRisPage(user) {
     const risContainer = document.getElementById('ris-container');
     const printButton = document.getElementById('print-ris-btn');
 
