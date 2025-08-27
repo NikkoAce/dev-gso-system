@@ -1,10 +1,11 @@
 import { fetchWithAuth } from '../js/api.js';
-import { showToast } from '../js/utils.js'; // Assuming you have a utils.js for toast notifications
+import { createUIManager } from '../js/ui.js';
 
 let allUsers = [];
 let metadata = { roles: [], permissions: [] };
 
 document.addEventListener('DOMContentLoaded', initializePage);
+const { showToast } = createUIManager();
 
 async function initializePage() {
     try {
