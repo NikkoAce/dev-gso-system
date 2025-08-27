@@ -74,8 +74,9 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
                 'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage',
                 'user:read', 'user:manage'
             ];
-            // Use a Set to merge permissions, ensuring no duplicates.
-            gsoUserRecord.permissions = [...new Set([...gsoUserRecord.permissions, ...defaultAdminPermissions])];
+            // Directly assign the canonical list of permissions to ensure admins are always up-to-date.
+            // This fixes the issue where existing admins might not have newly added permissions.
+            gsoUserRecord.permissions = defaultAdminPermissions;
         }
 
         await gsoUserRecord.save();

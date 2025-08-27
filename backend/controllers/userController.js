@@ -7,21 +7,28 @@ const User = require('../models/User');
 // For now, a static list provides a clear and manageable source of truth.
 const GSO_ROLES = ['GSO Admin', 'Department Head', 'Employee'];
 const GSO_PERMISSIONS = [
+    // Dashboard
     'dashboard:view',
+    // Movable Assets
+    'asset:create',
     'asset:read',
-    'asset:manage',
+    'asset:read:own_office',
+    'asset:update',
+    'asset:delete',
+    'asset:export',
     'asset:transfer',
-    'asset:dispose',
-    'slip:create',
+    // Immovable Assets
+    'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete',
+    // Slips (PAR, ICS, PTR)
+    'slip:generate',
     'slip:read',
-    'supply:read',
-    'supply:manage',
-    'requisition:create',
-    'requisition:approve',
+    // Supplies & Requisitions
+    'stock:read', 'stock:manage',
+    'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill',
+    // Other Modules
     'report:generate',
-    'settings:manage',
-    'user:read',
-    'user:manage'
+    'settings:read', 'settings:manage',
+    'user:read', 'user:manage'
 ];
 
 /**
