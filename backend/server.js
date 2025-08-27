@@ -50,6 +50,7 @@ app.use('/api/stock-items', require('./routes/stockItemRoutes'));
 app.use('/api/requisitions', require('./routes/requisitionRoutes'));
 app.use('/api/immovable-assets', require('./routes/immovableAssetRoutes'));
 console.log('Registering /api/users routes...');
+app.use('/api/roles', require('./routes/roleRoutes'));
 // IMPORTANT: This line registers the new user management routes with the application.
 app.use('/api/users', require('./routes/userRoutes'));
 console.log('Successfully registered /api/users routes.');

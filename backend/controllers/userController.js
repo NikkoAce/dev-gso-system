@@ -2,10 +2,9 @@ const asyncHandler = require('express-async-handler');
 // NOTE: This assumes you have a User model that is shared or synced from your LGU Portal.
 // It should include fields like name, email, office, role, and permissions.
 const User = require('../models/User');
+const Role = require('../models/Role');
 
-// In a production system, these could be stored in a database.
-// For now, a static list provides a clear and manageable source of truth.
-const GSO_ROLES = ['GSO Admin', 'Department Head', 'Employee'];
+// This remains the canonical source of all possible permissions in the system.
 const GSO_PERMISSIONS = [
     // Dashboard
     'dashboard:view',
@@ -76,8 +75,10 @@ const updateUser = asyncHandler(async (req, res) => {
  * @access  Private/Admin (Requires 'user:read' permission)
  */
 const getRolesAndPermissions = asyncHandler(async (req, res) => {
+    const roles = await Role.find({}).select('name').sort({ name: 1 });
+
     res.json({
-        roles: GSO_ROLES,
+        roles: roles.map(r => r.name),
         permissions: GSO_PERMISSIONS.sort(),
     });
 });
