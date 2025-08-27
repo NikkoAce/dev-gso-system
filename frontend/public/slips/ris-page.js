@@ -73,7 +73,7 @@ function initializeRisPage(user) {
         }
 
         risContainer.innerHTML = `
-            <div class="flex flex-col items-center mb-4">
+            <div class="flex flex-col items-center mb-8">
                 <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
                 <div class="text-center mt-4">
                     <p>Republic of the Philippines</p>
