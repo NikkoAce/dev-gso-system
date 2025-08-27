@@ -50,10 +50,10 @@ const updateUser = asyncHandler(async (req, res) => {
  * @access  Private/Admin (Requires 'user:read' permission)
  */
 const getRolesAndPermissions = asyncHandler(async (req, res) => {
-    const roles = await Role.find({}).select('name').sort({ name: 1 });
+    const roles = await Role.find({}).sort({ name: 1 }).lean();
 
     res.json({
-        roles: roles.map(r => r.name),
+        roles: roles, // Return the full role objects, not just names
         permissions: Object.values(PERMISSIONS).sort(),
     });
 });

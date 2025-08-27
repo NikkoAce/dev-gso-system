@@ -43,6 +43,9 @@ function setupEventListeners() {
     const editForm = document.getElementById('edit-user-form');
     editForm.addEventListener('submit', handleSaveChanges);
 
+    const roleSelect = document.getElementById('edit-role');
+    roleSelect.addEventListener('change', handleRoleChange);
+
     document.getElementById('modal-cancel-btn').addEventListener('click', () => {
         document.getElementById('edit-user-modal').close();
     });
@@ -89,8 +92,8 @@ function openEditModal(user) {
 
     // Populate roles dropdown
     const roleSelect = document.getElementById('edit-role');
-    roleSelect.innerHTML = metadata.roles.map(role =>
-        `<option value="${role}" ${user.role === role ? 'selected' : ''}>${role}</option>`
+    roleSelect.innerHTML = metadata.roles.map(role => // metadata.roles is now an array of objects
+        `<option value="${role.name}" ${user.role === role.name ? 'selected' : ''}>${role.name}</option>`
     ).join('');
 
     // Populate permissions checkboxes
@@ -104,6 +107,22 @@ function openEditModal(user) {
     `).join('');
 
     modal.showModal();
+}
+
+/**
+ * When a new role is selected in the modal, this function automatically
+ * checks the permissions associated with that role.
+ */
+function handleRoleChange() {
+    const roleSelect = document.getElementById('edit-role');
+    const selectedRoleName = roleSelect.value;
+    const selectedRole = metadata.roles.find(r => r.name === selectedRoleName);
+
+    if (selectedRole) {
+        document.querySelectorAll('#edit-permissions-container input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = selectedRole.permissions.includes(checkbox.value);
+        });
+    }
 }
 
 async function handleSaveChanges(event) {
