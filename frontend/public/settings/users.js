@@ -1,14 +1,21 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 let allUsers = [];
 let metadata = { roles: [], permissions: [] };
 
-document.addEventListener('DOMContentLoaded', initializePage);
 const { showToast } = createUIManager();
 
-async function initializePage() {
+document.addEventListener('DOMContentLoaded', async () => {
     try {
+        const user = await getCurrentUser();
+        if (!user) {
+            // If no user is found, auth.js will handle the redirect.
+            return;
+        }
+        initializeLayout(user, gsoLogout);
+
         [allUsers, metadata] = await Promise.all([
             fetchWithAuth('users'),
             fetchWithAuth('users/meta')
@@ -20,7 +27,7 @@ async function initializePage() {
         showToast('Failed to load user data. Please try again.', 'error');
         document.getElementById('user-list').innerHTML = `<tr><td colspan="4" class="text-center text-error">Could not load users.</td></tr>`;
     }
-}
+});
 
 function setupEventListeners() {
     const searchInput = document.getElementById('search-input');
