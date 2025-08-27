@@ -43,8 +43,10 @@ app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/stock-items', require('./routes/stockItemRoutes'));
 app.use('/api/requisitions', require('./routes/requisitionRoutes'));
 app.use('/api/immovable-assets', require('./routes/immovableAssetRoutes'));
+console.log('Registering /api/users routes...');
 // IMPORTANT: This line registers the new user management routes with the application.
 app.use('/api/users', require('./routes/userRoutes'));
+console.log('Successfully registered /api/users routes.');
 
 // Add a 404 handler specifically for API routes
 // This should be after all API routes and before the static file serving

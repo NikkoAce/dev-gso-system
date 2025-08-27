@@ -1,4 +1,5 @@
 const express = require('express');
+console.log('--- userRoutes.js file is being loaded ---');
 const router = express.Router();
 const {
     getUsers,
