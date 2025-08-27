@@ -45,11 +45,18 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     let lguUser;
     try {
         // Step 1: Verify the external token by calling the Portal's /me endpoint
+        // Add a timeout to prevent the request from hanging indefinitely if the portal is slow to respond.
         const response = await axios.get(`${LGU_PORTAL_API_URL}/users/me`, {
-            headers: { 'Authorization': `Bearer ${portalToken}` }
+            headers: { 'Authorization': `Bearer ${portalToken}` },
+            timeout: 30000 // 30 seconds
         });
         lguUser = response.data;
     } catch (error) {
+        if (error.code === 'ECONNABORTED') {
+            console.error('LGU Portal API timed out.');
+            res.status(504); // Gateway Timeout
+            throw new Error('The authentication service is not responding. Please try again in a few moments.');
+        }
         console.error('Error verifying portal token with LGU Portal:', error.response ? error.response.data : error.message);
         res.status(401);
         throw new Error('Invalid or expired portal token. Please log in again through the LGU Portal.');

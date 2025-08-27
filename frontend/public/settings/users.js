@@ -99,8 +99,8 @@ function openEditModal(user) {
 
     // Populate roles dropdown
     const roleSelect = document.getElementById('edit-role');
-    roleSelect.innerHTML = metadata.roles.map(role =>
-        `<option value="${role}" ${user.role === role ? 'selected' : ''}>${role}</option>`
+    roleSelect.innerHTML = metadata.roles.map(role => // role is an object { name, permissions }
+        `<option value="${role.name}" ${user.role === role.name ? 'selected' : ''}>${role.name}</option>`
     ).join('');
 
     // Populate permissions checkboxes
