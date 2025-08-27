@@ -36,11 +36,17 @@ function initializeImmovableReportsPage() {
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
 
-        let url = `/immovable-assets/report?`;
-        if (type) url += `type=${type}&`;
-        if (status) url += `status=${status}&`;
-        if (startDate) url += `startDate=${startDate}&`;
-        if (endDate) url += `endDate=${endDate}`;
+        // Use URLSearchParams for robust query string construction.
+        // This prevents issues like extra '&' at the end.
+        const params = new URLSearchParams();
+        if (type) params.append('type', type);
+        if (status) params.append('status', status);
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        const queryString = params.toString();
+        // The endpoint should not start with a slash, as fetchWithAuth adds it.
+        const url = `immovable-assets/report${queryString ? `?${queryString}` : ''}`;
 
         try {
             const reportData = await fetchWithAuth(url);
