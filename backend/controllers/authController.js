@@ -1,6 +1,7 @@
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // GSO's internal User model
+const Role = require('../models/Role'); // Import the Role model
 const asyncHandler = require('express-async-handler');
 const PERMISSIONS = require('../config/permissions');
 
@@ -65,22 +66,16 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         gsoUserRecord.name = lguUser.name;
         gsoUserRecord.office = lguUser.office;
 
-        // --- PERMISSION SYNC FOR ADMINS ---
-        // This block ensures existing admins get the latest permissions.
-        // It merges the current default admin permissions with any the user already has.
-        if (gsoUserRecord.role === 'GSO Admin') { // Directly assign the canonical list of permissions to ensure admins are always up-to-date.
-            // This fixes the issue where existing admins might not have newly added permissions.
-            gsoUserRecord.permissions = [
-                PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.ASSET_CREATE, PERMISSIONS.ASSET_READ, PERMISSIONS.ASSET_READ_OWN_OFFICE,
-                PERMISSIONS.ASSET_UPDATE, PERMISSIONS.ASSET_DELETE, PERMISSIONS.ASSET_EXPORT, PERMISSIONS.ASSET_TRANSFER,
-                PERMISSIONS.IMMOVABLE_CREATE, PERMISSIONS.IMMOVABLE_READ, PERMISSIONS.IMMOVABLE_UPDATE, PERMISSIONS.IMMOVABLE_DELETE,
-                PERMISSIONS.SLIP_GENERATE, PERMISSIONS.SLIP_READ,
-                PERMISSIONS.STOCK_READ, PERMISSIONS.STOCK_MANAGE,
-                PERMISSIONS.REQUISITION_CREATE, PERMISSIONS.REQUISITION_READ_OWN_OFFICE, PERMISSIONS.REQUISITION_READ_ALL, PERMISSIONS.REQUISITION_FULFILL,
-                PERMISSIONS.REPORT_GENERATE,
-                PERMISSIONS.SETTINGS_READ, PERMISSIONS.SETTINGS_MANAGE,
-                PERMISSIONS.USER_READ, PERMISSIONS.USER_MANAGE
-            ];
+        // --- DYNAMIC PERMISSION SYNC FOR ADMINS ---
+        // If the user has the 'GSO Admin' role, fetch the permissions directly from the Role document in the DB.
+        // This makes the Role Management UI the single source of truth.
+        if (gsoUserRecord.role === 'GSO Admin') {
+            const adminRole = await Role.findOne({ name: 'GSO Admin' }).lean();
+            if (adminRole) {
+                gsoUserRecord.permissions = adminRole.permissions;
+            } else {
+                console.warn('"GSO Admin" role not found in database during permission sync. User permissions will not be updated.');
+            }
         }
 
         await gsoUserRecord.save();
@@ -95,18 +90,14 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         const adminRoleNames = ['IT'];
 
         if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
-            gsoRole = 'GSO Admin'; // Admins should be able to read and manage users
-            permissions = [
-                PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.ASSET_CREATE, PERMISSIONS.ASSET_READ, PERMISSIONS.ASSET_READ_OWN_OFFICE,
-                PERMISSIONS.ASSET_UPDATE, PERMISSIONS.ASSET_DELETE, PERMISSIONS.ASSET_EXPORT, PERMISSIONS.ASSET_TRANSFER,
-                PERMISSIONS.IMMOVABLE_CREATE, PERMISSIONS.IMMOVABLE_READ, PERMISSIONS.IMMOVABLE_UPDATE, PERMISSIONS.IMMOVABLE_DELETE,
-                PERMISSIONS.SLIP_GENERATE, PERMISSIONS.SLIP_READ,
-                PERMISSIONS.STOCK_READ, PERMISSIONS.STOCK_MANAGE,
-                PERMISSIONS.REQUISITION_CREATE, PERMISSIONS.REQUISITION_READ_OWN_OFFICE, PERMISSIONS.REQUISITION_READ_ALL, PERMISSIONS.REQUISITION_FULFILL,
-                PERMISSIONS.REPORT_GENERATE,
-                PERMISSIONS.SETTINGS_READ, PERMISSIONS.SETTINGS_MANAGE,
-                PERMISSIONS.USER_READ, PERMISSIONS.USER_MANAGE
-            ];
+            gsoRole = 'GSO Admin';
+            // Fetch permissions from the Role document for new admins.
+            const adminRole = await Role.findOne({ name: 'GSO Admin' }).lean();
+            if (adminRole) {
+                permissions = adminRole.permissions;
+            } else {
+                console.warn('"GSO Admin" role not found in database. A new admin will be created with no permissions.');
+            }
         } else {
             gsoRole = lguUser.role === 'Department Head' ? 'Department Head' : 'Employee';
             permissions = [
