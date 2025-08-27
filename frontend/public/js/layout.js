@@ -1,96 +1,108 @@
-const GSO_MAIN_NAV = `
-  <li><a href="../dashboard/dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a></li>
-`;
+// Data-driven navigation configuration for the GSO Admin sidebar.
+// Each item can have a `permission` property to control its visibility.
+const GSO_NAV_CONFIG = [
+  { href: '../dashboard/dashboard.html', icon: 'layout-dashboard', text: 'Dashboard', permission: 'dashboard:view' },
+  {
+    icon: 'file-text', text: 'Reports', permission: 'report:generate',
+    children: [
+      { href: '../reports/reports.html', icon: 'archive', text: 'Movable Assets', permission: 'report:generate' },
+      { href: '../reports/immovable-reports.html', icon: 'land-plot', text: 'Immovable Assets', permission: 'report:generate' },
+    ]
+  },
+  {
+    icon: 'archive', text: 'Assets', permission: 'asset:read',
+    children: [
+      { href: '../assets/asset-registry.html', icon: 'list', text: 'Asset Registry', permission: 'asset:read' },
+      { href: '../assets/asset-form.html', icon: 'plus-square', text: 'Add New Asset', permission: 'asset:create' },
+      { href: '../slips/slip-history.html', icon: 'history', text: 'Slip History', permission: 'slip:read' },
+      { href: '../assets/physical-count.html', icon: 'clipboard-check', text: 'Physical Count', permission: 'asset:update' },
+      { href: '../assets/scanner.html', icon: 'scan-line', text: 'Scanner', permission: 'asset:update' },
+      { href: '../assets/qr-labels.html', icon: 'qr-code', text: 'Print QR Labels', permission: 'asset:read' },
+    ]
+  },
+  {
+    icon: 'land-plot', text: 'Immovable Assets', permission: 'immovable:read',
+    children: [
+      { href: '../immovable-assets/immovable-registry.html', icon: 'list', text: 'Registry', permission: 'immovable:read' },
+      { href: '../immovable-assets/immovable-form.html', icon: 'plus-square', text: 'Add New', permission: 'immovable:create' },
+    ]
+  },
+  {
+    icon: 'boxes', text: 'Supplies', permission: 'supply:read',
+    children: [
+      { href: '../supplies/gso-requisitions.html', icon: 'clipboard-list', text: 'Supply Requisitions', permission: 'requisition:read:all' },
+      { href: '../supplies/inventory.html', icon: 'boxes', text: 'Supplies Inventory', permission: 'stock:manage' },
+    ]
+  },
+  {
+    icon: 'settings', text: 'Settings', permission: 'settings:read',
+    children: [
+      { href: '../settings/categories.html', icon: 'tags', text: 'Categories', permission: 'settings:manage' },
+      { href: '../settings/offices.html', icon: 'map-pin', text: 'Offices', permission: 'settings:manage' },
+      { href: '../settings/employees.html', icon: 'users', text: 'Employees', permission: 'settings:manage' },
+      { href: '../settings/users.html', icon: 'user-cog', text: 'User Management', permission: 'user:read' },
+    ]
+  }
+];
 
-const GSO_REPORTS_NAV = `
-  <li>
-    <details>
-      <summary><i data-lucide="file-text"></i> Reports</summary>
-      <ul class="text-sm">
-        <li><a href="../reports/reports.html" class="nav-link"><i data-lucide="archive"></i> Movable Assets</a></li>
-        <li><a href="../reports/immovable-reports.html" class="nav-link"><i data-lucide="land-plot"></i> Immovable Assets</a></li>
-      </ul>
-    </details>
-  </li>
-`;
+// Data-driven navigation for the employee-facing portal view.
+const VIEW_ONLY_NAV_CONFIG = [
+    { href: 'https://lgu-employee-portal.netlify.app/dashboard.html', icon: 'arrow-left', text: 'Back to Portal' },
+    { href: '../portal/view-assets.html', icon: 'list', text: 'View My Assets', permission: 'asset:read:own_office' },
+    { href: '../portal/requisition.html', icon: 'shopping-cart', text: 'Request Supplies', permission: 'requisition:create' },
+    { href: '../portal/my-requisitions.html', icon: 'history', text: 'Requisition History', permission: 'requisition:read:own_office' },
+];
 
-const GSO_ASSETS_NAV = `
-  <li>
-    <details open>
-      <summary><i data-lucide="archive"></i> Assets</summary>
-      <ul class="text-sm">
-        <li><a href="../assets/asset-registry.html" class="nav-link"><i data-lucide="list"></i> Asset Registry</a></li>
-        <li><a href="../assets/asset-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New Asset</a></li>
-        <li><a href="../slips/slip-history.html" class="nav-link"><i data-lucide="history"></i> Slip History</a></li>
-        <li><a href="../assets/physical-count.html" class="nav-link"><i data-lucide="clipboard-check"></i> Physical Count</a></li>
-        <li><a href="../assets/scanner.html" class="nav-link"><i data-lucide="scan-line"></i> Scanner</a></li>
-        <li><a href="../assets/qr-labels.html" class="nav-link"><i data-lucide="qr-code"></i> Print QR Labels</a></li>
-      </ul>
-    </details>
-  </li>
-`;
+/**
+ * Recursively builds the navigation HTML from a configuration object,
+ * checking user permissions at each level.
+ * @param {Array} navConfig - The navigation configuration array.
+ * @param {Array<string>} userPermissions - The permissions of the current user.
+ * @returns {string} The generated HTML for the navigation.
+ */
+function buildNav(navConfig, userPermissions) {
+  let navHtml = '';
+  navConfig.forEach(item => {
+    // If an item requires a permission, check if the user has it.
+    // If no permission is specified (like 'Back to Portal'), always show it.
+    if (item.permission && !userPermissions.includes(item.permission)) {
+      return; // Skip this item if permission is missing
+    }
 
-const GSO_IMMOVABLE_ASSETS_NAV = `
-  <li>
-    <details>
-      <summary><i data-lucide="land-plot"></i> Immovable Assets</summary>
-      <ul class="text-sm">
-        <li><a href="../immovable-assets/immovable-registry.html" class="nav-link"><i data-lucide="list"></i> Registry</a></li>
-        <li><a href="../immovable-assets/immovable-form.html" class="nav-link"><i data-lucide="plus-square"></i> Add New</a></li>
-      </ul>
-    </details>
-  </li>
-`;
-
-const GSO_SUPPLIES_NAV = `
-  <li>
-    <details>
-      <summary><i data-lucide="boxes"></i> Supplies</summary>
-      <ul class="text-sm">
-        <li><a href="../supplies/gso-requisitions.html" class="nav-link"><i data-lucide="clipboard-list"></i> Supply Requisitions</a></li>
-        <li><a href="../supplies/inventory.html" class="nav-link"><i data-lucide="boxes"></i> Supplies Inventory</a></li>
-      </ul>
-    </details>
-  </li>
-`;
-
-const GSO_SETTINGS_NAV = `
-  <li>
-    <details>
-      <summary><i data-lucide="settings"></i> Settings</summary>
-      <ul class="text-sm">
-        <li><a href="../settings/categories.html" class="nav-link"><i data-lucide="tags"></i> Categories</a></li>
-        <li><a href="../settings/offices.html" class="nav-link"><i data-lucide="map-pin"></i> Offices</a></li>
-        <li><a href="../settings/employees.html" class="nav-link"><i data-lucide="users"></i> Employees</a></li>
-      </ul>
-    </details>
-  </li>
-`;
-
-const VIEW_ONLY_NAV = `
-  <li><a href="https://lgu-employee-portal.netlify.app/dashboard.html" class="nav-link"><i data-lucide="arrow-left"></i> Back to Portal</a></li>
-  <li><a href="../portal/view-assets.html" class="nav-link"><i data-lucide="list"></i> View My Assets</a></li>
-  <li><a href="../portal/requisition.html" class="nav-link"><i data-lucide="shopping-cart"></i> Request Supplies</a></li>
-  <li><a href="../portal/my-requisitions.html" class="nav-link"><i data-lucide="history"></i> Requisition History</a></li>
-`;
+    if (item.children) {
+      // Build submenu and only render the parent if there are visible children
+      const childrenHtml = buildNav(item.children, userPermissions);
+      if (childrenHtml) {
+        navHtml += `
+          <li>
+            <details>
+              <summary><i data-lucide="${item.icon}"></i> ${item.text}</summary>
+              <ul class="text-sm">${childrenHtml}</ul>
+            </details>
+          </li>
+        `;
+      }
+    } else {
+      // Build a single link
+      navHtml += `<li><a href="${item.href}" class="nav-link"><i data-lucide="${item.icon}"></i> ${item.text}</a></li>`;
+    }
+  });
+  return navHtml;
+}
 
 function getSidebarHTML(user) {
-  // Check if the user has the GSO Admin role, which is assigned by the backend.
+  const userPermissions = user.permissions || [];
   const isAdmin = user.role === 'GSO Admin';
   let navLinks;
 
   if (isAdmin) {
-    navLinks = `
-      ${GSO_MAIN_NAV}
-      ${GSO_REPORTS_NAV}
-      ${GSO_ASSETS_NAV}
-      ${GSO_IMMOVABLE_ASSETS_NAV}
-      ${GSO_SUPPLIES_NAV}
-      ${GSO_SETTINGS_NAV}
-    `;
+    // Build the admin navigation based on their specific permissions
+    navLinks = buildNav(GSO_NAV_CONFIG, userPermissions);
   } else {
-    navLinks = VIEW_ONLY_NAV;
+    // Build the employee-facing navigation
+    navLinks = buildNav(VIEW_ONLY_NAV_CONFIG, userPermissions);
   }
+
   const logoutButton = isAdmin
     ? `<button id="logout-button" class="btn btn-error btn-xs mt-2">Logout</button>`
     : "";
