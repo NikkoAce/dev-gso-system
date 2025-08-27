@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!user) return;
 
         initializeLayout(user, gsoLogout); // Pass the logout function to the layout script
-        if (user.office === 'GSO') {
+        // This check is now based on permission, not a hardcoded office or role name.
+        // This aligns with the navigation and is more secure and flexible.
+        if (user.permissions && user.permissions.includes('dashboard:view')) {
             initializeDashboard();
         } else {
             // Non-GSO users might see a different dashboard or be redirected
