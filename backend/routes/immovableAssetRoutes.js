@@ -7,7 +7,8 @@ const {
     createImmovableAsset,
     updateImmovableAsset,
     deleteImmovableAsset,
-    deleteImmovableAssetAttachment
+    deleteImmovableAssetAttachment,
+    generateImmovableAssetReport // new
 } = require('../controllers/immovableAssetController.js');
 const PERMISSIONS = require('../config/permissions.js');
 const { upload } = require('../middlewares/multer.js');
@@ -23,5 +24,8 @@ router.route('/:id')
 
 // New route for deleting a specific attachment
 router.route('/:id/attachments/:attachmentKey').delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), deleteImmovableAssetAttachment);
+
+// Route for generating an Immovable Asset Report
+router.get('/report', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateImmovableAssetReport);
 
 module.exports = router;

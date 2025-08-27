@@ -4,7 +4,8 @@ const historySchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
     event: { type: String, required: true }, // e.g., 'Created', 'Updated Assessed Value', 'Re-classified', 'Renovated'
     details: { type: String },
-    user: { type: String, required: true } // Name of the user who made the change, or 'System'
+        required: [true, 'Assessed value is required.'],
+        default: 0
 });
 
 const componentSchema = new mongoose.Schema({
@@ -50,8 +51,7 @@ const immovableAssetSchema = new mongoose.Schema({
     },
     assessedValue: {
         type: Number,
-        required: [true, 'Assessed value is required.'],
-        default: 0
+        required: false,
     },
     status: {
         type: String,

@@ -303,11 +303,66 @@ const deleteImmovableAssetAttachment = asyncHandler(async (req, res) => {
     res.status(200).json({ message: 'Attachment deleted successfully' });
 });
 
+/**
+ * @desc    Generate report for immovable assets
+ * @route   GET /api/immovable-assets/report
+ * @access  Private (GSO with report:generate permission)
+ */
+const generateImmovableAssetReport = asyncHandler(async (req, res) => {
+    try {
+        // Extract query parameters for filtering (optional)
+        const { type, status, startDate, endDate } = req.query;
+
+        // Build the filter object based on the provided query parameters
+        const filter = {};
+        if (type) {
+            filter.type = type;
+        }
+        if (status) {
+            filter.status = status;
+        }
+         if (startDate && endDate) {
+            filter.dateAcquired = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        } else if (startDate) {
+            filter.dateAcquired = { $gte: new Date(startDate) };
+        } else if (endDate) {
+            filter.dateAcquired = { $lte: new Date(endDate) };
+        }
+
+        const assets = await ImmovableAsset.find(filter);
+
+        // Format the data for the report (customize as needed)
+        const headers = ['Name', 'Property Index Number', 'Type', 'Location', 'Assessed Value', 'Status', 'Acquisition Date'];
+        const rows = assets.map(asset => [
+            asset.name,
+            asset.propertyIndexNumber,
+            asset.type,
+            asset.location,
+            asset.assessedValue,
+            asset.status,
+            asset.dateAcquired ? asset.dateAcquired.toLocaleDateString() : 'N/A'
+        ]);
+
+        // Respond with the formatted report data
+        res.status(200).json({
+            headers,
+            rows
+        });
+    } catch (error) {
+        console.error('Error generating immovable asset report:', error);
+        res.status(500).json({ message: 'Error generating report', error: error.message });
+    }
+});
+
 module.exports = {
     createImmovableAsset,
     getImmovableAssets,
     getImmovableAssetById,
     updateImmovableAsset,
     deleteImmovableAsset,
-    deleteImmovableAssetAttachment
+    deleteImmovableAssetAttachment,
+    generateImmovableAssetReport
 };

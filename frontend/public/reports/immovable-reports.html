@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immovable Asset Reports - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/print.css" media="print">
+    <script type="module" src="/js/auth.js" defer></script>
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar Skeleton Loader -->
+            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
+                <div class="p-2 border-b">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex-grow">
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
+                </div>
+                <div class="p-2 border-t">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="space-y-6">
+                    <h1 id="page-title" class="text-3xl font-bold text-gray-800">Immovable Asset Reports</h1>
+
+                    <section aria-labelledby="immovable-reports-heading" class="card bg-base-100 border non-printable">
+                        <div class="card-body">
+                            <h2 id="immovable-reports-heading" class="card-title">Generate Immovable Asset Report</h2>
+                            <div class="flex flex-wrap items-end gap-4">
+                                <div class="form-control w-full max-w-xs">
+                                    <label for="type-filter" class="label"><span class="label-text">Type</span></label>
+                                    <select id="type-filter" class="select select-bordered font-normal">
+                                        <option value="">All Types</option>
+                                        <option value="Land">Land</option>
+                                        <option value="Building">Building</option>
+                                        <option value="Other Structures">Other Structures</option>
+                                        <option value="Road Network">Road Network</option>
+                                        <option value="Other Public Infrastructure">Other Public Infrastructure</option>
+                                    </select>
+                                </div>
+                                <div class="form-control w-full max-w-xs">
+                                    <label for="status-filter" class="label"><span class="label-text">Status</span></label>
+                                    <select id="status-filter" class="select select-bordered font-normal">
+                                        <option value="">All Statuses</option>
+                                        <option value="In Use">In Use</option>
+                                        <option value="Under Construction">Under Construction</option>
+                                        <option value="Idle">Idle</option>
+                                        <option value="For Disposal">For Disposal</option>
+                                        <option value="Disposed">Disposed</option>
+                                    </select>
+                                </div>
+                                 <div class="form-control w-full max-w-xs">
+                                    <label for="start-date" class="label"><span class="label-text">Start Date</span></label>
+                                    <input type="date" id="start-date" class="input input-bordered">
+                                </div>
+                                <div class="form-control w-full max-w-xs">
+                                    <label for="end-date" class="label"><span class="label-text">End Date</span></label>
+                                    <input type="date" id="end-date" class="input input-bordered">
+                                </div>
+                                <button id="generate-report-btn" class="btn btn-primary">
+                                    <i data-lucide="file-text"></i> Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="report-output" aria-labelledby="report-title" class="hidden bg-white p-6 rounded-lg border printable-area">
+                        <div class="flex justify-between items-center mb-4 non-printable">
+                            <h2 id="report-title" class="text-xl font-bold text-gray-800">Immovable Asset Report</h2>
+                            <button id="print-report-btn" class="btn btn-ghost">
+                                <i data-lucide="printer"></i> Print Report
+                            </button>
+                        </div>
+                        <div class="flex justify-center items-center gap-4 mb-4">
+                            <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                            <div class="text-center">
+                                <p>Republic of the Philippines</p>
+                                <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                                <p class="font-bold">MUNICIPALITY OF DAET</p>
+                            </div>
+                        </div>
+                        <header id="report-header" class="text-center mb-4 hidden">
+                            <h3 id="report-header-title" class="font-bold">Immovable Asset Report</h3>
+                            <p class="text-sm">From <span id="report-start-date" class="font-semibold"></span> to <span id="report-end-date" class="font-semibold"></span></p>
+                        </header>
+                        <div id="report-table-container" class="overflow-x-auto"></div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="print-container" class="hidden"></div>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./immovable-reports.js"></script>
+</body>
+</html>
