@@ -332,18 +332,36 @@ const generateImmovableAssetReport = asyncHandler(async (req, res) => {
             filter.dateAcquired = { $lte: new Date(endDate) };
         }
 
-        const assets = await ImmovableAsset.find(filter);
+        const assets = await ImmovableAsset.find(filter).sort({ propertyIndexNumber: 1 });
 
-        // Format the data for the report (customize as needed)
-        const headers = ['Name', 'Property Index Number', 'Type', 'Location', 'Assessed Value', 'Status', 'Acquisition Date'];
+        // A more detailed set of headers for a COA-style report
+        const headers = [
+            'Property Index Number',
+            'Asset Name',
+            'Type',
+            'Location',
+            'Acquisition Date',
+            'Acquisition Method',
+            'Assessed Value',
+            'Condition',
+            'Status',
+            'Remarks'
+        ];
+
+        const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-CA') : 'N/A';
+
         const rows = assets.map(asset => [
-            asset.name,
             asset.propertyIndexNumber,
+            asset.name,
             asset.type,
             asset.location,
-            asset.assessedValue,
+            formatDate(asset.dateAcquired),
+            asset.acquisitionMethod || 'N/A',
+            formatCurrency(asset.assessedValue),
+            asset.condition || 'N/A',
             asset.status,
-            asset.dateAcquired ? asset.dateAcquired.toLocaleDateString() : 'N/A'
+            asset.remarks || ''
         ]);
 
         // Respond with the formatted report data
