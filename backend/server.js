@@ -30,6 +30,12 @@ const corsOptions = {
 app.use(cors(corsOptions)); // Use the secure CORS options
 app.use(express.json());
 
+// --- Sanity Check Route ---
+app.get('/api/healthcheck', (req, res) => {
+    console.log('Healthcheck endpoint was hit successfully!');
+    res.status(200).json({ status: 'ok', message: 'GSO Backend is running.' });
+});
+
 // --- API Routes ---
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/assets', require('./routes/assetRoutes'));
