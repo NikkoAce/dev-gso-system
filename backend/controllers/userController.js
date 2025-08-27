@@ -3,32 +3,7 @@ const asyncHandler = require('express-async-handler');
 // It should include fields like name, email, office, role, and permissions.
 const User = require('../models/User');
 const Role = require('../models/Role');
-
-// This remains the canonical source of all possible permissions in the system.
-const GSO_PERMISSIONS = [
-    // Dashboard
-    'dashboard:view',
-    // Movable Assets
-    'asset:create',
-    'asset:read',
-    'asset:read:own_office',
-    'asset:update',
-    'asset:delete',
-    'asset:export',
-    'asset:transfer',
-    // Immovable Assets
-    'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete',
-    // Slips (PAR, ICS, PTR)
-    'slip:generate',
-    'slip:read',
-    // Supplies & Requisitions
-    'stock:read', 'stock:manage',
-    'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill',
-    // Other Modules
-    'report:generate',
-    'settings:read', 'settings:manage',
-    'user:read', 'user:manage'
-];
+const PERMISSIONS = require('../config/permissions');
 
 /**
  * @desc    Get all users from the database
@@ -79,7 +54,7 @@ const getRolesAndPermissions = asyncHandler(async (req, res) => {
 
     res.json({
         roles: roles.map(r => r.name),
-        permissions: GSO_PERMISSIONS.sort(),
+        permissions: Object.values(PERMISSIONS).sort(),
     });
 });
 

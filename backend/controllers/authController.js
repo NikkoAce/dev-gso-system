@@ -2,6 +2,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // GSO's internal User model
 const asyncHandler = require('express-async-handler');
+const PERMISSIONS = require('../config/permissions');
 
 // Define the URL of the LGU Employee Portal's backend
 // IMPORTANT: Ensure this matches your deployed LGU Portal backend URL
@@ -67,16 +68,19 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         // --- PERMISSION SYNC FOR ADMINS ---
         // This block ensures existing admins get the latest permissions.
         // It merges the current default admin permissions with any the user already has.
-        if (gsoUserRecord.role === 'GSO Admin') {
-            const defaultAdminPermissions = [
-                'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
-                'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete', 'slip:generate', 'slip:read', 'stock:read', 'stock:manage',
-                'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage',
-                'user:read', 'user:manage'
-            ];
-            // Directly assign the canonical list of permissions to ensure admins are always up-to-date.
+        if (gsoUserRecord.role === 'GSO Admin') { // Directly assign the canonical list of permissions to ensure admins are always up-to-date.
             // This fixes the issue where existing admins might not have newly added permissions.
-            gsoUserRecord.permissions = defaultAdminPermissions;
+            gsoUserRecord.permissions = [
+                PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.ASSET_CREATE, PERMISSIONS.ASSET_READ, PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                PERMISSIONS.ASSET_UPDATE, PERMISSIONS.ASSET_DELETE, PERMISSIONS.ASSET_EXPORT, PERMISSIONS.ASSET_TRANSFER,
+                PERMISSIONS.IMMOVABLE_CREATE, PERMISSIONS.IMMOVABLE_READ, PERMISSIONS.IMMOVABLE_UPDATE, PERMISSIONS.IMMOVABLE_DELETE,
+                PERMISSIONS.SLIP_GENERATE, PERMISSIONS.SLIP_READ,
+                PERMISSIONS.STOCK_READ, PERMISSIONS.STOCK_MANAGE,
+                PERMISSIONS.REQUISITION_CREATE, PERMISSIONS.REQUISITION_READ_OWN_OFFICE, PERMISSIONS.REQUISITION_READ_ALL, PERMISSIONS.REQUISITION_FULFILL,
+                PERMISSIONS.REPORT_GENERATE,
+                PERMISSIONS.SETTINGS_READ, PERMISSIONS.SETTINGS_MANAGE,
+                PERMISSIONS.USER_READ, PERMISSIONS.USER_MANAGE
+            ];
         }
 
         await gsoUserRecord.save();
@@ -91,16 +95,26 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         const adminRoleNames = ['IT'];
 
         if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
-            gsoRole = 'GSO Admin';
+            gsoRole = 'GSO Admin'; // Admins should be able to read and manage users
             permissions = [
-                'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
-                'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete', 'slip:generate', 'slip:read', 'stock:read', 'stock:manage',
-                'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage',
-                'user:read', 'user:manage' // Admins should be able to read and manage users
+                PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.ASSET_CREATE, PERMISSIONS.ASSET_READ, PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                PERMISSIONS.ASSET_UPDATE, PERMISSIONS.ASSET_DELETE, PERMISSIONS.ASSET_EXPORT, PERMISSIONS.ASSET_TRANSFER,
+                PERMISSIONS.IMMOVABLE_CREATE, PERMISSIONS.IMMOVABLE_READ, PERMISSIONS.IMMOVABLE_UPDATE, PERMISSIONS.IMMOVABLE_DELETE,
+                PERMISSIONS.SLIP_GENERATE, PERMISSIONS.SLIP_READ,
+                PERMISSIONS.STOCK_READ, PERMISSIONS.STOCK_MANAGE,
+                PERMISSIONS.REQUISITION_CREATE, PERMISSIONS.REQUISITION_READ_OWN_OFFICE, PERMISSIONS.REQUISITION_READ_ALL, PERMISSIONS.REQUISITION_FULFILL,
+                PERMISSIONS.REPORT_GENERATE,
+                PERMISSIONS.SETTINGS_READ, PERMISSIONS.SETTINGS_MANAGE,
+                PERMISSIONS.USER_READ, PERMISSIONS.USER_MANAGE
             ];
         } else {
             gsoRole = lguUser.role === 'Department Head' ? 'Department Head' : 'Employee';
-            permissions = ['dashboard:view', 'asset:read:own_office', 'requisition:create', 'requisition:read:own_office'];
+            permissions = [
+                PERMISSIONS.DASHBOARD_VIEW,
+                PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                PERMISSIONS.REQUISITION_CREATE,
+                PERMISSIONS.REQUISITION_READ_OWN_OFFICE
+            ];
         }
 
         gsoUserRecord = await User.create({
