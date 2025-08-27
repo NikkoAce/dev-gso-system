@@ -33,7 +33,7 @@ const generateGsoToken = (gsoUserRecord) => {
  * @access  Public (initially, then verified by LGU Portal)
  */
 exports.ssoLogin = asyncHandler(async (req, res) => {
-    const { token: portalToken } = req.body; // Token from LGU Employee Portal
+    const { token: portalToken } = req.body;
 
     if (!portalToken) {
         res.status(400);
@@ -46,53 +46,55 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         const response = await axios.get(`${LGU_PORTAL_API_URL}/users/me`, {
             headers: { 'Authorization': `Bearer ${portalToken}` }
         });
-
-        lguUser = response.data; // This is the user object from the LGU Portal
+        lguUser = response.data;
     } catch (error) {
         console.error('Error verifying portal token with LGU Portal:', error.response ? error.response.data : error.message);
         res.status(401);
         throw new Error('Invalid or expired portal token. Please log in again through the LGU Portal.');
     }
 
-    // Define GSO-specific roles and permissions based on LGU user's role/office
-    let gsoRole = 'Employee'; // Default GSO role
-    let permissions = [];
+    // Step 2: Find if the user already exists in the GSO system
+    let gsoUserRecord = await User.findOne({ externalId: lguUser._id });
 
-    // Define which offices and roles from the LGU Portal should get GSO Admin privileges.
-    const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
-    const adminRoleNames = ['IT']; // e.g., a user with role 'IT' from any office is an admin.
+    if (gsoUserRecord) {
+        // --- USER EXISTS ---
+        // The user already has a profile in the GSO system.
+        // We only update their name and office from the portal to keep it in sync.
+        // We DO NOT overwrite their role and permissions, preserving any manual changes.
+        gsoUserRecord.name = lguUser.name;
+        gsoUserRecord.office = lguUser.office;
+        await gsoUserRecord.save();
+    } else {
+        // --- NEW USER ---
+        // This is the user's first time logging into the GSO system.
+        // We create a new record for them with default roles and permissions.
+        let gsoRole = 'Employee';
+        let permissions = [];
 
-    // IMPORTANT: Customize these permission mappings based on your actual requirements
-    // A user is an admin if their office is in the admin list OR their role is in the admin list.
-    if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
-        gsoRole = 'GSO Admin';
-        permissions = [
-            'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
-            'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete', 'slip:generate', 'slip:read', 'stock:read', 'stock:manage',
-            'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage', 'user:manage'
-        ];
-    } else { // Regular Employee or Department Head
-        gsoRole = lguUser.role === 'Department Head' ? 'Department Head' : 'Employee';
-        permissions = ['dashboard:view', 'asset:read:own_office', 'requisition:create', 'requisition:read:own_office'];
-    }
+        const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
+        const adminRoleNames = ['IT'];
 
-    // Step 2: Use findOneAndUpdate with upsert to atomically find and update, or create the user.
-    // This is more robust than a separate find and create/update, preventing duplicate key errors.
-    const gsoUserRecord = await User.findOneAndUpdate(
-        { externalId: lguUser._id }, // Find user by their portal ID
-        { // Data to set on update or insert
+        if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
+            gsoRole = 'GSO Admin';
+            permissions = [
+                'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
+                'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete', 'slip:generate', 'slip:read', 'stock:read', 'stock:manage',
+                'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage',
+                'user:read', 'user:manage' // Admins should be able to read and manage users
+            ];
+        } else {
+            gsoRole = lguUser.role === 'Department Head' ? 'Department Head' : 'Employee';
+            permissions = ['dashboard:view', 'asset:read:own_office', 'requisition:create', 'requisition:read:own_office'];
+        }
+
+        gsoUserRecord = await User.create({
+            externalId: lguUser._id,
             name: lguUser.name,
             office: lguUser.office,
             role: gsoRole,
             permissions: permissions,
-            externalId: lguUser._id
-        },
-        {
-            new: true, // Return the modified document rather than the original
-            upsert: true, // Create a new document if no matching document is found
-            setDefaultsOnInsert: true
-        }
-    );
+        });
+    }
 
     // Step 3: Generate and send back the GSO-specific token
     const gsoToken = generateGsoToken(gsoUserRecord);
