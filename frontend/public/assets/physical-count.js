@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
+        // Page-level permission check
+        if (!user.permissions || !user.permissions.includes('asset:update')) {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
+
         initializeLayout(user, gsoLogout);
         initializePhysicalCountPage(user);
     } catch (error) {

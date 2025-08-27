@@ -6,8 +6,11 @@ import { createUIManager } from '../js/ui.js';
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            window.location.href = '../dashboard/dashboard.html';
+        if (!user) return;
+
+        // A user can access this form if they can either create or update assets.
+        if (!user.permissions || (!user.permissions.includes('asset:create') && !user.permissions.includes('asset:update'))) {
+            window.location.href = '../dashboard/dashboard.html'; // Redirect if no permission
             return;
         }
         initializeLayout(user, gsoLogout);

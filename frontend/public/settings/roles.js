@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
         if (!user) return;
+
+        // Page-level permission check
+        if (!user.permissions || !user.permissions.includes('user:manage')) {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
+
         initializeLayout(user, gsoLogout);
         await initializePage();
     } catch (error) {

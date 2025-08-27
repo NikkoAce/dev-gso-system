@@ -6,8 +6,10 @@ import { createUIManager } from '../js/ui.js';
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            window.location.href = '../dashboard/dashboard.html';
+        if (!user) return;
+
+        if (!user.permissions || (!user.permissions.includes('immovable:create') && !user.permissions.includes('immovable:update'))) {
+            window.location.href = '../dashboard/dashboard.html'; // Redirect if no permission
             return;
         }
         initializeLayout(user, gsoLogout);

@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             // If no user is found, auth.js will handle the redirect.
             return;
         }
+
+        // Page-level permission check
+        if (!user.permissions || !user.permissions.includes('user:read')) {
+            window.location.href = '../dashboard/dashboard.html';
+            return;
+        }
+
         initializeLayout(user, gsoLogout);
 
         [allUsers, metadata] = await Promise.all([
