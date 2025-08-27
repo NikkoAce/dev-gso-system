@@ -66,9 +66,14 @@ function initializeRegistryPage(user) {
                 <td class="text-right">${formatCurrency(asset.assessedValue)}</td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center non-printable">
-                    <div class="flex justify-center items-center gap-1">
-                        <a href="./immovable-form.html?id=${asset._id}" class="btn btn-ghost btn-xs" title="Edit Asset"><i data-lucide="edit" class="h-4 w-4"></i></a>
-                        <button class="delete-asset-btn btn btn-ghost btn-xs text-red-500" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                     <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a href="./immovable-form.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="edit" class="h-4 w-4"></i> Edit</a></li>
+                            <li><a href="./ledger-card.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="book-user" class="h-4 w-4"></i> Ledger Card</a></li>
+                            <div class="divider my-1"></div>
+                            <li><button class="delete-asset-btn text-red-500 flex items-center gap-2" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button></li>
+                        </ul>
                     </div>
                 </td>
             `;

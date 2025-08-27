@@ -375,6 +375,24 @@ const generateImmovableAssetReport = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc    Get data for a Real Property Ledger Card for a single asset
+ * @route   GET /api/immovable-assets/:id/ledger
+ * @access  Private (GSO with report:generate permission)
+ */
+const generateLedgerCardReport = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id);
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    // The full asset object contains all the necessary details for the ledger card,
+    // including the history sub-document.
+    res.status(200).json(asset);
+});
+
 module.exports = {
     createImmovableAsset,
     getImmovableAssets,
@@ -382,5 +400,6 @@ module.exports = {
     updateImmovableAsset,
     deleteImmovableAsset,
     deleteImmovableAssetAttachment,
-    generateImmovableAssetReport
+    generateImmovableAssetReport,
+    generateLedgerCardReport
 };

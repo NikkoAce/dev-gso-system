@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Property Ledger Card - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/print.css" media="print">
+    <script type="module" src="/js/auth.js" defer></script>
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar is dynamically loaded by layout.js -->
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-6 non-printable">
+                        <h1 id="page-title" class="text-3xl font-bold text-gray-800">Real Property Ledger Card</h1>
+                        <div>
+                            <a href="./immovable-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
+                            <button id="print-report-btn" class="btn btn-primary">
+                                <i data-lucide="printer"></i> Print
+                            </button>
+                        </div>
+                    </div>
+
+                    <section id="report-output" class="bg-white p-6 rounded-lg border printable-area">
+                        <!-- Loading State -->
+                        <div id="loading-state" class="text-center p-8">
+                            <i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i>
+                            <p class="mt-2">Loading Ledger Card...</p>
+                        </div>
+
+                        <!-- Error State -->
+                        <div id="error-state" class="hidden text-center p-8">
+                            <i data-lucide="alert-triangle" class="h-8 w-8 mx-auto text-red-500"></i>
+                            <p id="error-message" class="mt-2 text-red-600">Could not load asset data.</p>
+                        </div>
+
+                        <!-- Report Content -->
+                        <div id="report-content" class="hidden">
+                            <div class="flex justify-center items-center gap-4 mb-4">
+                                <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                                <div class="text-center">
+                                    <p>Republic of the Philippines</p>
+                                    <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                                    <p class="font-bold">MUNICIPALITY OF DAET</p>
+                                </div>
+                            </div>
+                            <header class="text-center mb-4">
+                                <h3 class="font-bold text-lg">REAL PROPERTY LEDGER CARD</h3>
+                            </header>
+                            
+                            <!-- Asset Details Section -->
+                            <div id="asset-details-container" class="mb-6 text-sm"></div>
+
+                            <!-- History Table -->
+                            <h4 class="font-bold mb-2">History of the Property</h4>
+                            <div id="history-table-container" class="overflow-x-auto"></div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./ledger-card.js"></script>
+</body>
+</html>
