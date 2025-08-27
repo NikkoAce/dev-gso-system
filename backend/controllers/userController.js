@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 // NOTE: This assumes you have a User model that is shared or synced from your LGU Portal.
 // It should include fields like name, email, office, role, and permissions.
-const User = require('../models/userModel');
+const User = require('../models/User');
 
 // In a production system, these could be stored in a database.
 // For now, a static list provides a clear and manageable source of truth.

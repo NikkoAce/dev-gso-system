@@ -63,6 +63,21 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         // We DO NOT overwrite their role and permissions, preserving any manual changes.
         gsoUserRecord.name = lguUser.name;
         gsoUserRecord.office = lguUser.office;
+
+        // --- PERMISSION SYNC FOR ADMINS ---
+        // This block ensures existing admins get the latest permissions.
+        // It merges the current default admin permissions with any the user already has.
+        if (gsoUserRecord.role === 'GSO Admin') {
+            const defaultAdminPermissions = [
+                'dashboard:view', 'asset:create', 'asset:read', 'asset:read:own_office', 'asset:update', 'asset:delete', 'asset:export', 'asset:transfer',
+                'immovable:create', 'immovable:read', 'immovable:update', 'immovable:delete', 'slip:generate', 'slip:read', 'stock:read', 'stock:manage',
+                'requisition:create', 'requisition:read:own_office', 'requisition:read:all', 'requisition:fulfill', 'report:generate', 'settings:read', 'settings:manage',
+                'user:read', 'user:manage'
+            ];
+            // Use a Set to merge permissions, ensuring no duplicates.
+            gsoUserRecord.permissions = [...new Set([...gsoUserRecord.permissions, ...defaultAdminPermissions])];
+        }
+
         await gsoUserRecord.save();
     } else {
         // --- NEW USER ---
