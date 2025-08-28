@@ -9,10 +9,9 @@ const historySchema = new mongoose.Schema({
 
 const attachmentSchema = new mongoose.Schema({
     key: { type: String, required: true },
-    url: { type: String },
     originalName: { type: String, required: true },
-    title: { type: String },
-    fileType: { type: String }
+    title: { type: String, trim: true },
+    mimeType: { type: String, required: true }
 }, { _id: false });
 
 const componentSchema = new mongoose.Schema({
