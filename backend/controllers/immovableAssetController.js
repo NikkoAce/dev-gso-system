@@ -214,31 +214,43 @@ const getImmovableAssetById = asyncHandler(async (req, res) => {
 });
 
 const updateImmovableAsset = asyncHandler(async (req, res) => {
-    const originalAsset = await ImmovableAsset.findById(req.params.id).lean(); // Use .lean() for a plain object for comparison
+    const originalAsset = await ImmovableAsset.findById(req.params.id).lean();
 
     if (!originalAsset) {
         res.status(404);
         throw new Error('Asset not found');
     }
 
-    // Since we are using multipart/form-data, nested objects will be stringified.
     const parsedBody = {};
     for (const key in req.body) {
         try {
-            // Attempt to parse fields that might be JSON (like nested objects)
             parsedBody[key] = JSON.parse(req.body[key]);
         } catch (e) {
-            // If it's not valid JSON, use the original value
             parsedBody[key] = req.body[key];
         }
     }
 
-    // Generate detailed history entries based on what changed
     const historyEntries = generateUpdateHistory(originalAsset, parsedBody, req.user);
+
+    // Flatten the parsedBody to create a dot-notation update object.
+    // This is more robust for updating nested fields in MongoDB.
+    const flattenForUpdate = (obj, prefix = '') => {
+        return Object.keys(obj).reduce((acc, k) => {
+            const pre = prefix.length ? prefix + '.' : '';
+            if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
+                Object.assign(acc, flattenForUpdate(obj[k], pre + k));
+            } else {
+                acc[pre + k] = obj[k];
+            }
+            return acc;
+        }, {});
+    };
+
+    const updatePayload = flattenForUpdate(parsedBody);
 
     // Prepare the update payload for an atomic database operation
     const updateOperation = {
-        $set: parsedBody,
+        $set: updatePayload,
         $push: {}
     };
 
@@ -251,7 +263,7 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
         const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
         const uploadPromises = req.files.map((file, index) => uploadToS3(file, originalAsset._id, attachmentTitles[index] || file.originalname, 'immovable-assets'));
         const newAttachments = await Promise.all(uploadPromises);
-        
+
         updateOperation.$push.attachments = { $each: newAttachments };
 
         const attachmentHistory = { event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name };
@@ -262,12 +274,10 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
         }
     }
 
-    // If nothing is being pushed, remove the empty $push operator
     if (Object.keys(updateOperation.$push).length === 0) {
         delete updateOperation.$push;
     }
 
-    // Perform the atomic update and return the new document
     const updatedAsset = await ImmovableAsset.findByIdAndUpdate(req.params.id, updateOperation, { new: true, runValidators: true });
 
     res.json(updatedAsset);
