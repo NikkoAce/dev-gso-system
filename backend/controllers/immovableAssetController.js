@@ -427,33 +427,60 @@ const generatePropertyCardReport = asyncHandler(async (req, res) => {
  * @access  Private (GSO with report:generate permission)
  */
 const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id);
+    const asset = await ImmovableAsset.findById(req.params.id).lean();
 
     if (!asset) {
         res.status(404);
         throw new Error('Asset not found');
     }
 
-    // Depreciation calculation is only relevant for certain asset types
     if (!['Building', 'Other Structures'].includes(asset.type) || !asset.buildingAndStructureDetails) {
         res.status(400);
         throw new Error('Depreciation ledger card is only applicable for Buildings and Other Structures with depreciation details.');
     }
 
     const details = asset.buildingAndStructureDetails;
+    const acquisitionDate = new Date(asset.dateAcquired);
     const depreciableCost = asset.assessedValue - (details.salvageValue || 0);
     const annualDepreciation = details.estimatedUsefulLife > 0 ? depreciableCost / details.estimatedUsefulLife : 0;
+    const dailyDepreciation = annualDepreciation / 365.25; // Average for leap years
 
-    const schedule = [];
-    let accumulatedDepreciation = 0;
+    // Sort history chronologically to build the ledger
+    const sortedHistory = [...asset.history].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    for (let i = 1; i <= details.estimatedUsefulLife; i++) {
-        accumulatedDepreciation += annualDepreciation;
-        const bookValue = asset.assessedValue - accumulatedDepreciation;
-        schedule.push({ year: i, depreciation: annualDepreciation, accumulatedDepreciation: accumulatedDepreciation, bookValue: bookValue });
-    }
+    const ledgerRows = [];
+    let lastCost = asset.assessedValue;
 
-    res.status(200).json({ asset: asset.toObject(), schedule });
+    sortedHistory.forEach(entry => {
+        const eventDate = new Date(entry.date);
+        const daysSinceAcquisition = (eventDate - acquisitionDate) / (1000 * 60 * 60 * 24);
+        
+        let accumulatedDepreciation = 0;
+        if (daysSinceAcquisition > 0) {
+            accumulatedDepreciation = Math.min(dailyDepreciation * daysSinceAcquisition, depreciableCost);
+        }
+
+        const adjustedCost = lastCost - accumulatedDepreciation;
+
+        // NOTE: The following fields are placeholders as they are not in the current data model.
+        // They can be implemented fully by extending the ImmovableAsset model.
+        ledgerRows.push({
+            date: entry.date,
+            reference: 'N/A', // Placeholder
+            particulars: entry.details,
+            propertyId: asset.propertyIndexNumber,
+            cost: lastCost,
+            estimatedUsefulLife: details.estimatedUsefulLife,
+            accumulatedDepreciation: accumulatedDepreciation,
+            impairmentLosses: 0, // Placeholder
+            adjustedCost: adjustedCost,
+            repairNature: 'N/A', // Placeholder
+            repairAmount: 0, // Placeholder
+            remarks: entry.event
+        });
+    });
+
+    res.status(200).json({ asset, ledgerRows });
 });
 
 module.exports = {

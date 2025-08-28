@@ -28,8 +28,11 @@ function initializeLedgerCardPage() {
     const errorState = document.getElementById('error-state');
     const errorMessage = document.getElementById('error-message');
     const reportContent = document.getElementById('report-content');
-    const assetDetailsContainer = document.getElementById('asset-details-container');
-    const depreciationTableContainer = document.getElementById('depreciation-table-container');
+    const ledgerFund = document.getElementById('ledger-fund');
+    const ledgerEquipmentName = document.getElementById('ledger-equipment-name');
+    const ledgerAccountCode = document.getElementById('ledger-account-code');
+    const ledgerDescription = document.getElementById('ledger-description');
+    const ledgerTableContainer = document.getElementById('ledger-table-container');
     const printReportBtn = document.getElementById('print-report-btn');
 
     // --- UTILITY FUNCTIONS ---
@@ -105,9 +108,9 @@ function initializeLedgerCardPage() {
         }
 
         try {
-            const { asset, schedule } = await fetchWithAuth(API_ENDPOINT);
-            renderAssetDetails(asset);
-            renderDepreciationTable(schedule);
+            const { asset, ledgerRows } = await fetchWithAuth(API_ENDPOINT);
+            renderLedgerHeader(asset);
+            renderLedgerTable(ledgerRows);
             loadingState.classList.add('hidden');
             reportContent.classList.remove('hidden');
         } catch (error) {
