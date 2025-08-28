@@ -11,73 +11,110 @@ const mongoose = require('mongoose');
 const getDashboardStats = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
 
-    // --- Build Date Filter ---
-    const dateFilter = {};
-    if (startDate) {
-        dateFilter.$gte = new Date(startDate);
-    }
-    if (endDate) {
-        // Set to the end of the selected day
-        const endOfDay = new Date(endDate);
-        endOfDay.setUTCHours(23, 59, 59, 999);
-        dateFilter.$lte = endOfDay;
-    }
-    const hasDateFilter = Object.keys(dateFilter).length > 0;
+    // --- 1. Define Date Filters ---
+    const end = endDate ? new Date(endDate) : new Date();
+    end.setUTCHours(23, 59, 59, 999);
 
-    // --- Aggregations & Queries ---
-    const assetStatsPipeline = [
-        // Optional: Match by date if filters are provided
-        ...(hasDateFilter ? [{ $match: { createdAt: dateFilter } }] : []),
+    // If no start date, default to 30 days before the end date for trend calculation.
+    const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
+    start.setUTCHours(0, 0, 0, 0);
+
+    // --- 2. Define Aggregation Pipelines ---
+    // This helper function gets stats for all assets acquired *up to* a certain date.
+    const getStatsAtDate = (date) => Asset.aggregate([
+        { $match: { acquisitionDate: { $lte: date } } },
         {
             $facet: {
-                totalValue: [
-                    { $group: { _id: null, total: { $sum: '$acquisitionCost' } } }
-                ],
-                totalAssets: [
-                    { $count: 'count' }
-                ],
-                assetsByStatus: [
-                    { $group: { _id: '$status', count: { $sum: 1 } } }
-                ],
-                assetsByOffice: [
-                    { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
-                ],
-                monthlyAcquisitions: [
-                    {
-                        $group: {
-                            _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } },
-                            count: { $sum: 1 }
-                        }
-                    },
-                    { $sort: { _id: 1 } }
-                ]
+                totalValue: [{ $group: { _id: null, total: { $sum: '$acquisitionCost' } } }],
+                totalAssets: [{ $count: 'count' }],
+                forRepair: [{ $match: { status: 'For Repair' } }, { $count: 'count' }],
+                disposed: [{ $match: { status: 'Disposed' } }, { $count: 'count' }]
+            }
+        }
+    ]);
+
+    // This pipeline gets assets acquired *within* the date range for the chart.
+    const monthlyAcquisitionsPipeline = [
+        { $match: { acquisitionDate: { $gte: start, $lte: end } } },
+        {
+            $group: {
+                _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } }
+    ];
+
+    // These pipelines get the *current* distribution of assets, regardless of date filters.
+    const currentDistributionPipeline = [
+        {
+            $facet: {
+                assetsByStatus: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
+                assetsByOffice: [{ $group: { _id: '$custodian.office', count: { $sum: 1 } } }]
             }
         }
     ];
 
-    const [assetStatsResult, pendingRequisitions, recentAssets] = await Promise.all([
-        Asset.aggregate(assetStatsPipeline),
-        Requisition.countDocuments({ status: 'Pending' }),
-        Asset.find(hasDateFilter ? { createdAt: dateFilter } : {}).sort({ createdAt: -1 }).limit(5).populate('custodian', 'name office')
+    // --- 3. Execute all queries concurrently ---
+    const [
+        currentPeriodStatsResult,
+        previousPeriodStatsResult,
+        monthlyAcquisitions,
+        currentDistributionResult,
+        recentAssets,
+        currentPendingReqs,
+        previousPendingReqs
+    ] = await Promise.all([
+        getStatsAtDate(end),
+        getStatsAtDate(start),
+        Asset.aggregate(monthlyAcquisitionsPipeline),
+        Asset.aggregate(currentDistributionPipeline),
+        Asset.find({ acquisitionDate: { $lte: end } }).sort({ createdAt: -1 }).limit(5).populate('custodian', 'name office'),
+        Requisition.countDocuments({ status: 'Pending', dateRequested: { $lte: end } }),
+        Requisition.countDocuments({ status: 'Pending', dateRequested: { $lt: start } })
     ]);
 
-    const stats = assetStatsResult[0];
+    const current = currentPeriodStatsResult[0];
+    const previous = previousPeriodStatsResult[0];
+    const distribution = currentDistributionResult[0];
 
-    // --- Format Data for Frontend ---
+    // --- 4. Format Data & Calculate Trends ---
+    const calculateTrend = (currentVal, previousVal) => {
+        if (previousVal === 0) return currentVal > 0 ? 100 : 0;
+        if (currentVal === 0 && previousVal > 0) return -100;
+        if (currentVal === previousVal) return 0;
+        return parseFloat((((currentVal - previousVal) / previousVal) * 100).toFixed(1));
+    };
+
     const formattedStats = {
-        totalValue: { current: stats.totalValue[0]?.total || 0, trend: 0 },
-        totalAssets: { current: stats.totalAssets[0]?.count || 0, trend: 0 },
-        forRepair: { current: stats.assetsByStatus.find(s => s._id === 'For Repair')?.count || 0, trend: 0 },
-        disposed: { current: stats.assetsByStatus.find(s => s._id === 'Disposed')?.count || 0, trend: 0 },
-        pendingRequisitions: { current: pendingRequisitions, trend: 0 }
+        totalValue: {
+            current: current.totalValue[0]?.total || 0,
+            trend: calculateTrend(current.totalValue[0]?.total || 0, previous.totalValue[0]?.total || 0)
+        },
+        totalAssets: {
+            current: current.totalAssets[0]?.count || 0,
+            trend: calculateTrend(current.totalAssets[0]?.count || 0, previous.totalAssets[0]?.count || 0)
+        },
+        forRepair: {
+            current: current.forRepair[0]?.count || 0,
+            trend: calculateTrend(current.forRepair[0]?.count || 0, previous.forRepair[0]?.count || 0)
+        },
+        disposed: {
+            current: current.disposed[0]?.count || 0,
+            trend: calculateTrend(current.disposed[0]?.count || 0, previous.disposed[0]?.count || 0)
+        },
+        pendingRequisitions: {
+            current: currentPendingReqs,
+            trend: calculateTrend(currentPendingReqs, previousPendingReqs)
+        }
     };
 
     const formattedCharts = {
         monthlyAcquisitions: {
-            labels: stats.monthlyAcquisitions.map(m => m._id),
+            labels: monthlyAcquisitions.map(m => m._id),
             datasets: [{
                 label: 'Assets Acquired',
-                data: stats.monthlyAcquisitions.map(m => m.count),
+                data: monthlyAcquisitions.map(m => m.count),
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1,
@@ -85,17 +122,17 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             }]
         },
         assetsByOffice: {
-            labels: stats.assetsByOffice.map(o => o._id || 'Unassigned'),
+            labels: distribution.assetsByOffice.map(o => o._id || 'Unassigned'),
             datasets: [{
                 label: 'Assets by Office',
-                data: stats.assetsByOffice.map(o => o.count)
+                data: distribution.assetsByOffice.map(o => o.count)
             }]
         },
         assetStatus: {
-            labels: stats.assetsByStatus.map(s => s._id),
+            labels: distribution.assetsByStatus.map(s => s._id),
             datasets: [{
                 label: 'Asset Status',
-                data: stats.assetsByStatus.map(s => s.count)
+                data: distribution.assetsByStatus.map(s => s.count)
             }]
         }
     };
