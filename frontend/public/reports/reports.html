@@ -78,23 +78,6 @@
                         </div>
                     </section>
 
-                    <section aria-labelledby="ledger-card-heading" class="card bg-base-100 border non-printable">
-                        <div class="card-body">
-                            <h2 id="ledger-card-heading" class="card-title">Generate Individual Ledger Card</h2>
-                            <div class="flex flex-wrap items-end gap-4">
-                                <div class="relative flex-grow form-control w-full max-w-md">
-                                    <label for="asset-search-input" class="label"><span class="label-text">Select Asset</span></label>
-                                    <input type="text" id="asset-search-input" placeholder="Type to search for an asset..." class="input input-bordered" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-autocomplete="list">
-                                    <div id="asset-search-results" class="hidden absolute z-10 w-full bg-base-100 border border-base-300 rounded-md mt-1 max-h-60 overflow-y-auto top-full" role="listbox"></div>
-                                    <input type="hidden" id="selected-asset-id">
-                                </div>
-                                <button id="generate-ledger-card" class="btn btn-accent">
-                                    <i data-lucide="book-marked"></i> Generate Ledger Card
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
                     <section id="report-output" aria-labelledby="report-title" class="hidden bg-white p-6 rounded-lg border printable-area">
                         <div class="flex justify-between items-center mb-4 non-printable">
                             <h2 id="report-title" class="text-xl font-bold text-gray-800"></h2>

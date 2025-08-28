@@ -217,9 +217,9 @@ function initializeRegistryPage(user) {
                 window.location.href = `./asset-form.html?id=${editButton.dataset.id}`;
                 return;
             }
-            const propertyCardButton = e.target.closest('.property-card-btn');
-            if (propertyCardButton) {
-                window.location.href = `../slips/property-card.html?id=${propertyCardButton.dataset.id}`;
+            const ledgerCardButton = e.target.closest('.ledger-card-btn');
+            if (ledgerCardButton) {
+                window.location.href = `../slips/property-card.html?id=${ledgerCardButton.dataset.id}`;
                 return;
             }
             const transferButton = e.target.closest('.transfer-btn');

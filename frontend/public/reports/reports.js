@@ -20,18 +20,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function initializeReportsPage(user) {
-    let allAssets = [];
     const { populateFilters, showToast } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const fundSourceFilter = document.getElementById('fund-source-filter');
     const categoryFilter = document.getElementById('category-filter');
-    const assetSearchInput = document.getElementById('asset-search-input');
-    const assetSearchResults = document.getElementById('asset-search-results');
-    const selectedAssetIdInput = document.getElementById('selected-asset-id');
     const generateRpcppeBtn = document.getElementById('generate-rpcppe');
     const generateDepreciationBtn = document.getElementById('generate-depreciation');
-    const generateLedgerCardBtn = document.getElementById('generate-ledger-card');
     const asAtDateInput = document.getElementById('as-at-date');
     const printReportBtn = document.getElementById('print-report-btn');
     const reportOutput = document.getElementById('report-output');
@@ -52,25 +47,14 @@ function initializeReportsPage(user) {
     // --- UTILITY FUNCTIONS ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
-    const debounce = (func, delay) => {
-        let timeoutId;
-        return (...args) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                func.apply(this, args);
-            }, delay);
-        };
-    };
 
     // --- DATA FETCHING ---
     async function initializePage() {
         try {
-            const [fetchedAssets, categories] = await Promise.all([
-                fetchWithAuth('assets'),
+            const categories = await Promise.all([
                 fetchWithAuth('categories')
             ]);
             
-            allAssets = fetchedAssets;
             populateFilters({ categories }, { categoryFilter });
             asAtDateInput.value = new Date().toISOString().split('T')[0]; // Set default date to today
         } catch (error) {
@@ -155,91 +139,6 @@ function initializeReportsPage(user) {
         reportOutput.classList.remove('hidden');
     }
 
-    function generateLedgerCard(asset) {
-        reportTitle.textContent = `PPE Ledger Card`;
-        reportHeader.classList.add('hidden'); // Hide the standard header
-        reportFooter.classList.add('hidden'); // Hide the standard footer
-    
-        const depreciableCost = asset.acquisitionCost - (asset.salvageValue || 0);
-        const annualDepreciation = asset.usefulLife > 0 ? depreciableCost / asset.usefulLife : 0;
-        
-        let rowsHTML = '';
-        let accumulatedDepreciation = 0;
-    
-        for (let i = 1; i <= asset.usefulLife; i++) {
-            accumulatedDepreciation += annualDepreciation;
-            const bookValue = asset.acquisitionCost - accumulatedDepreciation;
-            rowsHTML += `
-                <tr class="border-b">
-                    <td class="border border-black p-1 text-center">${i}</td>
-                    <td class="border border-black p-1 text-right">${formatCurrency(annualDepreciation)}</td>
-                    <td class="border border-black p-1 text-right">${formatCurrency(accumulatedDepreciation)}</td>
-                    <td class="border border-black p-1 text-right">${formatCurrency(bookValue)}</td>
-                </tr>
-            `;
-        }
-    
-        let tableHTML = `
-            <div class="text-center mb-4">
-                <h3 class="font-bold">PROPERTY, PLANT AND EQUIPMENT LEDGER CARD</h3>
-                <p class="text-sm">${asset.category}</p>
-            </div>
-            <div class="grid grid-cols-2 gap-x-4 text-sm mb-4">
-                <p><strong>Description:</strong> ${asset.description}</p>
-                <p><strong>Property No.:</strong> ${asset.propertyNumber}</p>
-                <p><strong>Acquisition Cost:</strong> ${formatCurrency(asset.acquisitionCost)}</p>
-                <p><strong>Acquisition Date:</strong> ${formatDate(asset.acquisitionDate)}</p>
-                <p><strong>Est. Useful Life:</strong> ${asset.usefulLife} years</p>
-            </div>
-            <table class="w-full text-xs border-collapse border border-black">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="border border-black p-1">Year</th>
-                        <th class="border border-black p-1">Depreciation</th>
-                        <th class="border border-black p-1">Accum. Dep.</th>
-                        <th class="border border-black p-1">Book Value</th>
-                    </tr>
-                </thead>
-                <tbody>${rowsHTML}</tbody>
-            </table>
-        `;
-    
-        reportTableContainer.innerHTML = tableHTML;
-        reportOutput.classList.remove('hidden');
-    }
-
-    // --- ASSET SEARCH COMBOBOX LOGIC ---
-    function renderAssetSearchResults() {
-        const searchTerm = assetSearchInput.value.toLowerCase();
-        if (searchTerm.length < 2) {
-            assetSearchResults.classList.add('hidden');
-            return;
-        }
-
-        const filteredAssets = allAssets.filter(asset => 
-            asset.propertyNumber.toLowerCase().includes(searchTerm) ||
-            asset.description.toLowerCase().includes(searchTerm)
-        );
-
-        assetSearchResults.innerHTML = '';
-        if (filteredAssets.length > 0) {
-            filteredAssets.forEach(asset => {
-                const div = document.createElement('div');
-                div.className = 'p-2 hover:bg-blue-100 cursor-pointer';
-                div.textContent = `${asset.propertyNumber} - ${asset.description}`;
-                div.dataset.id = asset._id;
-                assetSearchResults.appendChild(div);
-            });
-            assetSearchResults.classList.remove('hidden');
-        } else {
-            const div = document.createElement('div');
-            div.className = 'p-2 text-gray-500';
-            div.textContent = 'No assets found.';
-            assetSearchResults.appendChild(div);
-            assetSearchResults.classList.remove('hidden');
-        }
-    }
-
     async function handleGenerateReport(config) {
         const {
             button,
@@ -297,18 +196,6 @@ function initializeReportsPage(user) {
 
     // --- EVENT LISTENERS ---
 
-    function handleGenerateLedger() {
-        const selectedAssetId = selectedAssetIdInput.value;
-        if (!selectedAssetId) {
-            showToast('Please select an asset to generate a ledger card.', 'warning');
-            return;
-        }
-        const selectedAsset = allAssets.find(asset => asset._id === selectedAssetId);
-        if (selectedAsset) {
-            generateLedgerCard(selectedAsset);
-        }
-    }
-
     generateRpcppeBtn.addEventListener('click', () => handleGenerateReport({
         button: generateRpcppeBtn,
         endpoint: 'rpcppe',
@@ -336,30 +223,6 @@ function initializeReportsPage(user) {
             8: (data) => formatCurrency(data)       // Book Value, End
         }
     }));
-
-    generateLedgerCardBtn.addEventListener('click', handleGenerateLedger);
-
-    const debouncedRenderAssetSearchResults = debounce(renderAssetSearchResults, 300);
-    assetSearchInput.addEventListener('input', debouncedRenderAssetSearchResults);
-    assetSearchInput.addEventListener('focus', renderAssetSearchResults);
-
-    assetSearchResults.addEventListener('click', (e) => {
-        if (e.target && e.target.dataset.id) {
-            const selectedAssetId = e.target.dataset.id;
-            const selectedAsset = allAssets.find(asset => asset._id === selectedAssetId);
-            if (selectedAsset) {
-                assetSearchInput.value = `${selectedAsset.propertyNumber} - ${selectedAsset.description}`;
-                selectedAssetIdInput.value = selectedAssetId;
-                assetSearchResults.classList.add('hidden');
-            }
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!assetSearchInput.contains(e.target) && !assetSearchResults.contains(e.target)) {
-            assetSearchResults.classList.add('hidden');
-        }
-    });
 
     if (printReportBtn) {
         printReportBtn.addEventListener('click', () => {
