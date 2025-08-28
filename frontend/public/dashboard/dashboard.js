@@ -1,6 +1,6 @@
 // FILE: frontend/public/dashboard/dashboard.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
