@@ -45,6 +45,25 @@ const updateUser = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Update the current user's dashboard preferences
+ * @route   PUT /api/users/preferences
+ * @access  Private
+ */
+const updateUserDashboardPreferences = asyncHandler(async (req, res) => {
+    // req.user.id is attached by the 'protect' middleware
+    const user = await User.findById(req.user.id);
+
+    if (user) {
+        user.dashboardPreferences = req.body;
+        const updatedUser = await user.save();
+        res.status(200).json(updatedUser.dashboardPreferences);
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+/**
  * @desc    Get available roles and permissions for the UI
  * @route   GET /api/users/meta
  * @access  Private/Admin (Requires 'user:read' permission)
@@ -58,4 +77,4 @@ const getRolesAndPermissions = asyncHandler(async (req, res) => {
     });
 });
 
-module.exports = { getUsers, updateUser, getRolesAndPermissions };
+module.exports = { getUsers, updateUser, getRolesAndPermissions, updateUserDashboardPreferences };

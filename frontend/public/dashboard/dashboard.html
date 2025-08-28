@@ -1,4 +1,4 @@
-<!-- FILE: frontend/public/dashboard.html -->
+<!-- FILE: frontend/public/dashboard/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
     <script type="module" src="/js/auth.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="../css/output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -50,11 +51,12 @@
                 <div class="space-y-6">
                     <div class="flex justify-between items-center">
                         <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+                        <button id="customize-dashboard-btn" class="btn btn-ghost btn-sm"><i data-lucide="settings-2"></i> Customize</button>
                     </div>
                     <!-- Stat Cards Grid -->
-                    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 dashboard-grid">
                         <!-- Total Portfolio Value -->
-                        <div class="stat card bg-base-100 border">
+                        <div class="stat card bg-base-100 border dashboard-component" data-id="totalPortfolioValue">
                             <div class="stat-figure text-primary">
                                 <i data-lucide="coins" class="h-8 w-8"></i>
                             </div>
@@ -63,7 +65,7 @@
                             <div id="stat-portfolio-value-trend" class="stat-desc"></div>
                         </div>
                         <!-- Total Assets -->
-                        <div id="stat-card-total-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
+                        <div id="stat-card-total-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="totalAssets">
                             <div class="stat-figure text-secondary">
                                 <i data-lucide="archive" class="h-8 w-8"></i>
                             </div>
@@ -72,7 +74,7 @@
                             <div id="stat-total-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Immovable Assets -->
-                        <div id="stat-card-immovable-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
+                        <div id="stat-card-immovable-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="immovableAssets">
                             <div class="stat-figure text-info">
                                 <i data-lucide="building-2" class="h-8 w-8"></i>
                             </div>
@@ -81,7 +83,7 @@
                             <div id="stat-immovable-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Assets for Repair -->
-                        <div id="stat-card-for-repair" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
+                        <div id="stat-card-for-repair" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="forRepair">
                             <div class="stat-figure text-accent">
                                 <i data-lucide="wrench" class="h-8 w-8"></i>
                             </div>
@@ -90,7 +92,7 @@
                             <div id="stat-for-repair-trend" class="stat-desc"></div>
                         </div>
                         <!-- Disposed Assets -->
-                        <div id="stat-card-disposed" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
+                        <div id="stat-card-disposed" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="disposed">
                             <div class="stat-figure text-error">
                                 <i data-lucide="trash-2" class="h-8 w-8"></i>
                             </div>
@@ -99,7 +101,7 @@
                             <div id="stat-disposed-trend" class="stat-desc"></div>
                         </div>
                         <!-- Pending Requisitions -->
-                        <div class="stat card bg-base-100 border">
+                        <div class="stat card bg-base-100 border dashboard-component" data-id="pendingRequisitions">
                             <div class="stat-figure text-warning">
                                 <i data-lucide="clipboard-list" class="h-8 w-8"></i>
                             </div>
@@ -108,7 +110,7 @@
                             <div id="stat-pending-reqs-trend" class="stat-desc"></div>
                         </div>
                         <!-- Low Stock Items -->
-                        <div id="stat-card-low-stock" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
+                        <div id="stat-card-low-stock" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="lowStockItems">
                             <div class="stat-figure text-orange-500">
                                 <i data-lucide="package-search" class="h-8 w-8"></i>
                             </div>
@@ -117,7 +119,7 @@
                             <div class="stat-desc text-orange-500">Reorder needed</div>
                         </div>
                         <!-- Filter Card -->
-                        <div class="card bg-base-100 border lg:col-span-2">
+                        <div class="card bg-base-100 border lg:col-span-2 dashboard-component" data-id="filters">
                             <div class="card-body p-4">
                                 <h2 class="card-title text-base">Filters</h2>
                                 <div class="grid grid-cols-2 gap-2">
@@ -135,9 +137,9 @@
                     </div>
 
                     <!-- Charts & Tables Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div id="main-content-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 dashboard-grid">
                         <!-- Monthly Acquisitions Chart -->
-                        <div class="card bg-base-100 border">
+                        <div class="card bg-base-100 border dashboard-component" data-id="monthlyAcquisitions">
                             <div class="card-body">
                                 <h2 class="card-title">Monthly Asset Acquisitions</h2>
                                 <div class="h-64">
@@ -146,7 +148,7 @@
                             </div>
                         </div>
                         <!-- Assets by Category Chart -->
-                        <div class="card bg-base-100 border">
+                        <div class="card bg-base-100 border dashboard-component" data-id="assetsByOffice">
                             <div class="card-body">
                                 <h2 class="card-title">Assets by Office</h2>
                                 <div class="h-64">
@@ -155,7 +157,7 @@
                             </div>
                         </div>
                         <!-- Asset Status Chart -->
-                        <div class="card bg-base-100 border">
+                        <div class="card bg-base-100 border dashboard-component" data-id="assetStatus">
                             <div class="card-body">
                                 <h2 class="card-title">Asset Status Distribution</h2>
                                 <div class="h-64">
@@ -164,7 +166,7 @@
                             </div>
                         </div>
                         <!-- Recent Assets Table -->
-                        <div class="lg:col-span-2 card bg-base-100 border">
+                        <div class="lg:col-span-2 card bg-base-100 border dashboard-component" data-id="recentAssets">
                             <div class="card-body">
                                 <h2 class="card-title">Recently Added Assets</h2>
                                 <div class="overflow-x-auto h-48">
@@ -175,7 +177,7 @@
                             </div>
                         </div>
                         <!-- Recent Requisitions Table -->
-                        <div class="card bg-base-100 border">
+                        <div class="card bg-base-100 border dashboard-component" data-id="recentRequisitions">
                             <div class="card-body">
                                 <h2 class="card-title">Recent Requisitions</h2>
                                 <div class="overflow-x-auto h-48">
@@ -190,6 +192,22 @@
             </main>
         </div>
     </div>
+
+    <!-- Customization Modal -->
+    <dialog id="customize-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-md">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg">Customize Dashboard</h3>
+            <p class="py-4 text-sm">Check the items you want to see on your dashboard. Drag and drop to reorder.</p>
+            <div id="component-list-container" class="space-y-4 max-h-96 overflow-y-auto">
+                <!-- Checkboxes will be populated by JS -->
+            </div>
+            <div class="modal-action"><button id="save-preferences-btn" class="btn btn-primary">Save Preferences</button></div>
+        </div>
+    </dialog>
+
     <script src="../js/layout.js"></script>
     <script type="module" src="./dashboard.js"></script>
 </body>

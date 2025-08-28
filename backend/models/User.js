@@ -16,6 +16,12 @@ const gsoUserSchema = new mongoose.Schema({
     permissions: [{ // An array of permission strings
         type: String,
     }],
+    dashboardPreferences: {
+        cardOrder: { type: [String], default: [] },
+        chartOrder: { type: [String], default: [] },
+        tableOrder: { type: [String], default: [] },
+        visibleComponents: { type: [String], default: [] }
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', gsoUserSchema);

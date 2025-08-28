@@ -2,24 +2,101 @@
 import { fetchWithAuth } from '../js/api.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
+let userPreferences = {};
+const allComponents = {};
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
         if (!user) return;
+
+        userPreferences = user.dashboardPreferences || {
+            cardOrder: [],
+            chartOrder: [],
+            tableOrder: [],
+            visibleComponents: []
+        };
 
         if (!user.permissions || !user.permissions.includes('dashboard:view')) {
             window.location.href = '../assets/asset-registry.html';
             return;
         }
 
+        // Store original component HTML and order
+        document.querySelectorAll('.dashboard-component').forEach(el => {
+            allComponents[el.dataset.id] = {
+                id: el.dataset.id,
+                html: el.outerHTML,
+                title: el.querySelector('.stat-title, .card-title')?.textContent || el.dataset.id,
+                containerId: el.parentElement.id
+            };
+        });
+
         initializeLayout(user, gsoLogout);
-        initializeDashboard();
+        initializeDashboard(user);
     } catch (error) {
         console.error("Authentication failed on dashboard:", error);
     }
 });
 
-function initializeDashboard() {
+function applyPreferences() {
+    // Hide all components first
+    Object.keys(allComponents).forEach(id => {
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (el) el.style.display = 'none';
+    });
+
+    // Show and order visible components
+    userPreferences.visibleComponents.forEach(id => {
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (el) el.style.display = '';
+    });
+
+    const orderAndRender = (orderKey, containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const orderedIds = userPreferences[orderKey] || [];
+        orderedIds.forEach(id => {
+            const component = document.querySelector(`[data-id="${id}"]`);
+            if (component && component.parentElement === container) {
+                container.appendChild(component);
+            }
+        });
+    };
+
+    orderAndRender('cardOrder', 'stats-container');
+    orderAndRender('chartOrder', 'main-content-grid');
+    orderAndRender('tableOrder', 'main-content-grid');
+}
+
+function populateCustomizeModal() {
+    const container = document.getElementById('component-list-container');
+    container.innerHTML = '';
+
+    const allComponentIds = Object.keys(allComponents);
+
+    allComponentIds.forEach(id => {
+        const component = allComponents[id];
+        const isVisible = userPreferences.visibleComponents.includes(id);
+        const itemHTML = `
+            <div class="flex items-center justify-between p-2 border rounded-lg bg-base-200 cursor-grab" data-id="${id}">
+                <div class="form-control">
+                    <label class="label cursor-pointer gap-2">
+                        <input type="checkbox" class="checkbox checkbox-sm component-visibility-toggle" data-id="${id}" ${isVisible ? 'checked' : ''}>
+                        <span class="label-text">${component.title}</span>
+                    </label>
+                </div>
+                <i data-lucide="grip-vertical" class="text-base-content/40"></i>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', itemHTML);
+    });
+
+    new Sortable(container, { animation: 150, handle: '.cursor-grab' });
+}
+
+function initializeDashboard(user) {
     const charts = {}; // To hold chart instances for updates
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -29,6 +106,7 @@ function initializeDashboard() {
             const params = new URLSearchParams({ startDate, endDate }).toString();
             const data = await fetchWithAuth(`dashboard/stats?${params}`);
             renderStatCards(data.stats);
+            applyPreferences(); // Apply layout after data is fetched
             createOrUpdateCharts(data.charts);
             renderRecentTables(data.recent);
         } catch (error) {
@@ -224,8 +302,49 @@ function initializeDashboard() {
         endDateInput.value = new Date().toISOString().split('T')[0];
     }
 
+    function setupCustomizationListeners() {
+        const modal = document.getElementById('customize-modal');
+        const openBtn = document.getElementById('customize-dashboard-btn');
+        const saveBtn = document.getElementById('save-preferences-btn');
+
+        openBtn.addEventListener('click', () => {
+            populateCustomizeModal();
+            modal.showModal();
+        });
+
+        saveBtn.addEventListener('click', async () => {
+            const newPreferences = {
+                visibleComponents: [],
+                cardOrder: [],
+                chartOrder: [],
+                tableOrder: []
+            };
+
+            document.querySelectorAll('#component-list-container > div').forEach(el => {
+                const id = el.dataset.id;
+                const componentInfo = allComponents[id];
+                if (componentInfo.containerId === 'stats-container') {
+                    newPreferences.cardOrder.push(id);
+                } else {
+                    // Differentiate between charts and tables if needed, for now group them
+                    newPreferences.chartOrder.push(id);
+                }
+            });
+
+            document.querySelectorAll('.component-visibility-toggle:checked').forEach(chk => {
+                newPreferences.visibleComponents.push(chk.dataset.id);
+            });
+
+            userPreferences = newPreferences;
+            await fetchWithAuth('users/preferences', { method: 'PUT', body: newPreferences });
+            applyPreferences();
+            document.getElementById('customize-modal').close();
+        });
+    }
+
     // --- INITIALIZATION ---
     const endDate = new Date().toISOString().split('T')[0];
     fetchDashboardData('', endDate); // Initial load with no start date and today as end date
     setupEventListeners();
+    setupCustomizationListeners();
 }
