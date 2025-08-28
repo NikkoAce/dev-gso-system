@@ -7,12 +7,13 @@ let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition',
-        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies'
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Existing cards and filters
+        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Existing charts
+        'recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies', 'recentImmovableAssets' // NEW: Added 'recentImmovableAssets'
     ],
     cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
-    tableOrder: ['recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies']
+    tableOrder: ['recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies', 'recentImmovableAssets'] // NEW: Added 'recentImmovableAssets'
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -181,16 +182,16 @@ function initializeDashboard(user) {
     }
 
     function renderStatCards(stats) {
-        document.getElementById('stat-portfolio-value').textContent = formatCurrency(stats.totalPortfolioValue.current);
-        document.getElementById('stat-total-assets').textContent = stats.totalAssets.current;
-        document.getElementById('stat-for-repair').textContent = stats.forRepair.current;
-        document.getElementById('stat-disposed').textContent = stats.disposed.current;
-        document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions.current;
-        document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets.current;
-        document.getElementById('stat-low-stock').textContent = stats.lowStockItems.current;
-        document.getElementById('stat-unassigned-assets').textContent = stats.unassignedAssets.current;
-        document.getElementById('stat-total-depreciation-ytd').textContent = formatCurrency(stats.totalDepreciationYTD.current);
-        document.getElementById('stat-nearing-end-of-life').textContent = stats.nearingEndOfLife.current;
+        document.getElementById('stat-portfolio-value').textContent = formatCurrency(stats.totalPortfolioValue?.current || 0);
+        document.getElementById('stat-total-assets').textContent = stats.totalAssets?.current || 0;
+        document.getElementById('stat-for-repair').textContent = stats.forRepair?.current || 0;
+        document.getElementById('stat-disposed').textContent = stats.disposed?.current || 0;
+        document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions?.current || 0;
+        document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets?.current || 0;
+        document.getElementById('stat-low-stock').textContent = stats.lowStockItems?.current || 0;
+        document.getElementById('stat-unassigned-assets').textContent = stats.unassignedAssets?.current || 0;
+        document.getElementById('stat-total-depreciation-ytd').textContent = formatCurrency(stats.totalDepreciationYTD?.current || 0);
+        document.getElementById('stat-nearing-end-of-life').textContent = stats.nearingEndOfLife?.current || 0;
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
@@ -202,12 +203,12 @@ function initializeDashboard(user) {
             }
         };
 
-        renderTrend(document.getElementById('stat-portfolio-value-trend'), stats.totalPortfolioValue.trend);
-        renderTrend(document.getElementById('stat-total-assets-trend'), stats.totalAssets.trend);
-        renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair.trend);
-        renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed.trend);
-        renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions.trend);
-        renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets.trend); // No trend for unassignedAssets or totalDepreciationYTD yet.
+        renderTrend(document.getElementById('stat-portfolio-value-trend'), stats.totalPortfolioValue?.trend || 0);
+        renderTrend(document.getElementById('stat-total-assets-trend'), stats.totalAssets?.trend || 0);
+        renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair?.trend || 0);
+        renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed?.trend || 0);
+        renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions?.trend || 0);
+        renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets?.trend || 0);
         // No trend for unassignedAssets yet, as per backend.
         lucide.createIcons();
     }
@@ -387,30 +388,44 @@ function initializeDashboard(user) {
         } else {
             topSuppliesBody.innerHTML = '<tr><td colspan="2" class="text-center text-gray-500 py-4">Not enough data for top supplies.</td></tr>';
         }
+
+        // NEW: Render Recent Immovable Assets Table
+        const recentImmovableAssetsBody = document.getElementById('recent-immovable-assets-table');
+        recentImmovableAssetsBody.innerHTML = '';
+        if (data.recentImmovableAssets && data.recentImmovableAssets.length > 0) {
+            data.recentImmovableAssets.forEach(asset => {
+                const row = `
+                    <tr>
+                        <td>${asset.propertyIndexNumber}</td>
+                        <td>${asset.name}</td>
+                        <td>${asset.type}</td>
+                        <td>${asset.location}</td>
+                        <td>${new Date(asset.dateAcquired).toLocaleDateString()}</td>
+                    </tr>`;
+                recentImmovableAssetsBody.insertAdjacentHTML('beforeend', row);
+            });
+        } else {
+            recentImmovableAssetsBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No recent immovable properties.</td></tr>';
+        }
     }
 
     function setupEventListeners() {
-        // Stat Card Click Handlers
-        document.getElementById('stat-card-total-assets').addEventListener('click', () => {
-            window.location.href = '../assets/asset-registry.html';
-        });
-        document.getElementById('stat-card-for-repair').addEventListener('click', () => {
-            window.location.href = '../assets/asset-registry.html?status=For Repair';
-        });
-        document.getElementById('stat-card-disposed').addEventListener('click', () => {
-            window.location.href = '../assets/asset-registry.html?status=Disposed';
-        });
-        document.getElementById('stat-card-low-stock').addEventListener('click', () => {
-            window.location.href = '../supplies/stock-management.html?filter=low_stock';
-        });
-        document.getElementById('stat-card-immovable-assets').addEventListener('click', () => {
-            window.location.href = '../immovable-assets/immovable-registry.html';
-        });
-        document.getElementById('stat-card-unassigned-assets').addEventListener('click', () => { // NEW
-            window.location.href = '../assets/asset-registry.html?assignment=unassigned';
-        });
-        document.getElementById('stat-card-nearing-end-of-life').addEventListener('click', () => {
-            window.location.href = '../assets/asset-registry.html?filter=nearing_eol';
+        const statsContainer = document.getElementById('stats-container');
+
+        // Delegated event listener for all clickable stat cards
+        statsContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.dashboard-component[data-url]');
+            if (!card) return;
+
+            const url = card.dataset.url;
+            const filterKey = card.dataset.filterKey;
+            const filterValue = card.dataset.filterValue;
+
+            if (filterKey && filterValue) {
+                window.location.href = `${url}?${filterKey}=${encodeURIComponent(filterValue)}`;
+            } else {
+                window.location.href = url;
+            }
         });
 
         // Date Filter Handlers

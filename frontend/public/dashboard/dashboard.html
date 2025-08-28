@@ -89,7 +89,7 @@
                             <div id="stat-total-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Immovable Assets -->
-                        <div id="stat-card-immovable-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="immovableAssets">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="immovableAssets" data-url="../immovable-assets/immovable-registry.html">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-info">
                                 <i data-lucide="building-2" class="h-8 w-8"></i>
@@ -99,7 +99,7 @@
                             <div id="stat-immovable-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Assets for Repair -->
-                        <div id="stat-card-for-repair" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="forRepair">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="forRepair" data-url="../assets/asset-registry.html" data-filter-key="status" data-filter-value="For Repair">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-accent">
                                 <i data-lucide="wrench" class="h-8 w-8"></i>
@@ -109,7 +109,7 @@
                             <div id="stat-for-repair-trend" class="stat-desc"></div>
                         </div>
                         <!-- Disposed Assets -->
-                        <div id="stat-card-disposed" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="disposed">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="disposed" data-url="../assets/asset-registry.html" data-filter-key="status" data-filter-value="Disposed">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-error">
                                 <i data-lucide="trash-2" class="h-8 w-8"></i>
@@ -129,7 +129,7 @@
                             <div id="stat-pending-reqs-trend" class="stat-desc"></div>
                         </div>
                         <!-- Low Stock Items -->
-                        <div id="stat-card-low-stock" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="lowStockItems">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="lowStockItems" data-url="../supplies/inventory.html" data-filter-key="filter" data-filter-value="low_stock">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-orange-500">
                                 <i data-lucide="package-search" class="h-8 w-8"></i>
@@ -139,7 +139,7 @@
                             <div class="stat-desc text-orange-500">Reorder needed</div>
                         </div>
                         <!-- NEW: Unassigned Assets -->
-                        <div id="stat-card-unassigned-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="unassignedAssets" data-type="card">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="unassignedAssets" data-type="card" data-url="../assets/asset-registry.html" data-filter-key="assignment" data-filter-value="unassigned">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-info">
                                 <i data-lucide="package-minus" class="h-8 w-8"></i>
@@ -159,7 +159,7 @@
                             <div class="stat-desc">As of selected date</div>
                         </div>
                         <!-- NEW: Assets Nearing End of Life -->
-                        <div id="stat-card-nearing-end-of-life" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="nearingEndOfLife" data-type="card">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="nearingEndOfLife" data-type="card" data-url="../assets/asset-registry.html" data-filter-key="filter" data-filter-value="nearing_eol">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-cyan-500">
                                 <i data-lucide="hourglass" class="h-8 w-8"></i>
@@ -279,6 +279,23 @@
                                             <tr><th>Item</th><th class="text-right">Total Issued</th></tr>
                                         </thead>
                                         <tbody id="top-supplies-table"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- NEW: Recently Acquired Immovable Properties Table -->
+                        <div class="lg:col-span-3 card bg-base-100 border dashboard-component" data-id="recentImmovableAssets" data-type="table">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="card-body">
+                                <h2 class="card-title">Recently Acquired Immovable Properties</h2>
+                                <div class="overflow-x-auto h-48">
+                                    <table class="table table-zebra table-pin-rows table-sm">
+                                        <thead>
+                                            <tr><th>PIN</th><th>Name</th><th>Type</th><th>Location</th><th>Acq. Date</th></tr>
+                                        </thead>
+                                        <tbody id="recent-immovable-assets-table">
+                                            <!-- Data will be populated by JS -->
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>

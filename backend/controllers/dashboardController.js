@@ -88,6 +88,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     { $sort: { acquisitionDate: -1 } },
                     { $limit: 5 },
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
+                ],
+                unassignedAssetsCount: [
+                    { $match: { assignedPAR: { $in: [null, ""] }, assignedICS: { $in: [null, ""] } } },
+                    { $count: "count" }
                 ]
             }
         }
@@ -122,17 +126,18 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         $expr: { $lte: ["$quantity", "$reorderPoint"] }
     });
 
-    // NEW: Pipeline for Unassigned Assets
-    const unassignedAssetsCountPipeline = Asset.countDocuments({
-        assignedPAR: { $in: [null, ""] },
-        assignedICS: { $in: [null, ""] }
-    });
-
     // NEW: Pipeline for Recent Transfers
     const recentTransfersPipeline = PTR.aggregate([
         { $sort: { date: -1 } }, // Sort by transfer date, most recent first
         { $limit: 5 }, // Get the top 5 recent transfers
         { $project: { ptrNumber: 1, date: 1, 'from.name': 1, 'from.office': 1, 'to.name': 1, 'to.office': 1, assets: 1 } }
+    ]);
+
+    // NEW: Pipeline for Recent Immovable Assets
+    const recentImmovableAssetsPipeline = ImmovableAsset.aggregate([
+        { $sort: { dateAcquired: -1, createdAt: -1 } }, // Sort by acquisition date, then creation date
+        { $limit: 5 }, // Get the top 5 recent immovable assets
+        { $project: { propertyIndexNumber: 1, name: 1, type: 1, location: 1, dateAcquired: 1 } }
     ]);
 
 
@@ -234,20 +239,20 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         immovableAssetResults,
         requisitionResults,
         lowStockCount,
-        unassignedAssetsCount,
         totalDepreciationResult,
         nearingEndOfLifeResult,
-        recentTransfersResult,
+        recentTransfersResult, // Existing
+        recentImmovableAssetsResult, // NEW
         topSuppliesResult
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
         requisitionPipeline,
         lowStockCountPipeline,
-        unassignedAssetsCountPipeline,
         totalDepreciationPipeline,
         nearingEndOfLifeCountPipeline,
-        recentTransfersPipeline,
+        recentTransfersPipeline, // Existing
+        recentImmovableAssetsPipeline, // NEW
         topSuppliesPipeline
     ]);
 
@@ -263,6 +268,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const assetsByOffice = ma.assetsByOffice || [];
     const assetsByCondition = ma.assetsByCondition || [];
     const recentAssets = ma.recentAssets || [];
+    const unassignedAssetsCount = ma.unassignedAssetsCount?.[0]?.count || 0;
 
     const currentImmovableStats = ia.currentImmovableStats || [];
     const previousImmovableStats = ia.previousImmovableStats || [];
@@ -276,6 +282,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const totalDepreciationYTD = totalDepreciationResult[0]?.totalDepreciationYTD || 0;
     const nearingEndOfLifeCount = nearingEndOfLifeResult[0]?.count || 0;
     const recentTransfers = recentTransfersResult || [];
+    const recentImmovableAssets = recentImmovableAssetsResult || []; // NEW
     const topSupplies = topSuppliesResult || [];
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
@@ -380,6 +387,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         recentAssets,
         recentRequisitions,
         recentTransfers,
+        recentImmovableAssets, // NEW
         topSupplies
     });
 });
