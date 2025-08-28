@@ -60,3 +60,21 @@ body.print-preview-mode.preview-landscape .printable-area { width: 356mm; min-he
     opacity: 0.4;
     background-color: oklch(var(--b3) / 1);
 }
+
+/* --- Dashboard Edit Mode Styles --- */
+.dashboard-grid.is-editing .dashboard-component {
+    border: 2px dashed oklch(var(--b3));
+    position: relative;
+}
+
+.dashboard-grid.is-editing .drag-handle {
+    display: block;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    cursor: grab;
+    padding: 4px;
+    background-color: oklch(var(--b1) / 0.7);
+    border-radius: 9999px;
+    z-index: 10;
+}
