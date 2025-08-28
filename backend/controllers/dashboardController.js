@@ -3,6 +3,7 @@ const Asset = require('../models/Asset');
 const Requisition = require('../models/Requisition');
 const ImmovableAsset = require('../models/immovableAsset');
 const StockItem = require('../models/StockItem');
+const PTR = require('../models/PTR'); // Import the PTR model
 const mongoose = require('mongoose');
 
 /**
@@ -23,6 +24,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const end = endDate ? new Date(endDate) : new Date();
     end.setUTCHours(23, 59, 59, 999);
 
+    const startOfYear = new Date(end.getFullYear(), 0, 1); // Start of the current year
     const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
     start.setUTCHours(0, 0, 0, 0);
 
@@ -126,19 +128,127 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         assignedICS: { $in: [null, ""] }
     });
 
+    // NEW: Pipeline for Recent Transfers
+    const recentTransfersPipeline = PTR.aggregate([
+        { $sort: { date: -1 } }, // Sort by transfer date, most recent first
+        { $limit: 5 }, // Get the top 5 recent transfers
+        { $project: { ptrNumber: 1, date: 1, 'from.name': 1, 'from.office': 1, 'to.name': 1, 'to.office': 1, assets: 1 } }
+    ]);
+
+
+
+    // NEW: Pipeline for Total Depreciation (Year-to-Date)
+    const totalDepreciationPipeline = Asset.aggregate([
+        ...matchStage,
+        { $match: { acquisitionDate: { $lte: end } } },
+        {
+            $addFields: {
+                depreciableCost: { $subtract: ["$acquisitionCost", { $ifNull: ["$salvageValue", 0] }] },
+                annualDepreciation: {
+                    $cond: {
+                        if: { $gt: ["$usefulLife", 0] },
+                        then: { $divide: [{ $subtract: ["$acquisitionCost", { $ifNull: ["$salvageValue", 0] }] }, "$usefulLife"] },
+                        else: 0
+                    }
+                }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalDepreciationYTD: {
+                    $sum: {
+                        $min: ["$depreciableCost", { $multiply: ["$annualDepreciation", { $divide: [{ $subtract: [end, { $max: ["$acquisitionDate", startOfYear] }] }, 1000 * 60 * 60 * 24 * 365.25] }] }]
+                    }
+                }
+            }
+        }
+    ]);
+
+    // NEW: Pipeline for Assets Nearing End of Life (within the next year)
+    const oneYearFromNow = new Date(end);
+    oneYearFromNow.setFullYear(end.getFullYear() + 1);
+
+    const nearingEndOfLifeCountPipeline = Asset.aggregate([
+        ...matchStage,
+        {
+            $match: {
+                status: { $in: ['In Use', 'In Storage'] },
+                usefulLife: { $gt: 0 }
+            }
+        },
+        {
+            $addFields: {
+                endOfLifeDate: { $dateAdd: { startDate: "$acquisitionDate", unit: "year", amount: "$usefulLife" } }
+            }
+        },
+        {
+            $match: {
+                endOfLifeDate: { $lte: oneYearFromNow, $gt: end }
+            }
+        },
+        { $count: "count" }
+    ]);
+
+    // NEW: Pipeline for Top 5 Requested Supplies (last 90 days)
+    const ninetyDaysAgo = new Date(end);
+    ninetyDaysAgo.setDate(end.getDate() - 90);
+
+    const topSuppliesPipeline = Requisition.aggregate([
+        {
+            $match: {
+                status: 'Issued',
+                // Using dateRequested as the filter date. A dedicated `dateIssued` would be more accurate if available.
+                dateRequested: { $gte: ninetyDaysAgo, $lte: end }
+            }
+        },
+        { $unwind: '$items' },
+        {
+            $match: {
+                'items.quantityIssued': { $gt: 0 } // Only consider items that were actually issued
+            }
+        },
+        {
+            $group: {
+                _id: '$items.stockItem',
+                totalIssued: { $sum: '$items.quantityIssued' }
+            }
+        },
+        { $sort: { totalIssued: -1 } },
+        { $limit: 5 },
+        {
+            $lookup: {
+                from: 'stockitems', // The collection name for StockItem model
+                localField: '_id',
+                foreignField: '_id',
+                as: 'stockItemInfo'
+            }
+        },
+        { $unwind: { path: '$stockItemInfo', preserveNullAndEmptyArrays: true } }, // Use preserve to not lose items if stock item is deleted
+        { $project: { _id: 0, description: { $ifNull: ['$stockItemInfo.description', 'Unknown Item'] }, stockNumber: { $ifNull: ['$stockItemInfo.stockNumber', 'N/A'] }, totalIssued: '$totalIssued' } }
+    ]);
+
     // --- 3. Execute all queries concurrently ---
     const [
         movableAssetResults,
         immovableAssetResults,
         requisitionResults,
         lowStockCount,
-        unassignedAssetsCount
+        unassignedAssetsCount,
+        totalDepreciationResult,
+        nearingEndOfLifeResult,
+        recentTransfersResult,
+        topSuppliesResult
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
         requisitionPipeline,
         lowStockCountPipeline,
-        unassignedAssetsCountPipeline
+        unassignedAssetsCountPipeline,
+        totalDepreciationPipeline,
+        nearingEndOfLifeCountPipeline,
+        recentTransfersPipeline,
+        topSuppliesPipeline
     ]);
 
     // Unpack results from the combined pipelines
@@ -163,6 +273,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const previousPendingReqs = rq.previousPendingReqs?.[0]?.count || 0;
     const recentRequisitions = rq.recentRequisitions || [];
 
+    const totalDepreciationYTD = totalDepreciationResult[0]?.totalDepreciationYTD || 0;
+    const nearingEndOfLifeCount = nearingEndOfLifeResult[0]?.count || 0;
+    const recentTransfers = recentTransfersResult || [];
+    const topSupplies = topSuppliesResult || [];
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
@@ -214,6 +328,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         unassignedAssets: { // NEW
             current: unassignedAssetsCount,
             trend: 0 // No trend calculation for this yet, can be added later if needed
+        },
+        totalDepreciationYTD: {
+            current: totalDepreciationYTD,
+            trend: 0
+        },
+        nearingEndOfLife: {
+            current: nearingEndOfLifeCount,
+            trend: 0
         }
     };
 
@@ -255,11 +377,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     res.json({
         stats: formattedStats,
         charts: formattedCharts,
-        recent: {
-            assets: recentAssets,
-            requisitions: recentRequisitions
-        }
+        recentAssets,
+        recentRequisitions,
+        recentTransfers,
+        topSupplies
     });
 });
-
-module.exports = { getDashboardStats };

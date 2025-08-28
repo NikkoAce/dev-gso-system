@@ -6,13 +6,13 @@ let dashboardFilters = {};
 let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
-    visibleComponents: [ // NEW: Added 'unassignedAssets'
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'filters', 'assetCondition',
-        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'recentAssets', 'recentRequisitions'
+    visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition',
+        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies'
     ],
-    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'filters'], // NEW: Added 'unassignedAssets'
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
-    tableOrder: ['recentAssets', 'recentRequisitions']
+    tableOrder: ['recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies']
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -173,7 +173,7 @@ function initializeDashboard(user) {
             renderStatCards(data.stats);
             applyPreferences(); // Apply layout after data is fetched
             createOrUpdateCharts(data.charts);
-            renderRecentTables(data.recent);
+            renderRecentTables(data); // Pass the whole data object to render tables
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             document.getElementById('stats-container').innerHTML = `<p class="text-red-500 col-span-full">Could not load dashboard data: ${error.message}</p>`;
@@ -188,7 +188,9 @@ function initializeDashboard(user) {
         document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions.current;
         document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets.current;
         document.getElementById('stat-low-stock').textContent = stats.lowStockItems.current;
-        document.getElementById('stat-unassigned-assets').textContent = stats.unassignedAssets.current; // NEW
+        document.getElementById('stat-unassigned-assets').textContent = stats.unassignedAssets.current;
+        document.getElementById('stat-total-depreciation-ytd').textContent = formatCurrency(stats.totalDepreciationYTD.current);
+        document.getElementById('stat-nearing-end-of-life').textContent = stats.nearingEndOfLife.current;
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
@@ -205,7 +207,7 @@ function initializeDashboard(user) {
         renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair.trend);
         renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed.trend);
         renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions.trend);
-        renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets.trend);
+        renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets.trend); // No trend for unassignedAssets or totalDepreciationYTD yet.
         // No trend for unassignedAssets yet, as per backend.
         lucide.createIcons();
     }
@@ -310,11 +312,11 @@ function initializeDashboard(user) {
         }
     }
 
-    function renderRecentTables(recentData) {
+    function renderRecentTables(data) {
         const recentAssetsBody = document.getElementById('recent-assets-table');
         recentAssetsBody.innerHTML = '';
-        if (recentData.assets.length > 0) {
-            recentData.assets.forEach(asset => {
+        if (data.recentAssets && data.recentAssets.length > 0) {
+            data.recentAssets.forEach(asset => {
                 const row = `
                     <tr>
                         <td>
@@ -332,8 +334,8 @@ function initializeDashboard(user) {
 
         const recentReqsBody = document.getElementById('recent-requisitions-table');
         recentReqsBody.innerHTML = '';
-        if (recentData.requisitions.length > 0) {
-            recentData.requisitions.forEach(req => {
+        if (data.recentRequisitions && data.recentRequisitions.length > 0) {
+            data.recentRequisitions.forEach(req => {
                 const row = `
                     <tr>
                         <td>
@@ -346,6 +348,44 @@ function initializeDashboard(user) {
             });
         } else {
             recentReqsBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">No recent requisitions.</td></tr>';
+        }
+
+        // NEW: Render Recent Transfers Table
+        const recentTransfersBody = document.getElementById('recent-transfers-table');
+        recentTransfersBody.innerHTML = '';
+        if (data.recentTransfers && data.recentTransfers.length > 0) {
+            data.recentTransfers.forEach(transfer => {
+                const row = `
+                    <tr>
+                        <td>${transfer.ptrNumber}</td>
+                        <td>${new Date(transfer.date).toLocaleDateString()}</td>
+                        <td>${transfer.from.name} (${transfer.from.office})</td>
+                        <td>${transfer.to.name} (${transfer.to.office})</td>
+                        <td>${transfer.assets.length} asset(s)</td>
+                    </tr>`;
+                recentTransfersBody.insertAdjacentHTML('beforeend', row);
+            });
+        } else {
+            recentTransfersBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No recent transfers.</td></tr>';
+        }
+
+        // NEW: Render Top 5 Requested Supplies Table
+        const topSuppliesBody = document.getElementById('top-supplies-table');
+        topSuppliesBody.innerHTML = '';
+        if (data.topSupplies && data.topSupplies.length > 0) {
+            data.topSupplies.forEach(supply => {
+                const row = `
+                    <tr>
+                        <td>
+                            <div class="font-bold">${supply.description}</div>
+                            <div class="text-sm opacity-50">${supply.stockNumber}</div>
+                        </td>
+                        <td class="text-right font-semibold">${supply.totalIssued}</td>
+                    </tr>`;
+                topSuppliesBody.insertAdjacentHTML('beforeend', row);
+            });
+        } else {
+            topSuppliesBody.innerHTML = '<tr><td colspan="2" class="text-center text-gray-500 py-4">Not enough data for top supplies.</td></tr>';
         }
     }
 
@@ -368,6 +408,9 @@ function initializeDashboard(user) {
         });
         document.getElementById('stat-card-unassigned-assets').addEventListener('click', () => { // NEW
             window.location.href = '../assets/asset-registry.html?assignment=unassigned';
+        });
+        document.getElementById('stat-card-nearing-end-of-life').addEventListener('click', () => {
+            window.location.href = '../assets/asset-registry.html?filter=nearing_eol';
         });
 
         // Date Filter Handlers

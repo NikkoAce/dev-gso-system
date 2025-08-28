@@ -148,6 +148,26 @@
                             <div id="stat-unassigned-assets" class="stat-value">Loading...</div>
                             <div class="stat-desc">Awaiting assignment</div>
                         </div>
+                        <!-- NEW: Total Depreciation (Year-to-Date) -->
+                        <div class="stat card bg-base-100 border dashboard-component" data-id="totalDepreciationYTD" data-type="card">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="stat-figure text-success">
+                                <i data-lucide="dollar-sign" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Total Depreciation (YTD)</div>
+                            <div id="stat-total-depreciation-ytd" class="stat-value">Loading...</div>
+                            <div class="stat-desc">As of selected date</div>
+                        </div>
+                        <!-- NEW: Assets Nearing End of Life -->
+                        <div id="stat-card-nearing-end-of-life" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="nearingEndOfLife" data-type="card">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="stat-figure text-cyan-500">
+                                <i data-lucide="hourglass" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Nearing End of Life</div>
+                            <div id="stat-nearing-end-of-life" class="stat-value">Loading...</div>
+                            <div class="stat-desc">Within the next year</div>
+                        </div>
                         <!-- Filter Card -->
                         <div class="card bg-base-100 border lg:col-span-2 dashboard-component" data-id="filters">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
@@ -229,6 +249,36 @@
                                 <div class="overflow-x-auto h-48">
                                     <table class="table table-zebra table-pin-rows table-sm">
                                         <tbody id="recent-requisitions-table"></tbody>
+                                    </table>
+                                </div>
+                        </div>
+                        <!-- NEW: Recently Transferred Assets Table -->
+                        <div class="lg:col-span-2 card bg-base-100 border dashboard-component" data-id="recentTransfers" data-type="table">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="card-body">
+                                <h2 class="card-title">Recently Transferred Assets</h2>
+                                <div class="overflow-x-auto h-48">
+                                    <table class="table table-zebra table-pin-rows table-sm">
+                                        <thead>
+                                            <tr><th>PTR No.</th><th>Date</th><th>From</th><th>To</th><th>Assets</th></tr>
+                                        </thead>
+                                        <tbody id="recent-transfers-table"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        <!-- NEW: Top 5 Most Requested Supplies Table -->
+                        <div class="lg:col-span-3 card bg-base-100 border dashboard-component" data-id="topSupplies" data-type="table">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="card-body">
+                                <h2 class="card-title">Top 5 Requested Supplies (Last 90 Days)</h2>
+                                <div class="overflow-x-auto h-48">
+                                    <table class="table table-zebra table-pin-rows table-sm">
+                                        <thead>
+                                            <tr><th>Item</th><th class="text-right">Total Issued</th></tr>
+                                        </thead>
+                                        <tbody id="top-supplies-table"></tbody>
                                     </table>
                                 </div>
                             </div>
