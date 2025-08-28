@@ -1,5 +1,6 @@
 // FILE: frontend/public/ptr.js
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -19,6 +20,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 function initializePtrPage(user) {
     const ptrContainer = document.getElementById('ptr-container');
     const printButton = document.getElementById('print-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const exitPreviewBtn = document.getElementById('exit-preview-btn');
+    let currentPtrData = null;
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
@@ -44,6 +49,7 @@ function initializePtrPage(user) {
             ptrContainer.innerHTML = `<p class="text-center text-red-500">No transfer data found. Please initiate a transfer from the Asset Registry.</p>`;
             return;
         }
+        currentPtrData = ptrData; // Store for export
         const { from, to, assets, date, ptrNumber } = ptrData;
 
         let assetRows = '';
@@ -151,9 +157,30 @@ function initializePtrPage(user) {
         `;
     }
 
+    function handleExportPDF() {
+        const fileName = `PTR-${currentPtrData?.ptrNumber || 'report'}.pdf`;
+        exportToPDF({
+            reportElementId: 'report-output',
+            fileName: fileName,
+            buttonElement: exportPdfBtn,
+            orientation: 'portrait',
+            format: 'a4'
+        });
+    }
+
+    function handleTogglePreview() {
+        togglePreviewMode({
+            orientation: 'portrait',
+            exitButtonId: 'exit-preview-btn'
+        });
+    }
+
     printButton.addEventListener('click', () => {
         window.print();
     });
+    exportPdfBtn.addEventListener('click', handleExportPDF);
+    previewBtn.addEventListener('click', handleTogglePreview);
+    exitPreviewBtn.addEventListener('click', handleTogglePreview);
 
     renderPTR();
 }

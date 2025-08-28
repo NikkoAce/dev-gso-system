@@ -9,6 +9,9 @@
     <script src="../js/theme.js"></script>
     <link href="../css/output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="../css/style.css">
     <script type="module" src="/js/auth.js" defer></script>
 </head>
@@ -16,41 +19,30 @@
     <div class="flex h-screen">
         <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
             <!-- Sidebar Skeleton Loader -->
-            <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
-                <div class="p-2 border-b">
-                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-                <div class="flex-grow">
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div class="h-8 bg-gray-200 rounded mb-2"></div>
-                </div>
-                <div class="p-2 border-t">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-                        <div class="ml-3 flex-1 space-y-2"><div class="h-4 bg-gray-200 rounded w-3/4"></div><div class="h-3 bg-gray-200 rounded w-1/2"></div></div>
-                    </div>
-                </div>
-            </div>
+            <!-- Sidebar is dynamically loaded by layout.js -->
         </aside>
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable hide-in-preview">
                 <h1 class="text-xl font-bold">LGU GSO System</h1>
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
-                <div class="flex justify-between items-center mb-6 non-printable">
-                    <h1 class="text-3xl font-bold text-gray-800">Property Transfer Report</h1>
-                    <div>
-                        <a href="../assets/asset-registry.html" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 mr-2">Back to Registry</a>
-                        <button id="print-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                            <i data-lucide="printer"></i> Print
-                        </button>
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800 non-printable hide-in-preview">Property Transfer Report</h1>
+                    <div class="flex items-center gap-2 non-printable">
+                        <a href="../assets/asset-registry.html" class="btn btn-ghost hide-in-preview">&larr; Back to Registry</a>
+                        <div class="dropdown dropdown-end">
+                            <label tabindex="0" class="btn btn-primary"><i data-lucide="download"></i> Export</label>
+                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                <li><button id="preview-btn"><i data-lucide="monitor"></i> Preview</button></li>
+                                <div class="divider my-1"></div>
+                                <li><button id="print-btn"><i data-lucide="printer"></i> Print</button></li>
+                                <li><button id="export-pdf-btn"><i data-lucide="file-type-2"></i> Export as PDF</button></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-white p-8 rounded-lg border printable-area">
+                <div id="report-output" class="bg-white p-8 rounded-lg border printable-area">
                     <div class="flex flex-col items-center mb-8">
                         <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
                         <div class="text-center mt-4">
@@ -66,6 +58,7 @@
             </main>
         </div>
     </div>
+    <button id="exit-preview-btn" class="btn btn-error hidden non-printable"><i data-lucide="x"></i> Exit Preview</button>
     <script src="../js/layout.js"></script>
     <script type="module" src="./ptr.js"></script>
 </body>

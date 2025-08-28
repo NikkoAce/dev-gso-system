@@ -1,6 +1,7 @@
 // FILE: frontend/public/ics-page.js
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -12,10 +13,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         initializeLayout(user, gsoLogout);
 
+        let currentIcsData = null; // Variable to hold slip data for export
+
         // The populateIcsForm function is passed as a callback to the shared initializer.
         // It contains only the logic specific to rendering the ICS form itself.
         const populateIcsForm = (icsData) => {
+            currentIcsData = icsData; // Store the data
             const icsContainer = document.getElementById('ics-form-container');
+            icsContainer.innerHTML = ''; // Clear previous content
             let assetsHTML = '';
             let totalAmount = 0;
 
@@ -137,6 +142,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Initialize the page with the common logic
         initializeSlipPage(icsConfig, user);
+
+        // --- EXPORT AND PREVIEW LOGIC ---
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const exitPreviewBtn = document.getElementById('exit-preview-btn');
+
+        function handleExportPDF() {
+            const fileName = `ICS-${currentIcsData?.number || currentIcsData?.icsNumber || 'report'}.pdf`;
+            exportToPDF({
+                reportElementId: 'report-output',
+                fileName: fileName,
+                buttonElement: exportPdfBtn,
+                orientation: 'portrait',
+                format: 'a4'
+            });
+        }
+
+        function handleTogglePreview() {
+            togglePreviewMode({
+                orientation: 'portrait',
+                exitButtonId: 'exit-preview-btn'
+            });
+        }
+
+        exportPdfBtn.addEventListener('click', handleExportPDF);
+        previewBtn.addEventListener('click', handleTogglePreview);
+        exitPreviewBtn.addEventListener('click', handleTogglePreview);
 
     } catch (error) {
         console.error("Authentication failed on ICS page:", error);
