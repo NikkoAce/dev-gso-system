@@ -45,6 +45,8 @@ function initializeForm(user) {
     const newAttachmentsContainer = document.getElementById('new-attachments-container');
     const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
+    const repairsContainer = document.getElementById('repairs-container');
+    const addRepairBtn = document.getElementById('add-repair-btn');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -71,6 +73,20 @@ function initializeForm(user) {
             <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-component-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
         `;
         componentsContainer.appendChild(div);
+        lucide.createIcons();
+    }
+
+    function renderRepairRow(repair = { date: '', natureOfRepair: '', amount: '' }) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center repair-row';
+        const repairDate = repair.date ? new Date(repair.date).toISOString().split('T')[0] : '';
+        div.innerHTML = `
+            <input type="date" placeholder="Date" class="input input-bordered input-sm repair-date" value="${repairDate}" required>
+            <input type="text" placeholder="Nature of Repair" class="input input-bordered input-sm repair-nature" value="${repair.natureOfRepair || ''}" required>
+            <input type="number" placeholder="Amount" class="input input-bordered input-sm repair-amount" value="${repair.amount || ''}" step="0.01" required>
+            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-repair-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
+        `;
+        repairsContainer.appendChild(div);
         lucide.createIcons();
     }
 
@@ -186,6 +202,14 @@ function initializeForm(user) {
             componentsContainer.innerHTML = ''; // Ensure it's clear if no components
         }
 
+        // Populate repair history
+        if (asset.repairHistory && asset.repairHistory.length > 0) {
+            repairsContainer.innerHTML = ''; // Clear any empty rows
+            asset.repairHistory.forEach(repair => renderRepairRow(repair));
+        } else {
+            repairsContainer.innerHTML = ''; // Ensure it's clear if no repairs
+        }
+
         // Populate history tab
         if (asset.history) {
             renderHistory(asset.history);
@@ -258,6 +282,19 @@ function initializeForm(user) {
         });
         formData.append('components', JSON.stringify(assetData.components));
 
+        // Manually gather repair history
+        assetData.repairHistory = [];
+        const repairRows = repairsContainer.querySelectorAll('.repair-row');
+        repairRows.forEach(row => {
+            const date = row.querySelector('.repair-date').value;
+            const natureOfRepair = row.querySelector('.repair-nature').value.trim();
+            const amount = row.querySelector('.repair-amount').value;
+            if (date && natureOfRepair && amount) {
+                assetData.repairHistory.push({ date, natureOfRepair, amount: parseFloat(amount) });
+            }
+        });
+        formData.append('repairHistory', JSON.stringify(assetData.repairHistory));
+
         // Append new files and their titles
         const attachmentTitles = [];
         const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
@@ -321,6 +358,13 @@ function initializeForm(user) {
     typeSelect.addEventListener('change', (e) => toggleTypeSpecificFields(e.target.value));
     addComponentBtn.addEventListener('click', () => {
         renderComponent();
+    });
+
+    addRepairBtn.addEventListener('click', () => renderRepairRow());
+    repairsContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-repair-btn')) {
+            e.target.closest('.repair-row').remove();
+        }
     });
 
     newAttachmentsContainer.addEventListener('click', (e) => {

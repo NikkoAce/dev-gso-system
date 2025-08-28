@@ -3,119 +3,89 @@ const mongoose = require('mongoose');
 const historySchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
     event: { type: String, required: true },
-    details: { type: String },
+    details: { type: String, required: true },
     user: { type: String, required: true }
-});
-
-const componentSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true },
-    description: { type: String, trim: true }
 }, { _id: false });
 
 const attachmentSchema = new mongoose.Schema({
-    key: { type: String, required: true }, // The key/filename in the S3 bucket
-    // url: { type: String, required: true }, // Removed: URL will be generated dynamically as a pre-signed URL
-    title: { type: String, trim: true }, // User-defined title for the document
+    key: { type: String, required: true },
+    url: { type: String },
     originalName: { type: String, required: true },
-    mimeType: { type: String, required: true }
+    title: { type: String },
+    fileType: { type: String }
+}, { _id: false });
+
+const componentSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    description: { type: String }
+}, { _id: false });
+
+const repairHistorySchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    natureOfRepair: { type: String, required: true },
+    amount: { type: Number, required: true }
+}, { _id: false });
+
+const landDetailsSchema = new mongoose.Schema({
+    lotNumber: String,
+    titleNumber: String,
+    taxDeclarationNumber: String,
+    areaSqm: Number,
+    classification: String,
+    boundaries: {
+        north: String,
+        south: String,
+        east: String,
+        west: String
+    }
+}, { _id: false });
+
+const buildingAndStructureDetailsSchema = new mongoose.Schema({
+    numberOfFloors: Number,
+    floorArea: Number,
+    constructionDate: Date,
+    constructionMaterials: String,
+    estimatedUsefulLife: Number,
+    salvageValue: Number
+}, { _id: false });
+
+const roadNetworkDetailsSchema = new mongoose.Schema({
+    lengthKm: Number,
+    widthMeters: Number,
+    pavementType: String
+}, { _id: false });
+
+const otherInfrastructureDetailsSchema = new mongoose.Schema({
+    structureType: String,
+    technicalSpecifications: String
 }, { _id: false });
 
 const immovableAssetSchema = new mongoose.Schema({
-    // --- Core Details ---
-    name: {
-        type: String,
-        required: [true, 'Asset name is required.'],
-        trim: true
-    },
-    propertyIndexNumber: { // Unique identifier (PIN)
-        type: String,
-        required: [true, 'Property Index Number is required.'],
-        unique: true,
-        trim: true
-    },
-    type: {
-        type: String,
-        required: true,
-        enum: ['Land', 'Building', 'Other Structures', 'Road Network', 'Other Public Infrastructure'],
-        default: 'Land'
-    },
-    location: {
-        type: String,
-        required: [true, 'Location or address is required.'],
-        trim: true
-    },
-    dateAcquired: {
-        type: Date,
-        required: true
-    },
-    assessedValue: {
-        type: Number,
-        required: [true, 'Assessed value is required.'],
-        default: 0
-    },
-    status: {
-        type: String,
-        required: true,
-        enum: ['In Use', 'Under Construction', 'Idle', 'For Disposal', 'Disposed'],
-        default: 'In Use'
-    },
-    acquisitionMethod: {
-        type: String,
-        enum: ['Purchase', 'Donation', 'Construction', 'Expropriation', 'Other'],
-        default: 'Purchase'
-    },
-    condition: {
-        type: String,
-        enum: ['Good', 'Fair', 'Needs Major Repair', 'Condemned'],
-        default: 'Good'
-    },
+    name: { type: String, required: true },
+    propertyIndexNumber: { type: String, required: true, unique: true },
+    type: { type: String, required: true, enum: ['Land', 'Building', 'Other Structures', 'Road Network', 'Other Public Infrastructure'] },
+    location: { type: String, required: true },
+    dateAcquired: { type: Date, required: true },
+    assessedValue: { type: Number, required: true },
+    status: { type: String, required: true, enum: ['In Use', 'Under Construction', 'Idle', 'For Disposal', 'Disposed'] },
+    acquisitionMethod: { type: String, enum: ['Purchase', 'Donation', 'Construction', 'Expropriation', 'Other'] },
+    condition: { type: String, enum: ['Good', 'Fair', 'Needs Major Repair', 'Condemned'] },
+    remarks: String,
     
-    // --- Type-Specific Details (Optional Sub-documents) ---
-    landDetails: {
-        lotNumber: { type: String, trim: true },
-        titleNumber: { type: String, trim: true }, // e.g., TCT, OCT
-        taxDeclarationNumber: { type: String, trim: true },
-        areaSqm: { type: Number }, // Area in Square Meters
-        boundaries: {
-            north: { type: String, trim: true },
-            south: { type: String, trim: true },
-            east: { type: String, trim: true },
-            west: { type: String, trim: true }
-        },
-        classification: {
-            type: String,
-            enum: ['Residential', 'Commercial', 'Agricultural', 'Industrial', 'Institutional', 'Park/Open Space', 'Other'],
-            trim: true
-        }
-    },
-    buildingAndStructureDetails: {
-        numberOfFloors: { type: Number },
-        floorArea: { type: Number }, // Total floor area in SqM
-        constructionDate: { type: Date },
-        constructionMaterials: { type: String, trim: true }, // e.g., Concrete, Steel, Wood, Mixed
-        estimatedUsefulLife: { type: Number }, // In years, for depreciation
-        salvageValue: { type: Number, default: 0 }
-    },
-    roadNetworkDetails: {
-        lengthKm: { type: Number },
-        widthMeters: { type: Number },
-        pavementType: { type: String, enum: ['Concrete', 'Asphalt', 'Gravel', 'Earth'], trim: true }
-    },
-    otherInfrastructureDetails: {
-        structureType: { type: String, trim: true }, // e.g., Bridge, Water System, Canal
-        technicalSpecifications: { type: String, trim: true } // e.g., Capacity, Dimensions
-    },
+    // --- New Fields for Ledger Card ---
+    fundSource: { type: String },
+    accountCode: { type: String },
+    impairmentLosses: { type: Number, default: 0 },
+    repairHistory: [repairHistorySchema],
+    // ------------------------------------
 
-    // --- General Fields ---
-    remarks: {
-        type: String,
-        trim: true
-    },
     components: [componentSchema],
     attachments: [attachmentSchema],
-    history: [historySchema]
-}, {
-    timestamps: true // Adds createdAt and updatedAt fields
-});
+    history: [historySchema],
+    landDetails: landDetailsSchema,
+    buildingAndStructureDetails: buildingAndStructureDetailsSchema,
+    roadNetworkDetails: roadNetworkDetailsSchema,
+    otherInfrastructureDetails: otherInfrastructureDetailsSchema
+}, { timestamps: true });
 
 module.exports = mongoose.model('ImmovableAsset', immovableAssetSchema);

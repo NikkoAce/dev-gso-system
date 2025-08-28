@@ -115,6 +115,9 @@ const generateUpdateHistory = (original, updates, user) => {
     compareAndLog('acquisitionMethod', 'Acquisition Method');
     compareAndLog('condition', 'Condition');
     compareAndLog('remarks', 'Remarks');
+    compareAndLog('fundSource', 'Fund Source');
+    compareAndLog('accountCode', 'Account Code');
+    compareAndLog('impairmentLosses', 'Impairment Losses');
 
     // Compare nested detail objects
     compareNestedObject('landDetails', 'Land Details');
@@ -427,7 +430,7 @@ const generatePropertyCardReport = asyncHandler(async (req, res) => {
  * @access  Private (GSO with report:generate permission)
  */
 const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id).lean();
+    const asset = await ImmovableAsset.findById(req.params.id).lean(); // .lean() is efficient for read-only operations
 
     if (!asset) {
         res.status(404);
@@ -443,41 +446,51 @@ const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
     const acquisitionDate = new Date(asset.dateAcquired);
     const depreciableCost = asset.assessedValue - (details.salvageValue || 0);
     const annualDepreciation = details.estimatedUsefulLife > 0 ? depreciableCost / details.estimatedUsefulLife : 0;
-    const dailyDepreciation = annualDepreciation / 365.25; // Average for leap years
+    const dailyDepreciation = annualDepreciation / 365.25;
 
-    // Sort history chronologically to build the ledger
-    const sortedHistory = [...asset.history].sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Combine main history and repair history into a single log for chronological processing
+    const combinedLog = [
+        ...asset.history.map(h => ({ ...h, logType: 'event' })),
+        ...(asset.repairHistory || []).map(r => ({ ...r, logType: 'repair' }))
+    ].sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const ledgerRows = [];
-    let lastCost = asset.assessedValue;
+    const currentCost = asset.assessedValue;
+    const totalImpairment = asset.impairmentLosses || 0;
 
-    sortedHistory.forEach(entry => {
-        const eventDate = new Date(entry.date);
+    combinedLog.forEach(logEntry => {
+        const eventDate = new Date(logEntry.date);
         const daysSinceAcquisition = (eventDate - acquisitionDate) / (1000 * 60 * 60 * 24);
         
         let accumulatedDepreciation = 0;
         if (daysSinceAcquisition > 0) {
             accumulatedDepreciation = Math.min(dailyDepreciation * daysSinceAcquisition, depreciableCost);
         }
+        const adjustedCost = currentCost - accumulatedDepreciation - totalImpairment;
 
-        const adjustedCost = lastCost - accumulatedDepreciation;
-
-        // NOTE: The following fields are placeholders as they are not in the current data model.
-        // They can be implemented fully by extending the ImmovableAsset model.
-        ledgerRows.push({
-            date: entry.date,
+        const row = {
+            date: logEntry.date,
             reference: 'N/A', // Placeholder
-            particulars: entry.details,
             propertyId: asset.propertyIndexNumber,
-            cost: lastCost,
+            cost: currentCost,
             estimatedUsefulLife: details.estimatedUsefulLife,
             accumulatedDepreciation: accumulatedDepreciation,
-            impairmentLosses: 0, // Placeholder
+            impairmentLosses: totalImpairment,
             adjustedCost: adjustedCost,
             repairNature: 'N/A', // Placeholder
-            repairAmount: 0, // Placeholder
-            remarks: entry.event
-        });
+            repairAmount: 0,
+        };
+
+        if (logEntry.logType === 'event') {
+            row.particulars = logEntry.details;
+            row.remarks = logEntry.event;
+        } else if (logEntry.logType === 'repair') {
+            row.particulars = `Repair: ${logEntry.natureOfRepair}`;
+            row.remarks = 'Repair/Maintenance';
+            row.repairNature = logEntry.natureOfRepair;
+            row.repairAmount = logEntry.amount;
+        }
+        ledgerRows.push(row);
     });
 
     res.status(200).json({ asset, ledgerRows });

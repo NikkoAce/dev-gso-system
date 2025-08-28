@@ -74,6 +74,19 @@
                                             <input type="number" id="assessedValue" name="assessedValue" class="input input-bordered" required step="0.01">
                                         </div>
                                         <div class="form-control">
+                                            <label for="fundSource" class="label"><span class="label-text">Fund Source</span></label>
+                                            <select id="fundSource" name="fundSource" class="select select-bordered">
+                                                <option value="">Select Fund</option>
+                                                <option>General Fund</option>
+                                                <option>Special Education Fund</option>
+                                                <option>Trust Fund</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="accountCode" class="label"><span class="label-text">Account Code</span></label>
+                                            <input type="text" id="accountCode" name="accountCode" class="input input-bordered">
+                                        </div>
+                                        <div class="form-control">
                                             <label for="status" class="label"><span class="label-text">Status</span></label>
                                             <select id="status" name="status" class="select select-bordered" required>
                                                 <option value="In Use">In Use</option>
@@ -155,6 +168,7 @@
                                         <div class="form-control"><label for="constructionMaterials" class="label"><span class="label-text">Construction Materials</span></label><input type="text" id="constructionMaterials" name="buildingAndStructureDetails.constructionMaterials" placeholder="e.g., Concrete, Steel, Wood" class="input input-bordered"></div>
                                         <div class="form-control"><label for="estimatedUsefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="estimatedUsefulLife" name="buildingAndStructureDetails.estimatedUsefulLife" class="input input-bordered"></div>
                                         <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="number" id="salvageValue" name="buildingAndStructureDetails.salvageValue" class="input input-bordered" step="0.01"></div>
+                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="number" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" step="0.01" value="0"></div>
                                     </div>
                                 </div>
                             </div>
@@ -178,6 +192,21 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="form-control"><label for="structureType" class="label"><span class="label-text">Structure Type</span></label><input type="text" id="structureType" name="otherInfrastructureDetails.structureType" placeholder="e.g., Bridge, Water System" class="input input-bordered"></div>
                                         <div class="form-control md:col-span-2"><label for="technicalSpecifications" class="label"><span class="label-text">Technical Specifications</span></label><textarea id="technicalSpecifications" name="otherInfrastructureDetails.technicalSpecifications" class="textarea textarea-bordered"></textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Repair History -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-center">
+                                        <h2 class="card-title">Repair History</h2>
+                                        <button type="button" id="add-repair-btn" class="btn btn-sm btn-ghost">
+                                            <i data-lucide="plus"></i> Add Repair Record
+                                        </button>
+                                    </div>
+                                    <div id="repairs-container" class="space-y-2">
+                                        <!-- Repair rows will be dynamically inserted here -->
                                     </div>
                                 </div>
                             </div>
