@@ -28,7 +28,7 @@ const GSO_NAV_CONFIG = [
     ]
   },
   {
-    icon: 'boxes', text: 'Supplies', permission: 'supply:read',
+    icon: 'boxes', text: 'Supplies', permission: 'stock:read',
     children: [
       { href: '../supplies/gso-requisitions.html', icon: 'clipboard-list', text: 'Supply Requisitions', permission: 'requisition:read:all' },
       { href: '../supplies/inventory.html', icon: 'boxes', text: 'Supplies Inventory', permission: 'stock:manage' },
