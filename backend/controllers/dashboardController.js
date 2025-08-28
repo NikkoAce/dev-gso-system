@@ -233,6 +233,28 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $project: { _id: 0, description: { $ifNull: ['$stockItemInfo.description', 'Unknown Item'] }, stockNumber: { $ifNull: ['$stockItemInfo.stockNumber', 'N/A'] }, totalIssued: '$totalIssued' } }
     ]);
 
+    // NEW: Pipeline for Average Requisition Fulfillment Time
+    const avgFulfillmentTimePipeline = Requisition.aggregate([
+        {
+            $match: {
+                status: 'Issued',
+                // Filter by when the requisition was fulfilled (i.e., when its status was updated to 'Issued')
+                updatedAt: { $gte: start, $lte: end }
+            }
+        },
+        {
+            $project: {
+                fulfillmentTime: { $subtract: ["$updatedAt", "$dateRequested"] }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                avgTime: { $avg: "$fulfillmentTime" }
+            }
+        }
+    ]);
+
     // --- 3. Execute all queries concurrently ---
     const [
         movableAssetResults,
@@ -243,7 +265,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         nearingEndOfLifeResult,
         recentTransfersResult, // Existing
         recentImmovableAssetsResult, // NEW
-        topSuppliesResult
+        topSuppliesResult,
+        avgFulfillmentTimeResult // NEW
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
@@ -253,7 +276,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         nearingEndOfLifeCountPipeline,
         recentTransfersPipeline, // Existing
         recentImmovableAssetsPipeline, // NEW
-        topSuppliesPipeline
+        topSuppliesPipeline,
+        avgFulfillmentTimePipeline // NEW
     ]);
 
     // Unpack results from the combined pipelines
@@ -284,6 +308,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const recentTransfers = recentTransfersResult || [];
     const recentImmovableAssets = recentImmovableAssetsResult || []; // NEW
     const topSupplies = topSuppliesResult || [];
+    
+    // NEW: Calculate average fulfillment time in days
+    const avgTimeInMs = avgFulfillmentTimeResult[0]?.avgTime || 0;
+    const avgFulfillmentTimeInDays = avgTimeInMs > 0 ? (avgTimeInMs / (1000 * 60 * 60 * 24)) : 0;
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
@@ -335,6 +363,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         nearingEndOfLife: {
             current: nearingEndOfLifeCount,
             trend: 0
+        },
+        avgFulfillmentTime: { // NEW
+            current: avgFulfillmentTimeInDays,
+            trend: 0 // No trend for this KPI yet
         }
     };
 

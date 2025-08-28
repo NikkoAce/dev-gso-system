@@ -7,11 +7,11 @@ let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Cards
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Cards
         'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Charts
         'recentActivity' // Tables
     ],
-    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
     tableOrder: ['recentActivity']
 };
@@ -85,28 +85,63 @@ function applyPreferences() {
     orderAndRender('tableOrder', 'main-content-grid');
 }
 
+// Helper to sort components within their groups based on DEFAULT_PREFERENCES order
+const sortComponentsByPreference = (components, orderArray) => {
+    return components.sort((a, b) => {
+        const indexA = orderArray.indexOf(a.id);
+        const indexB = orderArray.indexOf(b.id);
+        return indexA - indexB;
+    });
+};
+
 function populateCustomizeModal() {
     const container = document.getElementById('component-list-container');
     container.innerHTML = '';
 
-    const allComponentIds = Object.keys(allComponents);
+    const componentGroups = {
+        'Stat Cards': [],
+        'Charts': [],
+        'Tables': []
+    };
 
-    allComponentIds.forEach(id => {
-        const component = allComponents[id];
-        const isVisible = userPreferences.visibleComponents.includes(id);
-        // We only show the visibility toggle now, not the drag handle
-        const itemHTML = `
-            <div class="flex items-center justify-between p-2 border rounded-lg bg-base-200" data-id="${id}">
-                <div class="form-control">
-                    <label class="label cursor-pointer gap-2">
-                        <input type="checkbox" class="checkbox checkbox-sm component-visibility-toggle" data-id="${id}" ${isVisible ? 'checked' : ''}>
-                        <span class="label-text">${component.title}</span>
-                    </label>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', itemHTML);
+    // Categorize components
+    Object.values(allComponents).forEach(component => {
+        if (component.type === 'card') {
+            componentGroups['Stat Cards'].push(component);
+        } else if (component.type === 'chart') {
+            componentGroups['Charts'].push(component);
+        } else if (component.type === 'table') {
+            componentGroups['Tables'].push(component);
+        }
     });
+
+    // Sort components within their groups
+    componentGroups['Stat Cards'] = sortComponentsByPreference(componentGroups['Stat Cards'], DEFAULT_PREFERENCES.cardOrder);
+    componentGroups['Charts'] = sortComponentsByPreference(componentGroups['Charts'], DEFAULT_PREFERENCES.chartOrder);
+    componentGroups['Tables'] = sortComponentsByPreference(componentGroups['Tables'], DEFAULT_PREFERENCES.tableOrder);
+
+    // Render grouped components
+    for (const groupName in componentGroups) {
+        if (componentGroups[groupName].length > 0) {
+            const groupHeader = `<h4 class="font-semibold text-lg mt-4 mb-2 text-base-content">${groupName}</h4>`;
+            container.insertAdjacentHTML('beforeend', groupHeader);
+
+            componentGroups[groupName].forEach(component => {
+                const isVisible = userPreferences.visibleComponents.includes(component.id);
+                const itemHTML = `
+                    <div class="flex items-center justify-between p-2 border rounded-lg bg-base-200 mb-2" data-id="${component.id}">
+                        <div class="form-control">
+                            <label class="label cursor-pointer gap-2">
+                                <input type="checkbox" class="checkbox checkbox-sm component-visibility-toggle" data-id="${component.id}" ${isVisible ? 'checked' : ''}>
+                                <span class="label-text">${component.title}</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', itemHTML);
+            });
+        }
+    }
 }
 
 function renderActiveFilters() {
@@ -190,6 +225,8 @@ function initializeDashboard(user) {
         document.getElementById('stat-unassigned-assets').textContent = stats.unassignedAssets?.current || 0;
         document.getElementById('stat-total-depreciation-ytd').textContent = formatCurrency(stats.totalDepreciationYTD?.current || 0);
         document.getElementById('stat-nearing-end-of-life').textContent = stats.nearingEndOfLife?.current || 0;
+        const avgTime = stats.avgFulfillmentTime?.current || 0;
+        document.getElementById('stat-avg-fulfillment-time').textContent = `${avgTime.toFixed(1)} days`;
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
