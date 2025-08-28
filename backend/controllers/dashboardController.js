@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Asset = require('../models/Asset');
 const Requisition = require('../models/Requisition');
+const ImmovableAsset = require('../models/immovableAsset');
 const mongoose = require('mongoose');
 
 /**
@@ -39,7 +40,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } },
-                count: { $sum: 1 }
+                totalValue: { $sum: '$acquisitionCost' }
             }
         },
         { $sort: { _id: 1 } }
@@ -63,7 +64,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         currentDistributionResult,
         recentAssets,
         currentPendingReqs,
-        previousPendingReqs
+        previousPendingReqs,
+        immovableAssetsCount
     ] = await Promise.all([
         getStatsAtDate(end),
         getStatsAtDate(start),
@@ -71,7 +73,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         Asset.aggregate(currentDistributionPipeline),
         Asset.find({ acquisitionDate: { $lte: end } }).sort({ createdAt: -1 }).limit(5).populate('custodian', 'name office'),
         Requisition.countDocuments({ status: 'Pending', dateRequested: { $lte: end } }),
-        Requisition.countDocuments({ status: 'Pending', dateRequested: { $lt: start } })
+        Requisition.countDocuments({ status: 'Pending', dateRequested: { $lt: start } }),
+        ImmovableAsset.countDocuments()
     ]);
 
     const current = currentPeriodStatsResult[0];
@@ -106,6 +109,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         pendingRequisitions: {
             current: currentPendingReqs,
             trend: calculateTrend(currentPendingReqs, previousPendingReqs)
+        },
+        immovableAssets: {
+            current: immovableAssetsCount,
+            trend: 0 // Trend calculation for immovable assets is not yet implemented
         }
     };
 
@@ -113,8 +120,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         monthlyAcquisitions: {
             labels: monthlyAcquisitions.map(m => m._id),
             datasets: [{
-                label: 'Assets Acquired',
-                data: monthlyAcquisitions.map(m => m.count),
+                label: 'Acquisition Value',
+                data: monthlyAcquisitions.map(m => m.totalValue),
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1,

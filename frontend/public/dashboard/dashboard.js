@@ -43,6 +43,7 @@ function initializeDashboard() {
         document.getElementById('stat-for-repair').textContent = stats.forRepair.current;
         document.getElementById('stat-disposed').textContent = stats.disposed.current;
         document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions.current;
+        document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets.current;
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
@@ -59,6 +60,7 @@ function initializeDashboard() {
         renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair.trend);
         renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed.trend);
         renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions.trend);
+        renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets.trend);
         lucide.createIcons();
     }
 
@@ -67,12 +69,41 @@ function initializeDashboard() {
             monthlyAcquisitionChart: {
                 type: 'line',
                 data: chartData.monthlyAcquisitions,
-                options: { tension: 0.2 }
+                options: {
+                    tension: 0.2,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += formatCurrency(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
             },
             assetsByOfficeChart: {
-                type: 'doughnut',
+                type: 'bar',
                 data: chartData.assetsByOffice,
-                options: {},
+                options: {
+                    indexAxis: 'y',
+                },
                 filterKey: 'office'
             },
             assetStatusChart: {
@@ -173,6 +204,9 @@ function initializeDashboard() {
         });
         document.getElementById('stat-card-disposed').addEventListener('click', () => {
             window.location.href = '../assets/asset-registry.html?status=Disposed';
+        });
+        document.getElementById('stat-card-immovable-assets').addEventListener('click', () => {
+            window.location.href = '../immovable-assets/immovable-registry.html';
         });
 
         // Date Filter Handlers
