@@ -94,3 +94,25 @@ export function exportToPDF(options) {
         lucide.createIcons();
     });
 }
+
+/**
+ * Toggles a print-preview mode on the page.
+ * @param {object} options - The configuration for the preview mode.
+ * @param {'portrait'|'landscape'} options.orientation - The orientation for sizing the preview area.
+ * @param {string} options.exitButtonId - The ID of the button used to exit preview mode.
+ */
+export function togglePreviewMode(options) {
+    const { orientation, exitButtonId } = options;
+    const exitButton = document.getElementById(exitButtonId);
+    const isPreviewing = document.body.classList.contains('print-preview-mode');
+
+    if (isPreviewing) {
+        // Exit preview mode
+        document.body.classList.remove('print-preview-mode', 'preview-portrait', 'preview-landscape');
+        if (exitButton) exitButton.classList.add('hidden');
+    } else {
+        // Enter preview mode
+        document.body.classList.add('print-preview-mode', `preview-${orientation}`);
+        if (exitButton) exitButton.classList.remove('hidden');
+    }
+}
