@@ -124,8 +124,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const current = currentPeriodStatsResult[0] || defaultStats;
     const previous = previousPeriodStatsResult[0] || defaultStats;
     const distribution = currentDistributionResult[0] || defaultDistribution;
-    const currentImmovable = currentImmovableStats[0]; // Optional chaining handles undefined later
-    const previousImmovable = previousImmovableStats[0]; // Optional chaining handles undefined later
+    const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
+    const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
     // --- 4. Format Data & Calculate Trends ---
     const calculateTrend = (currentVal, previousVal) => {
@@ -137,8 +137,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     const currentMovableValue = current.totalValue[0]?.total || 0;
     const previousMovableValue = previous.totalValue[0]?.total || 0;
-    const currentImmovableValue = currentImmovable?.totalValue || 0;
-    const previousImmovableValue = previousImmovable?.totalValue || 0;
+    const currentImmovableValue = currentImmovable.totalValue || 0;
+    const previousImmovableValue = previousImmovable.totalValue || 0;
 
     const totalPortfolioValueCurrent = currentMovableValue + currentImmovableValue;
     const totalPortfolioValuePrevious = previousMovableValue + previousImmovableValue;
