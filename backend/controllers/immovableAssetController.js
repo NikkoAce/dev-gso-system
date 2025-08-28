@@ -214,9 +214,9 @@ const getImmovableAssetById = asyncHandler(async (req, res) => {
 });
 
 const updateImmovableAsset = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id);
+    const originalAsset = await ImmovableAsset.findById(req.params.id).lean(); // Use .lean() for a plain object for comparison
 
-    if (!asset) {
+    if (!originalAsset) {
         res.status(404);
         throw new Error('Asset not found');
     }
@@ -225,33 +225,51 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
     const parsedBody = {};
     for (const key in req.body) {
         try {
+            // Attempt to parse fields that might be JSON (like nested objects)
             parsedBody[key] = JSON.parse(req.body[key]);
         } catch (e) {
+            // If it's not valid JSON, use the original value
             parsedBody[key] = req.body[key];
         }
     }
 
     // Generate detailed history entries based on what changed
-    const historyEntries = generateUpdateHistory(asset.toObject(), parsedBody, req.user);
+    const historyEntries = generateUpdateHistory(originalAsset, parsedBody, req.user);
+
+    // Prepare the update payload for an atomic database operation
+    const updateOperation = {
+        $set: parsedBody,
+        $push: {}
+    };
+
     if (historyEntries.length > 0) {
-        asset.history.push(...historyEntries);
+        updateOperation.$push.history = { $each: historyEntries };
     }
 
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
         const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
-        const uploadPromises = req.files.map((file, index) => uploadToS3(file, asset._id, attachmentTitles[index] || file.originalname, 'immovable-assets'));
+        const uploadPromises = req.files.map((file, index) => uploadToS3(file, originalAsset._id, attachmentTitles[index] || file.originalname, 'immovable-assets'));
         const newAttachments = await Promise.all(uploadPromises);
-        asset.attachments.push(...newAttachments);
-        asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
+        
+        updateOperation.$push.attachments = { $each: newAttachments };
+
+        const attachmentHistory = { event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name };
+        if (updateOperation.$push.history) {
+            updateOperation.$push.history.$each.push(attachmentHistory);
+        } else {
+            updateOperation.$push.history = { $each: [attachmentHistory] };
+        }
     }
 
-    // Use asset.set() to apply updates from the request body.
-    // This is safer than Object.assign() as it respects schema paths.
-    // We need to handle the attachments array separately.
-    asset.set(parsedBody);
+    // If nothing is being pushed, remove the empty $push operator
+    if (Object.keys(updateOperation.$push).length === 0) {
+        delete updateOperation.$push;
+    }
 
-    const updatedAsset = await asset.save();
+    // Perform the atomic update and return the new document
+    const updatedAsset = await ImmovableAsset.findByIdAndUpdate(req.params.id, updateOperation, { new: true, runValidators: true });
+
     res.json(updatedAsset);
 });
 
