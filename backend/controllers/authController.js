@@ -48,7 +48,7 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         // Add a timeout to prevent the request from hanging indefinitely if the portal is slow to respond.
         const response = await axios.get(`${LGU_PORTAL_API_URL}/users/me`, {
             headers: { 'Authorization': `Bearer ${portalToken}` },
-            timeout: 30000 // 30 seconds
+            timeout: 15000 // 15 seconds
         });
         lguUser = response.data;
     } catch (error) {
@@ -59,72 +59,58 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         }
         console.error('Error verifying portal token with LGU Portal:', error.response ? error.response.data : error.message);
         res.status(401);
-        throw new Error('Invalid or expired portal token. Please log in again through the LGU Portal.');
+        const errorMessage = error.response?.data?.message || 'Invalid or expired portal token. Please log in again through the LGU Portal.';
+        throw new Error(errorMessage);
     }
 
-    // Step 2: Find if the user already exists in the GSO system
+    // Step 2: Determine the user's GSO role and permissions based on portal data.
+    // This makes the logic consistent for both new and existing users.
+    let targetGsoRoleName;
+    const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
+    const adminRoleNames = ['IT'];
+
+    if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
+        targetGsoRoleName = 'GSO Admin';
+    } else if (lguUser.role === 'Department Head') {
+        targetGsoRoleName = 'Department Head';
+    } else {
+        targetGsoRoleName = 'Employee';
+    }
+
+    // Fetch the permissions for the determined role from the database.
+    const roleData = await Role.findOne({ name: targetGsoRoleName }).lean();
+    if (!roleData) {
+        // This is a critical configuration error. A role defined in the logic doesn't exist in the DB.
+        console.error(`CRITICAL: The role "${targetGsoRoleName}" does not exist in the database. Cannot assign permissions.`);
+        res.status(500);
+        throw new Error('User role configuration error. Please contact the administrator.');
+    }
+    const targetPermissions = roleData.permissions;
+
+    // Step 3: Find or Create the user in the GSO system.
     let gsoUserRecord = await User.findOne({ externalId: lguUser._id });
 
     if (gsoUserRecord) {
         // --- USER EXISTS ---
-        // The user already has a profile in the GSO system.
-        // We only update their name and office from the portal to keep it in sync.
-        // We DO NOT overwrite their role and permissions, preserving any manual changes.
+        // Update the user's details, including their role and permissions, to keep them in sync with the portal and role definitions.
         gsoUserRecord.name = lguUser.name;
         gsoUserRecord.office = lguUser.office;
-
-        // --- DYNAMIC PERMISSION SYNC FOR ADMINS ---
-        // If the user has the 'GSO Admin' role, fetch the permissions directly from the Role document in the DB.
-        // This makes the Role Management UI the single source of truth.
-        if (gsoUserRecord.role === 'GSO Admin') {
-            const adminRole = await Role.findOne({ name: 'GSO Admin' }).lean();
-            if (adminRole) {
-                gsoUserRecord.permissions = adminRole.permissions;
-            } else {
-                console.warn('"GSO Admin" role not found in database during permission sync. User permissions will not be updated.');
-            }
-        }
-
+        gsoUserRecord.role = targetGsoRoleName;
+        gsoUserRecord.permissions = targetPermissions;
         await gsoUserRecord.save();
     } else {
         // --- NEW USER ---
-        // This is the user's first time logging into the GSO system.
-        // We create a new record for them with default roles and permissions.
-        let gsoRole = 'Employee';
-        let permissions = [];
-
-        const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
-        const adminRoleNames = ['IT'];
-
-        if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
-            gsoRole = 'GSO Admin';
-            // Fetch permissions from the Role document for new admins.
-            const adminRole = await Role.findOne({ name: 'GSO Admin' }).lean();
-            if (adminRole) {
-                permissions = adminRole.permissions;
-            } else {
-                console.warn('"GSO Admin" role not found in database. A new admin will be created with no permissions.');
-            }
-        } else {
-            gsoRole = lguUser.role === 'Department Head' ? 'Department Head' : 'Employee';
-            permissions = [
-                PERMISSIONS.DASHBOARD_VIEW,
-                PERMISSIONS.ASSET_READ_OWN_OFFICE,
-                PERMISSIONS.REQUISITION_CREATE,
-                PERMISSIONS.REQUISITION_READ_OWN_OFFICE
-            ];
-        }
-
+        // Create a new user record with the determined role and permissions.
         gsoUserRecord = await User.create({
             externalId: lguUser._id,
             name: lguUser.name,
             office: lguUser.office,
-            role: gsoRole,
-            permissions: permissions,
+            role: targetGsoRoleName,
+            permissions: targetPermissions,
         });
     }
 
-    // Step 3: Generate and send back the GSO-specific token
+    // Step 4: Generate and send back the GSO-specific token
     const gsoToken = generateGsoToken(gsoUserRecord);
     res.status(200).json({ token: gsoToken });
 });

@@ -38,12 +38,13 @@ function initializeDashboard() {
     }
 
     function renderStatCards(stats) {
-        document.getElementById('stat-total-value').textContent = formatCurrency(stats.totalValue.current);
+        document.getElementById('stat-portfolio-value').textContent = formatCurrency(stats.totalPortfolioValue.current);
         document.getElementById('stat-total-assets').textContent = stats.totalAssets.current;
         document.getElementById('stat-for-repair').textContent = stats.forRepair.current;
         document.getElementById('stat-disposed').textContent = stats.disposed.current;
         document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions.current;
         document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets.current;
+        document.getElementById('stat-low-stock').textContent = stats.lowStockItems.current;
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
@@ -55,7 +56,7 @@ function initializeDashboard() {
             }
         };
 
-        renderTrend(document.getElementById('stat-total-value-trend'), stats.totalValue.trend);
+        renderTrend(document.getElementById('stat-portfolio-value-trend'), stats.totalPortfolioValue.trend);
         renderTrend(document.getElementById('stat-total-assets-trend'), stats.totalAssets.trend);
         renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair.trend);
         renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed.trend);
@@ -157,40 +158,34 @@ function initializeDashboard() {
                 const row = `
                     <tr>
                         <td>
-                            <div class="font-bold">${asset.description}</div>
+                            <div class="font-bold">${asset.name || asset.description}</div>
                             <div class="text-sm opacity-50">${asset.propertyNumber}</div>
                         </td>
-                        <td>${asset.custodian.office}</td>
-                        <td><span class="badge badge-ghost badge-sm">${new Date(asset.createdAt).toLocaleDateString()}</span></td>
+                        <td>${asset.custodian?.office || 'N/A'}</td>
+                        <td><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></td>
                     </tr>`;
-                recentAssetsBody.innerHTML += row;
+                recentAssetsBody.insertAdjacentHTML('beforeend', row);
             });
         } else {
-            recentAssetsBody.innerHTML = '<tr><td colspan="3" class="text-center">No recent assets.</td></tr>';
+            recentAssetsBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">No recent assets.</td></tr>';
         }
 
         const recentReqsBody = document.getElementById('recent-requisitions-table');
         recentReqsBody.innerHTML = '';
         if (recentData.requisitions.length > 0) {
             recentData.requisitions.forEach(req => {
-                const statusMap = {
-                    'Pending': 'badge-warning',
-                    'Approved': 'badge-success',
-                    'Declined': 'badge-error',
-                    'Issued': 'badge-info'
-                };
                 const row = `
                     <tr>
                         <td>
                             <div class="font-bold">${req.requestingOffice}</div>
                             <div class="text-sm opacity-50">${req.risNumber}</div>
                         </td>
-                        <td><span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span></td>
+                        <td><span class="badge badge-ghost badge-sm">${req.status}</span></td>
                     </tr>`;
-                recentReqsBody.innerHTML += row;
+                recentReqsBody.insertAdjacentHTML('beforeend', row);
             });
         } else {
-            recentReqsBody.innerHTML = '<tr><td colspan="2" class="text-center">No recent requisitions.</td></tr>';
+            recentReqsBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">No recent requisitions.</td></tr>';
         }
     }
 
@@ -204,6 +199,9 @@ function initializeDashboard() {
         });
         document.getElementById('stat-card-disposed').addEventListener('click', () => {
             window.location.href = '../assets/asset-registry.html?status=Disposed';
+        });
+        document.getElementById('stat-card-low-stock').addEventListener('click', () => {
+            window.location.href = '../supplies/stock-management.html?filter=low_stock';
         });
         document.getElementById('stat-card-immovable-assets').addEventListener('click', () => {
             window.location.href = '../immovable-assets/immovable-registry.html';
