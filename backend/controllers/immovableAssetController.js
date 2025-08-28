@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const ImmovableAsset = require('../models/immovableAsset');
+const ImmovableAsset = require('../models/ImmovableAsset');
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
 
 /**

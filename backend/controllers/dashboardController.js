@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Asset = require('../models/Asset');
 const Requisition = require('../models/Requisition');
-const ImmovableAsset = require('../models/immovableAsset');
+const ImmovableAsset = require('../models/ImmovableAsset');
 const StockItem = require('../models/StockItem');
 const mongoose = require('mongoose');
 
