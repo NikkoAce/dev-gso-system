@@ -78,6 +78,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 assetsByOffice: [
                     { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
                 ],
+                assetsByCondition: [
+                    { $group: { _id: '$condition', count: { $sum: 1 } } }
+                ],
                 recentAssets: [
                     { $match: { acquisitionDate: { $lte: end } } },
                     { $sort: { acquisitionDate: -1 } },
@@ -140,6 +143,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const monthlyAcquisitions = ma.monthlyAcquisitions || [];
     const assetsByStatus = ma.assetsByStatus || [];
     const assetsByOffice = ma.assetsByOffice || [];
+    const assetsByCondition = ma.assetsByCondition || [];
     const recentAssets = ma.recentAssets || [];
 
     const currentImmovableStats = ia.currentImmovableStats || [];
@@ -225,6 +229,13 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             datasets: [{
                 label: 'Asset Status',
                 data: assetsByStatus.map(s => s.count)
+            }]
+        },
+        assetCondition: {
+            labels: assetsByCondition.map(c => c._id || 'Not Set'),
+            datasets: [{
+                label: 'Assets by Condition',
+                data: assetsByCondition.map(c => c.count)
             }]
         }
     };

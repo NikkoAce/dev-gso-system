@@ -7,11 +7,11 @@ let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters',
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters', 'assetCondition',
         'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'recentAssets', 'recentRequisitions'
     ],
     cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters'],
-    chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus'],
+    chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
     tableOrder: ['recentAssets', 'recentRequisitions']
 };
 
@@ -255,6 +255,14 @@ function initializeDashboard(user) {
                 data: chartData.assetStatus,
                 options: {},
                 filterKey: 'status'
+            },
+            assetConditionChart: {
+                type: 'bar',
+                data: chartData.assetCondition,
+                options: {
+                    indexAxis: 'y',
+                },
+                filterKey: 'condition'
             }
         };
 
