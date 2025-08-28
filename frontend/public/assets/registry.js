@@ -152,7 +152,8 @@ function initializeRegistryPage(user) {
     // --- MODULE: EXPORT MANAGER ---
     const exportManager = {
         exportToCsv() {
-            // This should now trigger a backend download
+            // This function triggers a backend download of a CSV file,
+            // which is the standard and most compatible way to export data for Excel.
             const params = new URLSearchParams({
                 sort: state.sortKey,
                 order: state.sortDirection,
