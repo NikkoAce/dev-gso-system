@@ -391,3 +391,5 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         topSupplies
     });
 });
+
+module.exports = { getDashboardStats };
