@@ -193,7 +193,7 @@ export function createUIManager() {
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                             <li><button class="edit-btn" data-id="${asset._id}"><i data-lucide="edit"></i> Edit</button></li>
-                            <li><button class="ledger-card-btn" data-id="${asset._id}"><i data-lucide="book-user"></i> Ledger Card</button></li>
+                            <li><a href="../slips/movable-ledger-card.html?id=${asset._id}" class="ledger-card-btn flex items-center"><i data-lucide="book-user"></i> Ledger Card</a></li>
                             <li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i> Transfer</button></li>
                             <div class="divider my-1"></div>
                             <li><button class="delete-btn text-red-500" data-id="${asset._id}"><i data-lucide="trash-2"></i> Delete</button></li>

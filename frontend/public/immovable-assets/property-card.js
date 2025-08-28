@@ -11,17 +11,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         initializeLayout(user, gsoLogout);
-        initializeLedgerCardPage();
+        initializePropertyCardPage();
     } catch (error) {
-        console.error("Authentication failed on ledger card page:", error);
+        console.error("Authentication failed on property card page:", error);
     }
 });
 
-function initializeLedgerCardPage() {
+function initializePropertyCardPage() {
     // --- STATE & CONFIG ---
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
-    const API_ENDPOINT = `immovable-assets/${assetId}/ledger-card`;
+    const API_ENDPOINT = `immovable-assets/${assetId}/property-card`;
 
     // --- DOM ELEMENTS ---
     const loadingState = document.getElementById('loading-state');
@@ -29,7 +29,7 @@ function initializeLedgerCardPage() {
     const errorMessage = document.getElementById('error-message');
     const reportContent = document.getElementById('report-content');
     const assetDetailsContainer = document.getElementById('asset-details-container');
-    const depreciationTableContainer = document.getElementById('depreciation-table-container');
+    const historyTableContainer = document.getElementById('history-table-container');
     const printReportBtn = document.getElementById('print-report-btn');
 
     // --- UTILITY FUNCTIONS ---
@@ -38,11 +38,10 @@ function initializeLedgerCardPage() {
 
     // --- RENDERING FUNCTIONS ---
     function renderAssetDetails(asset) {
-        const details = asset.buildingAndStructureDetails || {};
         let detailsHtml = `
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 border p-2">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 border p-2">
                 <div class="font-bold">Asset Name:</div>
-                <div class="md:col-span-2">${asset.name}</div>
+                <div class="md:col-span-3">${asset.name}</div>
                 
                 <div class="font-bold">Property Index No.:</div>
                 <div>${asset.propertyIndexNumber}</div>
@@ -50,68 +49,74 @@ function initializeLedgerCardPage() {
                 <div class="font-bold">Type:</div>
                 <div>${asset.type}</div>
 
+                <div class="font-bold">Location:</div>
+                <div class="md:col-span-3">${asset.location}</div>
+
                 <div class="font-bold">Acquisition Date:</div>
                 <div>${formatDate(asset.dateAcquired)}</div>
 
                 <div class="font-bold">Assessed Value:</div>
                 <div>${formatCurrency(asset.assessedValue)}</div>
-
-                <div class="font-bold">Est. Useful Life:</div>
-                <div>${details.usefulLife || 'N/A'} years</div>
             </div>
         `;
         assetDetailsContainer.innerHTML = detailsHtml;
     }
 
-    function renderDepreciationTable(schedule) {
-        if (!schedule || schedule.length === 0) {
-            depreciationTableContainer.innerHTML = '<p>No depreciation schedule available for this asset.</p>';
+    function renderHistoryTable(history) {
+        if (!history || history.length === 0) {
+            historyTableContainer.innerHTML = '<p>No history records found.</p>';
             return;
         }
+
+        const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
 
         const table = document.createElement('table');
         table.className = 'w-full text-xs border-collapse border border-black';
         table.innerHTML = `
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="border border-black p-1">Year</th>
-                    <th class="border border-black p-1">Depreciation</th>
-                    <th class="border border-black p-1">Accum. Depreciation</th>
-                    <th class="border border-black p-1">Book Value</th>
+                    <th class="border border-black p-1">Date</th>
+                    <th class="border border-black p-1">Event</th>
+                    <th class="border border-black p-1">Details</th>
+                    <th class="border border-black p-1">User</th>
                 </tr>
             </thead>
             <tbody>
-                ${schedule.map(entry => `
+                ${sortedHistory.map(entry => `
                     <tr class="border-b">
-                        <td class="border border-black p-1 text-center">${entry.year}</td>
-                        <td class="border border-black p-1 text-right">${formatCurrency(entry.depreciation)}</td>
-                        <td class="border border-black p-1 text-right">${formatCurrency(entry.accumulatedDepreciation)}</td>
-                        <td class="border border-black p-1 text-right">${formatCurrency(entry.bookValue)}</td>
+                        <td class="border border-black p-1">${formatDate(entry.date)}</td>
+                        <td class="border border-black p-1">${entry.event}</td>
+                        <td class="border border-black p-1">${entry.details}</td>
+                        <td class="border border-black p-1">${entry.user}</td>
                     </tr>
                 `).join('')}
             </tbody>
         `;
-        depreciationTableContainer.innerHTML = '';
-        depreciationTableContainer.appendChild(table);
+        historyTableContainer.innerHTML = '';
+        historyTableContainer.appendChild(table);
     }
 
     // --- CORE LOGIC ---
-    async function loadLedgerCard() {
+    async function loadPropertyCard() {
         if (!assetId) {
             loadingState.classList.add('hidden');
-            errorMessage.textContent = 'No Asset ID provided.';
+            errorMessage.textContent = 'No Asset ID provided. Please return to the registry and select an asset.';
             errorState.classList.remove('hidden');
             return;
         }
 
         try {
-            const { asset, schedule } = await fetchWithAuth(API_ENDPOINT);
-            renderAssetDetails(asset);
-            renderDepreciationTable(schedule);
+            const assetData = await fetchWithAuth(API_ENDPOINT);
+            
+            renderAssetDetails(assetData);
+            renderHistoryTable(assetData.history);
+
             loadingState.classList.add('hidden');
             reportContent.classList.remove('hidden');
+            lucide.createIcons();
+
         } catch (error) {
-            console.error('Error fetching ledger card data:', error);
+            console.error('Error fetching property card data:', error);
             loadingState.classList.add('hidden');
             errorMessage.textContent = `Error: ${error.message}`;
             errorState.classList.remove('hidden');
@@ -119,8 +124,10 @@ function initializeLedgerCardPage() {
     }
 
     // --- EVENT LISTENERS ---
-    printReportBtn.addEventListener('click', () => window.print());
+    printReportBtn.addEventListener('click', () => {
+        window.print();
+    });
 
     // --- INITIALIZATION ---
-    loadLedgerCard();
+    loadPropertyCard();
 }

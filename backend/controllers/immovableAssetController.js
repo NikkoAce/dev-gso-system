@@ -376,11 +376,11 @@ const generateImmovableAssetReport = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Get data for a Real Property Ledger Card for a single asset
- * @route   GET /api/immovable-assets/:id/ledger
+ * @desc    Get data for a Real Property Card for a single asset
+ * @route   GET /api/immovable-assets/:id/property-card
  * @access  Private (GSO with report:generate permission)
  */
-const generateLedgerCardReport = asyncHandler(async (req, res) => {
+const generatePropertyCardReport = asyncHandler(async (req, res) => {
     const asset = await ImmovableAsset.findById(req.params.id);
 
     if (!asset) {
@@ -388,9 +388,44 @@ const generateLedgerCardReport = asyncHandler(async (req, res) => {
         throw new Error('Asset not found');
     }
 
-    // The full asset object contains all the necessary details for the ledger card,
+    // The full asset object contains all the necessary details for the property card,
     // including the history sub-document.
     res.status(200).json(asset);
+});
+
+/**
+ * @desc    Get data for a Real Property Ledger Card (Depreciation)
+ * @route   GET /api/immovable-assets/:id/ledger-card
+ * @access  Private (GSO with report:generate permission)
+ */
+const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id).lean();
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    // Depreciation calculation is only relevant for certain asset types
+    if (!['Building', 'Other Structures'].includes(asset.type) || !asset.buildingAndStructureDetails) {
+        res.status(400);
+        throw new Error('Depreciation ledger card is only applicable for Buildings and Other Structures with depreciation details.');
+    }
+
+    const details = asset.buildingAndStructureDetails;
+    const depreciableCost = asset.assessedValue - (details.salvageValue || 0);
+    const annualDepreciation = details.usefulLife > 0 ? depreciableCost / details.usefulLife : 0;
+
+    const schedule = [];
+    let accumulatedDepreciation = 0;
+
+    for (let i = 1; i <= details.usefulLife; i++) {
+        accumulatedDepreciation += annualDepreciation;
+        const bookValue = asset.assessedValue - accumulatedDepreciation;
+        schedule.push({ year: i, depreciation: annualDepreciation, accumulatedDepreciation: accumulatedDepreciation, bookValue: bookValue });
+    }
+
+    res.status(200).json({ asset, schedule });
 });
 
 module.exports = {
@@ -401,5 +436,6 @@ module.exports = {
     deleteImmovableAsset,
     deleteImmovableAssetAttachment,
     generateImmovableAssetReport,
-    generateLedgerCardReport
+    generatePropertyCardReport,
+    generateImmovableLedgerCard
 };

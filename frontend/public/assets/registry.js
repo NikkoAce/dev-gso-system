@@ -217,9 +217,9 @@ function initializeRegistryPage(user) {
                 window.location.href = `./asset-form.html?id=${editButton.dataset.id}`;
                 return;
             }
-            const ledgerCardButton = e.target.closest('.ledger-card-btn');
-            if (ledgerCardButton) {
-                window.location.href = `../slips/property-card.html?id=${ledgerCardButton.dataset.id}`;
+            // The ledger card is now a link, so it doesn't need a click handler here.
+            // The browser will handle the navigation via the <a> tag in ui.js.
+            if (e.target.closest('.ledger-card-btn')) {
                 return;
             }
             const transferButton = e.target.closest('.transfer-btn');

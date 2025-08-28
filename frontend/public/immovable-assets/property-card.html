@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Immovable Property Ledger Card - LGU GSO System</title>
+    <title>Real Property Card - LGU GSO System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
     <link href="../css/output.css" rel="stylesheet">
@@ -25,7 +25,7 @@
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-4xl mx-auto">
                     <div class="flex justify-between items-center mb-6 non-printable">
-                        <h1 id="page-title" class="text-3xl font-bold text-gray-800">Immovable Property Ledger Card</h1>
+                        <h1 id="page-title" class="text-3xl font-bold text-gray-800">Real Property Card</h1>
                         <div>
                             <a href="./immovable-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
                             <button id="print-report-btn" class="btn btn-primary">
@@ -38,7 +38,7 @@
                         <!-- Loading State -->
                         <div id="loading-state" class="text-center p-8">
                             <i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i>
-                            <p class="mt-2">Loading Ledger Card...</p>
+                            <p class="mt-2">Loading Property Card...</p>
                         </div>
 
                         <!-- Error State -->
@@ -58,14 +58,15 @@
                                 </div>
                             </div>
                             <header class="text-center mb-4">
-                                <h3 class="font-bold text-lg">IMMOVABLE PROPERTY LEDGER CARD</h3>
+                                <h3 class="font-bold text-lg">REAL PROPERTY CARD</h3>
                             </header>
                             
                             <!-- Asset Details Section -->
                             <div id="asset-details-container" class="mb-6 text-sm"></div>
 
-                            <!-- Depreciation Table -->
-                            <div id="depreciation-table-container" class="overflow-x-auto"></div>
+                            <!-- History Table -->
+                            <h4 class="font-bold mb-2">History of the Property</h4>
+                            <div id="history-table-container" class="overflow-x-auto"></div>
                         </div>
                     </section>
                 </div>
@@ -73,6 +74,6 @@
         </div>
     </div>
     <script src="../js/layout.js"></script>
-    <script type="module" src="./ledger-card.js"></script>
+    <script type="module" src="./property-card.js"></script>
 </body>
 </html>
