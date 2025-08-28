@@ -5,8 +5,10 @@ import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            window.location.href = '../dashboard/dashboard.html';
+        // A user needs permission to either transfer assets or read slips to view this page.
+        const canAccess = user.permissions.includes('asset:transfer') || user.permissions.includes('slip:read');
+        if (!user || !canAccess) {
+            window.location.href = '../assets/asset-registry.html'; // Redirect to a safe page
             return;
         }
 
