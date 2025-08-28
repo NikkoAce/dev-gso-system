@@ -1,6 +1,6 @@
 const asyncHandler = require('express-async-handler');
-const Asset = require('../models/assetModel.js');
-const Requisition = require('../models/requisitionModel.js');
+const Asset = require('../models/Asset');
+const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
 
 /**
