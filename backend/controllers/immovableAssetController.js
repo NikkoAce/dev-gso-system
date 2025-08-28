@@ -427,7 +427,7 @@ const generatePropertyCardReport = asyncHandler(async (req, res) => {
  * @access  Private (GSO with report:generate permission)
  */
 const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id).lean();
+    const asset = await ImmovableAsset.findById(req.params.id);
 
     if (!asset) {
         res.status(404);
@@ -453,7 +453,7 @@ const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
         schedule.push({ year: i, depreciation: annualDepreciation, accumulatedDepreciation: accumulatedDepreciation, bookValue: bookValue });
     }
 
-    res.status(200).json({ asset, schedule });
+    res.status(200).json({ asset: asset.toObject(), schedule });
 });
 
 module.exports = {
