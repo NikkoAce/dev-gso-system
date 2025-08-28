@@ -111,11 +111,9 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
 
     if (gsoUserRecord) {
         // --- USER EXISTS ---
-        // Update the user's details, including their role and permissions, to keep them in sync with the portal and role definitions.
+        // Only update basic details to keep them in sync with the portal. Do NOT overwrite the role and permissions, as they are managed within the GSO system.
         gsoUserRecord.name = lguUser.name;
         gsoUserRecord.office = lguUser.office;
-        gsoUserRecord.role = targetGsoRoleName;
-        gsoUserRecord.permissions = targetPermissions;
         await gsoUserRecord.save();
     } else {
         // --- NEW USER ---
