@@ -1,4 +1,4 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
 import { fetchWithAuth, BASE_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -151,28 +151,60 @@ function initializeRegistryPage(user) {
 
     // --- MODULE: EXPORT MANAGER ---
     const exportManager = {
-        exportToCsv() {
-            // This function triggers a backend download of a CSV file,
-            // which is the standard and most compatible way to export data for Excel.
-            const params = new URLSearchParams({
-                sort: state.sortKey,
-                order: state.sortDirection,
-                search: DOM.searchInput.value,
-                category: DOM.categoryFilter.value,
-                status: DOM.statusFilter.value,
-                office: DOM.officeFilter.value,
-                fundSource: DOM.fundSourceFilter?.value,
-                assignment: DOM.assignmentFilter?.value,
-                startDate: DOM.startDateFilter?.value,
-                endDate: DOM.endDateFilter?.value
-            });
+        async exportToCsv() {
+            DOM.exportCsvBtn.disabled = true;
+            DOM.exportCsvBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Exporting...`;
 
-            const exportUrl = `${BASE_URL}/assets/export?${Array.from(params.entries()).filter(([, value]) => value).map(e => e.join('=')).join('&')}`;
-            
-            // To trigger a download, we can create a temporary link or just navigate.
-            // Navigating is simpler. Note: This method may not send auth headers. 
-            // The backend must support auth via cookie or query param for this to work.
-            window.location.href = exportUrl;
+            try {
+                const params = new URLSearchParams({
+                    sort: state.sortKey,
+                    order: state.sortDirection,
+                    search: DOM.searchInput.value,
+                    category: DOM.categoryFilter.value,
+                    status: DOM.statusFilter.value,
+                    office: DOM.officeFilter.value,
+                    fundSource: DOM.fundSourceFilter?.value,
+                    assignment: DOM.assignmentFilter?.value,
+                    startDate: DOM.startDateFilter?.value,
+                    endDate: DOM.endDateFilter?.value
+                });
+
+                const exportUrl = `${BASE_URL}/assets/export?${Array.from(params.entries()).filter(([, value]) => value).map(e => e.join('=')).join('&')}`;
+                
+                const token = getGsoToken();
+                if (!token) {
+                    throw new Error('Authentication token not found.');
+                }
+
+                const response = await fetch(exportUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+                    throw new Error(errorData.message || `Failed to export data. Status: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'assets_export.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+            } catch (error) {
+                uiManager.showToast(`Export failed: ${error.message}`, 'error');
+            } finally {
+                DOM.exportCsvBtn.disabled = false;
+                DOM.exportCsvBtn.innerHTML = `<i data-lucide="download" class="h-5 w-5"></i> Export`;
+                lucide.createIcons();
+            }
         }
     };
 
