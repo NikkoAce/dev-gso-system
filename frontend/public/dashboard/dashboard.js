@@ -2,6 +2,7 @@
 import { fetchWithAuth } from '../js/api.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
+let dashboardFilters = {};
 let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
@@ -107,14 +108,67 @@ function populateCustomizeModal() {
     });
 }
 
+function renderActiveFilters() {
+    const bar = document.getElementById('active-filters-bar');
+    const container = document.getElementById('active-filters-container');
+
+    if (!bar || !container) return;
+
+    if (Object.keys(dashboardFilters).length === 0) {
+        bar.classList.add('hidden');
+        return;
+    }
+
+    bar.classList.remove('hidden');
+    container.innerHTML = '';
+
+    for (const [key, value] of Object.entries(dashboardFilters)) {
+        const filterPill = `
+            <div class="badge badge-info gap-2">
+                <span class="font-normal capitalize">${key}:</span>
+                <span>${value}</span>
+                <button class="clear-filter-btn" data-filter-key="${key}"><i data-lucide="x" class="h-3 w-3"></i></button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', filterPill);
+    }
+    lucide.createIcons();
+}
+
+function setupFilterInteractivity() {
+    const bar = document.getElementById('active-filters-bar');
+    if (!bar) return;
+
+    document.getElementById('clear-filters-btn').addEventListener('click', () => {
+        dashboardFilters = {};
+        renderActiveFilters();
+        fetchDashboardData();
+    });
+
+    bar.addEventListener('click', (e) => {
+        const clearButton = e.target.closest('.clear-filter-btn');
+        if (clearButton) {
+            const keyToRemove = clearButton.dataset.filterKey;
+            delete dashboardFilters[keyToRemove];
+            renderActiveFilters();
+            fetchDashboardData();
+        }
+    });
+}
+
 function initializeDashboard(user) {
     const charts = {}; // To hold chart instances for updates
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
-    async function fetchDashboardData(startDate = '', endDate = '') {
+    async function fetchDashboardData() {
         try {
-            const params = new URLSearchParams({ startDate, endDate }).toString();
+            const startDate = document.getElementById('filter-start-date').value;
+            const endDate = document.getElementById('filter-end-date').value;
+            const dateFilters = { startDate, endDate };
+            const allFilters = { ...dateFilters, ...dashboardFilters };
+
+            const params = new URLSearchParams(allFilters).toString();
             const data = await fetchWithAuth(`dashboard/stats?${params}`);
             renderStatCards(data.stats);
             applyPreferences(); // Apply layout after data is fetched
@@ -234,8 +288,15 @@ function initializeDashboard(user) {
         if (points.length) {
             const firstPoint = points[0];
             const label = chart.data.labels[firstPoint.index];
-            const encodedLabel = encodeURIComponent(label);
-            window.location.href = `../assets/asset-registry.html?${filterKey}=${encodedLabel}`;
+
+            // Update the filter state
+            dashboardFilters[filterKey] = label;
+
+            // Re-render the active filters display
+            renderActiveFilters();
+
+            // Fetch new data with the applied filter
+            fetchDashboardData();
         }
     }
 
@@ -303,7 +364,7 @@ function initializeDashboard(user) {
         const applyDateFilters = () => {
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
-            fetchDashboardData(startDate, endDate);
+            fetchDashboardData();
         };
 
         startDateInput.addEventListener('change', applyDateFilters);
@@ -410,7 +471,9 @@ function initializeDashboard(user) {
 
     // --- INITIALIZATION ---
     const endDate = new Date().toISOString().split('T')[0];
-    fetchDashboardData('', endDate); // Initial load with no start date and today as end date
+    document.getElementById('filter-end-date').value = endDate;
+    fetchDashboardData(); // Initial load
     setupEventListeners();
     setupDashboardInteractivity();
+    setupFilterInteractivity();
 }

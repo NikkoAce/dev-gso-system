@@ -11,7 +11,13 @@ const mongoose = require('mongoose');
  * @access  Private/Admin
  */
 const getDashboardStats = asyncHandler(async (req, res) => {
-    const { startDate, endDate } = req.query;
+    const {
+        startDate,
+        endDate,
+        // New interactive filters from chart clicks
+        office,
+        status
+    } = req.query;
 
     // --- 1. Define Date Filters ---
     const end = endDate ? new Date(endDate) : new Date();
@@ -20,8 +26,21 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
     start.setUTCHours(0, 0, 0, 0);
 
+    // --- NEW: Build the interactive filter match stage ---
+    // This will be applied to the main asset pipeline to filter all stats and charts.
+    const interactiveFilter = {};
+    if (office) {
+        interactiveFilter['custodian.office'] = office;
+    }
+    if (status) {
+        interactiveFilter['status'] = status;
+    }
+
+    const matchStage = Object.keys(interactiveFilter).length > 0 ? [{ $match: interactiveFilter }] : [];
+
     // --- 2. Define Combined Aggregation Pipelines for Performance ---
     const movableAssetPipeline = Asset.aggregate([
+        ...matchStage, // Apply interactive filters at the very beginning for max efficiency
         {
             $facet: {
                 currentPeriodStats: [

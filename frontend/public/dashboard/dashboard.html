@@ -58,6 +58,14 @@
                             <button id="cancel-layout-btn" class="btn btn-ghost btn-sm hidden"><i data-lucide="x"></i> Cancel</button>
                         </div>
                     </div>
+                    <!-- Active Filters Bar -->
+                    <div id="active-filters-bar" class="hidden flex items-center gap-2 p-2 mb-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                        <span class="font-semibold text-blue-800">Active Filters:</span>
+                        <div id="active-filters-container" class="flex items-center gap-2 flex-wrap">
+                            <!-- Active filter badges will be populated here by JS -->
+                        </div>
+                        <button id="clear-filters-btn" class="btn btn-ghost btn-xs ml-auto">Clear All</button>
+                    </div>
                     <!-- Stat Cards Grid -->
                     <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 dashboard-grid">
                         <!-- Total Portfolio Value -->
