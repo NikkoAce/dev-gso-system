@@ -57,7 +57,7 @@ function initializeLedgerCardPage() {
                 <div>${formatCurrency(asset.assessedValue)}</div>
 
                 <div class="font-bold">Est. Useful Life:</div>
-                <div>${details.usefulLife || 'N/A'} years</div>
+                <div>${details.estimatedUsefulLife || 'N/A'} years</div>
             </div>
         `;
         assetDetailsContainer.innerHTML = detailsHtml;

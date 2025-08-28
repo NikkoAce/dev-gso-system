@@ -442,12 +442,12 @@ const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
 
     const details = asset.buildingAndStructureDetails;
     const depreciableCost = asset.assessedValue - (details.salvageValue || 0);
-    const annualDepreciation = details.usefulLife > 0 ? depreciableCost / details.usefulLife : 0;
+    const annualDepreciation = details.estimatedUsefulLife > 0 ? depreciableCost / details.estimatedUsefulLife : 0;
 
     const schedule = [];
     let accumulatedDepreciation = 0;
 
-    for (let i = 1; i <= details.usefulLife; i++) {
+    for (let i = 1; i <= details.estimatedUsefulLife; i++) {
         accumulatedDepreciation += annualDepreciation;
         const bookValue = asset.assessedValue - accumulatedDepreciation;
         schedule.push({ year: i, depreciation: annualDepreciation, accumulatedDepreciation: accumulatedDepreciation, bookValue: bookValue });
