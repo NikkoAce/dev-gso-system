@@ -180,7 +180,7 @@ function initializeLayout(user, logoutFunction) {
   const mobileMenuButton = document.getElementById("mobile-menu-button");
 
   if (sidebarContainer) {
-    sidebarContainer.className = 'fixed inset-y-0 left-0 z-50 w-64 bg-base-200 h-screen flex flex-col border-r non-printable transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0';
+    sidebarContainer.className = 'fixed inset-y-0 left-0 z-50 w-64 bg-base-200 h-screen flex flex-col border-r non-printable hide-in-preview transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0';
     sidebarContainer.innerHTML = getSidebarHTML(user);
 
     // Attach the passed logout function to the button

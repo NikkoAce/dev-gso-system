@@ -21,16 +21,16 @@
             <!-- Sidebar is dynamically loaded by layout.js -->
         </aside>
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable hide-in-preview">
                 <h1 class="text-xl font-bold">LGU GSO System</h1>
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-6 non-printable">
-                        <h1 id="page-title" class="text-3xl font-bold text-gray-800">Movable Property Card</h1>
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 id="page-title" class="text-3xl font-bold text-gray-800 non-printable hide-in-preview">Movable Property Card</h1>
                         <div class="flex items-center gap-2 non-printable">
-                            <a href="../assets/asset-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
+                            <a href="../assets/asset-registry.html" class="btn btn-ghost hide-in-preview">&larr; Back to Registry</a>
                             <div class="dropdown dropdown-end">
                                 <label tabindex="0" class="btn btn-primary"><i data-lucide="download"></i> Export</label>
                                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">

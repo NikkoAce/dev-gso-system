@@ -15,8 +15,8 @@ body { font-family: 'Inter', sans-serif; }
     color: white;
 }
 
-/* --- Print Preview Mode --- */
-body.print-preview-mode .non-printable {
+/* --- Preview Mode --- */
+body.print-preview-mode .hide-in-preview {
     display: none !important;
 }
 
