@@ -463,6 +463,35 @@ function initializeRegistryPage(user) {
         }
     }
 
+    /**
+     * Checks for filter parameters in the URL, applies them to the filter controls,
+     * and then cleans the URL. This enables drill-down from other pages.
+     */
+    function applyUrlFilters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let hasFilters = false;
+
+        const status = urlParams.get('status');
+        if (status) {
+            DOM.statusFilter.value = status;
+            hasFilters = true;
+        }
+
+        const office = urlParams.get('office');
+        if (office) {
+            if (DOM.advancedFilters.classList.contains('hidden')) {
+                DOM.moreFiltersBtn.click();
+            }
+            DOM.officeFilter.value = office;
+            hasFilters = true;
+        }
+
+        // Clean the URL to avoid confusion on subsequent manual filtering
+        if (hasFilters) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     // --- INITIALIZATION ORCHESTRATOR ---
     async function main() {
         try {
@@ -477,6 +506,7 @@ function initializeRegistryPage(user) {
 
             uiManager.populateFilters({ categories, offices }, { categoryFilter: DOM.categoryFilter, officeFilter: DOM.officeFilter });
             eventManager.setupEventListeners();
+            applyUrlFilters(); // Apply filters from URL before loading
             await loadAssets();
         } catch (error) {
             console.error('Failed to initialize page:', error);

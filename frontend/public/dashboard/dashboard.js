@@ -1,303 +1,199 @@
-// FILE: frontend/public/dashboard.js
-import { fetchWithAuth } from '../js/api.js';
+// FILE: frontend/public/dashboard/dashboard.js
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
         if (!user) return;
 
-        initializeLayout(user, gsoLogout); // Pass the logout function to the layout script
-        // This check is now based on permission, not a hardcoded office or role name.
-        // This aligns with the navigation and is more secure and flexible.
-        if (user.permissions && user.permissions.includes('dashboard:view')) {
-            initializeDashboard();
-        } else {
-            // Non-GSO users might see a different dashboard or be redirected
-            document.querySelector('main').innerHTML = `<h1 class="text-2xl">Welcome, ${user.name}!</h1>`;
+        if (!user.permissions || !user.permissions.includes('dashboard:view')) {
+            window.location.href = '../assets/asset-registry.html';
+            return;
         }
+
+        initializeLayout(user, gsoLogout);
+        initializeDashboard();
     } catch (error) {
         console.error("Authentication failed on dashboard:", error);
     }
 });
 
 function initializeDashboard() {
+    const charts = {}; // To hold chart instances for updates
+
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
-    const statElements = {
-        totalValue: document.getElementById('stat-total-value'),
-        totalAssets: document.getElementById('stat-total-assets'),
-        forRepair: document.getElementById('stat-for-repair'),
-        disposed: document.getElementById('stat-disposed'),
-        pendingReqs: document.getElementById('stat-pending-reqs'),
-    };
-
-    const trendElements = {
-        totalValue: document.getElementById('stat-total-value-trend'),
-        totalAssets: document.getElementById('stat-total-assets-trend'),
-        forRepair: document.getElementById('stat-for-repair-trend'),
-        disposed: document.getElementById('stat-disposed-trend'),
-        pendingReqs: document.getElementById('stat-pending-reqs-trend'),
-    };
-
-    let assetsByOfficeChartInstance = null;
-    let assetStatusChartInstance = null;
-    let monthlyAcquisitionChartInstance = null;
-    
-    const recentAssetsTable = document.getElementById('recent-assets-table');
-    const recentRequisitionsTable = document.getElementById('recent-requisitions-table');
-
-    async function fetchDashboardData() {
+    async function fetchDashboardData(startDate = '', endDate = '') {
         try {
-            const startDate = document.getElementById('filter-start-date').value;
-            const endDate = document.getElementById('filter-end-date').value;
-
-            const params = new URLSearchParams();
-            if (startDate) params.append('startDate', startDate);
-            if (endDate) params.append('endDate', endDate);
-
-            const query = params.toString();
-            const endpoint = `assets/dashboard/summary${query ? `?${query}` : ''}`;
-            const summaryData = await fetchWithAuth(endpoint);
-            
-            updateStatCards(summaryData.stats);
-            renderAssetsByOfficeChart(summaryData.charts.assetsByOffice);
-            renderAssetStatusChart(summaryData.charts.assetStatus);
-            renderMonthlyAcquisitionChart(summaryData.charts.monthlyAcquisitions);
-            renderRecentAssetsTable(summaryData.tables.recentAssets);
-            renderRecentRequisitionsTable(summaryData.tables.recentRequisitions);
-
+            const params = new URLSearchParams({ startDate, endDate }).toString();
+            const data = await fetchWithAuth(`dashboard/stats?${params}`);
+            renderStatCards(data.stats);
+            createOrUpdateCharts(data.charts);
+            renderRecentTables(data.recent);
         } catch (error) {
-            console.error("Failed to fetch dashboard data:", error);
-            Object.values(statElements).forEach(el => el.textContent = 'Error');
-            Object.values(trendElements).forEach(el => el.textContent = '');
-            recentAssetsTable.innerHTML = `<tr><td class="text-center text-error">Error loading data.</td></tr>`;
-            recentRequisitionsTable.innerHTML = `<tr><td class="text-center text-error">Error loading data.</td></tr>`;
+            console.error('Error fetching dashboard data:', error);
+            document.getElementById('stats-container').innerHTML = `<p class="text-red-500 col-span-full">Could not load dashboard data: ${error.message}</p>`;
         }
     }
 
-    function updateStatCards(stats) {
-        statElements.totalValue.textContent = formatCurrency(stats.totalAssetValue);
-        statElements.totalAssets.textContent = stats.totalAssets.toLocaleString();
-        statElements.forRepair.textContent = stats.assetsForRepair.toLocaleString();
-        statElements.disposed.textContent = stats.disposedAssets.toLocaleString();
-        statElements.pendingReqs.textContent = stats.pendingRequisitions.toLocaleString();
+    function renderStatCards(stats) {
+        document.getElementById('stat-total-value').textContent = formatCurrency(stats.totalValue.current);
+        document.getElementById('stat-total-assets').textContent = stats.totalAssets.current;
+        document.getElementById('stat-for-repair').textContent = stats.forRepair.current;
+        document.getElementById('stat-disposed').textContent = stats.disposed.current;
+        document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions.current;
 
-        // Update trends
-        updateTrend(trendElements.totalValue, stats.trends.totalAssetValue, true);
-        updateTrend(trendElements.totalAssets, stats.trends.totalAssets, false);
-        updateTrend(trendElements.forRepair, stats.trends.assetsForRepair, false);
-        updateTrend(trendElements.disposed, stats.trends.disposedAssets, false);
-        updateTrend(trendElements.pendingReqs, stats.trends.pendingRequisitions, false);
-    }
-
-    function updateTrend(element, trendData, isCurrency = false) {
-        if (!element || typeof trendData?.percent !== 'number') {
-            if(element) element.textContent = '';
-            return;
-        }
-
-        const { percent, absolute } = trendData;
-        const arrow = percent >= 0 ? '↗︎' : '↘︎';
-        const sign = absolute >= 0 ? '+' : '';
-        const formattedAbsolute = isCurrency 
-            ? formatCurrency(absolute) 
-            : absolute.toLocaleString();
-
-        element.textContent = `${arrow} ${Math.abs(percent)}% (${sign}${formattedAbsolute}) vs last period`;
-        element.className = `stat-desc ${percent >= 0 ? 'text-success' : 'text-error'}`;
-    }
-
-    function renderChart(canvasId, instance, chartConfig) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        if (instance) {
-            instance.destroy();
-        }
-        return new Chart(ctx, chartConfig);
-    }
-
-    function renderAssetsByOfficeChart(data) {
-        assetsByOfficeChartInstance = renderChart('assetsByOfficeChart', assetsByOfficeChartInstance, {
-            type: 'bar',
-            data: {
-                labels: data.map(d => d.office),
-                datasets: [{
-                    label: 'Assets by Office',
-                    data: data.map(d => d.count),
-                    backgroundColor: 'rgba(240, 0, 184, 0.6)',
-                    borderColor: 'rgba(240, 0, 184, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y', // Horizontal bar chart is good for long office names
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
+        const renderTrend = (el, trend) => {
+            if (trend > 0) {
+                el.innerHTML = `<i data-lucide="trending-up" class="text-success"></i> +${trend}%`;
+            } else if (trend < 0) {
+                el.innerHTML = `<i data-lucide="trending-down" class="text-error"></i> ${trend}%`;
+            } else {
+                el.innerHTML = `No change`;
             }
-        });
-    }
-
-    function renderAssetStatusChart(data) {
-        assetStatusChartInstance = renderChart('assetStatusChart', assetStatusChartInstance, {
-            type: 'pie',
-            data: {
-                labels: data.map(d => d.status),
-                datasets: [{
-                    label: 'Asset Status',
-                    data: data.map(d => d.count),
-                    backgroundColor: ['#37cdbe', '#fbbd23', '#f87272', '#6b7280'],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                }
-            }
-        });
-    }
-
-    function renderMonthlyAcquisitionChart(data) {
-        monthlyAcquisitionChartInstance = renderChart('monthlyAcquisitionChart', monthlyAcquisitionChartInstance, {
-            type: 'line',
-            data: {
-                labels: data.map(d => d.month),
-                datasets: [{
-                    label: 'Acquisition Value',
-                    data: data.map(d => d.totalValue),
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            // Format y-axis labels as currency
-                            callback: function(value, index, values) {
-                                if (value >= 1000) {
-                                    return '₱' + (value / 1000) + 'k';
-                                }
-                                return '₱' + value;
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += formatCurrency(context.parsed.y);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function renderRecentAssetsTable(assets) {
-        recentAssetsTable.innerHTML = '';
-        if (!assets || assets.length === 0) {
-            recentAssetsTable.innerHTML = `<tr><td class="text-center text-base-content/70">No recent assets.</td></tr>`;
-            return;
-        }
-        assets.forEach(asset => {
-            const row = `
-                <tr>
-                    <td>
-                        <div class="font-bold">${asset.description}</div>
-                        <div class="text-xs opacity-70">${asset.propertyNumber}</div>
-                    </td>
-                    <td>
-                        <div>${asset.custodian ? asset.custodian.name : 'N/A'}</div>
-                        <div class="text-xs opacity-70">${asset.office || 'Unassigned'}</div>
-                    </td>
-                </tr>
-            `;
-            recentAssetsTable.innerHTML += row;
-        });
-    }
-
-    function renderRecentRequisitionsTable(requisitions) {
-        recentRequisitionsTable.innerHTML = '';
-        if (!requisitions || requisitions.length === 0) {
-            recentRequisitionsTable.innerHTML = `<tr><td class="text-center text-base-content/70">No recent requisitions.</td></tr>`;
-            return;
-        }
-        const statusMap = {
-            'Pending': 'badge-warning',
-            'Issued': 'badge-success',
         };
-        requisitions.forEach(req => {
-            const row = `
-                <tr>
-                    <td>${req.requestingOffice}</td>
-                    <td><span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span></td>
-                </tr>
-            `;
-            recentRequisitionsTable.innerHTML += row;
-        });
+
+        renderTrend(document.getElementById('stat-total-value-trend'), stats.totalValue.trend);
+        renderTrend(document.getElementById('stat-total-assets-trend'), stats.totalAssets.trend);
+        renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair.trend);
+        renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed.trend);
+        renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions.trend);
+        lucide.createIcons();
     }
 
-    function initializeFilters() {
+    function createOrUpdateCharts(chartData) {
+        const chartConfigs = {
+            monthlyAcquisitionChart: {
+                type: 'line',
+                data: chartData.monthlyAcquisitions,
+                options: { tension: 0.2 }
+            },
+            assetsByOfficeChart: {
+                type: 'doughnut',
+                data: chartData.assetsByOffice,
+                options: {},
+                filterKey: 'office'
+            },
+            assetStatusChart: {
+                type: 'pie',
+                data: chartData.assetStatus,
+                options: {},
+                filterKey: 'status'
+            }
+        };
+
+        for (const [id, config] of Object.entries(chartConfigs)) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (charts[id]) {
+                charts[id].data = config.data;
+                charts[id].update();
+            } else {
+                charts[id] = new Chart(ctx, {
+                    type: config.type,
+                    data: config.data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: config.type !== 'line' } },
+                        ...config.options,
+                        onClick: (event) => {
+                            if (config.filterKey) {
+                                onChartClick(event, charts[id], config.filterKey);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    function onChartClick(event, chart, filterKey) {
+        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+        if (points.length) {
+            const firstPoint = points[0];
+            const label = chart.data.labels[firstPoint.index];
+            const encodedLabel = encodeURIComponent(label);
+            window.location.href = `../assets/asset-registry.html?${filterKey}=${encodedLabel}`;
+        }
+    }
+
+    function renderRecentTables(recentData) {
+        const recentAssetsBody = document.getElementById('recent-assets-table');
+        recentAssetsBody.innerHTML = '';
+        if (recentData.assets.length > 0) {
+            recentData.assets.forEach(asset => {
+                const row = `
+                    <tr>
+                        <td>
+                            <div class="font-bold">${asset.description}</div>
+                            <div class="text-sm opacity-50">${asset.propertyNumber}</div>
+                        </td>
+                        <td>${asset.custodian.office}</td>
+                        <td><span class="badge badge-ghost badge-sm">${new Date(asset.createdAt).toLocaleDateString()}</span></td>
+                    </tr>`;
+                recentAssetsBody.innerHTML += row;
+            });
+        } else {
+            recentAssetsBody.innerHTML = '<tr><td colspan="3" class="text-center">No recent assets.</td></tr>';
+        }
+
+        const recentReqsBody = document.getElementById('recent-requisitions-table');
+        recentReqsBody.innerHTML = '';
+        if (recentData.requisitions.length > 0) {
+            recentData.requisitions.forEach(req => {
+                const statusMap = {
+                    'Pending': 'badge-warning',
+                    'Approved': 'badge-success',
+                    'Declined': 'badge-error',
+                    'Issued': 'badge-info'
+                };
+                const row = `
+                    <tr>
+                        <td>
+                            <div class="font-bold">${req.requestingOffice}</div>
+                            <div class="text-sm opacity-50">${req.risNumber}</div>
+                        </td>
+                        <td><span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span></td>
+                    </tr>`;
+                recentReqsBody.innerHTML += row;
+            });
+        } else {
+            recentReqsBody.innerHTML = '<tr><td colspan="2" class="text-center">No recent requisitions.</td></tr>';
+        }
+    }
+
+    function setupEventListeners() {
+        // Stat Card Click Handlers
+        document.getElementById('stat-card-total-assets').addEventListener('click', () => {
+            window.location.href = '../assets/asset-registry.html';
+        });
+        document.getElementById('stat-card-for-repair').addEventListener('click', () => {
+            window.location.href = '../assets/asset-registry.html?status=For Repair';
+        });
+        document.getElementById('stat-card-disposed').addEventListener('click', () => {
+            window.location.href = '../assets/asset-registry.html?status=Disposed';
+        });
+
+        // Date Filter Handlers
         const startDateInput = document.getElementById('filter-start-date');
         const endDateInput = document.getElementById('filter-end-date');
 
-        // Set default dates to the current year
-        const today = new Date();
-        const yearStart = new Date(today.getFullYear(), 0, 1);
-        startDateInput.value = yearStart.toISOString().split('T')[0];
-        endDateInput.value = today.toISOString().split('T')[0];
-
-        const handleDateChange = () => {
-            const startValue = startDateInput.value;
-            const endValue = endDateInput.value;
-
-            if (!startValue || !endValue) return; // Don't do anything if a date is cleared
-
-            if (new Date(startValue) > new Date(endValue)) {
-                alert('Start date cannot be after the end date. Adjusting start date.');
-                startDateInput.value = endValue; // Auto-correct the start date
-            }
-            fetchDashboardData();
+        const applyDateFilters = () => {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            fetchDashboardData(startDate, endDate);
         };
 
-        startDateInput.addEventListener('change', handleDateChange);
-        endDateInput.addEventListener('change', handleDateChange);
+        startDateInput.addEventListener('change', applyDateFilters);
+        endDateInput.addEventListener('change', applyDateFilters);
+
+        // Set default end date to today
+        endDateInput.value = new Date().toISOString().split('T')[0];
     }
 
-    initializeFilters();
-    fetchDashboardData(); // Initial fetch with default dates
+    // --- INITIALIZATION ---
+    const endDate = new Date().toISOString().split('T')[0];
+    fetchDashboardData('', endDate); // Initial load with no start date and today as end date
+    setupEventListeners();
 }
