@@ -131,14 +131,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         movableAssetResults,
         immovableAssetResults,
         requisitionResults,
-        lowStockCount
-        unassignedAssetsCount // NEW
+        lowStockCount,
+        unassignedAssetsCount
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
         requisitionPipeline,
-        lowStockCountPipeline
-        unassignedAssetsCountPipeline // NEW
+        lowStockCountPipeline,
+        unassignedAssetsCountPipeline
     ]);
 
     // Unpack results from the combined pipelines

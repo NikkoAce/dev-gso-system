@@ -79,11 +79,28 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         targetGsoRoleName = 'Employee';
     }
 
-    // Fetch the permissions for the determined role from the database.
-    const roleData = await Role.findOne({ name: targetGsoRoleName }).lean();
+    // --- Ensure Role Exists and Get Permissions ---
+    // This makes the system resilient by creating default non-admin roles if they don't exist.
+    const defaultEmployeePermissions = [
+        PERMISSIONS.ASSET_READ_OWN_OFFICE,
+        PERMISSIONS.REQUISITION_CREATE,
+        PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+    ];
+
+    // Find the role, or create it if it doesn't exist (upsert).
+    const roleData = await Role.findOneAndUpdate(
+        { name: targetGsoRoleName },
+        { $setOnInsert: { 
+            name: targetGsoRoleName, 
+            // GSO Admins should have permissions set manually. For others, provide safe defaults.
+            permissions: targetGsoRoleName === 'GSO Admin' ? [] : defaultEmployeePermissions 
+        } },
+        { new: true, upsert: true, lean: true }
+    );
+
     if (!roleData) {
-        // This is a critical configuration error. A role defined in the logic doesn't exist in the DB.
-        console.error(`CRITICAL: The role "${targetGsoRoleName}" does not exist in the database. Cannot assign permissions.`);
+        // This should theoretically never happen with upsert: true, but it's a good safeguard.
+        console.error(`CRITICAL: Failed to find or create the role "${targetGsoRoleName}".`);
         res.status(500);
         throw new Error('User role configuration error. Please contact the administrator.');
     }
