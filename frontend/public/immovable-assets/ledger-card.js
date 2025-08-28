@@ -1,5 +1,6 @@
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { exportToPDF } from '../js/report-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -22,6 +23,7 @@ function initializeLedgerCardPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
     const API_ENDPOINT = `immovable-assets/${assetId}/ledger-card`;
+    let currentAsset = null; // To store asset data for filename
 
     // --- DOM ELEMENTS ---
     const loadingState = document.getElementById('loading-state');
@@ -34,6 +36,7 @@ function initializeLedgerCardPage() {
     const ledgerDescription = document.getElementById('ledger-description');
     const ledgerTableContainer = document.getElementById('ledger-table-container');
     const printReportBtn = document.getElementById('print-report-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
 
     // --- UTILITY FUNCTIONS ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -112,6 +115,7 @@ function initializeLedgerCardPage() {
 
         try {
             const { asset, ledgerRows } = await fetchWithAuth(API_ENDPOINT);
+            currentAsset = asset; // Store asset for later use
             renderLedgerHeader(asset);
             renderLedgerTable(ledgerRows);
             loadingState.classList.add('hidden');
@@ -124,8 +128,18 @@ function initializeLedgerCardPage() {
         }
     }
 
+    function handleExportPDF() {
+        const fileName = `Immovable-Ledger-Card-${currentAsset?.propertyIndexNumber || 'report'}.pdf`;
+        exportToPDF({
+            reportElementId: 'report-output',
+            fileName: fileName,
+            buttonElement: exportPdfBtn
+        });
+    }
+
     // --- EVENT LISTENERS ---
     printReportBtn.addEventListener('click', () => window.print());
+    exportPdfBtn.addEventListener('click', handleExportPDF);
 
     // --- INITIALIZATION ---
     loadLedgerCard();

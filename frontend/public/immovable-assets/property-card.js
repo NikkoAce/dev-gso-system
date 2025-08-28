@@ -1,5 +1,6 @@
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { exportToPDF } from '../js/report-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -21,6 +22,7 @@ function initializePropertyCardPage() {
     // --- STATE & CONFIG ---
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
+    let currentAsset = null;
     const API_ENDPOINT = `immovable-assets/${assetId}/property-card`;
 
     // --- DOM ELEMENTS ---
@@ -31,6 +33,7 @@ function initializePropertyCardPage() {
     const assetDetailsContainer = document.getElementById('asset-details-container');
     const historyTableContainer = document.getElementById('history-table-container');
     const printReportBtn = document.getElementById('print-report-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
 
     // --- UTILITY FUNCTIONS ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -107,6 +110,7 @@ function initializePropertyCardPage() {
 
         try {
             const assetData = await fetchWithAuth(API_ENDPOINT);
+            currentAsset = assetData;
             
             renderAssetDetails(assetData);
             renderHistoryTable(assetData.history);
@@ -123,10 +127,20 @@ function initializePropertyCardPage() {
         }
     }
 
+    function handleExportPDF() {
+        const fileName = `Immovable-Property-Card-${currentAsset?.propertyIndexNumber || 'report'}.pdf`;
+        exportToPDF({
+            reportElementId: 'report-output',
+            fileName: fileName,
+            buttonElement: exportPdfBtn,
+            orientation: 'portrait',
+            format: 'a4'
+        });
+    }
+
     // --- EVENT LISTENERS ---
-    printReportBtn.addEventListener('click', () => {
-        window.print();
-    });
+    printReportBtn.addEventListener('click', () => window.print());
+    exportPdfBtn.addEventListener('click', handleExportPDF);
 
     // --- INITIALIZATION ---
     loadPropertyCard();

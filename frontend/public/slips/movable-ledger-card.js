@@ -1,6 +1,7 @@
 // FILE: frontend/public/slips/movable-ledger-card.js
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { exportToPDF } from '../js/report-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -127,108 +128,18 @@ function initializeLedgerCardPage() {
         }
     }
 
-    // --- EXPORT FUNCTIONALITY ---
-    function exportToPDF() {
-        const { jsPDF } = window.jspdf;
-        const reportElement = document.getElementById('report-output');
-        
-        // Temporarily remove the hidden class to ensure it's fully rendered for capture
-        reportElement.classList.remove('hidden');
-        
-        // Show a temporary loading message
-        exportPdfBtn.disabled = true;
-        exportPdfBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin"></i> Exporting...`;
-        lucide.createIcons();
-
-        html2canvas(reportElement, {
-            scale: 2, // Increase scale for better resolution
-            useCORS: true,
-            logging: false,
-            onclone: (clonedDoc) => {
-                // This is a workaround for html2canvas not supporting oklch() colors used by DaisyUI.
-                // Step 1: Inject a style block with the hex/hsl fallback variables.
-                // These are copied from the `@supports not (color: oklch(0% 0 0))` block in the CSS.
-                const style = clonedDoc.createElement('style');
-                style.textContent = `
-                    :root {
-                        --fallback-p: #491eff; --fallback-pc: #d4dbff;
-                        --fallback-s: #ff41c7; --fallback-sc: #fff9fc;
-                        --fallback-a: #00cfbd; --fallback-ac: #00100d;
-                        --fallback-n: #2b3440; --fallback-nc: #d7dde4;
-                        --fallback-b1: #ffffff; --fallback-b2: #e5e6e6;
-                        --fallback-b3: #e5e6e6; --fallback-bc: #1f2937;
-                        --fallback-in: #00b3f0; --fallback-inc: #000000;
-                        --fallback-su: #00ca92; --fallback-suc: #000000;
-                        --fallback-wa: #ffc22d; --fallback-wac: #000000;
-                        --fallback-er: #ff6f70; --fallback-erc: #000000;
-                    }
-                `;
-                clonedDoc.head.appendChild(style);
-
-                // Step 2: Invalidate the oklch() function in the cloned document's stylesheets.
-                // This forces the browser's CSS parser to use the fallback variables we just defined.
-                for (const sheet of Array.from(clonedDoc.styleSheets)) {
-                    try {
-                        if (sheet.cssRules) {
-                            for (const rule of Array.from(sheet.cssRules)) {
-                                if (rule.style && rule.style.cssText.includes('oklch')) {
-                                    rule.style.cssText = rule.style.cssText.replace(/oklch/g, 'ignore');
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Could not process stylesheet for PDF export:", e.message);
-                    }
-                }
-            }
-        }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'legal' // Use legal size for more space
-            });
-
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const ratio = canvasWidth / canvasHeight;
-            
-            let imgWidth = pdfWidth - 20; // with margin
-            let imgHeight = imgWidth / ratio;
-
-            // If the height is too large for the page, scale by height instead
-            if (imgHeight > pdfHeight - 20) {
-                imgHeight = pdfHeight - 20;
-                imgWidth = imgHeight * ratio;
-            }
-
-            const x = (pdfWidth - imgWidth) / 2;
-            const y = (pdfHeight - imgHeight) / 2;
-
-            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-            
-            const fileName = `Movable-Ledger-Card-${currentAsset?.propertyNumber || 'report'}.pdf`;
-            pdf.save(fileName);
-
-            // Restore button state
-            exportPdfBtn.disabled = false;
-            exportPdfBtn.innerHTML = `<i data-lucide="file-type-2"></i> Export as PDF`;
-            lucide.createIcons();
-        }).catch(err => {
-            console.error("Error exporting to PDF:", err);
-            alert("An error occurred while exporting to PDF.");
-            // Restore button state
-            exportPdfBtn.disabled = false;
-            exportPdfBtn.innerHTML = `<i data-lucide="file-type-2"></i> Export as PDF`;
-            lucide.createIcons();
+    function handleExportPDF() {
+        const fileName = `Movable-Ledger-Card-${currentAsset?.propertyNumber || 'report'}.pdf`;
+        exportToPDF({
+            reportElementId: 'report-output',
+            fileName: fileName,
+            buttonElement: exportPdfBtn
         });
     }
 
     // --- EVENT LISTENERS ---
     printReportBtn.addEventListener('click', () => window.print());
-    exportPdfBtn.addEventListener('click', exportToPDF);
+    exportPdfBtn.addEventListener('click', handleExportPDF);
 
     // --- INITIALIZATION ---
     loadLedgerCard();
