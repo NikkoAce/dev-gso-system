@@ -109,11 +109,23 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         getRecentRequisitions()
     ]);
 
-    const current = currentPeriodStatsResult[0];
-    const previous = previousPeriodStatsResult[0];
-    const distribution = currentDistributionResult[0];
-    const currentImmovable = currentImmovableStats[0];
-    const previousImmovable = previousImmovableStats[0];
+    // Define default structures to prevent errors when aggregations return no results (e.g., on a new database).
+    const defaultStats = {
+        totalValue: [],
+        totalAssets: [],
+        forRepair: [],
+        disposed: []
+    };
+    const defaultDistribution = {
+        assetsByStatus: [],
+        assetsByOffice: []
+    };
+
+    const current = currentPeriodStatsResult[0] || defaultStats;
+    const previous = previousPeriodStatsResult[0] || defaultStats;
+    const distribution = currentDistributionResult[0] || defaultDistribution;
+    const currentImmovable = currentImmovableStats[0]; // Optional chaining handles undefined later
+    const previousImmovable = previousImmovableStats[0]; // Optional chaining handles undefined later
 
     // --- 4. Format Data & Calculate Trends ---
     const calculateTrend = (currentVal, previousVal) => {
