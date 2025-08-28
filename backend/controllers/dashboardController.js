@@ -26,32 +26,38 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             $facet: {
                 currentPeriodStats: [
                     { $match: { acquisitionDate: { $lte: end } } },
-                    { $facet: {
-                        totalValue: [{ $group: { _id: null, total: { $sum: '$acquisitionCost' } } }],
-                        totalAssets: [{ $count: 'count' }],
-                        forRepair: [{ $match: { status: 'For Repair' } }, { $count: 'count' }],
-                        disposed: [{ $match: { status: 'Disposed' } }, { $count: 'count' }]
-                    }}
+                    {
+                        $group: {
+                            _id: null,
+                            totalValue: { $sum: '$acquisitionCost' },
+                            totalAssets: { $sum: 1 },
+                            forRepair: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } },
+                            disposed: { $sum: { $cond: [{ $eq: ['$status', 'Disposed'] }, 1, 0] } }
+                        }
+                    }
                 ],
                 previousPeriodStats: [
                     { $match: { acquisitionDate: { $lte: start } } },
-                    { $facet: {
-                        totalValue: [{ $group: { _id: null, total: { $sum: '$acquisitionCost' } } }],
-                        totalAssets: [{ $count: 'count' }],
-                        forRepair: [{ $match: { status: 'For Repair' } }, { $count: 'count' }],
-                        disposed: [{ $match: { status: 'Disposed' } }, { $count: 'count' }]
-                    }}
+                    {
+                        $group: {
+                            _id: null,
+                            totalValue: { $sum: '$acquisitionCost' },
+                            totalAssets: { $sum: 1 },
+                            forRepair: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } },
+                            disposed: { $sum: { $cond: [{ $eq: ['$status', 'Disposed'] }, 1, 0] } }
+                        }
+                    }
                 ],
                 monthlyAcquisitions: [
                     { $match: { acquisitionDate: { $gte: start, $lte: end } } },
                     { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } }, totalValue: { $sum: '$acquisitionCost' } } },
                     { $sort: { _id: 1 } }
                 ],
-                currentDistribution: [
-                    { $facet: {
-                        assetsByStatus: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
-                        assetsByOffice: [{ $group: { _id: '$custodian.office', count: { $sum: 1 } } }]
-                    }}
+                assetsByStatus: [
+                    { $group: { _id: '$status', count: { $sum: 1 } } }
+                ],
+                assetsByOffice: [
+                    { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
                 ],
                 recentAssets: [
                     { $match: { acquisitionDate: { $lte: end } } },
@@ -105,27 +111,16 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         lowStockCountPipeline
     ]);
 
-    // Define default structures to prevent errors when aggregations return no results (e.g., on a new database).
-    const defaultStats = {
-        totalValue: [],
-        totalAssets: [],
-        forRepair: [],
-        disposed: []
-    };
-    const defaultDistribution = {
-        assetsByStatus: [],
-        assetsByOffice: []
-    };
-
     // Unpack results from the combined pipelines
     const ma = movableAssetResults[0] || {};
     const ia = immovableAssetResults[0] || {};
     const rq = requisitionResults[0] || {};
 
-    const currentPeriodStatsResult = ma.currentPeriodStats?.[0] || {};
-    const previousPeriodStatsResult = ma.previousPeriodStats?.[0] || {};
+    const currentStats = ma.currentPeriodStats?.[0] || {};
+    const previousStats = ma.previousPeriodStats?.[0] || {};
     const monthlyAcquisitions = ma.monthlyAcquisitions || [];
-    const currentDistributionResult = ma.currentDistribution?.[0] || {};
+    const assetsByStatus = ma.assetsByStatus || [];
+    const assetsByOffice = ma.assetsByOffice || [];
     const recentAssets = ma.recentAssets || [];
 
     const currentImmovableStats = ia.currentImmovableStats || [];
@@ -137,9 +132,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const previousPendingReqs = rq.previousPendingReqs?.[0]?.count || 0;
     const recentRequisitions = rq.recentRequisitions || [];
 
-    const current = Object.assign({}, defaultStats, currentPeriodStatsResult);
-    const previous = Object.assign({}, defaultStats, previousPeriodStatsResult);
-    const distribution = Object.assign({}, defaultDistribution, currentDistributionResult);
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
@@ -151,8 +143,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         return parseFloat((((currentVal - previousVal) / previousVal) * 100).toFixed(1));
     };
 
-    const currentMovableValue = current.totalValue[0]?.total || 0;
-    const previousMovableValue = previous.totalValue[0]?.total || 0;
+    const currentMovableValue = currentStats.totalValue || 0;
+    const previousMovableValue = previousStats.totalValue || 0;
     const currentImmovableValue = currentImmovable.totalValue || 0;
     const previousImmovableValue = previousImmovable.totalValue || 0;
 
@@ -169,16 +161,16 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             trend: 0
         },
         totalAssets: {
-            current: current.totalAssets[0]?.count || 0,
-            trend: calculateTrend(current.totalAssets[0]?.count || 0, previous.totalAssets[0]?.count || 0)
+            current: currentStats.totalAssets || 0,
+            trend: calculateTrend(currentStats.totalAssets || 0, previousStats.totalAssets || 0)
         },
         forRepair: {
-            current: current.forRepair[0]?.count || 0,
-            trend: calculateTrend(current.forRepair[0]?.count || 0, previous.forRepair[0]?.count || 0)
+            current: currentStats.forRepair || 0,
+            trend: calculateTrend(currentStats.forRepair || 0, previousStats.forRepair || 0)
         },
         disposed: {
-            current: current.disposed[0]?.count || 0,
-            trend: calculateTrend(current.disposed[0]?.count || 0, previous.disposed[0]?.count || 0)
+            current: currentStats.disposed || 0,
+            trend: calculateTrend(currentStats.disposed || 0, previousStats.disposed || 0)
         },
         pendingRequisitions: {
             current: currentPendingReqs,
@@ -203,17 +195,17 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             }]
         },
         assetsByOffice: {
-            labels: distribution.assetsByOffice.map(o => o._id || 'Unassigned'),
+            labels: assetsByOffice.map(o => o._id || 'Unassigned'),
             datasets: [{
                 label: 'Assets by Office',
-                data: distribution.assetsByOffice.map(o => o.count)
+                data: assetsByOffice.map(o => o.count)
             }]
         },
         assetStatus: {
-            labels: distribution.assetsByStatus.map(s => s._id),
+            labels: assetsByStatus.map(s => s._id),
             datasets: [{
                 label: 'Asset Status',
-                data: distribution.assetsByStatus.map(s => s.count)
+                data: assetsByStatus.map(s => s.count)
             }]
         }
     };
