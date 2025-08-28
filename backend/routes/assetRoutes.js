@@ -17,16 +17,12 @@ const {
     exportAssetsToCsv,
     getMyOfficeAssets,
     updateScanResults,
-    getDashboardStats,
     addRepairRecord,
     deleteRepairRecord,
     generateMovableLedgerCard
 } = require('../controllers/assetController'); // Assuming a controller file
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
-
-// Route for dashboard stats - Changed from /stats to /dashboard/summary
-router.get('/dashboard/summary', protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW), getDashboardStats);
 
 // Route for getting the next property number
 router.get('/next-number', protect, checkPermission(PERMISSIONS.ASSET_CREATE), getNextPropertyNumber);
