@@ -68,8 +68,10 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     let targetGsoRoleName;
     const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
     const adminRoleNames = ['IT'];
-
+    
     if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
+        targetGsoRoleName = 'GSO Admin';
+    } else if (lguUser.role === 'GSO Admin') { // NEW: Explicitly check for 'GSO Admin' role from portal
         targetGsoRoleName = 'GSO Admin';
     } else if (lguUser.role === 'Department Head') {
         targetGsoRoleName = 'Department Head';
