@@ -1,7 +1,7 @@
-import asyncHandler from 'express-async-handler';
-import Asset from '../models/assetModel.js';
-import Requisition from '../models/requisitionModel.js';
-import mongoose from 'mongoose';
+const asyncHandler = require('express-async-handler');
+const Asset = require('../models/assetModel.js');
+const Requisition = require('../models/requisitionModel.js');
+const mongoose = require('mongoose');
 
 /**
  * @desc    Get dashboard statistics and chart data
@@ -110,4 +110,4 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     });
 });
 
-export { getDashboardStats };
+module.exports = { getDashboardStats };
