@@ -17,96 +17,91 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const end = endDate ? new Date(endDate) : new Date();
     end.setUTCHours(23, 59, 59, 999);
 
-    // If no start date, default to 30 days before the end date for trend calculation.
     const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
     start.setUTCHours(0, 0, 0, 0);
 
-    // --- 2. Define Aggregation Pipelines ---
-    // This helper function gets stats for all assets acquired *up to* a certain date.
-    const getStatsAtDate = (date) => Asset.aggregate([
-        { $match: { acquisitionDate: { $lte: date } } },
+    // --- 2. Define Combined Aggregation Pipelines for Performance ---
+    const movableAssetPipeline = Asset.aggregate([
         {
             $facet: {
-                totalValue: [{ $group: { _id: null, total: { $sum: '$acquisitionCost' } } }],
-                totalAssets: [{ $count: 'count' }],
-                forRepair: [{ $match: { status: 'For Repair' } }, { $count: 'count' }],
-                disposed: [{ $match: { status: 'Disposed' } }, { $count: 'count' }]
+                currentPeriodStats: [
+                    { $match: { acquisitionDate: { $lte: end } } },
+                    { $facet: {
+                        totalValue: [{ $group: { _id: null, total: { $sum: '$acquisitionCost' } } }],
+                        totalAssets: [{ $count: 'count' }],
+                        forRepair: [{ $match: { status: 'For Repair' } }, { $count: 'count' }],
+                        disposed: [{ $match: { status: 'Disposed' } }, { $count: 'count' }]
+                    }}
+                ],
+                previousPeriodStats: [
+                    { $match: { acquisitionDate: { $lte: start } } },
+                    { $facet: {
+                        totalValue: [{ $group: { _id: null, total: { $sum: '$acquisitionCost' } } }],
+                        totalAssets: [{ $count: 'count' }],
+                        forRepair: [{ $match: { status: 'For Repair' } }, { $count: 'count' }],
+                        disposed: [{ $match: { status: 'Disposed' } }, { $count: 'count' }]
+                    }}
+                ],
+                monthlyAcquisitions: [
+                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
+                    { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } }, totalValue: { $sum: '$acquisitionCost' } } },
+                    { $sort: { _id: 1 } }
+                ],
+                currentDistribution: [
+                    { $facet: {
+                        assetsByStatus: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
+                        assetsByOffice: [{ $group: { _id: '$custodian.office', count: { $sum: 1 } } }]
+                    }}
+                ],
+                recentAssets: [
+                    { $match: { acquisitionDate: { $lte: end } } },
+                    { $sort: { createdAt: -1 } },
+                    { $limit: 5 },
+                    { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
+                ]
             }
         }
     ]);
 
-    // New helper for immovable assets
-    const getImmovableStatsAtDate = (date) => ImmovableAsset.aggregate([
-        { $match: { dateAcquired: { $lte: date } } },
+    const immovableAssetPipeline = ImmovableAsset.aggregate([
         {
-            $group: {
-                _id: null,
-                totalValue: { $sum: '$assessedValue' }
+            $facet: {
+                currentImmovableStats: [ { $match: { dateAcquired: { $lte: end } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                previousImmovableStats: [ { $match: { dateAcquired: { $lte: start } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                immovableAssetsCount: [ { $count: 'count' } ]
             }
         }
     ]);
 
-    // New helper for low stock items
-    const getLowStockCount = () => StockItem.countDocuments({
+    const requisitionPipeline = Requisition.aggregate([
+        {
+            $facet: {
+                currentPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lte: end } } }, { $count: 'count' } ],
+                previousPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lt: start } } }, { $count: 'count' } ],
+                recentRequisitions: [
+                    { $sort: { dateRequested: -1 } },
+                    { $limit: 5 },
+                    { $project: { risNumber: 1, requestingOffice: 1, status: 1 } }
+                ]
+            }
+        }
+    ]);
+
+    const lowStockCountPipeline = StockItem.countDocuments({
         $expr: { $lte: ["$quantity", "$reorderPoint"] }
     });
 
-    // New helper for recent requisitions
-    const getRecentRequisitions = () => Requisition.find({})
-        .sort({ dateRequested: -1 })
-        .limit(5)
-        .populate('requestingUser', 'name')
-        .lean();
-
-    // This pipeline gets assets acquired *within* the date range for the chart.
-    const monthlyAcquisitionsPipeline = [
-        { $match: { acquisitionDate: { $gte: start, $lte: end } } },
-        {
-            $group: {
-                _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } },
-                totalValue: { $sum: '$acquisitionCost' }
-            }
-        },
-        { $sort: { _id: 1 } }
-    ];
-
-    // These pipelines get the *current* distribution of assets, regardless of date filters.
-    const currentDistributionPipeline = [
-        {
-            $facet: {
-                assetsByStatus: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
-                assetsByOffice: [{ $group: { _id: '$custodian.office', count: { $sum: 1 } } }]
-            }
-        }
-    ];
-
     // --- 3. Execute all queries concurrently ---
     const [
-        currentPeriodStatsResult,
-        previousPeriodStatsResult,
-        currentImmovableStats,
-        previousImmovableStats,
-        monthlyAcquisitions,
-        currentDistributionResult,
-        recentAssets,
-        currentPendingReqs,
-        previousPendingReqs,
-        immovableAssetsCount,
-        lowStockCount,
-        recentRequisitions
+        movableAssetResults,
+        immovableAssetResults,
+        requisitionResults,
+        lowStockCount
     ] = await Promise.all([
-        getStatsAtDate(end),
-        getStatsAtDate(start),
-        getImmovableStatsAtDate(end),
-        getImmovableStatsAtDate(start),
-        Asset.aggregate(monthlyAcquisitionsPipeline),
-        Asset.aggregate(currentDistributionPipeline),
-        Asset.find({ acquisitionDate: { $lte: end } }).sort({ createdAt: -1 }).limit(5).populate('custodian', 'name office'),
-        Requisition.countDocuments({ status: 'Pending', dateRequested: { $lte: end } }),
-        Requisition.countDocuments({ status: 'Pending', dateRequested: { $lt: start } }),
-        ImmovableAsset.countDocuments(),
-        getLowStockCount(),
-        getRecentRequisitions()
+        movableAssetPipeline,
+        immovableAssetPipeline,
+        requisitionPipeline,
+        lowStockCountPipeline
     ]);
 
     // Define default structures to prevent errors when aggregations return no results (e.g., on a new database).
@@ -121,13 +116,32 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         assetsByOffice: []
     };
 
-    const current = Object.assign({}, defaultStats, currentPeriodStatsResult[0]);
-    const previous = Object.assign({}, defaultStats, previousPeriodStatsResult[0]);
-    const distribution = Object.assign({}, defaultDistribution, currentDistributionResult[0]);
+    // Unpack results from the combined pipelines
+    const ma = movableAssetResults[0] || {};
+    const ia = immovableAssetResults[0] || {};
+    const rq = requisitionResults[0] || {};
+
+    const currentPeriodStatsResult = ma.currentPeriodStats?.[0] || {};
+    const previousPeriodStatsResult = ma.previousPeriodStats?.[0] || {};
+    const monthlyAcquisitions = ma.monthlyAcquisitions || [];
+    const currentDistributionResult = ma.currentDistribution?.[0] || {};
+    const recentAssets = ma.recentAssets || [];
+
+    const currentImmovableStats = ia.currentImmovableStats || [];
+    const previousImmovableStats = ia.previousImmovableStats || [];
+    const immovableAssetsCount = ia.immovableAssetsCount?.[0]?.count || 0;
+
+    const currentPendingReqs = rq.currentPendingReqs?.[0]?.count || 0;
+    const previousPendingReqs = rq.previousPendingReqs?.[0]?.count || 0;
+    const recentRequisitions = rq.recentRequisitions || [];
+
+    const current = Object.assign({}, defaultStats, currentPeriodStatsResult);
+    const previous = Object.assign({}, defaultStats, previousPeriodStatsResult);
+    const distribution = Object.assign({}, defaultDistribution, currentDistributionResult);
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
-    // --- 4. Format Data & Calculate Trends ---
+    // --- 4. Format Data & Calculate Trends (No changes needed here) ---
     const calculateTrend = (currentVal, previousVal) => {
         if (previousVal === 0) return currentVal > 0 ? 100 : 0;
         if (currentVal === 0 && previousVal > 0) return -100;

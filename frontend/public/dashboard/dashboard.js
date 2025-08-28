@@ -4,18 +4,24 @@ import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 let userPreferences = {};
 const allComponents = {};
+const DEFAULT_PREFERENCES = {
+    visibleComponents: [
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters',
+        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'recentAssets', 'recentRequisitions'
+    ],
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters'],
+    chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus'],
+    tableOrder: ['recentAssets', 'recentRequisitions']
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
         if (!user) return;
 
-        userPreferences = user.dashboardPreferences || {
-            cardOrder: [],
-            chartOrder: [],
-            tableOrder: [],
-            visibleComponents: []
-        };
+        // Check if the user has any saved preferences. If not, use the default layout.
+        const hasPreferences = user.dashboardPreferences && user.dashboardPreferences.visibleComponents && user.dashboardPreferences.visibleComponents.length > 0;
+        userPreferences = hasPreferences ? user.dashboardPreferences : DEFAULT_PREFERENCES;
 
         if (!user.permissions || !user.permissions.includes('dashboard:view')) {
             window.location.href = '../assets/asset-registry.html';
@@ -28,7 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 id: el.dataset.id,
                 html: el.outerHTML,
                 title: el.querySelector('.stat-title, .card-title')?.textContent || el.dataset.id,
-                containerId: el.parentElement.id
+                containerId: el.parentElement.id,
+                type: el.dataset.type || 'card' // Identify component type
             };
         });
 
@@ -323,11 +330,12 @@ function initializeDashboard(user) {
             document.querySelectorAll('#component-list-container > div').forEach(el => {
                 const id = el.dataset.id;
                 const componentInfo = allComponents[id];
-                if (componentInfo.containerId === 'stats-container') {
+                if (componentInfo.type === 'card') {
                     newPreferences.cardOrder.push(id);
-                } else {
-                    // Differentiate between charts and tables if needed, for now group them
+                } else if (componentInfo.type === 'chart') {
                     newPreferences.chartOrder.push(id);
+                } else if (componentInfo.type === 'table') {
+                    newPreferences.tableOrder.push(id);
                 }
             });
 
