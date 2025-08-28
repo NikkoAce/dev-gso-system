@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Asset = require('../models/Asset');
 const Requisition = require('../models/Requisition');
 const ImmovableAsset = require('../models/immovableAsset');
+const StockItem = require('../models/StockItem');
 const mongoose = require('mongoose');
 
 /**
@@ -34,6 +35,29 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
+    // New helper for immovable assets
+    const getImmovableStatsAtDate = (date) => ImmovableAsset.aggregate([
+        { $match: { dateAcquired: { $lte: date } } },
+        {
+            $group: {
+                _id: null,
+                totalValue: { $sum: '$assessedValue' }
+            }
+        }
+    ]);
+
+    // New helper for low stock items
+    const getLowStockCount = () => StockItem.countDocuments({
+        $expr: { $lte: ["$quantity", "$reorderPoint"] }
+    });
+
+    // New helper for recent requisitions
+    const getRecentRequisitions = () => Requisition.find({})
+        .sort({ dateRequested: -1 })
+        .limit(5)
+        .populate('requestingUser', 'name')
+        .lean();
+
     // This pipeline gets assets acquired *within* the date range for the chart.
     const monthlyAcquisitionsPipeline = [
         { $match: { acquisitionDate: { $gte: start, $lte: end } } },
@@ -60,26 +84,36 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const [
         currentPeriodStatsResult,
         previousPeriodStatsResult,
+        currentImmovableStats,
+        previousImmovableStats,
         monthlyAcquisitions,
         currentDistributionResult,
         recentAssets,
         currentPendingReqs,
         previousPendingReqs,
-        immovableAssetsCount
+        immovableAssetsCount,
+        lowStockCount,
+        recentRequisitions
     ] = await Promise.all([
         getStatsAtDate(end),
         getStatsAtDate(start),
+        getImmovableStatsAtDate(end),
+        getImmovableStatsAtDate(start),
         Asset.aggregate(monthlyAcquisitionsPipeline),
         Asset.aggregate(currentDistributionPipeline),
         Asset.find({ acquisitionDate: { $lte: end } }).sort({ createdAt: -1 }).limit(5).populate('custodian', 'name office'),
         Requisition.countDocuments({ status: 'Pending', dateRequested: { $lte: end } }),
         Requisition.countDocuments({ status: 'Pending', dateRequested: { $lt: start } }),
-        ImmovableAsset.countDocuments()
+        ImmovableAsset.countDocuments(),
+        getLowStockCount(),
+        getRecentRequisitions()
     ]);
 
     const current = currentPeriodStatsResult[0];
     const previous = previousPeriodStatsResult[0];
     const distribution = currentDistributionResult[0];
+    const currentImmovable = currentImmovableStats[0];
+    const previousImmovable = previousImmovableStats[0];
 
     // --- 4. Format Data & Calculate Trends ---
     const calculateTrend = (currentVal, previousVal) => {
@@ -89,10 +123,22 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         return parseFloat((((currentVal - previousVal) / previousVal) * 100).toFixed(1));
     };
 
+    const currentMovableValue = current.totalValue[0]?.total || 0;
+    const previousMovableValue = previous.totalValue[0]?.total || 0;
+    const currentImmovableValue = currentImmovable?.totalValue || 0;
+    const previousImmovableValue = previousImmovable?.totalValue || 0;
+
+    const totalPortfolioValueCurrent = currentMovableValue + currentImmovableValue;
+    const totalPortfolioValuePrevious = previousMovableValue + previousImmovableValue;
+
     const formattedStats = {
-        totalValue: {
-            current: current.totalValue[0]?.total || 0,
-            trend: calculateTrend(current.totalValue[0]?.total || 0, previous.totalValue[0]?.total || 0)
+        totalPortfolioValue: {
+            current: totalPortfolioValueCurrent,
+            trend: calculateTrend(totalPortfolioValueCurrent, totalPortfolioValuePrevious)
+        },
+        lowStockItems: {
+            current: lowStockCount,
+            trend: 0
         },
         totalAssets: {
             current: current.totalAssets[0]?.count || 0,
@@ -149,7 +195,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         charts: formattedCharts,
         recent: {
             assets: recentAssets,
-            requisitions: [] // Placeholder for recent requisitions
+            requisitions: recentRequisitions
         }
     });
 });

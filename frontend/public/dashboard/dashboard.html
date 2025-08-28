@@ -52,15 +52,15 @@
                         <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
                     </div>
                     <!-- Stat Cards Grid -->
-                    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- Total Asset Value -->
+                    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                        <!-- Total Portfolio Value -->
                         <div class="stat card bg-base-100 border">
                             <div class="stat-figure text-primary">
                                 <i data-lucide="coins" class="h-8 w-8"></i>
                             </div>
-                            <div class="stat-title">Total Asset Value</div>
-                            <div id="stat-total-value" class="stat-value">Loading...</div>
-                            <div id="stat-total-value-trend" class="stat-desc"></div>
+                            <div class="stat-title">Total Portfolio Value</div>
+                            <div id="stat-portfolio-value" class="stat-value">Loading...</div>
+                            <div id="stat-portfolio-value-trend" class="stat-desc"></div>
                         </div>
                         <!-- Total Assets -->
                         <div id="stat-card-total-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
@@ -106,6 +106,15 @@
                             <div class="stat-title">Pending Requisitions</div>
                             <div id="stat-pending-reqs" class="stat-value">Loading...</div>
                             <div id="stat-pending-reqs-trend" class="stat-desc"></div>
+                        </div>
+                        <!-- Low Stock Items -->
+                        <div id="stat-card-low-stock" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer">
+                            <div class="stat-figure text-orange-500">
+                                <i data-lucide="package-search" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Low Stock Items</div>
+                            <div id="stat-low-stock" class="stat-value">Loading...</div>
+                            <div class="stat-desc text-orange-500">Reorder needed</div>
                         </div>
                         <!-- Filter Card -->
                         <div class="card bg-base-100 border lg:col-span-2">
