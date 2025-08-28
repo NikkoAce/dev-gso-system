@@ -14,19 +14,19 @@ const PERMISSIONS = require('../config/permissions');
 // @route   GET /api/users/meta
 router.route('/meta').get(protect, checkPermission(PERMISSIONS.USER_READ), getRolesAndPermissions);
 
+// --- NEW ROUTE ---
+// This route allows a logged-in user to update their own preferences.
+// It must be defined BEFORE the '/:id' route to be matched correctly.
+router.route('/preferences')
+    .put(protect, updateUserDashboardPreferences);
+
 // @desc    Get all users
 // @route   GET /api/users
 router.route('/')
     .get(protect, checkPermission(PERMISSIONS.USER_READ), getUsers);
 
 // @desc    Update a single user
-// @route   PUT /api/users/:id
+// @route   PUT /api/users/:id (This is a generic route, so it comes last)
 router.route('/:id').put(protect, checkPermission(PERMISSIONS.USER_MANAGE), updateUser);
-
-// --- NEW ROUTE ---
-// This route allows a logged-in user to update their own preferences.
-// It doesn't need special permissions beyond being authenticated.
-router.route('/preferences')
-    .put(protect, updateUserDashboardPreferences);
 
 module.exports = router;
