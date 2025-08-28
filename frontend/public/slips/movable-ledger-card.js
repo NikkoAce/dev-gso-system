@@ -1,7 +1,7 @@
 // FILE: frontend/public/slips/movable-ledger-card.js
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
-import { exportToPDF } from '../js/report-utils.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -38,6 +38,8 @@ function initializeLedgerCardPage() {
     const ledgerTableContainer = document.getElementById('ledger-table-container');
     const printReportBtn = document.getElementById('print-report-btn');
     const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const exitPreviewBtn = document.getElementById('exit-preview-btn');
 
     // --- UTILITY FUNCTIONS ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -137,9 +139,18 @@ function initializeLedgerCardPage() {
         });
     }
 
+    function handleTogglePreview() {
+        togglePreviewMode({
+            orientation: 'landscape',
+            exitButtonId: 'exit-preview-btn'
+        });
+    }
+
     // --- EVENT LISTENERS ---
     printReportBtn.addEventListener('click', () => window.print());
     exportPdfBtn.addEventListener('click', handleExportPDF);
+    previewBtn.addEventListener('click', handleTogglePreview);
+    exitPreviewBtn.addEventListener('click', handleTogglePreview);
 
     // --- INITIALIZATION ---
     loadLedgerCard();
