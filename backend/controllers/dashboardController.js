@@ -55,7 +55,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 ],
                 recentAssets: [
                     { $match: { acquisitionDate: { $lte: end } } },
-                    { $sort: { createdAt: -1 } },
+                    { $sort: { acquisitionDate: -1 } },
                     { $limit: 5 },
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
                 ]
@@ -68,7 +68,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             $facet: {
                 currentImmovableStats: [ { $match: { dateAcquired: { $lte: end } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
                 previousImmovableStats: [ { $match: { dateAcquired: { $lte: start } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                immovableAssetsCount: [ { $count: 'count' } ]
+                currentImmovableCount: [ { $match: { dateAcquired: { $lte: end } } }, { $count: 'count' } ],
+                previousImmovableCount: [ { $match: { dateAcquired: { $lte: start } } }, { $count: 'count' } ]
             }
         }
     ]);
@@ -129,7 +130,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     const currentImmovableStats = ia.currentImmovableStats || [];
     const previousImmovableStats = ia.previousImmovableStats || [];
-    const immovableAssetsCount = ia.immovableAssetsCount?.[0]?.count || 0;
+    const currentImmovableCount = ia.currentImmovableCount?.[0]?.count || 0;
+    const previousImmovableCount = ia.previousImmovableCount?.[0]?.count || 0;
 
     const currentPendingReqs = rq.currentPendingReqs?.[0]?.count || 0;
     const previousPendingReqs = rq.previousPendingReqs?.[0]?.count || 0;
@@ -183,8 +185,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             trend: calculateTrend(currentPendingReqs, previousPendingReqs)
         },
         immovableAssets: {
-            current: immovableAssetsCount,
-            trend: 0 // Trend calculation for immovable assets is not yet implemented
+            current: currentImmovableCount,
+            trend: calculateTrend(currentImmovableCount, previousImmovableCount)
         }
     };
 
