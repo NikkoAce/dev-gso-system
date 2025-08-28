@@ -98,26 +98,6 @@
                             <div id="stat-immovable-assets" class="stat-value">Loading...</div>
                             <div id="stat-immovable-assets-trend" class="stat-desc"></div>
                         </div>
-                        <!-- Assets for Repair -->
-                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="forRepair" data-url="../assets/asset-registry.html" data-filter-key="status" data-filter-value="For Repair">
-                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
-                            <div class="stat-figure text-accent">
-                                <i data-lucide="wrench" class="h-8 w-8"></i>
-                            </div>
-                            <div class="stat-title">Assets for Repair</div>
-                            <div id="stat-for-repair" class="stat-value">Loading...</div>
-                            <div id="stat-for-repair-trend" class="stat-desc"></div>
-                        </div>
-                        <!-- Disposed Assets -->
-                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="disposed" data-url="../assets/asset-registry.html" data-filter-key="status" data-filter-value="Disposed">
-                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
-                            <div class="stat-figure text-error">
-                                <i data-lucide="trash-2" class="h-8 w-8"></i>
-                            </div>
-                            <div class="stat-title">Disposed Assets</div>
-                            <div id="stat-disposed" class="stat-value">Loading...</div>
-                            <div id="stat-disposed-trend" class="stat-desc"></div>
-                        </div>
                         <!-- Pending Requisitions -->
                         <div class="stat card bg-base-100 border dashboard-component" data-id="pendingRequisitions">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
@@ -229,74 +209,66 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Recent Assets Table -->
-                        <div class="lg:col-span-2 card bg-base-100 border dashboard-component" data-id="recentAssets" data-type="table">
+                        <!-- NEW: Tabbed Recent Activity Widget -->
+                        <div class="lg:col-span-3 card bg-base-100 border dashboard-component" data-id="recentActivity" data-type="table">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="card-body">
-                                <h2 class="card-title">Recently Added Assets</h2>
-                                <div class="overflow-x-auto h-48">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <tbody id="recent-assets-table"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Recent Requisitions Table -->
-                        <div class="card bg-base-100 border dashboard-component" data-id="recentRequisitions" data-type="table">
-                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
-                            <div class="card-body">
-                                <h2 class="card-title">Recent Requisitions</h2>
-                                <div class="overflow-x-auto h-48">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <tbody id="recent-requisitions-table"></tbody>
-                                    </table>
-                                </div>
-                        </div>
-                        <!-- NEW: Recently Transferred Assets Table -->
-                        <div class="lg:col-span-2 card bg-base-100 border dashboard-component" data-id="recentTransfers" data-type="table">
-                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
-                            <div class="card-body">
-                                <h2 class="card-title">Recently Transferred Assets</h2>
-                                <div class="overflow-x-auto h-48">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <thead>
-                                            <tr><th>PTR No.</th><th>Date</th><th>From</th><th>To</th><th>Assets</th></tr>
-                                        </thead>
-                                        <tbody id="recent-transfers-table"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        <!-- NEW: Top 5 Most Requested Supplies Table -->
-                        <div class="lg:col-span-3 card bg-base-100 border dashboard-component" data-id="topSupplies" data-type="table">
-                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
-                            <div class="card-body">
-                                <h2 class="card-title">Top 5 Requested Supplies (Last 90 Days)</h2>
-                                <div class="overflow-x-auto h-48">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <thead>
-                                            <tr><th>Item</th><th class="text-right">Total Issued</th></tr>
-                                        </thead>
-                                        <tbody id="top-supplies-table"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- NEW: Recently Acquired Immovable Properties Table -->
-                        <div class="lg:col-span-3 card bg-base-100 border dashboard-component" data-id="recentImmovableAssets" data-type="table">
-                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
-                            <div class="card-body">
-                                <h2 class="card-title">Recently Acquired Immovable Properties</h2>
-                                <div class="overflow-x-auto h-48">
-                                    <table class="table table-zebra table-pin-rows table-sm">
-                                        <thead>
-                                            <tr><th>PIN</th><th>Name</th><th>Type</th><th>Location</th><th>Acq. Date</th></tr>
-                                        </thead>
-                                        <tbody id="recent-immovable-assets-table">
-                                            <!-- Data will be populated by JS -->
-                                        </tbody>
-                                    </table>
+                                <h2 class="card-title">Recent Activity</h2>
+                                <!-- Tabs -->
+                                <div role="tablist" class="tabs tabs-bordered -mb-2">
+                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Movable Assets" checked />
+                                    <div role="tabpanel" class="tab-content p-4">
+                                        <div class="overflow-x-auto h-48">
+                                            <table class="table table-zebra table-pin-rows table-sm">
+                                                <tbody id="recent-assets-table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                        
+                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Transfers" />
+                                    <div role="tabpanel" class="tab-content p-4">
+                                        <div class="overflow-x-auto h-48">
+                                            <table class="table table-zebra table-pin-rows table-sm">
+                                                <thead>
+                                                    <tr><th>PTR No.</th><th>Date</th><th>From</th><th>To</th><th>Assets</th></tr>
+                                                </thead>
+                                                <tbody id="recent-transfers-table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                        
+                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Requisitions" />
+                                    <div role="tabpanel" class="tab-content p-4">
+                                        <div class="overflow-x-auto h-48">
+                                            <table class="table table-zebra table-pin-rows table-sm">
+                                                <tbody id="recent-requisitions-table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                        
+                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Top Supplies" />
+                                    <div role="tabpanel" class="tab-content p-4">
+                                        <div class="overflow-x-auto h-48">
+                                            <table class="table table-zebra table-pin-rows table-sm">
+                                                <thead>
+                                                    <tr><th>Item</th><th class="text-right">Total Issued</th></tr>
+                                                </thead>
+                                                <tbody id="top-supplies-table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                        
+                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Immovable" />
+                                    <div role="tabpanel" class="tab-content p-4">
+                                        <div class="overflow-x-auto h-48">
+                                            <table class="table table-zebra table-pin-rows table-sm">
+                                                <thead>
+                                                    <tr><th>PIN</th><th>Name</th><th>Type</th><th>Location</th><th>Acq. Date</th></tr>
+                                                </thead>
+                                                <tbody id="recent-immovable-assets-table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

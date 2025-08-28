@@ -7,13 +7,13 @@ let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Existing cards and filters
-        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Existing charts
-        'recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies', 'recentImmovableAssets' // NEW: Added 'recentImmovableAssets'
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Cards
+        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Charts
+        'recentActivity' // Tables
     ],
-    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
-    tableOrder: ['recentAssets', 'recentRequisitions', 'recentTransfers', 'topSupplies', 'recentImmovableAssets'] // NEW: Added 'recentImmovableAssets'
+    tableOrder: ['recentActivity']
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -184,8 +184,6 @@ function initializeDashboard(user) {
     function renderStatCards(stats) {
         document.getElementById('stat-portfolio-value').textContent = formatCurrency(stats.totalPortfolioValue?.current || 0);
         document.getElementById('stat-total-assets').textContent = stats.totalAssets?.current || 0;
-        document.getElementById('stat-for-repair').textContent = stats.forRepair?.current || 0;
-        document.getElementById('stat-disposed').textContent = stats.disposed?.current || 0;
         document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions?.current || 0;
         document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets?.current || 0;
         document.getElementById('stat-low-stock').textContent = stats.lowStockItems?.current || 0;
@@ -205,8 +203,6 @@ function initializeDashboard(user) {
 
         renderTrend(document.getElementById('stat-portfolio-value-trend'), stats.totalPortfolioValue?.trend || 0);
         renderTrend(document.getElementById('stat-total-assets-trend'), stats.totalAssets?.trend || 0);
-        renderTrend(document.getElementById('stat-for-repair-trend'), stats.forRepair?.trend || 0);
-        renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed?.trend || 0);
         renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions?.trend || 0);
         renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets?.trend || 0);
         // No trend for unassignedAssets yet, as per backend.

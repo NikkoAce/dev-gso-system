@@ -316,14 +316,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             current: currentStats.totalAssets || 0,
             trend: calculateTrend(currentStats.totalAssets || 0, previousStats.totalAssets || 0)
         },
-        forRepair: {
-            current: currentStats.forRepair || 0,
-            trend: calculateTrend(currentStats.forRepair || 0, previousStats.forRepair || 0)
-        },
-        disposed: {
-            current: currentStats.disposed || 0,
-            trend: calculateTrend(currentStats.disposed || 0, previousStats.disposed || 0)
-        },
         pendingRequisitions: {
             current: currentPendingReqs,
             trend: calculateTrend(currentPendingReqs, previousPendingReqs)
