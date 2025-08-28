@@ -496,6 +496,51 @@ const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
     res.status(200).json({ asset, ledgerRows });
 });
 
+/**
+ * @desc    Add a repair record to an immovable asset
+ * @route   POST /api/immovable-assets/:id/repairs
+ * @access  Private (IMMOVABLE_UPDATE)
+ */
+const addRepairRecord = asyncHandler(async (req, res) => {
+    const { date, natureOfRepair, amount } = req.body;
+
+    if (!date || !natureOfRepair || !amount) {
+        res.status(400);
+        throw new Error('Date, Nature of Repair, and Amount are required.');
+    }
+
+    const asset = await ImmovableAsset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    asset.repairHistory.push({ date, natureOfRepair, amount });
+    asset.history.push({ event: 'Updated', details: `Repair added: ${natureOfRepair} for ${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount)}.`, user: req.user.name });
+
+    const updatedAsset = await asset.save();
+    res.status(201).json(updatedAsset);
+});
+
+/**
+ * @desc    Delete a repair record from an immovable asset
+ * @route   DELETE /api/immovable-assets/:id/repairs/:repairId
+ * @access  Private (IMMOVABLE_UPDATE)
+ */
+const deleteRepairRecord = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    asset.repairHistory.pull({ _id: req.params.repairId });
+    asset.history.push({ event: 'Updated', details: `Repair record removed.`, user: req.user.name });
+
+    const updatedAsset = await asset.save();
+    res.status(200).json(updatedAsset);
+});
+
 module.exports = {
     createImmovableAsset,
     getImmovableAssets,
@@ -505,5 +550,7 @@ module.exports = {
     deleteImmovableAssetAttachment,
     generateImmovableAssetReport,
     generatePropertyCardReport,
-    generateImmovableLedgerCard
+    generateImmovableLedgerCard,
+    addRepairRecord,
+    deleteRepairRecord
 };

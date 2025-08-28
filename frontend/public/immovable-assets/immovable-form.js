@@ -37,8 +37,10 @@ function initializeForm(user) {
     const addComponentBtn = document.getElementById('add-component-btn');
     const formTabs = document.getElementById('form-tabs');
     const detailsTab = document.getElementById('details-tab');
+    const repairsTab = document.getElementById('repairs-tab');
     const historyTab = document.getElementById('history-tab');
     const detailsPanel = document.getElementById('details-panel');
+    const repairsPanel = document.getElementById('repairs-panel');
     const historyPanel = document.getElementById('history-panel');
     const historyContainer = document.getElementById('history-container');
     const addAttachmentBtn = document.getElementById('add-attachment-btn');
@@ -46,7 +48,7 @@ function initializeForm(user) {
     const existingAttachmentsContainer = document.getElementById('existing-attachments-container');
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
     const repairsContainer = document.getElementById('repairs-container');
-    const addRepairBtn = document.getElementById('add-repair-btn');
+    const repairForm = document.getElementById('repair-form');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -76,15 +78,15 @@ function initializeForm(user) {
         lucide.createIcons();
     }
 
-    function renderRepairRow(repair = { date: '', natureOfRepair: '', amount: '' }) {
+    function renderRepairRow(repair) {
         const div = document.createElement('div');
-        div.className = 'grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center repair-row';
+        div.className = 'grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center repair-row p-2 border-b';
         const repairDate = repair.date ? new Date(repair.date).toISOString().split('T')[0] : '';
         div.innerHTML = `
-            <input type="date" placeholder="Date" class="input input-bordered input-sm repair-date" value="${repairDate}" required>
-            <input type="text" placeholder="Nature of Repair" class="input input-bordered input-sm repair-nature" value="${repair.natureOfRepair || ''}" required>
-            <input type="number" placeholder="Amount" class="input input-bordered input-sm repair-amount" value="${repair.amount || ''}" step="0.01" required>
-            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-repair-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
+            <span class="text-sm">${repairDate}</span>
+            <span class="text-sm">${repair.natureOfRepair}</span>
+            <span class="text-sm text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(repair.amount)}</span>
+            <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-repair-btn" data-repair-id="${repair._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
         `;
         repairsContainer.appendChild(div);
         lucide.createIcons();
@@ -202,14 +204,6 @@ function initializeForm(user) {
             componentsContainer.innerHTML = ''; // Ensure it's clear if no components
         }
 
-        // Populate repair history
-        if (asset.repairHistory && asset.repairHistory.length > 0) {
-            repairsContainer.innerHTML = ''; // Clear any empty rows
-            asset.repairHistory.forEach(repair => renderRepairRow(repair));
-        } else {
-            repairsContainer.innerHTML = ''; // Ensure it's clear if no repairs
-        }
-
         // Populate history tab
         if (asset.history) {
             renderHistory(asset.history);
@@ -218,6 +212,14 @@ function initializeForm(user) {
         // Populate attachments
         if (asset.attachments) {
             renderAttachments(asset.attachments);
+        }
+
+        // Populate repair history tab
+        if (asset.repairHistory && asset.repairHistory.length > 0) {
+            repairsContainer.innerHTML = ''; // Clear any empty rows
+            asset.repairHistory.forEach(repair => renderRepairRow(repair));
+        } else {
+            repairsContainer.innerHTML = '<p class="text-sm text-center text-base-content/70 p-4">No repair records found.</p>';
         }
 
         // Show the correct details section based on the asset type
@@ -281,19 +283,6 @@ function initializeForm(user) {
             }
         });
         formData.append('components', JSON.stringify(assetData.components));
-
-        // Manually gather repair history
-        assetData.repairHistory = [];
-        const repairRows = repairsContainer.querySelectorAll('.repair-row');
-        repairRows.forEach(row => {
-            const date = row.querySelector('.repair-date').value;
-            const natureOfRepair = row.querySelector('.repair-nature').value.trim();
-            const amount = row.querySelector('.repair-amount').value;
-            if (date && natureOfRepair && amount) {
-                assetData.repairHistory.push({ date, natureOfRepair, amount: parseFloat(amount) });
-            }
-        });
-        formData.append('repairHistory', JSON.stringify(assetData.repairHistory));
 
         // Append new files and their titles
         const attachmentTitles = [];
@@ -360,13 +349,6 @@ function initializeForm(user) {
         renderComponent();
     });
 
-    addRepairBtn.addEventListener('click', () => renderRepairRow());
-    repairsContainer.addEventListener('click', (e) => {
-        if (e.target.closest('.remove-repair-btn')) {
-            e.target.closest('.repair-row').remove();
-        }
-    });
-
     newAttachmentsContainer.addEventListener('click', (e) => {
         const removeBtn = e.target.closest('.remove-new-attachment-btn');
         if (removeBtn) {
@@ -382,21 +364,77 @@ function initializeForm(user) {
 
     existingAttachmentsList.addEventListener('click', handleAttachmentDelete);
 
+    // --- Tab Switching Logic ---
+    const tabs = [detailsTab, repairsTab, historyTab];
+    const panels = [detailsPanel, repairsPanel, historyPanel];
+
+    function switchTab(activeIndex) {
+        tabs.forEach((tab, index) => {
+            tab.classList.toggle('tab-active', index === activeIndex);
+        });
+        panels.forEach((panel, index) => {
+            panel.classList.toggle('hidden', index !== activeIndex);
+        });
+        // Show/hide main save button based on which tab is active
+        submitButton.classList.toggle('hidden', activeIndex !== 0);
+    }
+
     detailsTab.addEventListener('click', () => {
-        detailsTab.classList.add('tab-active');
-        historyTab.classList.remove('tab-active');
-        detailsPanel.classList.remove('hidden');
-        historyPanel.classList.add('hidden');
-        submitButton.classList.remove('hidden');
+        switchTab(0);
+    });
+
+    repairsTab.addEventListener('click', () => {
+        switchTab(1);
     });
 
     historyTab.addEventListener('click', () => {
-        historyTab.classList.add('tab-active');
-        detailsTab.classList.remove('tab-active');
-        historyPanel.classList.remove('hidden');
-        detailsPanel.classList.add('hidden');
-        submitButton.classList.add('hidden');
+        switchTab(2);
     });
 
     form.addEventListener('submit', handleFormSubmit);
+
+    // --- Repair Form Logic ---
+    repairForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const repairData = {
+            date: document.getElementById('new-repair-date').value,
+            natureOfRepair: document.getElementById('new-repair-nature').value,
+            amount: document.getElementById('new-repair-amount').value,
+        };
+
+        if (!repairData.date || !repairData.natureOfRepair || !repairData.amount) {
+            showToast('Please fill out all repair fields.', 'error');
+            return;
+        }
+
+        try {
+            await fetchWithAuth(`${API_ENDPOINT}/${assetId}/repairs`, {
+                method: 'POST',
+                body: JSON.stringify(repairData)
+            });
+            showToast('Repair record added successfully.', 'success');
+            repairForm.reset();
+            loadAssetForEditing(); // Reload to refresh all tabs
+        } catch (error) {
+            showToast(`Error adding repair: ${error.message}`, 'error');
+        }
+    });
+
+    repairsContainer.addEventListener('click', async (e) => {
+        const removeBtn = e.target.closest('.remove-repair-btn');
+        if (removeBtn) {
+            const repairId = removeBtn.dataset.repairId;
+            if (confirm('Are you sure you want to delete this repair record?')) {
+                try {
+                    await fetchWithAuth(`${API_ENDPOINT}/${assetId}/repairs/${repairId}`, {
+                        method: 'DELETE'
+                    });
+                    showToast('Repair record deleted.', 'success');
+                    loadAssetForEditing(); // Reload to refresh
+                } catch (error) {
+                    showToast(`Error deleting repair: ${error.message}`, 'error');
+                }
+            }
+        }
+    });
 }

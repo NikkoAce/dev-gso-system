@@ -32,6 +32,7 @@
                     <!-- Tabs (hidden by default, shown in edit mode) -->
                     <div id="form-tabs" role="tablist" class="tabs tabs-boxed bg-base-200 hidden mb-6">
                         <a role="tab" id="details-tab" class="tab tab-active">Details</a>
+                        <a role="tab" id="repairs-tab" class="tab">Repairs</a>
                         <a role="tab" id="history-tab" class="tab">History</a>
                     </div>
 
@@ -195,21 +196,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Repair History -->
-                            <div class="card bg-base-100 border">
-                                <div class="card-body">
-                                    <div class="flex justify-between items-center">
-                                        <h2 class="card-title">Repair History</h2>
-                                        <button type="button" id="add-repair-btn" class="btn btn-sm btn-ghost">
-                                            <i data-lucide="plus"></i> Add Repair Record
-                                        </button>
-                                    </div>
-                                    <div id="repairs-container" class="space-y-2">
-                                        <!-- Repair rows will be dynamically inserted here -->
-                                    </div>
-                                </div>
-                            </div>
                         </form>
                     </div>
 
@@ -233,6 +219,27 @@
                                     </div>
                                 </div>
                             </div>
+
+                    <!-- Repairs Panel (hidden by default) -->
+                    <div id="repairs-panel" class="hidden">
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Repair History</h2>
+                                <p class="text-sm text-base-content/70 -mt-2">Log repair and maintenance activities for this asset.</p>
+                                <!-- Form to add a new repair -->
+                                <form id="repair-form" class="grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-end p-4 border rounded-lg bg-base-200 mb-4">
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Date</span></label><input type="date" id="new-repair-date" class="input input-bordered input-sm" required></div>
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Nature of Repair</span></label><input type="text" id="new-repair-nature" placeholder="e.g., Roof resealing" class="input input-bordered input-sm" required></div>
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Amount</span></label><input type="number" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" step="0.01" required></div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Add</button>
+                                </form>
+                                <!-- Container for existing repair records -->
+                                <div id="repairs-container" class="space-y-2">
+                                    <!-- Repair rows will be dynamically inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- History Panel (hidden by default) -->
                     <div id="history-panel" class="hidden">

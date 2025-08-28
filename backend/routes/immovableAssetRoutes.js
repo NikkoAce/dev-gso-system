@@ -33,6 +33,12 @@ router.route('/:id')
     .put(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), upload.array('attachments'), updateImmovableAsset)
     .delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_DELETE), deleteImmovableAsset);
 
+// Routes for managing repairs on a specific asset
+router.route('/:id/repairs')
+    .post(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), addRepairRecord);
+router.route('/:id/repairs/:repairId')
+    .delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), deleteRepairRecord);
+
 // New route for deleting a specific attachment
 router.route('/:id/attachments/:attachmentKey').delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), deleteImmovableAssetAttachment);
 
