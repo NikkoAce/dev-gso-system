@@ -16,8 +16,14 @@ const DEFAULT_PREFERENCES = {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const user = await getCurrentUser();
+        let user = await getCurrentUser();
         if (!user) return;
+
+        // --- FIX: Fetch the full, up-to-date user profile from the server ---
+        // This ensures we always have the latest dashboard preferences,
+        // instead of relying on potentially stale data from the JWT.
+        const fullUser = await fetchWithAuth('users/profile');
+        user = fullUser; // Replace the token-based user with the full user object
 
         // Check if the user has any saved preferences. If not, use the default layout.
         const hasPreferences = user.dashboardPreferences && user.dashboardPreferences.visibleComponents && user.dashboardPreferences.visibleComponents.length > 0;

@@ -45,6 +45,22 @@ const updateUser = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Get the current user's profile
+ * @route   GET /api/users/profile
+ * @access  Private
+ */
+const getUserProfile = asyncHandler(async (req, res) => {
+    // req.user is attached by the protect middleware and contains the user's ID from the token
+    const user = await User.findById(req.user.id).select('-password'); // Exclude password just in case
+    if (user) {
+        res.json(user);
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+/**
  * @desc    Update the current user's dashboard preferences
  * @route   PUT /api/users/preferences
  * @access  Private
@@ -77,4 +93,4 @@ const getRolesAndPermissions = asyncHandler(async (req, res) => {
     });
 });
 
-module.exports = { getUsers, updateUser, getRolesAndPermissions, updateUserDashboardPreferences };
+module.exports = { getUsers, updateUser, getRolesAndPermissions, updateUserDashboardPreferences, getUserProfile };

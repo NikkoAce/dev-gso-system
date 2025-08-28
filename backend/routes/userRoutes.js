@@ -5,7 +5,8 @@ const {
     getUsers,
     updateUser,
     getRolesAndPermissions,
-    updateUserDashboardPreferences
+    updateUserDashboardPreferences,
+    getUserProfile
 } = require('../controllers/userController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const PERMISSIONS = require('../config/permissions');
@@ -13,6 +14,10 @@ const PERMISSIONS = require('../config/permissions');
 // @desc    Get metadata (roles, permissions) for building the UI
 // @route   GET /api/users/meta
 router.route('/meta').get(protect, checkPermission(PERMISSIONS.USER_READ), getRolesAndPermissions);
+
+// @desc    Get the currently logged-in user's full profile
+// @route   GET /api/users/profile
+router.route('/profile').get(protect, getUserProfile);
 
 // --- NEW ROUTE ---
 // This route allows a logged-in user to update their own preferences.
