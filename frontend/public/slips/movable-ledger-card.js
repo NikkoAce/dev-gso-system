@@ -1,7 +1,7 @@
 // FILE: frontend/public/slips/movable-ledger-card.js
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
-import { formatCurrency, formatDate } from './slip-page-common.js';
+import { formatCurrency, formatDate } from '../js/slip-page-common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
