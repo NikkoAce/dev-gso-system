@@ -10,7 +10,9 @@ const {
     deleteImmovableAssetAttachment,
     generateImmovableAssetReport,
     generatePropertyCardReport,
-    generateImmovableLedgerCard
+    generateImmovableLedgerCard,
+    addRepairRecord,
+    deleteRepairRecord
 } = require('../controllers/immovableAssetController.js');
 const PERMISSIONS = require('../config/permissions.js');
 const { upload } = require('../middlewares/multer.js');
