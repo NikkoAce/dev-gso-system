@@ -43,6 +43,9 @@ router.put('/physical-count', protect, checkPermission(PERMISSIONS.ASSET_UPDATE)
 // Route for updating from scanner
 router.post('/scan', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updateScanResults);
 
+// Route for generating a Property Card for a specific asset (shows history)
+router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetById);
+
 // Standard CRUD routes for assets
 router.route('/')
     .get(protect, checkPermission(PERMISSIONS.ASSET_READ), getAssets)
