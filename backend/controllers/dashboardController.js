@@ -121,9 +121,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         assetsByOffice: []
     };
 
-    const current = currentPeriodStatsResult[0] || defaultStats;
-    const previous = previousPeriodStatsResult[0] || defaultStats;
-    const distribution = currentDistributionResult[0] || defaultDistribution;
+    const current = Object.assign({}, defaultStats, currentPeriodStatsResult[0]);
+    const previous = Object.assign({}, defaultStats, previousPeriodStatsResult[0]);
+    const distribution = Object.assign({}, defaultDistribution, currentDistributionResult[0]);
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
