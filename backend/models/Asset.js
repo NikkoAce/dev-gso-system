@@ -27,6 +27,12 @@ const HistorySchema = new mongoose.Schema({
     user: { type: String, required: true }
 }, { _id: false });
 
+const repairHistorySchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    natureOfRepair: { type: String, required: true },
+    amount: { type: Number, required: true }
+}, { _id: false });
+
 const CustodianSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     designation: { type: String, trim: true },
@@ -46,10 +52,12 @@ const AssetSchema = new mongoose.Schema({
   acquisitionCost: { type: Number, required: [true, 'Please add an acquisition cost'] },
   usefulLife: { type: Number, required: [true, 'Please add the useful life in years'] },
   salvageValue: { type: Number, default: 0 },
+  impairmentLosses: { type: Number, default: 0 },
   status: { type: String, enum: ['In Use', 'In Storage', 'For Repair', 'Disposed'], default: 'In Use' },
   assignedPAR: { type: String, default: null },
   assignedICS: { type: String, default: null }, // NEW
   maintenanceSchedule: { type: Date },
+  repairHistory: [repairHistorySchema],
   condition: { type: String, trim: true },
   remarks: { type: String, trim: true },
   history: [HistorySchema],

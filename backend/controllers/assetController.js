@@ -1,4 +1,5 @@
 const Asset = require('../models/Asset');
+const asyncHandler = require('express-async-handler');
 const Employee = require('../models/Employee');
 const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
@@ -823,11 +824,124 @@ const getMyOfficeAssets = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Add a repair record to a movable asset
+ * @route   POST /api/assets/:id/repairs
+ * @access  Private (ASSET_UPDATE)
+ */
+const addRepairRecord = asyncHandler(async (req, res) => {
+    const { date, natureOfRepair, amount } = req.body;
+
+    if (!date || !natureOfRepair || !amount) {
+        res.status(400);
+        throw new Error('Date, Nature of Repair, and Amount are required.');
+    }
+
+    const asset = await Asset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    asset.repairHistory.push({ date, natureOfRepair, amount });
+    asset.history.push({ event: 'Updated', details: `Repair added: ${natureOfRepair} for ${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount)}.`, user: req.user.name });
+
+    const updatedAsset = await asset.save();
+    res.status(201).json(updatedAsset);
+});
+
+/**
+ * @desc    Delete a repair record from a movable asset
+ * @route   DELETE /api/assets/:id/repairs/:repairId
+ * @access  Private (ASSET_UPDATE)
+ */
+const deleteRepairRecord = asyncHandler(async (req, res) => {
+    const asset = await Asset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    asset.repairHistory.pull({ _id: req.params.repairId });
+    asset.history.push({ event: 'Updated', details: `Repair record removed.`, user: req.user.name });
+
+    const updatedAsset = await asset.save();
+    res.status(200).json(updatedAsset);
+});
+
+/**
+ * @desc    Get data for a Movable Property Ledger Card (COA Format)
+ * @route   GET /api/assets/:id/ledger-card
+ * @access  Private (ASSET_READ)
+ */
+const generateMovableLedgerCard = asyncHandler(async (req, res) => {
+    const asset = await Asset.findById(req.params.id).lean();
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    const acquisitionDate = new Date(asset.acquisitionDate);
+    const depreciableCost = asset.acquisitionCost - (asset.salvageValue || 0);
+    const annualDepreciation = asset.usefulLife > 0 ? depreciableCost / asset.usefulLife : 0;
+    const dailyDepreciation = annualDepreciation / 365.25;
+
+    const combinedLog = [
+        ...asset.history.map(h => ({ ...h, logType: 'event' })),
+        ...(asset.repairHistory || []).map(r => ({ ...r, logType: 'repair' }))
+    ].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const ledgerRows = [];
+    const currentCost = asset.acquisitionCost;
+    const totalImpairment = asset.impairmentLosses || 0;
+
+    combinedLog.forEach(logEntry => {
+        const eventDate = new Date(logEntry.date);
+        const daysSinceAcquisition = (eventDate - acquisitionDate) / (1000 * 60 * 60 * 24);
+        
+        let accumulatedDepreciation = 0;
+        if (daysSinceAcquisition > 0) {
+            accumulatedDepreciation = Math.min(dailyDepreciation * daysSinceAcquisition, depreciableCost);
+        }
+        const adjustedCost = currentCost - accumulatedDepreciation - totalImpairment;
+
+        const row = {
+            date: logEntry.date,
+            reference: asset.assignedPAR || asset.assignedICS || 'N/A',
+            propertyId: asset.propertyNumber,
+            cost: currentCost,
+            estimatedUsefulLife: asset.usefulLife,
+            accumulatedDepreciation: accumulatedDepreciation,
+            impairmentLosses: totalImpairment,
+            adjustedCost: adjustedCost,
+            repairNature: 'N/A',
+            repairAmount: 0,
+        };
+
+        if (logEntry.logType === 'event') {
+            row.particulars = logEntry.details;
+            row.remarks = logEntry.event;
+        } else if (logEntry.logType === 'repair') {
+            row.particulars = `Repair: ${logEntry.natureOfRepair}`;
+            row.remarks = 'Repair/Maintenance';
+            row.repairNature = logEntry.natureOfRepair;
+            row.repairAmount = logEntry.amount;
+        }
+        ledgerRows.push(row);
+    });
+
+    res.status(200).json({ asset, ledgerRows });
+});
+
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
     deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount,
     updateScanResults, bulkTransferAssets,
     exportAssetsToCsv, getDashboardStats,
-    getMyOfficeAssets
+    getMyOfficeAssets,
+    addRepairRecord,
+    deleteRepairRecord,
+    generateMovableLedgerCard
 };

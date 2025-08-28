@@ -18,6 +18,9 @@ const {
     getMyOfficeAssets,
     updateScanResults,
     getDashboardStats,
+    addRepairRecord,
+    deleteRepairRecord,
+    generateMovableLedgerCard
 } = require('../controllers/assetController'); // Assuming a controller file
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
@@ -45,6 +48,15 @@ router.post('/scan', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updateS
 
 // Route for generating a Property Card for a specific asset (shows history)
 router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetById);
+
+// Route for generating a Ledger Card for a specific asset (shows depreciation)
+router.get('/:id/ledger-card', protect, checkPermission(PERMISSIONS.ASSET_READ), generateMovableLedgerCard);
+
+// Routes for managing repairs on a specific asset
+router.route('/:id/repairs')
+    .post(protect, checkPermission(PERMISSIONS.ASSET_UPDATE), addRepairRecord);
+router.route('/:id/repairs/:repairId')
+    .delete(protect, checkPermission(PERMISSIONS.ASSET_UPDATE), deleteRepairRecord);
 
 // Standard CRUD routes for assets
 router.route('/')
