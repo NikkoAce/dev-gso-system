@@ -40,35 +40,17 @@ function initializeLedgerCardPage() {
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
 
     // --- RENDERING FUNCTIONS ---
-    function renderAssetDetails(asset) {
-        const details = asset.buildingAndStructureDetails || {};
-        let detailsHtml = `
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 border p-2">
-                <div class="font-bold">Asset Name:</div>
-                <div class="md:col-span-2">${asset.name}</div>
-                
-                <div class="font-bold">Property Index No.:</div>
-                <div>${asset.propertyIndexNumber}</div>
-                
-                <div class="font-bold">Type:</div>
-                <div>${asset.type}</div>
-
-                <div class="font-bold">Acquisition Date:</div>
-                <div>${formatDate(asset.dateAcquired)}</div>
-
-                <div class="font-bold">Assessed Value:</div>
-                <div>${formatCurrency(asset.assessedValue)}</div>
-
-                <div class="font-bold">Est. Useful Life:</div>
-                <div>${details.estimatedUsefulLife || 'N/A'} years</div>
-            </div>
-        `;
-        assetDetailsContainer.innerHTML = detailsHtml;
+    function renderLedgerHeader(asset) {
+        // NOTE: Fund and Account Code are populated from the asset model.
+        ledgerFund.textContent = asset.fundSource || 'General Fund';
+        ledgerEquipmentName.textContent = asset.name;
+        ledgerAccountCode.textContent = asset.accountCode || 'N/A';
+        ledgerDescription.textContent = asset.remarks || asset.name;
     }
 
-    function renderDepreciationTable(schedule) {
-        if (!schedule || schedule.length === 0) {
-            depreciationTableContainer.innerHTML = '<p>No depreciation schedule available for this asset.</p>';
+    function renderLedgerTable(ledgerRows) {
+        if (!ledgerRows || ledgerRows.length === 0) {
+            ledgerTableContainer.innerHTML = '<p>No ledger entries available for this asset.</p>';
             return;
         }
 
@@ -76,26 +58,47 @@ function initializeLedgerCardPage() {
         table.className = 'w-full text-xs border-collapse border border-black';
         table.innerHTML = `
             <thead class="bg-gray-100">
-                <tr>
-                    <th class="border border-black p-1">Year</th>
-                    <th class="border border-black p-1">Depreciation</th>
-                    <th class="border border-black p-1">Accum. Depreciation</th>
-                    <th class="border border-black p-1">Book Value</th>
+                <tr class="text-center">
+                    <th class="border border-black p-1">Date</th>
+                    <th class="border border-black p-1">Reference</th>
+                    <th class="border border-black p-1">Particulars</th>
+                    <th class="border border-black p-1">Property ID No.</th>
+                    <th class="border border-black p-1">Cost</th>
+                    <th class="border border-black p-1">Est. Useful Life</th>
+                    <th class="border border-black p-1">Accum. Dep.</th>
+                    <th class="border border-black p-1">Accum. Impairment Losses</th>
+                    <th class="border border-black p-1">Adjusted Cost</th>
+                    <th class="border border-black p-1" colspan="2">Repair History</th>
+                    <th class="border border-black p-1">Remarks</th>
+                </tr>
+                <tr class="text-center">
+                    <th class="border border-black p-1" colspan="9"></th>
+                    <th class="border border-black p-1">Nature of Repair</th>
+                    <th class="border border-black p-1">Amount</th>
+                    <th class="border border-black p-1"></th>
                 </tr>
             </thead>
             <tbody>
-                ${schedule.map(entry => `
+                ${ledgerRows.map(entry => `
                     <tr class="border-b">
-                        <td class="border border-black p-1 text-center">${entry.year}</td>
-                        <td class="border border-black p-1 text-right">${formatCurrency(entry.depreciation)}</td>
+                        <td class="border border-black p-1">${formatDate(entry.date)}</td>
+                        <td class="border border-black p-1">${entry.reference}</td>
+                        <td class="border border-black p-1">${entry.particulars}</td>
+                        <td class="border border-black p-1">${entry.propertyId}</td>
+                        <td class="border border-black p-1 text-right">${formatCurrency(entry.cost)}</td>
+                        <td class="border border-black p-1 text-center">${entry.estimatedUsefulLife} yrs</td>
                         <td class="border border-black p-1 text-right">${formatCurrency(entry.accumulatedDepreciation)}</td>
-                        <td class="border border-black p-1 text-right">${formatCurrency(entry.bookValue)}</td>
+                        <td class="border border-black p-1 text-right">${formatCurrency(entry.impairmentLosses)}</td>
+                        <td class="border border-black p-1 text-right">${formatCurrency(entry.adjustedCost)}</td>
+                        <td class="border border-black p-1">${entry.repairNature}</td>
+                        <td class="border border-black p-1 text-right">${formatCurrency(entry.repairAmount)}</td>
+                        <td class="border border-black p-1">${entry.remarks}</td>
                     </tr>
                 `).join('')}
             </tbody>
         `;
-        depreciationTableContainer.innerHTML = '';
-        depreciationTableContainer.appendChild(table);
+        ledgerTableContainer.innerHTML = '';
+        ledgerTableContainer.appendChild(table);
     }
 
     // --- CORE LOGIC ---
