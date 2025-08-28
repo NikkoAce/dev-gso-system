@@ -86,21 +86,19 @@ function populateCustomizeModal() {
     allComponentIds.forEach(id => {
         const component = allComponents[id];
         const isVisible = userPreferences.visibleComponents.includes(id);
+        // We only show the visibility toggle now, not the drag handle
         const itemHTML = `
-            <div class="flex items-center justify-between p-2 border rounded-lg bg-base-200 cursor-grab" data-id="${id}">
+            <div class="flex items-center justify-between p-2 border rounded-lg bg-base-200" data-id="${id}">
                 <div class="form-control">
                     <label class="label cursor-pointer gap-2">
                         <input type="checkbox" class="checkbox checkbox-sm component-visibility-toggle" data-id="${id}" ${isVisible ? 'checked' : ''}>
                         <span class="label-text">${component.title}</span>
                     </label>
                 </div>
-                <i data-lucide="grip-vertical" class="text-base-content/40"></i>
             </div>
         `;
         container.insertAdjacentHTML('beforeend', itemHTML);
     });
-
-    new Sortable(container, { animation: 150, handle: '.cursor-grab' });
 }
 
 function initializeDashboard(user) {
@@ -309,50 +307,104 @@ function initializeDashboard(user) {
         endDateInput.value = new Date().toISOString().split('T')[0];
     }
 
-    function setupCustomizationListeners() {
+    function setupDashboardInteractivity() {
         const modal = document.getElementById('customize-modal');
-        const openBtn = document.getElementById('customize-dashboard-btn');
+        const visibilityBtn = document.getElementById('visibility-settings-btn');
         const saveBtn = document.getElementById('save-preferences-btn');
+        const editLayoutBtn = document.getElementById('edit-layout-btn');
+        const saveLayoutBtn = document.getElementById('save-layout-btn');
+        const cancelLayoutBtn = document.getElementById('cancel-layout-btn');
+        const grids = document.querySelectorAll('.dashboard-grid');
+        let sortableInstances = [];
 
-        openBtn.addEventListener('click', () => {
-            populateCustomizeModal();
-            modal.showModal();
-        });
+        // Defensive check: if the main buttons don't exist, we can't proceed.
+        if (!editLayoutBtn || !visibilityBtn || !saveLayoutBtn || !cancelLayoutBtn || !saveBtn) {
+            console.warn('Dashboard customization buttons not found. Interactivity will be disabled.');
+            return;
+        }
 
-        saveBtn.addEventListener('click', async () => {
+        const enterEditMode = () => {
+            editLayoutBtn.classList.add('hidden');
+            visibilityBtn.classList.add('hidden');
+            saveLayoutBtn.classList.remove('hidden');
+            cancelLayoutBtn.classList.remove('hidden');
+            grids.forEach(grid => grid.classList.add('is-editing'));
+
+            sortableInstances = Array.from(grids).map(grid => {
+                return new Sortable(grid, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'sortable-ghost'
+                });
+            });
+        };
+
+        const exitEditMode = (revert = false) => {
+            if (revert) {
+                applyPreferences(); // Re-apply last saved preferences to revert changes
+            }
+            editLayoutBtn.classList.remove('hidden');
+            visibilityBtn.classList.remove('hidden');
+            saveLayoutBtn.classList.add('hidden');
+            cancelLayoutBtn.classList.add('hidden');
+            grids.forEach(grid => grid.classList.remove('is-editing'));
+            sortableInstances.forEach(instance => instance.destroy());
+            sortableInstances = [];
+        };
+
+        const saveLayout = async () => {
             const newPreferences = {
-                visibleComponents: [],
+                ...userPreferences, // Start with existing visibility settings
                 cardOrder: [],
                 chartOrder: [],
                 tableOrder: []
             };
 
-            document.querySelectorAll('#component-list-container > div').forEach(el => {
-                const id = el.dataset.id;
-                const componentInfo = allComponents[id];
-                if (componentInfo.type === 'card') {
-                    newPreferences.cardOrder.push(id);
-                } else if (componentInfo.type === 'chart') {
-                    newPreferences.chartOrder.push(id);
-                } else if (componentInfo.type === 'table') {
-                    newPreferences.tableOrder.push(id);
-                }
-            });
-
-            document.querySelectorAll('.component-visibility-toggle:checked').forEach(chk => {
-                newPreferences.visibleComponents.push(chk.dataset.id);
+            document.querySelectorAll('#stats-container .dashboard-component').forEach(el => newPreferences.cardOrder.push(el.dataset.id));
+            document.querySelectorAll('#main-content-grid .dashboard-component').forEach(el => {
+                if (el.dataset.type === 'chart') newPreferences.chartOrder.push(el.dataset.id);
+                if (el.dataset.type === 'table') newPreferences.tableOrder.push(el.dataset.id);
             });
 
             userPreferences = newPreferences;
-            await fetchWithAuth('users/preferences', { method: 'PUT', body: newPreferences });
-            applyPreferences();
-            document.getElementById('customize-modal').close();
+            try {
+                await fetchWithAuth('users/preferences', { method: 'PUT', body: newPreferences });
+                exitEditMode();
+            } catch (error) {
+                console.error("Failed to save layout:", error);
+                alert("Could not save your layout changes. Please try again.");
+            }
+        };
+
+        const saveVisibility = async () => {
+            const newVisible = [];
+            document.querySelectorAll('.component-visibility-toggle:checked').forEach(chk => {
+                newVisible.push(chk.dataset.id);
+            });
+            userPreferences.visibleComponents = newVisible;
+            try {
+                await fetchWithAuth('users/preferences', { method: 'PUT', body: userPreferences });
+                applyPreferences();
+                if (modal) modal.close();
+            } catch (error) {
+                console.error("Failed to save visibility settings:", error);
+                alert("Could not save your widget visibility changes. Please try again.");
+            }
+        };
+
+        editLayoutBtn.addEventListener('click', enterEditMode);
+        cancelLayoutBtn.addEventListener('click', () => exitEditMode(true));
+        visibilityBtn.addEventListener('click', () => {
+            populateCustomizeModal();
+            if (modal) modal.showModal();
         });
+        saveLayoutBtn.addEventListener('click', saveLayout);
+        saveBtn.addEventListener('click', saveVisibility);
     }
 
     // --- INITIALIZATION ---
     const endDate = new Date().toISOString().split('T')[0];
     fetchDashboardData('', endDate); // Initial load with no start date and today as end date
     setupEventListeners();
-    setupCustomizationListeners();
+    setupDashboardInteractivity();
 }
