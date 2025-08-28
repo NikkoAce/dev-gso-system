@@ -138,6 +138,16 @@
                             <div id="stat-low-stock" class="stat-value">Loading...</div>
                             <div class="stat-desc text-orange-500">Reorder needed</div>
                         </div>
+                        <!-- NEW: Unassigned Assets -->
+                        <div id="stat-card-unassigned-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="unassignedAssets" data-type="card">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="stat-figure text-info">
+                                <i data-lucide="package-minus" class="h-8 w-8"></i>
+                            </div>
+                            <div class="stat-title">Unassigned Assets</div>
+                            <div id="stat-unassigned-assets" class="stat-value">Loading...</div>
+                            <div class="stat-desc">Awaiting assignment</div>
+                        </div>
                         <!-- Filter Card -->
                         <div class="card bg-base-100 border lg:col-span-2 dashboard-component" data-id="filters">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>

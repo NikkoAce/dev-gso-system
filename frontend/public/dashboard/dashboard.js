@@ -6,11 +6,11 @@ let dashboardFilters = {};
 let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
-    visibleComponents: [
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters', 'assetCondition',
+    visibleComponents: [ // NEW: Added 'unassignedAssets'
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'filters', 'assetCondition',
         'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'recentAssets', 'recentRequisitions'
     ],
-    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'filters'],
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'forRepair', 'disposed', 'pendingRequisitions', 'lowStockItems', 'unassignedAssets', 'filters'], // NEW: Added 'unassignedAssets'
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
     tableOrder: ['recentAssets', 'recentRequisitions']
 };
@@ -188,6 +188,7 @@ function initializeDashboard(user) {
         document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions.current;
         document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets.current;
         document.getElementById('stat-low-stock').textContent = stats.lowStockItems.current;
+        document.getElementById('stat-unassigned-assets').textContent = stats.unassignedAssets.current; // NEW
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
@@ -205,6 +206,7 @@ function initializeDashboard(user) {
         renderTrend(document.getElementById('stat-disposed-trend'), stats.disposed.trend);
         renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions.trend);
         renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets.trend);
+        // No trend for unassignedAssets yet, as per backend.
         lucide.createIcons();
     }
 
@@ -363,6 +365,9 @@ function initializeDashboard(user) {
         });
         document.getElementById('stat-card-immovable-assets').addEventListener('click', () => {
             window.location.href = '../immovable-assets/immovable-registry.html';
+        });
+        document.getElementById('stat-card-unassigned-assets').addEventListener('click', () => { // NEW
+            window.location.href = '../assets/asset-registry.html?assignment=unassigned';
         });
 
         // Date Filter Handlers

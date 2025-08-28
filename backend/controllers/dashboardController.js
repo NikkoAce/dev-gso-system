@@ -120,17 +120,25 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         $expr: { $lte: ["$quantity", "$reorderPoint"] }
     });
 
+    // NEW: Pipeline for Unassigned Assets
+    const unassignedAssetsCountPipeline = Asset.countDocuments({
+        assignedPAR: { $in: [null, ""] },
+        assignedICS: { $in: [null, ""] }
+    });
+
     // --- 3. Execute all queries concurrently ---
     const [
         movableAssetResults,
         immovableAssetResults,
         requisitionResults,
         lowStockCount
+        unassignedAssetsCount // NEW
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
         requisitionPipeline,
         lowStockCountPipeline
+        unassignedAssetsCountPipeline // NEW
     ]);
 
     // Unpack results from the combined pipelines
@@ -202,6 +210,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         immovableAssets: {
             current: currentImmovableCount,
             trend: calculateTrend(currentImmovableCount, previousImmovableCount)
+        },
+        unassignedAssets: { // NEW
+            current: unassignedAssetsCount,
+            trend: 0 // No trend calculation for this yet, can be added later if needed
         }
     };
 
