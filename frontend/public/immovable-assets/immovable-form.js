@@ -141,43 +141,40 @@ function initializeForm(user) {
     }
 
     function populateForm(asset) {
-        // Populate core fields
-        Object.keys(asset).forEach(key => {
-            const field = form.elements[key];
+        // Helper to set value on a form element, including nested ones
+        const setFieldValue = (name, value) => {
+            const field = form.querySelector(`[name="${name}"]`);
             if (field) {
-                if (field.type === 'date' && asset[key]) {
-                    field.value = new Date(asset[key]).toISOString().split('T')[0];
+                if (field.type === 'date' && value) {
+                    field.value = new Date(value).toISOString().split('T')[0];
                 } else {
-                    field.value = asset[key];
+                    // Use empty string for null/undefined to clear the field
+                    field.value = value || '';
                 }
             }
-        });
+        };
 
-        // Populate nested detail fields
-        Object.keys(detailSections).forEach(sectionKey => {
-            const detailsKey = sectionKey.charAt(0).toLowerCase() + sectionKey.slice(1).replace(/\s+/g, '') + 'Details';
-            if (asset[detailsKey]) {
-                Object.keys(asset[detailsKey]).forEach(detailKey => {
-                    const nestedObj = asset[detailsKey];
-                    if (typeof nestedObj[detailKey] === 'object' && nestedObj[detailKey] !== null) {
+        // Populate all fields by iterating through the asset object
+        Object.keys(asset).forEach(key => {
+            const value = asset[key];
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                // Handle nested objects (e.g., landDetails, buildingAndStructureDetails)
+                Object.keys(value).forEach(nestedKey => {
+                    const nestedValue = value[nestedKey];
+                    if (typeof nestedValue === 'object' && nestedValue !== null && !Array.isArray(nestedValue)) {
                         // Handle third-level nesting (e.g., boundaries)
-                        Object.keys(nestedObj[detailKey]).forEach(subKey => {
-                            const fieldName = `${detailsKey}.${detailKey}.${subKey}`;
-                            const field = form.elements[fieldName];
-                            if (field) field.value = nestedObj[detailKey][subKey];
+                        Object.keys(nestedValue).forEach(subKey => {
+                            const fieldName = `${key}.${nestedKey}.${subKey}`;
+                            setFieldValue(fieldName, nestedValue[subKey]);
                         });
                     } else {
-                        const fieldName = `${detailsKey}.${detailKey}`;
-                        const field = form.elements[fieldName];
-                        if (field) {
-                             if (field.type === 'date' && nestedObj[detailKey]) {
-                                field.value = new Date(nestedObj[detailKey]).toISOString().split('T')[0];
-                            } else {
-                                field.value = nestedObj[detailKey];
-                            }
-                        }
+                        const fieldName = `${key}.${nestedKey}`;
+                        setFieldValue(fieldName, nestedValue);
                     }
                 });
+            } else if (!Array.isArray(value)) {
+                // Handle top-level fields
+                setFieldValue(key, value);
             }
         });
 
@@ -185,6 +182,8 @@ function initializeForm(user) {
         if (asset.components && asset.components.length > 0) {
             componentsContainer.innerHTML = ''; // Clear any empty rows
             asset.components.forEach(comp => renderComponent(comp));
+        } else {
+            componentsContainer.innerHTML = ''; // Ensure it's clear if no components
         }
 
         // Populate history tab
@@ -197,6 +196,7 @@ function initializeForm(user) {
             renderAttachments(asset.attachments);
         }
 
+        // Show the correct details section based on the asset type
         toggleTypeSpecificFields(asset.type);
     }
 
