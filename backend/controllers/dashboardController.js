@@ -255,6 +255,40 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
+    // NEW: Pipeline for Sparkline Data (last 30 days)
+    const thirtyDaysAgo = new Date(end);
+    thirtyDaysAgo.setDate(end.getDate() - 30);
+
+    const sparklineDataPipeline = Asset.aggregate([
+        ...matchStage,
+        { $match: { acquisitionDate: { $lte: end } } },
+        {
+            $facet: {
+                initialTotals: [
+                    { $match: { acquisitionDate: { $lt: thirtyDaysAgo } } },
+                    {
+                        $group: {
+                            _id: null,
+                            assetCount: { $sum: 1 },
+                            portfolioValue: { $sum: '$acquisitionCost' }
+                        }
+                    }
+                ],
+                dailyChanges: [
+                    { $match: { acquisitionDate: { $gte: thirtyDaysAgo, $lte: end } } },
+                    {
+                        $group: {
+                            _id: { $dateToString: { format: "%Y-%m-%d", date: "$acquisitionDate" } },
+                            assetCount: { $sum: 1 },
+                            portfolioValue: { $sum: '$acquisitionCost' }
+                        }
+                    },
+                    { $sort: { _id: 1 } }
+                ]
+            }
+        }
+    ]);
+
     // --- 3. Execute all queries concurrently ---
     const [
         movableAssetResults,
@@ -266,7 +300,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         recentTransfersResult, // Existing
         recentImmovableAssetsResult, // NEW
         topSuppliesResult,
-        avgFulfillmentTimeResult // NEW
+        avgFulfillmentTimeResult, // NEW
+        sparklineDataResult // NEW
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
@@ -277,7 +312,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         recentTransfersPipeline, // Existing
         recentImmovableAssetsPipeline, // NEW
         topSuppliesPipeline,
-        avgFulfillmentTimePipeline // NEW
+        avgFulfillmentTimePipeline, // NEW
+        sparklineDataPipeline // NEW
     ]);
 
     // Unpack results from the combined pipelines
@@ -312,6 +348,31 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // NEW: Calculate average fulfillment time in days
     const avgTimeInMs = avgFulfillmentTimeResult[0]?.avgTime || 0;
     const avgFulfillmentTimeInDays = avgTimeInMs > 0 ? (avgTimeInMs / (1000 * 60 * 60 * 24)) : 0;
+
+    // NEW: Process sparkline data
+    const sparklineResults = sparklineDataResult[0] || {};
+    const initialTotals = sparklineResults.initialTotals?.[0] || { assetCount: 0, portfolioValue: 0 };
+    const dailyChangesMap = new Map(
+        (sparklineResults.dailyChanges || []).map(d => [d._id, { assetCount: d.assetCount, portfolioValue: d.portfolioValue }])
+    );
+
+    let currentAssetTotal = initialTotals.assetCount;
+    let currentPortfolioValue = initialTotals.portfolioValue;
+    const assetSparkline = [];
+    const portfolioSparkline = [];
+
+    for (let i = 0; i < 30; i++) {
+        const date = new Date(end);
+        date.setDate(end.getDate() - (29 - i));
+        const dateString = date.toISOString().split('T')[0];
+        const dailyChange = dailyChangesMap.get(dateString);
+        if (dailyChange) {
+            currentAssetTotal += dailyChange.assetCount;
+            currentPortfolioValue += dailyChange.portfolioValue;
+        }
+        assetSparkline.push(currentAssetTotal);
+        portfolioSparkline.push(currentPortfolioValue);
+    }
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
@@ -334,7 +395,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const formattedStats = {
         totalPortfolioValue: {
             current: totalPortfolioValueCurrent,
-            trend: calculateTrend(totalPortfolioValueCurrent, totalPortfolioValuePrevious)
+            trend: calculateTrend(totalPortfolioValueCurrent, totalPortfolioValuePrevious),
+            sparkline: portfolioSparkline // NEW
         },
         lowStockItems: {
             current: lowStockCount,
@@ -342,7 +404,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         },
         totalAssets: {
             current: currentStats.totalAssets || 0,
-            trend: calculateTrend(currentStats.totalAssets || 0, previousStats.totalAssets || 0)
+            trend: calculateTrend(currentStats.totalAssets || 0, previousStats.totalAssets || 0),
+            sparkline: assetSparkline // NEW
         },
         pendingRequisitions: {
             current: currentPendingReqs,

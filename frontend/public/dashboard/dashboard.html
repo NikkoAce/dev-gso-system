@@ -76,7 +76,11 @@
                             </div>
                             <div class="stat-title">Total Portfolio Value</div>
                             <div id="stat-portfolio-value" class="stat-value text-3xl md:text-4xl">Loading...</div>
-                            <div id="stat-portfolio-value-trend" class="stat-desc"></div>
+                            <div id="stat-portfolio-value-trend" class="stat-desc z-10"></div>
+                            <!-- NEW Sparkline Canvas -->
+                            <div class="absolute bottom-0 left-0 right-0 h-16 opacity-50 pointer-events-none">
+                                <canvas id="sparkline-portfolio-value"></canvas>
+                            </div>
                         </div>
                         <!-- Total Assets -->
                         <div id="stat-card-total-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="totalAssets" data-url="../assets/asset-registry.html" data-type="card">
@@ -86,7 +90,11 @@
                             </div>
                             <div class="stat-title">Total Assets</div>
                             <div id="stat-total-assets" class="stat-value text-3xl md:text-4xl">Loading...</div>
-                            <div id="stat-total-assets-trend" class="stat-desc"></div>
+                            <div id="stat-total-assets-trend" class="stat-desc z-10"></div>
+                            <!-- NEW Sparkline Canvas -->
+                            <div class="absolute bottom-0 left-0 right-0 h-16 opacity-50 pointer-events-none">
+                                <canvas id="sparkline-total-assets"></canvas>
+                            </div>
                         </div>
                         <!-- Immovable Assets -->
                         <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="immovableAssets" data-url="../immovable-assets/immovable-registry.html" data-type="card">

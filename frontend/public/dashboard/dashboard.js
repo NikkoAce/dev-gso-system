@@ -2,6 +2,7 @@
 import { fetchWithAuth } from '../js/api.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
+const sparklines = {}; // To hold sparkline chart instances
 let dashboardFilters = {};
 let userPreferences = {};
 const allComponents = {};
@@ -197,6 +198,51 @@ function initializeDashboard(user) {
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
+    function renderSparkline(canvasId, data, color) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+    
+        // Destroy existing chart if it exists to prevent memory leaks
+        if (sparklines[canvasId]) {
+            sparklines[canvasId].destroy();
+        }
+    
+        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 70);
+        gradient.addColorStop(0, `${color}40`); // 25% opacity
+        gradient.addColorStop(1, `${color}00`); // 0% opacity
+    
+        sparklines[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map((_, i) => i), // Dummy labels for 30 days
+                datasets: [{
+                    data: data,
+                    borderColor: color,
+                    borderWidth: 2,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                elements: { point: { radius: 0 } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        display: false,
+                        beginAtZero: false // Allows chart to zoom into the data's range
+                    }
+                }
+            }
+        });
+    }
+
     async function showDetailsModal(detailsId, title) {
         const modal = document.getElementById('details-modal');
         const modalTitle = document.getElementById('details-modal-title');
@@ -344,6 +390,16 @@ function initializeDashboard(user) {
         renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions?.trend || 0);
         renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets?.trend || 0);
         // No trend for unassignedAssets yet, as per backend.
+
+        // NEW: Render sparklines
+        const primaryColor = 'oklch(var(--p))';
+        const secondaryColor = 'oklch(var(--s))';
+        if (stats.totalPortfolioValue?.sparkline) {
+            renderSparkline('sparkline-portfolio-value', stats.totalPortfolioValue.sparkline, primaryColor);
+        }
+        if (stats.totalAssets?.sparkline) {
+            renderSparkline('sparkline-total-assets', stats.totalAssets.sparkline, secondaryColor);
+        }
         lucide.createIcons();
     }
 
