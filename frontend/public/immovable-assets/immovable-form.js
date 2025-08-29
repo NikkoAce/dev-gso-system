@@ -66,14 +66,33 @@ function initializeForm(user) {
     let map = null;
     let marker = null;
 
-    function initializeMap(lat = 14.1155, lng = 122.9550) { // Default to Daet, Camarines Norte
+    function initializeMap(lat = 14.1155, lng = 122.9550) {
         if (map) return; // Already initialized
 
-        map = L.map(mapContainer).setView([lat, lng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // 1. Define Base Layers
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        });
 
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        });
+
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+        });
+
+        const baseLayers = {
+            "Street": osmLayer,
+            "Satellite": satelliteLayer,
+            "Topographic": topoLayer
+        };
+
+        // 2. Initialize Map
+        map = L.map(mapContainer, { center: [lat, lng], zoom: 14, layers: [osmLayer] });
+
+        // 3. Add Layer Control
+        L.control.layers(baseLayers).addTo(map);
         marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
         map.on('click', (e) => {
@@ -242,6 +261,15 @@ function initializeForm(user) {
             updateMarkerAndInputs(asset.latitude, asset.longitude);
         } else {
             initializeMap(); // Initialize with default location
+        }
+
+        // Bind a popup to the marker to show asset details on the form map
+        if (isEditMode && marker) {
+            const popupContent = `
+                <div class="font-bold">${asset.name}</div>
+                <div class="text-xs font-mono text-gray-500">${asset.propertyIndexNumber}</div>
+            `;
+            marker.bindPopup(popupContent).openPopup();
         }
 
         // Populate components

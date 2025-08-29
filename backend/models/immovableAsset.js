@@ -80,7 +80,6 @@ const immovableAssetSchema = new mongoose.Schema({
     latitude: { type: Number },
     longitude: { type: Number },
 
-    
     components: [componentSchema],
     attachments: [attachmentSchema],
     history: [historySchema],

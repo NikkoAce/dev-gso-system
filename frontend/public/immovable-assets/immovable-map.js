@@ -21,12 +21,34 @@ async function initializeAssetMap() {
     const mapContainer = document.getElementById('asset-map');
     if (!mapContainer) return;
 
-    // Default center to Daet, Camarines Norte
-    const map = L.map('asset-map').setView([14.1155, 122.9550], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // 1. Define Base Layers
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    });
+
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+    });
+
+    const baseLayers = {
+        "Street": osmLayer,
+        "Satellite": satelliteLayer,
+        "Topographic": topoLayer
+    };
+
+    // 2. Initialize Map with default layer
+    const map = L.map('asset-map', {
+        center: [14.1155, 122.9550], // Default center to Daet, Camarines Norte
+        zoom: 13,
+        layers: [osmLayer] // Default layer
+    });
+
+    // 3. Add Layer Control
+    L.control.layers(baseLayers).addTo(map);
 
     try {
         const assets = await fetchWithAuth('immovable-assets');
