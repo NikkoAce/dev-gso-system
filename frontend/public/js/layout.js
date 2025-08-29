@@ -24,6 +24,7 @@ const GSO_NAV_CONFIG = [
     icon: 'land-plot', text: 'Immovable Assets', permission: 'immovable:read',
     children: [
       { href: '../immovable-assets/immovable-registry.html', icon: 'list', text: 'Registry', permission: 'immovable:read' },
+      { href: '../immovable-assets/immovable-map.html', icon: 'map', text: 'Asset Map', permission: 'immovable:read' },
       { href: '../immovable-assets/immovable-form.html', icon: 'plus-square', text: 'Add New', permission: 'immovable:create' },
     ]
   },

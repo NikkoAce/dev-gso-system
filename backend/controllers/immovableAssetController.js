@@ -1,556 +1,333 @@
 const asyncHandler = require('express-async-handler');
 const ImmovableAsset = require('../models/immovableAsset');
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
+const mongoose = require('mongoose');
 
-/**
- * Helper function to compare fields and generate history logs for immovable assets.
- * @param {object} original - The original asset object before updates.
- * @param {object} updates - The incoming update data from the request body.
- * @param {object} user - The authenticated user performing the action.
- * @returns {Array<object>} An array of history entry objects.
- */
-const generateUpdateHistory = (original, updates, user) => {
-    const historyEntries = [];
-    const user_name = user.name;
-
-    const format = (value, field) => {
-        if (value instanceof Date) {
-            return value.toLocaleDateString('en-CA');
-        }
-        if (['assessedValue', 'salvageValue', 'floorArea', 'areaSqm', 'lengthKm', 'widthMeters'].includes(field) && typeof value === 'number') {
-            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
-        }
-        if (value === null || value === undefined || value === '') {
-            return 'empty';
-        }
-        return `"${value}"`;
-    };
-
-    // Helper for simple fields
-    const compareAndLog = (field, fieldName, originalObj = original, updatesObj = updates) => {
-        if (updatesObj[field] === undefined) return;
-
-        const originalValue = originalObj[field];
-        const updatedValue = updatesObj[field];
-
-        // Handle date comparison by comparing YYYY-MM-DD strings
-        if (originalValue instanceof Date) {
-            if (new Date(originalValue).toISOString().split('T')[0] !== new Date(updatedValue).toISOString().split('T')[0]) {
-                historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(new Date(updatedValue), field)}.`, user: user_name });
-            }
-            return;
-        }
-
-        // Handle numeric comparison
-        if (typeof originalValue === 'number') {
-            if (parseFloat(originalValue) !== parseFloat(updatedValue)) {
-                historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(parseFloat(updatedValue), field)}.`, user: user_name });
-            }
-            return;
-        }
-
-        // Default string comparison
-        if (String(originalValue ?? '') !== String(updatedValue ?? '')) {
-            historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(updatedValue, field)}.`, user: user_name });
-        }
-    };
-
-    // Helper for nested objects
-    const compareNestedObject = (objKey, objName) => {
-        const originalNested = original[objKey] || {};
-        const updatedNested = updates[objKey];
-
-        if (!updatedNested) return;
-
-        for (const key in updatedNested) {
-            if (key === 'boundaries') { // Special handling for boundaries
-                const originalBoundaries = originalNested.boundaries || {};
-                const updatedBoundaries = updatedNested.boundaries || {};
-                for (const boundaryKey in updatedBoundaries) {
-                    compareAndLog(boundaryKey, `${objName}: Boundary ${boundaryKey.charAt(0).toUpperCase() + boundaryKey.slice(1)}`, originalBoundaries, updatedBoundaries);
-                }
-            } else {
-                const fieldName = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                compareAndLog(key, `${objName}: ${fieldName}`, originalNested, updatedNested);
-            }
-        }
-    };
-
-    // Helper for components array
-    const compareComponents = () => {
-        const originalComponents = original.components || [];
-        const updatedComponents = updates.components;
-
-        if (!updatedComponents) return;
-
-        const originalMap = new Map(originalComponents.map(c => [c.name, c.description]));
-        const updatedMap = new Map(updatedComponents.map(c => [c.name, c.description]));
-
-        // Check for added or modified components
-        updatedMap.forEach((description, name) => {
-            if (!originalMap.has(name)) {
-                historyEntries.push({ event: 'Updated', details: `Component Added: "${name}".`, user: user_name });
-            } else if (originalMap.get(name) !== description) {
-                historyEntries.push({ event: 'Updated', details: `Component "${name}" description updated.`, user: user_name });
-            }
-        });
-
-        // Check for removed components
-        originalMap.forEach((description, name) => {
-            if (!updatedMap.has(name)) {
-                historyEntries.push({ event: 'Updated', details: `Component Removed: "${name}".`, user: user_name });
-            }
-        });
-    };
-
-    // --- Execute Comparisons ---
-
-    // Compare core fields
-    compareAndLog('name', 'Name');
-    compareAndLog('type', 'Type');
-    compareAndLog('location', 'Location');
-    compareAndLog('dateAcquired', 'Date Acquired');
-    compareAndLog('assessedValue', 'Assessed Value');
-    compareAndLog('status', 'Status');
-    compareAndLog('acquisitionMethod', 'Acquisition Method');
-    compareAndLog('condition', 'Condition');
-    compareAndLog('remarks', 'Remarks');
-    compareAndLog('fundSource', 'Fund Source');
-    compareAndLog('accountCode', 'Account Code');
-    compareAndLog('impairmentLosses', 'Impairment Losses');
-
-    // Compare nested detail objects
-    compareNestedObject('landDetails', 'Land Details');
-    compareNestedObject('buildingAndStructureDetails', 'Building Details');
-    compareNestedObject('roadNetworkDetails', 'Road Network Details');
-    compareNestedObject('otherInfrastructureDetails', 'Infrastructure Details');
-
-    // Compare components array
-    compareComponents();
-
-    return historyEntries;
+// Helper function to parse stringified JSON from FormData
+const parseJSON = (string) => {
+    try {
+        return JSON.parse(string);
+    } catch (e) {
+        return undefined;
+    }
 };
 
 /**
- * @desc    Get all immovable assets
+ * @desc    Get immovable assets with pagination, filtering, and sorting
  * @route   GET /api/immovable-assets
- * @access  Private (GSO)
+ * @access  Private
  */
 const getImmovableAssets = asyncHandler(async (req, res) => {
-    // Fetch all assets and sort by the most recently created
-    const assets = await ImmovableAsset.find({}).sort({ createdAt: -1 });
-    res.status(200).json(assets);
+    const { page = 1, limit = 15, sort = 'propertyIndexNumber', order = 'asc', search, type, status } = req.query;
+
+    const query = {};
+    if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        query.$or = [
+            { name: searchRegex },
+            { propertyIndexNumber: searchRegex },
+            { location: searchRegex }
+        ];
+    }
+    if (type) query.type = type;
+    if (status) query.status = status;
+
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [assets, totalDocs] = await Promise.all([
+        ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
+        ImmovableAsset.countDocuments(query)
+    ]);
+
+    res.json({
+        docs: assets,
+        totalDocs,
+        limit: limitNum,
+        totalPages: Math.ceil(totalDocs / limitNum),
+        page: pageNum,
+    });
 });
 
 /**
  * @desc    Create a new immovable asset
  * @route   POST /api/immovable-assets
- * @access  Private (GSO)
+ * @access  Private
  */
 const createImmovableAsset = asyncHandler(async (req, res) => {
-    // Since we are using multipart/form-data, nested objects will be stringified.
-    const parsedBody = {};
-    for (const key in req.body) {
-        try {
-            // Attempt to parse fields that might be JSON
-            parsedBody[key] = JSON.parse(req.body[key]);
-        } catch (e) {
-            // If it's not valid JSON, use the original value
-            parsedBody[key] = req.body[key];
-        }
-    }
+    const {
+        name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
+        fundSource, accountCode, status, acquisitionMethod, condition, remarks,
+        impairmentLosses,
+        // --- NEW: GIS Coordinates ---
+        latitude, longitude,
+        // Stringified JSON fields
+        landDetails, buildingAndStructureDetails, roadNetworkDetails, otherInfrastructureDetails,
+        components, attachmentTitles
+    } = req.body;
 
-    const { name, propertyIndexNumber, type, location, dateAcquired, assessedValue } = parsedBody;
-
-    // Basic validation for required fields
-    if (!name || !propertyIndexNumber || !type || !location || !dateAcquired || !assessedValue) {
-        res.status(400);
-        throw new Error('Please provide all required core asset fields.');
-    }
-
-    // Check if an asset with the same Property Index Number (PIN) already exists
-    const assetExists = await ImmovableAsset.findOne({ propertyIndexNumber });
-    if (assetExists) {
-        res.status(400);
-        throw new Error('An asset with this Property Index Number (PIN) already exists.');
-    }
-
-    const asset = new ImmovableAsset(parsedBody);
-
-    // Add the initial history entry using the authenticated user's name
-    asset.history.push({
-        event: 'Asset Created',
-        details: `Initial record for '${asset.name}' created.`,
-        user: req.user.name
-    });
-
-    const createdAsset = await asset.save();
-
-    // --- Handle File Uploads ---
-    if (req.files && req.files.length > 0) {
-        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
-        const uploadPromises = req.files.map((file, index) => uploadToS3(file, createdAsset._id, attachmentTitles[index] || file.originalname, 'immovable-assets'));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        createdAsset.attachments.push(...uploadedAttachments);
-        createdAsset.history.push({ event: 'Updated', details: `${uploadedAttachments.length} file(s) attached.`, user: req.user.name });
-        await createdAsset.save();
-    }
-
-    res.status(201).json(createdAsset);
-});
-
-const getImmovableAssetById = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id);
-    if (asset) { // Generate pre-signed URLs for attachments before sending
-        const attachmentsWithSignedUrls = await Promise.all(
-            asset.attachments.map(async (att) => ({
-                ...att.toObject(), // Convert Mongoose subdocument to plain object
-                url: await generatePresignedUrl(att.key)
-            }))
-        );
-        asset.attachments = attachmentsWithSignedUrls; // Replace with objects containing signed URLs
-        res.json(asset);
-    } else {
-        res.status(404);
-        throw new Error('Asset not found');
-    }
-});
-
-const updateImmovableAsset = asyncHandler(async (req, res) => {
-    const originalAsset = await ImmovableAsset.findById(req.params.id).lean();
-
-    if (!originalAsset) {
-        res.status(404);
-        throw new Error('Asset not found');
-    }
-
-    const parsedBody = {};
-    for (const key in req.body) {
-        try {
-            parsedBody[key] = JSON.parse(req.body[key]);
-        } catch (e) {
-            parsedBody[key] = req.body[key];
-        }
-    }
-
-    const historyEntries = generateUpdateHistory(originalAsset, parsedBody, req.user);
-
-    // Flatten the parsedBody to create a dot-notation update object.
-    // This is more robust for updating nested fields in MongoDB.
-    const flattenForUpdate = (obj, prefix = '') => {
-        return Object.keys(obj).reduce((acc, k) => {
-            const pre = prefix.length ? prefix + '.' : '';
-            if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
-                Object.assign(acc, flattenForUpdate(obj[k], pre + k));
-            } else {
-                acc[pre + k] = obj[k];
-            }
-            return acc;
-        }, {});
+    const assetData = {
+        name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
+        fundSource, accountCode, status, acquisitionMethod, condition, remarks,
+        impairmentLosses,
+        // --- NEW: GIS Coordinates ---
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        // Parse JSON fields
+        landDetails: parseJSON(landDetails),
+        buildingAndStructureDetails: parseJSON(buildingAndStructureDetails),
+        roadNetworkDetails: parseJSON(roadNetworkDetails),
+        otherInfrastructureDetails: parseJSON(otherInfrastructureDetails),
+        components: parseJSON(components),
+        history: [{ event: 'Created', user: req.user.name, details: 'Asset record created.' }]
     };
 
-    const updatePayload = flattenForUpdate(parsedBody);
+    const asset = await ImmovableAsset.create(assetData);
 
-    // Prepare the update payload for an atomic database operation
-    const updateOperation = {
-        $set: updatePayload,
-        $push: {}
-    };
-
-    if (historyEntries.length > 0) {
-        updateOperation.$push.history = { $each: historyEntries };
-    }
-
-    // --- Handle File Uploads ---
-    if (req.files && req.files.length > 0) {
-        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
-        const uploadPromises = req.files.map((file, index) => uploadToS3(file, originalAsset._id, attachmentTitles[index] || file.originalname, 'immovable-assets'));
-        const newAttachments = await Promise.all(uploadPromises);
-
-        updateOperation.$push.attachments = { $each: newAttachments };
-
-        const attachmentHistory = { event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name };
-        if (updateOperation.$push.history) {
-            updateOperation.$push.history.$each.push(attachmentHistory);
-        } else {
-            updateOperation.$push.history = { $each: [attachmentHistory] };
-        }
-    }
-
-    if (Object.keys(updateOperation.$push).length === 0) {
-        delete updateOperation.$push;
-    }
-
-    const updatedAsset = await ImmovableAsset.findByIdAndUpdate(req.params.id, updateOperation, { new: true, runValidators: true });
-
-    res.json(updatedAsset);
-});
-
-const deleteImmovableAsset = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id);
     if (asset) {
-        // Perform a "soft delete" by changing the status, which is better for auditing.
-        asset.status = 'Disposed';
-        asset.history.push({
-            event: 'Disposed',
-            details: 'Asset marked as disposed.',
-            user: req.user.name
-        });
-        await asset.save();
-        res.json({ message: 'Asset marked as disposed' });
+        // Handle File Uploads
+        if (req.files && req.files.length > 0) {
+            const attachmentTitlesArray = parseJSON(attachmentTitles) || [];
+            const uploadPromises = req.files.map((file, index) =>
+                uploadToS3(file, asset._id, attachmentTitlesArray[index] || file.originalname, 'immovable-assets')
+            );
+            const uploadedAttachments = await Promise.all(uploadPromises);
+            asset.attachments.push(...uploadedAttachments);
+            asset.history.push({ event: 'Updated', details: `${uploadedAttachments.length} file(s) attached.`, user: req.user.name });
+            await asset.save();
+        }
+
+        res.status(201).json(asset);
     } else {
-        res.status(404);
-        throw new Error('Asset not found');
+        res.status(400);
+        throw new Error('Invalid asset data');
     }
 });
 
-const deleteImmovableAssetAttachment = asyncHandler(async (req, res) => {
-    const { id, attachmentKey } = req.params;
-    const asset = await ImmovableAsset.findById(id);
+/**
+ * @desc    Get a single immovable asset by ID
+ * @route   GET /api/immovable-assets/:id
+ * @access  Private
+ */
+const getImmovableAssetById = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id).lean();
 
     if (!asset) {
         res.status(404);
         throw new Error('Asset not found');
     }
 
-    const attachment = asset.attachments.find(att => att.key === decodeURIComponent(attachmentKey));
+    // Generate pre-signed URLs for attachments
+    if (asset.attachments && asset.attachments.length > 0) {
+        asset.attachments = await Promise.all(
+            asset.attachments.map(async (att) => ({
+                ...att,
+                url: await generatePresignedUrl(att.key)
+            }))
+        );
+    }
+    res.json(asset);
+});
+
+/**
+ * @desc    Update an immovable asset
+ * @route   PUT /api/immovable-assets/:id
+ * @access  Private
+ */
+const updateImmovableAsset = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id);
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    // Parse all fields from FormData
+    const updateData = {};
+    for (const key in req.body) {
+        updateData[key] = parseJSON(req.body[key]) ?? req.body[key];
+    }
+
+    // Handle GIS coordinates separately
+    if (req.body.latitude) updateData.latitude = parseFloat(req.body.latitude);
+    if (req.body.longitude) updateData.longitude = parseFloat(req.body.longitude);
+
+    // Apply updates
+    Object.assign(asset, updateData);
+
+    // Handle new attachments
+    if (req.files && req.files.length > 0) {
+        const attachmentTitlesArray = parseJSON(req.body.attachmentTitles) || [];
+        const uploadPromises = req.files.map((file, index) =>
+            uploadToS3(file, asset._id, attachmentTitlesArray[index] || file.originalname, 'immovable-assets')
+        );
+        const newAttachments = await Promise.all(uploadPromises);
+        asset.attachments.push(...newAttachments);
+        asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
+    }
+    
+    asset.history.push({ event: 'Updated', user: req.user.name, details: 'Asset details updated.' });
+
+    const updatedAsset = await asset.save();
+    res.json(updatedAsset);
+});
+
+/**
+ * @desc    Delete an immovable asset
+ * @route   DELETE /api/immovable-assets/:id
+ * @access  Private
+ */
+const deleteImmovableAsset = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+    // Soft delete by changing status
+    asset.status = 'Disposed';
+    asset.history.push({ event: 'Disposed', user: req.user.name, details: 'Asset marked as disposed.' });
+    await asset.save();
+    res.json({ message: 'Asset marked as disposed' });
+});
+
+/**
+ * @desc    Delete an attachment from an immovable asset
+ * @route   DELETE /api/immovable-assets/:id/attachments/:attachmentKey
+ * @access  Private
+ */
+const deleteImmovableAssetAttachment = asyncHandler(async (req, res) => {
+    const { id, attachmentKey } = req.params;
+    const asset = await ImmovableAsset.findById(id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+    const decodedKey = decodeURIComponent(attachmentKey);
+    const attachment = asset.attachments.find(att => att.key === decodedKey);
     if (!attachment) {
         res.status(404);
         throw new Error('Attachment not found');
     }
-
     // Delete from S3
-    const deleteCommand = new DeleteObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: attachment.key,
-    });
-    await s3.send(deleteCommand);
-
+    await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET_NAME, Key: decodedKey }));
     // Remove from MongoDB
-    asset.attachments = asset.attachments.filter(att => att.key !== attachment.key);
+    asset.attachments = asset.attachments.filter(att => att.key !== decodedKey);
     asset.history.push({ event: 'Updated', details: `File removed: "${attachment.originalName}".`, user: req.user.name });
     await asset.save();
-
     res.status(200).json({ message: 'Attachment deleted successfully' });
 });
 
 /**
- * @desc    Generate report for immovable assets
+ * @desc    Generate a report of immovable assets
  * @route   GET /api/immovable-assets/report
- * @access  Private (GSO with report:generate permission)
+ * @access  Private
  */
 const generateImmovableAssetReport = asyncHandler(async (req, res) => {
-    try {
-        // Extract query parameters for filtering (optional)
-        const { type, status, startDate, endDate } = req.query;
-
-        // Build the filter object based on the provided query parameters
-        const filter = {};
-        if (type) {
-            filter.type = type;
-        }
-        if (status) {
-            filter.status = status;
-        }
-         if (startDate && endDate) {
-            filter.dateAcquired = {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
-            };
-        } else if (startDate) {
-            filter.dateAcquired = { $gte: new Date(startDate) };
-        } else if (endDate) {
-            filter.dateAcquired = { $lte: new Date(endDate) };
-        }
-
-        const assets = await ImmovableAsset.find(filter).sort({ propertyIndexNumber: 1 });
-
-        // A more detailed set of headers for a COA-style report
-        const headers = [
-            'Property Index Number',
-            'Asset Name',
-            'Type',
-            'Location',
-            'Acquisition Date',
-            'Acquisition Method',
-            'Assessed Value',
-            'Condition',
-            'Status',
-            'Remarks'
-        ];
-
-        const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
-        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-CA') : 'N/A';
-
-        const rows = assets.map(asset => [
-            asset.propertyIndexNumber,
-            asset.name,
-            asset.type,
-            asset.location,
-            formatDate(asset.dateAcquired),
-            asset.acquisitionMethod || 'N/A',
-            formatCurrency(asset.assessedValue),
-            asset.condition || 'N/A',
-            asset.status,
-            asset.remarks || ''
-        ]);
-
-        // Respond with the formatted report data
-        res.status(200).json({
-            headers,
-            rows
-        });
-    } catch (error) {
-        console.error('Error generating immovable asset report:', error);
-        res.status(500).json({ message: 'Error generating report', error: error.message });
+    const { type, status, startDate, endDate } = req.query;
+    const query = {};
+    if (type) query.type = type;
+    if (status) query.status = status;
+    if (startDate || endDate) {
+        query.dateAcquired = {};
+        if (startDate) query.dateAcquired.$gte = new Date(startDate);
+        if (endDate) query.dateAcquired.$lte = new Date(endDate);
     }
+    const assets = await ImmovableAsset.find(query).sort({ propertyIndexNumber: 1 }).lean();
+    const headers = ['PIN', 'Name', 'Type', 'Location', 'Date Acquired', 'Assessed Value', 'Condition', 'Status'];
+    const rows = assets.map(a => [
+        a.propertyIndexNumber, a.name, a.type, a.location,
+        a.dateAcquired ? new Date(a.dateAcquired).toLocaleDateString('en-CA') : 'N/A',
+        new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(a.assessedValue || 0),
+        a.condition || '', a.status || ''
+    ]);
+    res.json({ headers, rows });
 });
 
 /**
- * @desc    Get data for a Real Property Card for a single asset
+ * @desc    Generate a Real Property Card (history)
  * @route   GET /api/immovable-assets/:id/property-card
- * @access  Private (GSO with report:generate permission)
+ * @access  Private
  */
 const generatePropertyCardReport = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id);
-
+    const asset = await ImmovableAsset.findById(req.params.id).lean();
     if (!asset) {
         res.status(404);
         throw new Error('Asset not found');
     }
-
-    // The full asset object contains all the necessary details for the property card,
-    // including the history sub-document.
-    res.status(200).json(asset);
+    res.json(asset);
 });
 
 /**
- * @desc    Get data for a Real Property Ledger Card (Depreciation)
+ * @desc    Generate a Real Property Ledger Card (depreciation)
  * @route   GET /api/immovable-assets/:id/ledger-card
- * @access  Private (GSO with report:generate permission)
+ * @access  Private
  */
 const generateImmovableLedgerCard = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id).lean(); // .lean() is efficient for read-only operations
-
+    const asset = await ImmovableAsset.findById(req.params.id).lean();
     if (!asset) {
-        res.status(404);
-        throw new Error('Asset not found');
+        res.status(404); throw new Error('Asset not found');
     }
-
-    if (!['Building', 'Other Structures'].includes(asset.type) || !asset.buildingAndStructureDetails) {
-        res.status(400);
-        throw new Error('Depreciation ledger card is only applicable for Buildings and Other Structures with depreciation details.');
+    if (!['Building', 'Other Structures'].includes(asset.type)) {
+        res.status(400); throw new Error('Ledger cards are only applicable for Buildings and Other Structures.');
     }
 
     const details = asset.buildingAndStructureDetails;
     const acquisitionDate = new Date(asset.dateAcquired);
     const depreciableCost = asset.assessedValue - (details.salvageValue || 0);
     const annualDepreciation = details.estimatedUsefulLife > 0 ? depreciableCost / details.estimatedUsefulLife : 0;
-    const dailyDepreciation = annualDepreciation / 365.25;
-
-    // Combine main history and repair history into a single log for chronological processing
-    const combinedLog = [
-        ...asset.history.map(h => ({ ...h, logType: 'event' })),
-        ...(asset.repairHistory || []).map(r => ({ ...r, logType: 'repair' }))
-    ].sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const ledgerRows = [];
-    const currentCost = asset.assessedValue;
-    const totalImpairment = asset.impairmentLosses || 0;
+    let currentBookValue = asset.assessedValue;
 
-    combinedLog.forEach(logEntry => {
-        const eventDate = new Date(logEntry.date);
-        const daysSinceAcquisition = (eventDate - acquisitionDate) / (1000 * 60 * 60 * 24);
-        
-        let accumulatedDepreciation = 0;
-        if (daysSinceAcquisition > 0) {
-            accumulatedDepreciation = Math.min(dailyDepreciation * daysSinceAcquisition, depreciableCost);
-        }
-        const adjustedCost = currentCost - accumulatedDepreciation - totalImpairment;
+    for (let i = 0; i <= details.estimatedUsefulLife; i++) {
+        const yearEndDate = new Date(acquisitionDate.getFullYear() + i, 11, 31);
+        const accumulatedDepreciation = Math.min(annualDepreciation * (i + 1), depreciableCost);
+        currentBookValue = asset.assessedValue - accumulatedDepreciation;
 
-        const row = {
-            date: logEntry.date,
-            reference: 'N/A', // Placeholder
+        ledgerRows.push({
+            date: yearEndDate,
+            reference: 'N/A',
+            particulars: `Depreciation for Year ${i + 1}`,
             propertyId: asset.propertyIndexNumber,
-            cost: currentCost,
+            cost: asset.assessedValue,
             estimatedUsefulLife: details.estimatedUsefulLife,
             accumulatedDepreciation: accumulatedDepreciation,
-            impairmentLosses: totalImpairment,
-            adjustedCost: adjustedCost,
-            repairNature: 'N/A', // Placeholder
-            repairAmount: 0,
-        };
-
-        if (logEntry.logType === 'event') {
-            row.particulars = logEntry.details;
-            row.remarks = logEntry.event;
-        } else if (logEntry.logType === 'repair') {
-            row.particulars = `Repair: ${logEntry.natureOfRepair}`;
-            row.remarks = 'Repair/Maintenance';
-            row.repairNature = logEntry.natureOfRepair;
-            row.repairAmount = logEntry.amount;
-        }
-        ledgerRows.push(row);
-    });
-
-    res.status(200).json({ asset, ledgerRows });
+            impairmentLosses: asset.impairmentLosses || 0,
+            adjustedCost: currentBookValue,
+            repairNature: '', repairAmount: '', remarks: ''
+        });
+    }
+    res.json({ asset, ledgerRows });
 });
 
 /**
  * @desc    Add a repair record to an immovable asset
  * @route   POST /api/immovable-assets/:id/repairs
- * @access  Private (IMMOVABLE_UPDATE)
+ * @access  Private
  */
 const addRepairRecord = asyncHandler(async (req, res) => {
-    const { date, natureOfRepair, amount } = req.body;
-
-    if (!date || !natureOfRepair || !amount) {
-        res.status(400);
-        throw new Error('Date, Nature of Repair, and Amount are required.');
-    }
-
     const asset = await ImmovableAsset.findById(req.params.id);
-    if (!asset) {
-        res.status(404);
-        throw new Error('Asset not found');
-    }
-
-    asset.repairHistory.push({ date, natureOfRepair, amount });
-    asset.history.push({ event: 'Updated', details: `Repair added: ${natureOfRepair} for ${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount)}.`, user: req.user.name });
-
-    const updatedAsset = await asset.save();
-    res.status(201).json(updatedAsset);
+    if (!asset) { res.status(404); throw new Error('Asset not found'); }
+    asset.repairHistory.push(req.body);
+    asset.history.push({ event: 'Updated', details: `Repair added: ${req.body.natureOfRepair}`, user: req.user.name });
+    await asset.save();
+    res.status(201).json(asset);
 });
 
 /**
  * @desc    Delete a repair record from an immovable asset
  * @route   DELETE /api/immovable-assets/:id/repairs/:repairId
- * @access  Private (IMMOVABLE_UPDATE)
+ * @access  Private
  */
 const deleteRepairRecord = asyncHandler(async (req, res) => {
     const asset = await ImmovableAsset.findById(req.params.id);
-    if (!asset) {
-        res.status(404);
-        throw new Error('Asset not found');
-    }
-
+    if (!asset) { res.status(404); throw new Error('Asset not found'); }
     asset.repairHistory.pull({ _id: req.params.repairId });
     asset.history.push({ event: 'Updated', details: `Repair record removed.`, user: req.user.name });
-
-    const updatedAsset = await asset.save();
-    res.status(200).json(updatedAsset);
+    await asset.save();
+    res.status(200).json(asset);
 });
 
-module.exports = {
-    createImmovableAsset,
-    getImmovableAssets,
-    getImmovableAssetById,
-    updateImmovableAsset,
-    deleteImmovableAsset,
-    deleteImmovableAssetAttachment,
-    generateImmovableAssetReport,
-    generatePropertyCardReport,
-    generateImmovableLedgerCard,
-    addRepairRecord,
-    deleteRepairRecord
-};
+module.exports = { createImmovableAsset, updateImmovableAsset, getImmovableAssets, getImmovableAssetById, deleteImmovableAsset, deleteImmovableAssetAttachment, generateImmovableAssetReport, generatePropertyCardReport, generateImmovableLedgerCard, addRepairRecord, deleteRepairRecord };

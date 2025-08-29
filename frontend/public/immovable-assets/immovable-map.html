@@ -1,0 +1,51 @@
+<!-- FILE: frontend/public/immovable-assets/immovable-map.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immovable Asset Map - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <script type="module" src="/js/auth.js" defer></script>
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar is dynamically loaded by layout.js -->
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 id="page-title" class="text-3xl font-bold text-gray-800">Immovable Asset Map</h1>
+                    <a href="./immovable-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
+                </div>
+                <div class="card bg-base-100 border">
+                    <div id="asset-map" class="h-[75vh] w-full rounded-lg z-0">
+                        <!-- Loading state -->
+                        <div class="flex items-center justify-center h-full"><i data-lucide="loader-2" class="animate-spin h-10 w-10 text-gray-400"></i></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./immovable-map.js"></script>
+</body>
+</html>

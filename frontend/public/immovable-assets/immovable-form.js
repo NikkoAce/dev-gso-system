@@ -49,6 +49,10 @@ function initializeForm(user) {
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
     const repairsContainer = document.getElementById('repairs-container');
     const repairForm = document.getElementById('repair-form');
+    // --- NEW: GIS Elements ---
+    const mapContainer = document.getElementById('map');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -57,6 +61,42 @@ function initializeForm(user) {
         'Road Network': document.getElementById('road-details-section'),
         'Other Public Infrastructure': document.getElementById('infra-details-section'),
     };
+
+    // --- NEW: GIS LOGIC ---
+    let map = null;
+    let marker = null;
+
+    function initializeMap(lat = 14.1155, lng = 122.9550) { // Default to Daet, Camarines Norte
+        if (map) return; // Already initialized
+
+        map = L.map(mapContainer).setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+        map.on('click', (e) => {
+            const { lat, lng } = e.latlng;
+            updateMarkerAndInputs(lat, lng);
+        });
+
+        marker.on('dragend', (e) => {
+            const { lat, lng } = e.target.getLatLng();
+            updateMarkerAndInputs(lat, lng);
+        });
+    }
+
+    function updateMarkerAndInputs(lat, lng) {
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        }
+        if (map) {
+            map.panTo([lat, lng]);
+        }
+        latitudeInput.value = lat.toFixed(6);
+        longitudeInput.value = lng.toFixed(6);
+    }
 
     // --- UI LOGIC ---
     function toggleTypeSpecificFields(selectedType) {
@@ -195,6 +235,14 @@ function initializeForm(user) {
                 setFieldValue(key, value);
             }
         });
+
+        // --- NEW: Populate GIS fields and map ---
+        if (asset.latitude && asset.longitude) {
+            initializeMap(asset.latitude, asset.longitude);
+            updateMarkerAndInputs(asset.latitude, asset.longitude);
+        } else {
+            initializeMap(); // Initialize with default location
+        }
 
         // Populate components
         if (asset.components && asset.components.length > 0) {
@@ -340,6 +388,7 @@ function initializeForm(user) {
         formTitle.textContent = 'Edit Immovable Asset';
         loadAssetForEditing();
     } else {
+        initializeMap(); // Initialize map for new asset
         toggleTypeSpecificFields(typeSelect.value); // Show default section
     }
 

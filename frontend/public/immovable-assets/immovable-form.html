@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
     <link href="../css/output.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../css/style.css">
     <script type="module" src="/js/auth.js" defer></script>
@@ -123,6 +125,26 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- GIS Location -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">GIS Location</h2>
+                                    <p class="text-sm text-base-content/70 -mt-2">Click on the map to set the precise location of the asset.</p>
+                                    <div id="map" class="h-64 w-full rounded-lg mt-2 z-0"></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <div class="form-control">
+                                            <label for="latitude" class="label"><span class="label-text">Latitude</span></label>
+                                            <input type="number" id="latitude" name="latitude" class="input input-bordered" step="any" readonly>
+                                        </div>
+                                        <div class="form-control">
+                                            <label for="longitude" class="label"><span class="label-text">Longitude</span></label>
+                                            <input type="number" id="longitude" name="longitude" class="input input-bordered" step="any" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             <!-- Components -->
                             <div class="card bg-base-100 border">
@@ -268,6 +290,8 @@
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast toast-top toast-end"></div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="../js/layout.js"></script>
     <script type="module" src="./immovable-form.js"></script>
 </body>
