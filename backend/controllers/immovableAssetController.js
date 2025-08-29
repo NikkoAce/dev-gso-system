@@ -238,8 +238,16 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
         asset.attachments.push(...newAttachments);
         asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
     }
-    
-    asset.history.push({ event: 'Updated', user: req.user.name, details: 'Asset details updated.' });
+
+    // Check if parentAsset was part of the update and if it changed
+    const originalParentId = asset.parentAsset ? asset.parentAsset.toString() : null;
+    const newParentId = updateData.parentAsset ? updateData.parentAsset.toString() : null;
+
+    if (originalParentId !== newParentId) {
+        asset.history.push({ event: 'Updated', user: req.user.name, details: `Parent asset link changed.` });
+    } else {
+        asset.history.push({ event: 'Updated', user: req.user.name, details: 'Asset details updated.' });
+    }
 
     const updatedAsset = await asset.save();
     res.json(updatedAsset);

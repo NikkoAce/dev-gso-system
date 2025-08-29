@@ -69,6 +69,7 @@ function initializeForm(user) {
     let map = null;
     let marker = null;
     let assetGeometry = null; // To store GeoJSON geometry
+    let drawnItems = null; // To hold the feature group for drawing
 
     function initializeMap(lat = 14.1155, lng = 122.9550) {
         if (map) return; // Already initialized
@@ -96,7 +97,7 @@ function initializeForm(user) {
         const overlayMaps = {};
 
         // NEW: Add a feature group for drawn items
-        const drawnItems = new L.FeatureGroup();
+        drawnItems = new L.FeatureGroup();
 
 
         // 2. Initialize Map
@@ -173,6 +174,7 @@ function initializeForm(user) {
             const layer = e.layer;
             drawnItems.clearLayers(); // Only allow one shape at a time
             marker?.remove(); // Remove the old point marker if it exists
+            marker = null;
             drawnItems.addLayer(layer);
             assetGeometry = layer.toGeoJSON().geometry;
             updateLatLngFromGeometry(layer);
@@ -198,11 +200,13 @@ function initializeForm(user) {
         });
 
         // Only add the default marker if no geometry will be loaded
-        if (!assetId) {
+        if (!isEditMode) {
             marker = L.marker([lat, lng], { draggable: true }).addTo(map);
             map.on('click', (e) => {
-                const { lat, lng } = e.latlng;
-                updateMarkerAndInputs(lat, lng);
+                if (drawnItems.getLayers().length === 0) { // Only respond to clicks if no shape is drawn
+                    const { lat, lng } = e.latlng;
+                    updateMarkerAndInputs(lat, lng);
+                }
             });
             marker.on('dragend', (e) => {
                 const { lat, lng } = e.target.getLatLng();
@@ -428,21 +432,27 @@ function initializeForm(user) {
         });
 
         // --- REVISED: Populate GIS fields and map, prioritizing drawn geometry ---
-        const drawnItems = map?.getLayer(1); // Assuming drawnItems is the second layer added
         if (asset.geometry && drawnItems) {
             assetGeometry = asset.geometry;
             const geoJsonLayer = L.geoJSON(asset.geometry, {
                 style: { color: '#f06eaa' }
             });
+            drawnItems.clearLayers();
             drawnItems.addLayer(geoJsonLayer);
             map.fitBounds(geoJsonLayer.getBounds());
             updateLatLngFromGeometry(geoJsonLayer.getLayers()[0]);
             marker?.remove();
+            marker = null;
         } else if (asset.latitude && asset.longitude) {
-            initializeMap(asset.latitude, asset.longitude);
+            // Map is already initialized and centered. We just need to ensure a marker exists for editing.
+            if (!marker) {
+                marker = L.marker([asset.latitude, asset.longitude], { draggable: true }).addTo(map);
+                marker.on('dragend', (e) => {
+                    const { lat, lng } = e.target.getLatLng();
+                    updateMarkerAndInputs(lat, lng);
+                });
+            }
             updateMarkerAndInputs(asset.latitude, asset.longitude);
-        } else {
-            initializeMap(); // Initialize with default location
         }
 
         // Bind a popup to the marker to show asset details on the form map
@@ -498,6 +508,8 @@ function initializeForm(user) {
     async function loadAssetForEditing() {
         try {
             const asset = await fetchWithAuth(`${API_ENDPOINT}/${assetId}`);
+            // Initialize map with asset's location if available, otherwise default.
+            initializeMap(asset.latitude, asset.longitude);
             populateForm(asset);
             // Load potential parents *after* populating the form, using the correct asset type.
             loadPotentialParents(asset.type);
@@ -613,7 +625,7 @@ function initializeForm(user) {
     // --- INITIALIZATION ---
     if (isEditMode) {
         formTitle.textContent = 'Edit Immovable Asset';
-        loadAssetForEditing();
+        loadAssetForEditing(); // This now initializes the map as well
     } else {
         initializeMap(); // Initialize map for new asset
         toggleTypeSpecificFields(typeSelect.value); // Show default section
