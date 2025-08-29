@@ -40,6 +40,9 @@ async function initializeAssetMap() {
         "Topographic": topoLayer
     };
 
+    // NEW: Define Overlay Layers container
+    const overlayMaps = {};
+
     // 2. Initialize Map with default layer
     const map = L.map('asset-map', {
         center: [14.1155, 122.9550], // Default center to Daet, Camarines Norte
@@ -47,8 +50,45 @@ async function initializeAssetMap() {
         layers: [osmLayer] // Default layer
     });
 
-    // 3. Add Layer Control
-    L.control.layers(baseLayers).addTo(map);
+    // NEW: Asynchronously load and add overlay layers
+    const addOverlayLayers = async () => {
+        try {
+            const floodHazardResponse = await fetch('../gis-data/flood_hazard.geojson');
+            if (floodHazardResponse.ok) {
+                const floodHazardData = await floodHazardResponse.json();
+                const floodHazardLayer = L.geoJSON(floodHazardData, {
+                    style: function (feature) {
+                        // Style polygons based on risk level property
+                        switch (feature.properties.risk_level) {
+                            case 'High': return { color: "#e53e3e", weight: 1, opacity: 0.7, fillOpacity: 0.4 };
+                            case 'Medium': return { color: "#dd6b20", weight: 1, opacity: 0.7, fillOpacity: 0.4 };
+                            default: return { color: "#38a169", weight: 1, opacity: 0.7, fillOpacity: 0.4 };
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.description) {
+                            layer.bindPopup(`<strong>Risk: ${feature.properties.risk_level}</strong><p>${feature.properties.description}</p>`);
+                        }
+                    }
+                });
+                overlayMaps["Flood Hazard Zones"] = floodHazardLayer;
+            }
+        } catch (e) {
+            console.error("Could not load flood hazard data:", e);
+        }
+        // 3. (MODIFIED) Add Layer Control with Overlays
+        L.control.layers(baseLayers, overlayMaps).addTo(map);
+    };
+    addOverlayLayers();
+
+    // 4. NEW: Add Geosearch control
+    const searchControl = new GeoSearch.GeoSearchControl({
+        provider: new GeoSearch.OpenStreetMapProvider(),
+        style: 'bar', // 'bar' or 'button'
+        showMarker: false, // We don't need a permanent marker for search results
+        autoClose: true,
+    });
+    map.addControl(searchControl);
 
     try {
         const assets = await fetchWithAuth('immovable-assets');

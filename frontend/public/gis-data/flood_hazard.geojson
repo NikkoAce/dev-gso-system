@@ -1,0 +1,43 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "risk_level": "High",
+        "description": "High susceptibility to flooding. Expected to be inundated during heavy rainfall."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [122.950, 14.120],
+            [122.960, 14.120],
+            [122.960, 14.125],
+            [122.950, 14.125],
+            [122.950, 14.120]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "risk_level": "Medium",
+        "description": "Moderate susceptibility to flooding. May experience flooding during prolonged or intense rainfall."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [122.962, 14.115],
+            [122.972, 14.115],
+            [122.972, 14.120],
+            [122.962, 14.120],
+            [122.962, 14.115]
+          ]
+        ]
+      }
+    }
+  ]
+}

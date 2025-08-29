@@ -88,11 +88,56 @@ function initializeForm(user) {
             "Topographic": topoLayer
         };
 
+        // NEW: Define Overlay Layers container
+        const overlayMaps = {};
+
         // 2. Initialize Map
         map = L.map(mapContainer, { center: [lat, lng], zoom: 14, layers: [osmLayer] });
 
-        // 3. Add Layer Control
-        L.control.layers(baseLayers).addTo(map);
+        // NEW: Asynchronously load and add overlay layers
+        const addOverlayLayers = async () => {
+            try {
+                const floodHazardResponse = await fetch('../gis-data/flood_hazard.geojson');
+                if (floodHazardResponse.ok) {
+                    const floodHazardData = await floodHazardResponse.json();
+                    const floodHazardLayer = L.geoJSON(floodHazardData, {
+                        style: function (feature) {
+                            // Style polygons based on risk level property
+                            switch (feature.properties.risk_level) {
+                                case 'High': return { color: "#e53e3e", weight: 1, opacity: 0.7, fillOpacity: 0.4 };
+                                case 'Medium': return { color: "#dd6b20", weight: 1, opacity: 0.7, fillOpacity: 0.4 };
+                                default: return { color: "#38a169", weight: 1, opacity: 0.7, fillOpacity: 0.4 };
+                            }
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties && feature.properties.description) {
+                                layer.bindPopup(`<strong>Risk: ${feature.properties.risk_level}</strong><p>${feature.properties.description}</p>`);
+                            }
+                        }
+                    });
+                    overlayMaps["Flood Hazard Zones"] = floodHazardLayer;
+                }
+            } catch (e) {
+                console.error("Could not load flood hazard data:", e);
+            }
+            // 3. (MODIFIED) Add Layer Control with Overlays
+            L.control.layers(baseLayers, overlayMaps).addTo(map);
+        };
+        addOverlayLayers();
+
+        // 4. NEW: Add Geosearch control
+        const searchControl = new GeoSearch.GeoSearchControl({
+            provider: new GeoSearch.OpenStreetMapProvider(),
+            style: 'bar',
+            showMarker: false, // We will manage our own marker
+            autoClose: true,
+        });
+        map.addControl(searchControl);
+
+        // 5. NEW: Listen for search results to update our marker and inputs
+        map.on('geosearch/showlocation', (result) => {
+            updateMarkerAndInputs(result.location.y, result.location.x);
+        });
         marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
         map.on('click', (e) => {
