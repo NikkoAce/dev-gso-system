@@ -90,6 +90,9 @@ async function initializeAssetMap() {
     });
     map.addControl(searchControl);
 
+    // Add the fullscreen control
+    map.addControl(new L.Control.Fullscreen());
+
     try {
         // The API now consistently returns a paginated object structure
         const response = await fetchWithAuth('immovable-assets');
