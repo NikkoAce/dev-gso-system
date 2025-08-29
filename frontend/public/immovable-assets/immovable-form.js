@@ -59,6 +59,9 @@ function initializeForm(user) {
     const fullscreenIcon = document.getElementById('fullscreen-icon');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
+    // Get the parent containers that are causing the overflow issue
+    const mainContentArea = document.querySelector('main');
+    const mainPanel = mainContentArea.parentElement;
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -650,6 +653,10 @@ function initializeForm(user) {
         fullscreenMapBtn.addEventListener('click', () => {
             gisLocationCard.classList.toggle('gis-fullscreen');
             document.body.classList.toggle('overflow-hidden');
+            // NEW: Toggle overflow on parents to break the containing block
+            mainPanel.classList.toggle('force-overflow-visible');
+            mainContentArea.classList.toggle('force-overflow-visible');
+
             const isFullscreen = gisLocationCard.classList.contains('gis-fullscreen');
 
             // Change icon based on state
