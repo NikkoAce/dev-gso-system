@@ -623,10 +623,12 @@ function initializeForm(user) {
 
         // 2. Stringify nested objects and append to FormData
         Object.keys(assetData).forEach(key => {
-            if (typeof assetData[key] === 'object' && assetData[key] !== null) {
-                formData.append(key, JSON.stringify(assetData[key]));
-            } else if (assetData[key] !== null && assetData[key] !== undefined) {
-                formData.append(key, assetData[key]);
+            const value = assetData[key];
+            if (typeof value === 'object' && value !== null) {
+                formData.append(key, JSON.stringify(value));
+            } else if (value !== undefined) { // Allow null to be processed
+                // If the value is null, append an empty string. The backend will interpret this as clearing the field.
+                formData.append(key, value === null ? '' : value);
             }
         });
 
