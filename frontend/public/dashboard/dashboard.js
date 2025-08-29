@@ -207,9 +207,13 @@ function initializeDashboard(user) {
             sparklines[canvasId].destroy();
         }
     
-        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 70);
-        gradient.addColorStop(0, `${color}40`); // 25% opacity
-        gradient.addColorStop(1, `${color}00`); // 0% opacity
+        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 70);        
+        // The color string is expected to be in a format like 'oklch(L C H)'.
+        // We modify it to add the alpha channel for the gradient.
+        const colorWithAlpha25 = color.replace(')', ' / 0.25)');
+        const colorWithAlpha0 = color.replace(')', ' / 0)');
+        gradient.addColorStop(0, colorWithAlpha25);
+        gradient.addColorStop(1, colorWithAlpha0);
     
         sparklines[canvasId] = new Chart(ctx, {
             type: 'line',
@@ -392,8 +396,10 @@ function initializeDashboard(user) {
         // No trend for unassignedAssets yet, as per backend.
 
         // NEW: Render sparklines
-        const primaryColor = 'oklch(var(--p))';
-        const secondaryColor = 'oklch(var(--s))';
+        const computedStyle = getComputedStyle(document.documentElement);
+        const primaryColor = `oklch(${computedStyle.getPropertyValue('--p').trim()})`;
+        const secondaryColor = `oklch(${computedStyle.getPropertyValue('--s').trim()})`;
+
         if (stats.totalPortfolioValue?.sparkline) {
             renderSparkline('sparkline-portfolio-value', stats.totalPortfolioValue.sparkline, primaryColor);
         }
