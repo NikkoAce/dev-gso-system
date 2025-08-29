@@ -113,7 +113,7 @@ function getSidebarHTML(user) {
   return `
     <!-- Header -->
     <div class="p-4 border-b border-base-300 flex flex-col items-center gap-1">
-      <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-14 w-14 mb-1">
+      <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20 mb-1">
       <div class="text-center">
         <h1 class="text-lg font-bold leading-tight">LGU Daet</h1>
         <p class="text-xs text-gray-500">GSO Management System</p>
