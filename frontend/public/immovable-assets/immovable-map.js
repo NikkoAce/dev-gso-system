@@ -96,16 +96,16 @@ async function initializeAssetMap() {
     try {
         // The API now consistently returns a paginated object structure
         const response = await fetchWithAuth('immovable-assets');
-        const assetsWithCoords = response.docs.filter(asset => asset.latitude && asset.longitude);
+        const assetsWithLocation = response.docs.filter(asset => asset.geometry || (asset.latitude && asset.longitude));
 
-        if (assetsWithCoords.length === 0) {
+        if (assetsWithLocation.length === 0) {
             mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No assets with location data found.</div>';
             return;
         }
 
         const markers = L.markerClusterGroup();
 
-        assetsWithCoords.forEach(asset => {
+        assetsWithLocation.forEach(asset => {
             const popupContent = `
                 <div class="font-bold text-base">${asset.name}</div>
                 <div class="text-sm text-gray-600">${asset.type}</div>
@@ -113,9 +113,19 @@ async function initializeAssetMap() {
                 <hr class="my-2">
                 <a href="./immovable-form.html?id=${asset._id}" class="text-blue-600 hover:underline">View/Edit Details &rarr;</a>
             `;
-            const marker = L.marker([asset.latitude, asset.longitude])
-                .bindPopup(popupContent);
-            markers.addLayer(marker);
+            let layer;
+
+            if (asset.geometry) {
+                // If geometry exists, render it as a shape
+                layer = L.geoJSON(asset.geometry, {
+                    style: () => ({ color: '#3388ff' }) // Default style for shapes
+                });
+            } else {
+                // Fallback to a point marker if no geometry is present
+                layer = L.marker([asset.latitude, asset.longitude]);
+            }
+            layer.bindPopup(popupContent);
+            markers.addLayer(layer);
         });
 
         map.addLayer(markers);

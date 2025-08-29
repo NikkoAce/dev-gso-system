@@ -68,6 +68,7 @@ function initializeForm(user) {
     // --- NEW: GIS LOGIC ---
     let map = null;
     let marker = null;
+    let assetGeometry = null; // To store GeoJSON geometry
 
     function initializeMap(lat = 14.1155, lng = 122.9550) {
         if (map) return; // Already initialized
@@ -94,12 +95,18 @@ function initializeForm(user) {
         // NEW: Define Overlay Layers container
         const overlayMaps = {};
 
+        // NEW: Add a feature group for drawn items
+        const drawnItems = new L.FeatureGroup();
+
+
         // 2. Initialize Map
         map = L.map(mapContainer, {
             center: [lat, lng],
             zoom: 14,
             layers: [osmLayer]
         });
+
+        map.addLayer(drawnItems);
 
         // NEW: Asynchronously load and add overlay layers
         const addOverlayLayers = async () => {
@@ -144,21 +151,64 @@ function initializeForm(user) {
         });
         map.addControl(searchControl);
 
+        // NEW: Add draw controls
+        const drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems,
+                remove: true
+            },
+            draw: {
+                polygon: { allowIntersection: false, shapeOptions: { color: '#f06eaa' } },
+                polyline: { shapeOptions: { color: '#f06eaa' } },
+                rectangle: { shapeOptions: { color: '#f06eaa' } },
+                circle: false, // Circles are not standard GeoJSON
+                circlemarker: false,
+                marker: true // Keep marker for point locations
+            }
+        });
+        map.addControl(drawControl);
+
+        // NEW: Handle draw events
+        map.on(L.Draw.Event.CREATED, function (e) {
+            const layer = e.layer;
+            drawnItems.clearLayers(); // Only allow one shape at a time
+            marker?.remove(); // Remove the old point marker if it exists
+            drawnItems.addLayer(layer);
+            assetGeometry = layer.toGeoJSON().geometry;
+            updateLatLngFromGeometry(layer);
+        });
+
+        map.on(L.Draw.Event.EDITED, function (e) {
+            const layers = e.layers;
+            layers.eachLayer(function (layer) {
+                assetGeometry = layer.toGeoJSON().geometry;
+                updateLatLngFromGeometry(layer);
+            });
+        });
+
+        map.on(L.Draw.Event.DELETED, function () {
+            assetGeometry = null;
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+        });
+
         // 5. NEW: Listen for search results to update our marker and inputs
         map.on('geosearch/showlocation', (result) => {
             updateMarkerAndInputs(result.location.y, result.location.x);
         });
-        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-        map.on('click', (e) => {
-            const { lat, lng } = e.latlng;
-            updateMarkerAndInputs(lat, lng);
-        });
-
-        marker.on('dragend', (e) => {
-            const { lat, lng } = e.target.getLatLng();
-            updateMarkerAndInputs(lat, lng);
-        });
+        // Only add the default marker if no geometry will be loaded
+        if (!assetId) {
+            marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                updateMarkerAndInputs(lat, lng);
+            });
+            marker.on('dragend', (e) => {
+                const { lat, lng } = e.target.getLatLng();
+                updateMarkerAndInputs(lat, lng);
+            });
+        }
     }
 
     function updateMarkerAndInputs(lat, lng) {
@@ -167,6 +217,19 @@ function initializeForm(user) {
         }
         if (map) {
             map.panTo([lat, lng]);
+        }
+        latitudeInput.value = lat.toFixed(6);
+        longitudeInput.value = lng.toFixed(6);
+    }
+
+    function updateLatLngFromGeometry(layer) {
+        let lat, lng;
+        if (layer.getLatLng) { // It's a marker
+            ({ lat, lng } = layer.getLatLng());
+        } else { // It's a polygon or polyline
+            const center = layer.getBounds().getCenter();
+            lat = center.lat;
+            lng = center.lng;
         }
         latitudeInput.value = lat.toFixed(6);
         longitudeInput.value = lng.toFixed(6);
@@ -364,8 +427,18 @@ function initializeForm(user) {
             }
         });
 
-        // --- NEW: Populate GIS fields and map ---
-        if (asset.latitude && asset.longitude) {
+        // --- REVISED: Populate GIS fields and map, prioritizing drawn geometry ---
+        const drawnItems = map?.getLayer(1); // Assuming drawnItems is the second layer added
+        if (asset.geometry && drawnItems) {
+            assetGeometry = asset.geometry;
+            const geoJsonLayer = L.geoJSON(asset.geometry, {
+                style: { color: '#f06eaa' }
+            });
+            drawnItems.addLayer(geoJsonLayer);
+            map.fitBounds(geoJsonLayer.getBounds());
+            updateLatLngFromGeometry(geoJsonLayer.getLayers()[0]);
+            marker?.remove();
+        } else if (asset.latitude && asset.longitude) {
             initializeMap(asset.latitude, asset.longitude);
             updateMarkerAndInputs(asset.latitude, asset.longitude);
         } else {
@@ -482,6 +555,11 @@ function initializeForm(user) {
         formData.append('components', JSON.stringify(assetData.components));
 
         // Append new files and their titles
+        // NEW: Add geometry data if it exists
+        if (assetGeometry) {
+            formData.append('geometry', JSON.stringify(assetGeometry));
+        }
+
         const attachmentTitles = [];
         const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
         

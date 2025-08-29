@@ -85,7 +85,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
         impairmentLosses, parentAsset,
         // --- NEW: GIS Coordinates ---
         latitude, longitude,
-        // Stringified JSON fields
+        geometry, // Stringified JSON fields
         landDetails, buildingAndStructureDetails, roadNetworkDetails, otherInfrastructureDetails,
         components, attachmentTitles
     } = req.body;
@@ -114,6 +114,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
         // --- NEW: GIS Coordinates ---
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
+        geometry: parseJSON(geometry),
         // Parse JSON fields
         landDetails: parseJSON(landDetails),
         buildingAndStructureDetails: parseJSON(buildingAndStructureDetails),

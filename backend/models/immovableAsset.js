@@ -79,6 +79,7 @@ const immovableAssetSchema = new mongoose.Schema({
     // ------------------------------------
     latitude: { type: Number },
     longitude: { type: Number },
+    geometry: { type: Object }, // To store GeoJSON geometry
 
     // --- NEW: Parent-Child Linking ---
     parentAsset: { type: mongoose.Schema.Types.ObjectId, ref: 'ImmovableAsset', default: null },
@@ -91,5 +92,8 @@ const immovableAssetSchema = new mongoose.Schema({
     roadNetworkDetails: roadNetworkDetailsSchema,
     otherInfrastructureDetails: otherInfrastructureDetailsSchema
 }, { timestamps: true });
+
+// Add a 2dsphere index for geospatial queries on the geometry field
+immovableAssetSchema.index({ geometry: '2dsphere' });
 
 module.exports = mongoose.model('ImmovableAsset', immovableAssetSchema);
