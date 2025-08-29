@@ -77,7 +77,10 @@ const immovableAssetSchema = new mongoose.Schema({
     impairmentLosses: { type: Number, default: 0 },
     repairHistory: [repairHistorySchema],
     // ------------------------------------
+    latitude: { type: Number },
+    longitude: { type: Number },
 
+    
     components: [componentSchema],
     attachments: [attachmentSchema],
     history: [historySchema],
