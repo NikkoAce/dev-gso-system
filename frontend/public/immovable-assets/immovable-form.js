@@ -479,19 +479,40 @@ function initializeForm(user) {
         // --- REVISED: Populate GIS fields and map, prioritizing drawn geometry ---
         if (asset.geometry && drawnItems) {
             assetGeometry = asset.geometry;
+            // When creating a GeoJSON layer, Leaflet creates a FeatureGroup.
+            // For a Point, it contains a Marker. For a Polygon, it contains a Polygon layer.
+            // We use pointToLayer to ensure any Point geometry creates a draggable marker.
             const geoJsonLayer = L.geoJSON(asset.geometry, {
+                pointToLayer: function (feature, latlng) {
+                    return L.marker(latlng, { draggable: true });
+                },
                 style: { color: '#f06eaa' }
             });
             drawnItems.clearLayers();
-            const mainLayer = geoJsonLayer.getLayers()[0]; // Get the actual Polygon/LineString layer
-            if (mainLayer) {
-                drawnItems.addLayer(mainLayer);
-                map.fitBounds(mainLayer.getBounds());
-                updateLatLngFromGeometry(mainLayer);
-                calculateAndDisplayMeasurement(mainLayer); // Calculate for the loaded shape
-            }
-            marker?.remove();
+            marker?.remove(); // Remove any old point marker
             marker = null;
+
+            const mainLayer = geoJsonLayer.getLayers()[0]; // Get the actual layer
+            if (mainLayer) {
+                // Check if the layer is a shape with bounds (Polygon, LineString)
+                if (typeof mainLayer.getBounds === 'function') {
+                    drawnItems.addLayer(mainLayer);
+                    map.fitBounds(mainLayer.getBounds());
+                    calculateAndDisplayMeasurement(mainLayer);
+                }
+                // Or if it's a point marker, which does not have .getBounds()
+                else if (typeof mainLayer.getLatLng === 'function') {
+                    marker = mainLayer;
+                    marker.addTo(map);
+                    map.setView(marker.getLatLng(), 16); // Center map on the marker
+                    marker.on('dragend', (e) => {
+                        const { lat, lng } = e.target.getLatLng();
+                        updateMarkerAndInputs(lat, lng);
+                    });
+                    calculateAndDisplayMeasurement(null); // Hide measurement for point markers
+                }
+                updateLatLngFromGeometry(mainLayer);
+            }
         } else if (asset.latitude && asset.longitude) {
             // Map is already initialized and centered. We just need to ensure a marker exists for editing.
             if (!marker) {
