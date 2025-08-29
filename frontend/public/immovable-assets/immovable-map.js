@@ -106,10 +106,17 @@ async function initializeAssetMap() {
         const markers = L.markerClusterGroup();
 
         assetsWithLocation.forEach(asset => {
+            const parentAssetInfo = asset.parentAsset
+                ? `<div class="text-xs text-gray-500 mt-1">
+                       Part of: <a href="./immovable-form.html?id=${asset.parentAsset._id}" class="link link-hover">${asset.parentAsset.name}</a>
+                   </div>`
+                : '';
+
             const popupContent = `
                 <div class="font-bold text-base">${asset.name}</div>
                 <div class="text-sm text-gray-600">${asset.type}</div>
                 <div class="text-xs font-mono text-gray-500">${asset.propertyIndexNumber}</div>
+                ${parentAssetInfo}
                 <hr class="my-2">
                 <a href="./immovable-form.html?id=${asset._id}" class="text-blue-600 hover:underline">View/Edit Details &rarr;</a>
             `;
