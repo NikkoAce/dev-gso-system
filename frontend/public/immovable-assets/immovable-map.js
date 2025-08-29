@@ -124,14 +124,19 @@ async function initializeAssetMap() {
 
             if (asset.geometry) {
                 // If geometry exists, render it as a shape
+                // Use onEachFeature to correctly bind the popup to the actual feature layer,
+                // not the feature group that L.geoJSON returns. This is more robust.
                 layer = L.geoJSON(asset.geometry, {
-                    style: () => ({ color: '#3388ff' }) // Default style for shapes
+                    style: () => ({ color: '#3388ff' }), // Default style for shapes
+                    onEachFeature: (feature, featureLayer) => {
+                        featureLayer.bindPopup(popupContent);
+                    }
                 });
             } else {
                 // Fallback to a point marker if no geometry is present
                 layer = L.marker([asset.latitude, asset.longitude]);
+                layer.bindPopup(popupContent);
             }
-            layer.bindPopup(popupContent);
             markers.addLayer(layer);
         });
 
