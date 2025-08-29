@@ -77,3 +77,20 @@ body.print-preview-mode.preview-landscape .printable-area { width: 356mm; min-he
     border-radius: 9999px;
     z-index: 10;
 }
+
+/* --- Desktop Sidebar Toggle --- */
+#desktop-sidebar-toggle {
+    /* Default position when sidebar is visible (w-64 = 16rem) */
+    left: 16rem;
+}
+
+body.desktop-sidebar-collapsed #desktop-sidebar-toggle {
+    /* Position when sidebar is hidden */
+    left: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    body.desktop-sidebar-collapsed #sidebar-container {
+        transform: translateX(-100%);
+    }
+}
