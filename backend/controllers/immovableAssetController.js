@@ -62,7 +62,14 @@ const getImmovableAssets = asyncHandler(async (req, res) => {
     } else {
         // If no pagination params, return all matching assets (for map view, etc.)
         const assets = await ImmovableAsset.find(query).sort(sortOptions).populate('parentAsset', 'name propertyIndexNumber').lean();
-        res.json(assets);
+        // Make the response consistent with the paginated one
+        res.json({
+            docs: assets,
+            totalDocs: assets.length,
+            limit: assets.length,
+            totalPages: 1,
+            page: 1,
+        });
     }
 });
 

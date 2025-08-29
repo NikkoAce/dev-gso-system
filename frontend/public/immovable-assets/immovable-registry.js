@@ -211,7 +211,8 @@ function initializeRegistryPage(user) {
         });
 
         try {
-            const allAssets = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
+            const response = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
+            const allAssets = response.docs; // Use the 'docs' property
             if (!allAssets || allAssets.length === 0) {
                 showToast('No assets to export for the current filters.', 'warning');
                 return;

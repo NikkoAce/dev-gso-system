@@ -180,7 +180,8 @@ function initializeForm(user) {
 
         try {
             // Fetch only 'Land' assets, as only they can be parents.
-            const potentialParents = await fetchWithAuth(`${API_ENDPOINT}?type=Land`);
+            const response = await fetchWithAuth(`${API_ENDPOINT}?type=Land`);
+            const potentialParents = response.docs;
             
             parentAssetSelect.innerHTML = '<option value="">None</option>'; // Start with a "None" option
             

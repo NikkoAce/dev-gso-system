@@ -91,8 +91,9 @@ async function initializeAssetMap() {
     map.addControl(searchControl);
 
     try {
-        const assets = await fetchWithAuth('immovable-assets');
-        const assetsWithCoords = assets.filter(asset => asset.latitude && asset.longitude);
+        // The API now consistently returns a paginated object structure
+        const response = await fetchWithAuth('immovable-assets');
+        const assetsWithCoords = response.docs.filter(asset => asset.latitude && asset.longitude);
 
         if (assetsWithCoords.length === 0) {
             mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No assets with location data found.</div>';
