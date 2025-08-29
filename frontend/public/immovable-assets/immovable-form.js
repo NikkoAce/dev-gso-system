@@ -198,6 +198,27 @@ function initializeForm(user) {
             showToast(`Could not load parent assets: ${error.message}`, 'error');
         }
     }
+
+    function renderChildAssets(childAssets = []) {
+        if (childAssets.length > 0) {
+            childAssetsSection.classList.remove('hidden');
+            childAssetsList.innerHTML = '';
+            childAssets.forEach(child => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${child.name}</td>
+                    <td><span class="font-mono text-xs">${child.propertyIndexNumber}</span></td>
+                    <td><span class="badge badge-ghost badge-sm">${child.type}</span></td>
+                    <td><span class="badge badge-ghost badge-sm">${child.status}</span></td>
+                    <td class="text-right"><a href="./immovable-form.html?id=${child._id}" class="btn btn-xs btn-ghost" title="View/Edit Child Asset"><i data-lucide="arrow-up-right"></i></a></td>
+                `;
+                childAssetsList.appendChild(tr);
+            });
+            lucide.createIcons();
+        } else {
+            childAssetsSection.classList.add('hidden');
+        }
+    }
     // --- UI LOGIC ---
     function toggleTypeSpecificFields(selectedType) {
         Object.values(detailSections).forEach(section => section.classList.add('hidden'));
