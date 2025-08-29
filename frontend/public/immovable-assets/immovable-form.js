@@ -2,6 +2,7 @@
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { area as turfArea, length as turfLength } from 'https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/+esm';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -56,6 +57,10 @@ function initializeForm(user) {
     const mapContainer = document.getElementById('map');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
+    // NEW: Measurement display elements
+    const measurementDisplay = document.getElementById('measurement-display');
+    const measurementValue = document.getElementById('measurement-value');
+    const measurementUnit = document.getElementById('measurement-unit');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -70,6 +75,43 @@ function initializeForm(user) {
     let marker = null;
     let assetGeometry = null; // To store GeoJSON geometry
     let drawnItems = null; // To hold the feature group for drawing
+
+    // --- NEW: GIS Measurement Calculation ---
+    function calculateAndDisplayMeasurement(layer) {
+        if (!layer) {
+            measurementDisplay.classList.add('hidden');
+            return;
+        }
+
+        const geojson = layer.toGeoJSON();
+        let value = 0;
+        let unit = '';
+        let formattedValue = '';
+
+        if (geojson.geometry.type === 'Polygon') {
+            value = turfArea(geojson); // Area in square meters
+            if (value > 10000) { // If larger than 1 hectare
+                formattedValue = (value / 10000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                unit = 'hectares';
+            } else {
+                formattedValue = value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                unit = 'sq. meters';
+            }
+        } else if (geojson.geometry.type === 'LineString') {
+            value = turfLength(geojson, { units: 'kilometers' }); // Length in kilometers
+            formattedValue = value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 3 });
+            unit = 'km';
+        }
+
+        if (unit) {
+            measurementValue.textContent = formattedValue;
+            measurementUnit.textContent = unit;
+            measurementDisplay.classList.remove('hidden');
+        } else {
+            // Hide for markers or other types
+            measurementDisplay.classList.add('hidden');
+        }
+    }
 
     function initializeMap(lat = 14.1155, lng = 122.9550) {
         if (map) return; // Already initialized
@@ -178,6 +220,7 @@ function initializeForm(user) {
             drawnItems.addLayer(layer);
             assetGeometry = layer.toGeoJSON().geometry;
             updateLatLngFromGeometry(layer);
+            calculateAndDisplayMeasurement(layer);
         });
 
         map.on(L.Draw.Event.EDITED, function (e) {
@@ -185,6 +228,7 @@ function initializeForm(user) {
             layers.eachLayer(function (layer) {
                 assetGeometry = layer.toGeoJSON().geometry;
                 updateLatLngFromGeometry(layer);
+                calculateAndDisplayMeasurement(layer);
             });
         });
 
@@ -192,6 +236,7 @@ function initializeForm(user) {
             assetGeometry = null;
             latitudeInput.value = '';
             longitudeInput.value = '';
+            calculateAndDisplayMeasurement(null);
         });
 
         // 5. NEW: Listen for search results to update our marker and inputs
@@ -438,9 +483,13 @@ function initializeForm(user) {
                 style: { color: '#f06eaa' }
             });
             drawnItems.clearLayers();
-            drawnItems.addLayer(geoJsonLayer);
-            map.fitBounds(geoJsonLayer.getBounds());
-            updateLatLngFromGeometry(geoJsonLayer.getLayers()[0]);
+            const mainLayer = geoJsonLayer.getLayers()[0]; // Get the actual Polygon/LineString layer
+            if (mainLayer) {
+                drawnItems.addLayer(mainLayer);
+                map.fitBounds(mainLayer.getBounds());
+                updateLatLngFromGeometry(mainLayer);
+                calculateAndDisplayMeasurement(mainLayer); // Calculate for the loaded shape
+            }
             marker?.remove();
             marker = null;
         } else if (asset.latitude && asset.longitude) {
@@ -453,6 +502,7 @@ function initializeForm(user) {
                 });
             }
             updateMarkerAndInputs(asset.latitude, asset.longitude);
+            calculateAndDisplayMeasurement(null); // Hide measurement for point markers
         }
 
         // Bind a popup to the marker to show asset details on the form map
