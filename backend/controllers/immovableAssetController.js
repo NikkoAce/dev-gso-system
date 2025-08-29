@@ -301,8 +301,14 @@ const generateImmovableAssetReport = asyncHandler(async (req, res) => {
     if (status) query.status = status;
     if (startDate || endDate) {
         query.dateAcquired = {};
-        if (startDate) query.dateAcquired.$gte = new Date(startDate);
-        if (endDate) query.dateAcquired.$lte = new Date(endDate);
+        if (startDate) {
+            query.dateAcquired.$gte = new Date(startDate);
+        }
+        if (endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+            query.dateAcquired.$lt = endOfDay;
+        }
     }
     const assets = await ImmovableAsset.find(query).sort({ propertyIndexNumber: 1 }).lean();
     const headers = ['PIN', 'Name', 'Type', 'Location', 'Date Acquired', 'Assessed Value', 'Condition', 'Status'];

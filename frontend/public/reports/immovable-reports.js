@@ -38,7 +38,12 @@ function initializeImmovableReportsPage() {
     const signatory3Title = document.getElementById('signatory-3-title');
 
     // --- UTILITY ---
-    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        // Appending T00:00:00 forces the date to be parsed in the user's local timezone,
+        // preventing it from shifting to the previous day in some timezones.
+        return new Date(`${dateString}T00:00:00`).toLocaleDateString('en-CA');
+    };
 
 
     // --- REPORT GENERATION ---
