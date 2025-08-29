@@ -34,6 +34,7 @@ function initializeRegistryPage(user) {
     const typeFilter = document.getElementById('type-filter');
     const statusFilter = document.getElementById('status-filter');
     const paginationControls = document.getElementById('pagination-controls');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
 
     // --- UTILITY ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -117,6 +118,94 @@ function initializeRegistryPage(user) {
         }
     }
 
+    // --- NEW: CSV Export Logic ---
+    function convertToCSV(assets) {
+        const headers = [
+            'Property Index Number', 'Name', 'Type', 'Location', 'Latitude', 'Longitude',
+            'Date Acquired', 'Assessed Value', 'Status', 'Condition', 'Remarks',
+            'Fund Source', 'Account Code', 'Acquisition Method', 'Impairment Losses',
+            'Land Lot Number', 'Land Title Number', 'Land Area (sqm)',
+            'Building Floors', 'Building Floor Area (sqm)', 'Building Construction Date', 'Building Useful Life (Yrs)', 'Building Salvage Value'
+        ];
+
+        const rows = assets.map(asset => {
+            const landDetails = asset.landDetails || {};
+            const buildingDetails = asset.buildingAndStructureDetails || {};
+            // Helper to safely format strings for CSV
+            const escapeCSV = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+
+            return [
+                escapeCSV(asset.propertyIndexNumber),
+                escapeCSV(asset.name),
+                escapeCSV(asset.type),
+                escapeCSV(asset.location),
+                asset.latitude || '',
+                asset.longitude || '',
+                asset.dateAcquired ? new Date(asset.dateAcquired).toISOString().split('T')[0] : '',
+                asset.assessedValue || 0,
+                escapeCSV(asset.status),
+                escapeCSV(asset.condition),
+                escapeCSV(asset.remarks),
+                escapeCSV(asset.fundSource),
+                escapeCSV(asset.accountCode),
+                escapeCSV(asset.acquisitionMethod),
+                asset.impairmentLosses || 0,
+                escapeCSV(landDetails.lotNumber),
+                escapeCSV(landDetails.titleNumber),
+                landDetails.areaSqm || '',
+                buildingDetails.numberOfFloors || '',
+                buildingDetails.floorArea || '',
+                buildingDetails.constructionDate ? new Date(buildingDetails.constructionDate).toISOString().split('T')[0] : '',
+                buildingDetails.estimatedUsefulLife || '',
+                buildingDetails.salvageValue || 0
+            ].join(',');
+        });
+
+        return [headers.join(','), ...rows].join('\n');
+    }
+
+    function downloadCSV(csvContent, fileName) {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    async function handleExportCSV() {
+        exportCsvBtn.disabled = true;
+        exportCsvBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin"></i> Exporting...`;
+        lucide.createIcons();
+
+        const params = new URLSearchParams({
+            sort: currentSort.field, order: currentSort.order,
+            search: searchInput.value, type: typeFilter.value, status: statusFilter.value
+        });
+
+        try {
+            const allAssets = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
+            if (!allAssets || allAssets.length === 0) {
+                showToast('No assets to export for the current filters.', 'warning');
+                return;
+            }
+            const csvContent = convertToCSV(allAssets);
+            downloadCSV(csvContent, `immovable-assets-export-${new Date().toISOString().split('T')[0]}.csv`);
+            showToast('Export successful!', 'success');
+        } catch (error) {
+            console.error('Failed to export assets:', error);
+            showToast(`Error exporting assets: ${error.message}`, 'error');
+        } finally {
+            exportCsvBtn.disabled = false;
+            exportCsvBtn.innerHTML = `<i data-lucide="download"></i> Export to CSV`;
+            lucide.createIcons();
+        }
+    }
+
     async function handleDeleteAsset(assetId) {
         try {
             await fetchWithAuth(`${API_ENDPOINT}/${assetId}`, { method: 'DELETE' });
@@ -160,6 +249,8 @@ function initializeRegistryPage(user) {
             );
         }
     });
+
+    exportCsvBtn.addEventListener('click', handleExportCSV);
 
     // --- INITIALIZATION ---
     fetchAndRenderAssets();

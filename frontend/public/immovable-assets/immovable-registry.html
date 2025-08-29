@@ -26,9 +26,14 @@
                 <div class="space-y-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <h1 class="text-3xl font-bold text-gray-800">Immovable Asset Registry</h1>
-                        <a href="./immovable-form.html" class="btn btn-primary">
-                            <i data-lucide="plus"></i> Add New Immovable Asset
-                        </a>
+                        <div class="flex items-center gap-2">
+                            <button id="export-csv-btn" class="btn btn-outline">
+                                <i data-lucide="download"></i> Export to CSV
+                            </button>
+                            <a href="./immovable-form.html" class="btn btn-primary">
+                                <i data-lucide="plus"></i> Add New Immovable Asset
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Filters -->
