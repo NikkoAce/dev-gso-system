@@ -426,6 +426,14 @@ function initializeForm(user) {
         });
         // Show/hide main save button based on which tab is active
         submitButton.classList.toggle('hidden', activeIndex !== 0);
+
+        // If the details tab is being shown, the map might need its size invalidated.
+        // This fixes issues where the map was hidden and its container size was not updated,
+        // causing rendering glitches or interaction errors.
+        if (activeIndex === 0 && map) {
+            // A small delay ensures the container is visible before invalidating.
+            setTimeout(() => map.invalidateSize(), 10);
+        }
     }
 
     detailsTab.addEventListener('click', () => {
