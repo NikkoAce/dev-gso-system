@@ -50,11 +50,6 @@ body.print-preview-mode.preview-landscape .printable-area { width: 356mm; min-he
     z-index: 1000;
 }
 
-/* Helper to break "position: fixed" out of a container with overflow:hidden */
-.force-overflow-visible {
-    overflow: visible !important;
-}
-
 /* --- GIS Fullscreen Mode --- */
 #gis-location-card.gis-fullscreen {
     position: fixed;

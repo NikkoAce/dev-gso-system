@@ -59,9 +59,6 @@ function initializeForm(user) {
     const fullscreenIcon = document.getElementById('fullscreen-icon');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
-    // Get the parent containers that are causing the overflow issue
-    const mainContentArea = document.querySelector('main');
-    const mainPanel = mainContentArea.parentElement;
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -648,19 +645,39 @@ function initializeForm(user) {
         }
     });
 
-    // --- Fullscreen Map Logic ---
+    // --- Fullscreen Map Logic (DOM-moving approach) ---
+    let originalMapParent = gisLocationCard.parentElement;
+    let originalMapNextSibling = gisLocationCard.nextElementSibling;
+
     if (fullscreenMapBtn) {
         fullscreenMapBtn.addEventListener('click', () => {
-            gisLocationCard.classList.toggle('gis-fullscreen');
-            document.body.classList.toggle('overflow-hidden');
-            // NEW: Toggle overflow on parents to break the containing block
-            mainPanel.classList.toggle('force-overflow-visible');
-            mainContentArea.classList.toggle('force-overflow-visible');
-
             const isFullscreen = gisLocationCard.classList.contains('gis-fullscreen');
 
-            // Change icon based on state
-            fullscreenIcon.setAttribute('data-lucide', isFullscreen ? 'minimize' : 'maximize');
+            if (isFullscreen) {
+                // --- EXITING FULLSCREEN ---
+                gisLocationCard.classList.remove('gis-fullscreen');
+                document.body.classList.remove('overflow-hidden');
+
+                // Move the card back to its original position in the form
+                if (originalMapNextSibling) {
+                    originalMapParent.insertBefore(gisLocationCard, originalMapNextSibling);
+                } else {
+                    originalMapParent.appendChild(gisLocationCard);
+                }
+                fullscreenIcon.setAttribute('data-lucide', 'maximize');
+            } else {
+                // --- ENTERING FULLSCREEN ---
+                // Store original position before moving
+                originalMapParent = gisLocationCard.parentElement;
+                originalMapNextSibling = gisLocationCard.nextElementSibling;
+
+                // Move the card to be a direct child of the body
+                document.body.appendChild(gisLocationCard);
+
+                gisLocationCard.classList.add('gis-fullscreen');
+                document.body.classList.add('overflow-hidden');
+                fullscreenIcon.setAttribute('data-lucide', 'minimize');
+            }
 
             lucide.createIcons(); // Re-render the new icon
 
