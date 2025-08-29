@@ -80,6 +80,9 @@ const immovableAssetSchema = new mongoose.Schema({
     latitude: { type: Number },
     longitude: { type: Number },
 
+    // --- NEW: Parent-Child Linking ---
+    parentAsset: { type: mongoose.Schema.Types.ObjectId, ref: 'ImmovableAsset', default: null },
+
     components: [componentSchema],
     attachments: [attachmentSchema],
     history: [historySchema],

@@ -43,7 +43,7 @@ function initializeRegistryPage(user) {
     function renderTable(assets) {
         tableBody.innerHTML = '';
         if (!assets || assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-500">No immovable assets found for the selected criteria.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">No immovable assets found for the selected criteria.</td></tr>`;
             return;
         }
         const statusMap = {
@@ -60,6 +60,10 @@ function initializeRegistryPage(user) {
                 ? `<li><a href="./ledger-card.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="book-down" class="h-4 w-4"></i> Ledger Card (Depreciation)</a></li>`
                 : '';
 
+            const parentAssetInfo = asset.parentAsset
+                ? `<a href="./immovable-form.html?id=${asset.parentAsset._id}" class="link link-hover text-xs">${asset.parentAsset.name}</a>`
+                : '<span class="text-xs text-gray-400">None</span>';
+
             const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm">${asset.status}</span>`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -67,6 +71,7 @@ function initializeRegistryPage(user) {
                 <td>${asset.name}</td>
                 <td>${asset.type}</td>
                 <td>${asset.location}</td>
+                <td>${parentAssetInfo}</td>
                 <td class="text-right">${formatCurrency(asset.assessedValue)}</td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center non-printable">
@@ -90,7 +95,7 @@ function initializeRegistryPage(user) {
     // --- CORE LOGIC ---
     async function fetchAndRenderAssets(page = 1) {
         currentPage = page;
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
         lucide.createIcons();
 
         const params = new URLSearchParams({
@@ -114,7 +119,7 @@ function initializeRegistryPage(user) {
             });
         } catch (error) {
             console.error('Failed to fetch assets:', error);
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets. Please try again.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-red-500">Error loading assets. Please try again.</td></tr>`;
         }
     }
 

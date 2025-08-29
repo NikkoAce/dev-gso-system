@@ -50,6 +50,7 @@ function initializeForm(user) {
     const repairsContainer = document.getElementById('repairs-container');
     const repairForm = document.getElementById('repair-form');
     // --- NEW: GIS Elements ---
+    const parentAssetSelect = document.getElementById('parentAsset');
     const mapContainer = document.getElementById('map');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
@@ -162,6 +163,28 @@ function initializeForm(user) {
         longitudeInput.value = lng.toFixed(6);
     }
 
+    // --- NEW: Parent Asset Logic ---
+    async function loadPotentialParents() {
+        try {
+            // Fetch all assets to be potential parents. You could filter this further, e.g., `?type=Land`
+            const potentialParents = await fetchWithAuth(API_ENDPOINT);
+            
+            parentAssetSelect.innerHTML = '<option value="">None</option>'; // Start with a "None" option
+            
+            potentialParents.forEach(parent => {
+                // In edit mode, don't allow an asset to be its own parent
+                if (isEditMode && parent._id === assetId) {
+                    return;
+                }
+                const option = document.createElement('option');
+                option.value = parent._id;
+                option.textContent = `${parent.name} (PIN: ${parent.propertyIndexNumber})`;
+                parentAssetSelect.appendChild(option);
+            });
+        } catch (error) {
+            showToast('Could not load potential parent assets.', 'error');
+        }
+    }
     // --- UI LOGIC ---
     function toggleTypeSpecificFields(selectedType) {
         Object.values(detailSections).forEach(section => section.classList.add('hidden'));
@@ -317,6 +340,11 @@ function initializeForm(user) {
             marker.bindPopup(popupContent).openPopup();
         }
 
+        // Populate parent asset dropdown
+        if (asset.parentAsset) {
+            parentAssetSelect.value = asset.parentAsset._id || asset.parentAsset;
+        }
+
         // Populate components
         if (asset.components && asset.components.length > 0) {
             componentsContainer.innerHTML = ''; // Clear any empty rows
@@ -460,6 +488,7 @@ function initializeForm(user) {
     if (isEditMode) {
         formTitle.textContent = 'Edit Immovable Asset';
         loadAssetForEditing();
+        loadPotentialParents();
     } else {
         initializeMap(); // Initialize map for new asset
         toggleTypeSpecificFields(typeSelect.value); // Show default section

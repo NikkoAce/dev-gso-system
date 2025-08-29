@@ -40,7 +40,7 @@ const getImmovableAssets = asyncHandler(async (req, res) => {
         const skip = (pageNum - 1) * limitNum;
 
         const [assets, totalDocs] = await Promise.all([
-            ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
+        ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).populate('parentAsset', 'name propertyIndexNumber').lean(),
             ImmovableAsset.countDocuments(query)
         ]);
 
@@ -53,7 +53,7 @@ const getImmovableAssets = asyncHandler(async (req, res) => {
         });
     } else {
         // If no pagination params, return all matching assets (for map view, etc.)
-        const assets = await ImmovableAsset.find(query).sort(sortOptions).lean();
+        const assets = await ImmovableAsset.find(query).sort(sortOptions).populate('parentAsset', 'name propertyIndexNumber').lean();
         res.json(assets);
     }
 });
@@ -67,7 +67,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
     const {
         name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
         fundSource, accountCode, status, acquisitionMethod, condition, remarks,
-        impairmentLosses,
+        impairmentLosses, parentAsset,
         // --- NEW: GIS Coordinates ---
         latitude, longitude,
         // Stringified JSON fields
@@ -78,7 +78,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
     const assetData = {
         name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
         fundSource, accountCode, status, acquisitionMethod, condition, remarks,
-        impairmentLosses,
+        impairmentLosses, parentAsset: parentAsset || null,
         // --- NEW: GIS Coordinates ---
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
@@ -119,7 +119,7 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const getImmovableAssetById = asyncHandler(async (req, res) => {
-    const asset = await ImmovableAsset.findById(req.params.id).lean();
+    const asset = await ImmovableAsset.findById(req.params.id).populate('parentAsset', 'name propertyIndexNumber').lean();
 
     if (!asset) {
         res.status(404);
@@ -160,6 +160,9 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
     // Handle GIS coordinates separately
     if (req.body.latitude) updateData.latitude = parseFloat(req.body.latitude);
     if (req.body.longitude) updateData.longitude = parseFloat(req.body.longitude);
+    
+    // Handle parent asset link (set to null if empty string is passed)
+    if ('parentAsset' in req.body) updateData.parentAsset = req.body.parentAsset || null;
 
     // Apply updates
     Object.assign(asset, updateData);
