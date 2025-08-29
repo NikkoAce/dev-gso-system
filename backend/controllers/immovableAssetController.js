@@ -126,6 +126,12 @@ const getImmovableAssetById = asyncHandler(async (req, res) => {
         throw new Error('Asset not found');
     }
 
+    // --- NEW: Find child assets ---
+    const childAssets = await ImmovableAsset.find({ parentAsset: asset._id })
+        .select('name propertyIndexNumber type status')
+        .sort({ name: 1 })
+        .lean();
+
     // Generate pre-signed URLs for attachments
     if (asset.attachments && asset.attachments.length > 0) {
         asset.attachments = await Promise.all(
@@ -135,6 +141,9 @@ const getImmovableAssetById = asyncHandler(async (req, res) => {
             }))
         );
     }
+
+    // Add child assets to the response object
+    asset.childAssets = childAssets;
     res.json(asset);
 });
 

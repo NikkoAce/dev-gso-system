@@ -50,6 +50,8 @@ function initializeForm(user) {
     const repairsContainer = document.getElementById('repairs-container');
     const repairForm = document.getElementById('repair-form');
     // --- NEW: GIS Elements ---
+    const childAssetsSection = document.getElementById('child-assets-section');
+    const childAssetsList = document.getElementById('child-assets-list');
     const parentAssetSelect = document.getElementById('parentAsset');
     const mapContainer = document.getElementById('map');
     const latitudeInput = document.getElementById('latitude');
@@ -343,6 +345,11 @@ function initializeForm(user) {
         // Populate parent asset dropdown
         if (asset.parentAsset) {
             parentAssetSelect.value = asset.parentAsset._id || asset.parentAsset;
+        }
+
+        // Populate Child Assets
+        if (asset.childAssets) {
+            renderChildAssets(asset.childAssets);
         }
 
         // Populate components

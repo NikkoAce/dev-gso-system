@@ -133,6 +133,28 @@
                                 </div>
                             </div>
 
+                            <!-- Child Assets (hidden by default, shown in edit mode) -->
+                            <div id="child-assets-section" class="card bg-base-100 border hidden">
+                                <div class="card-body">
+                                    <h2 class="card-title">Child Assets</h2>
+                                    <p class="text-sm text-base-content/70 -mt-2">Properties linked to this asset (e.g., buildings on this land).</p>
+                                    <div class="overflow-x-auto mt-2">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>PIN</th>
+                                                    <th>Type</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="child-assets-list"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- GIS Location -->
                             <div class="card bg-base-100 border">
                                 <div class="card-body">
