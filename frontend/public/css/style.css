@@ -50,31 +50,6 @@ body.print-preview-mode.preview-landscape .printable-area { width: 356mm; min-he
     z-index: 1000;
 }
 
-/* --- GIS Fullscreen Mode --- */
-#gis-location-card.gis-fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    /* Use viewport units to ensure it covers the entire screen,
-       regardless of parent container properties. */
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000; /* Ensure it's on top of other content */
-    margin: 0 !important;
-    border-radius: 0 !important;
-}
-
-#gis-location-card.gis-fullscreen .card-body {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-#gis-location-card.gis-fullscreen #map {
-    flex-grow: 1; /* Make the map container fill the available space */
-    height: auto !important; /* Override inline style to allow flex-grow to work */
-}
-
 .nav-link.active {
     background-color: oklch(var(--n) / var(--tw-bg-opacity, 1));
     color: oklch(var(--nc) / var(--tw-text-opacity, 1));

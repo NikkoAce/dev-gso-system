@@ -54,9 +54,6 @@ function initializeForm(user) {
     const childAssetsList = document.getElementById('child-assets-list');
     const parentAssetSelect = document.getElementById('parentAsset');
     const mapContainer = document.getElementById('map');
-    const gisLocationCard = document.getElementById('gis-location-card');
-    const fullscreenMapBtn = document.getElementById('fullscreen-map-btn');
-    const fullscreenIcon = document.getElementById('fullscreen-icon');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
 
@@ -98,7 +95,11 @@ function initializeForm(user) {
         const overlayMaps = {};
 
         // 2. Initialize Map
-        map = L.map(mapContainer, { center: [lat, lng], zoom: 14, layers: [osmLayer] });
+        map = L.map(mapContainer, {
+            center: [lat, lng],
+            zoom: 14,
+            layers: [osmLayer]
+        });
 
         // NEW: Asynchronously load and add overlay layers
         const addOverlayLayers = async () => {
@@ -130,6 +131,9 @@ function initializeForm(user) {
             L.control.layers(baseLayers, overlayMaps).addTo(map);
         };
         addOverlayLayers();
+
+        // Add the fullscreen control from the plugin
+        map.addControl(new L.Control.Fullscreen());
 
         // 4. NEW: Add Geosearch control
         const searchControl = new GeoSearch.GeoSearchControl({
@@ -644,48 +648,4 @@ function initializeForm(user) {
             }
         }
     });
-
-    // --- Fullscreen Map Logic (DOM-moving approach) ---
-    let originalMapParent = gisLocationCard.parentElement;
-    let originalMapNextSibling = gisLocationCard.nextElementSibling;
-
-    if (fullscreenMapBtn) {
-        fullscreenMapBtn.addEventListener('click', () => {
-            const isFullscreen = gisLocationCard.classList.contains('gis-fullscreen');
-
-            if (isFullscreen) {
-                // --- EXITING FULLSCREEN ---
-                gisLocationCard.classList.remove('gis-fullscreen');
-                document.body.classList.remove('overflow-hidden');
-
-                // Move the card back to its original position in the form
-                if (originalMapNextSibling) {
-                    originalMapParent.insertBefore(gisLocationCard, originalMapNextSibling);
-                } else {
-                    originalMapParent.appendChild(gisLocationCard);
-                }
-                fullscreenIcon.setAttribute('data-lucide', 'maximize');
-            } else {
-                // --- ENTERING FULLSCREEN ---
-                // Store original position before moving
-                originalMapParent = gisLocationCard.parentElement;
-                originalMapNextSibling = gisLocationCard.nextElementSibling;
-
-                // Move the card to be a direct child of the body
-                document.body.appendChild(gisLocationCard);
-
-                gisLocationCard.classList.add('gis-fullscreen');
-                document.body.classList.add('overflow-hidden');
-                fullscreenIcon.setAttribute('data-lucide', 'minimize');
-            }
-
-            lucide.createIcons(); // Re-render the new icon
-
-            if (map) {
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 150); // A small delay is often needed for the transition
-            }
-        });
-    }
 }
