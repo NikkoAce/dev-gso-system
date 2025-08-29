@@ -30,6 +30,7 @@ function initializeRegistryPage(user) {
 
     // --- DOM ELEMENTS ---
     const tableBody = document.getElementById('asset-table-body');
+    const tableFooter = document.getElementById('asset-table-footer');
     const searchInput = document.getElementById('search-input');
     const typeFilter = document.getElementById('type-filter');
     const statusFilter = document.getElementById('status-filter');
@@ -92,10 +93,25 @@ function initializeRegistryPage(user) {
         lucide.createIcons();
     }
 
+    function renderSummary(totalValue) {
+        if (totalValue > 0) {
+            tableFooter.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-right font-bold">Total Assessed Value (All Filtered Pages):</td>
+                    <td class="text-right font-bold">${formatCurrency(totalValue)}</td>
+                    <td colspan="2"></td>
+                </tr>
+            `;
+        } else {
+            tableFooter.innerHTML = '';
+        }
+    }
+
     // --- CORE LOGIC ---
     async function fetchAndRenderAssets(page = 1) {
         currentPage = page;
         tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
+        tableFooter.innerHTML = ''; // Clear footer while loading
         lucide.createIcons();
 
         const params = new URLSearchParams({
@@ -111,6 +127,7 @@ function initializeRegistryPage(user) {
         try {
             const data = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
             renderTable(data.docs);
+            renderSummary(data.totalValue);
             renderPagination(paginationControls, {
                 currentPage: data.page,
                 totalPages: data.totalPages,
@@ -120,6 +137,7 @@ function initializeRegistryPage(user) {
         } catch (error) {
             console.error('Failed to fetch assets:', error);
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-red-500">Error loading assets. Please try again.</td></tr>`;
+            tableFooter.innerHTML = ''; // Clear footer on error
         }
     }
 

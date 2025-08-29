@@ -39,14 +39,22 @@ const getImmovableAssets = asyncHandler(async (req, res) => {
         const limitNum = parseInt(limit, 10);
         const skip = (pageNum - 1) * limitNum;
 
-        const [assets, totalDocs] = await Promise.all([
-        ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).populate('parentAsset', 'name propertyIndexNumber').lean(),
-            ImmovableAsset.countDocuments(query)
+        // Aggregation pipeline for summary stats (total value of all filtered assets)
+        const summaryPipeline = [
+            { $match: query },
+            { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } }
+        ];
+
+        const [assets, totalDocs, summaryResult] = await Promise.all([
+            ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).populate('parentAsset', 'name propertyIndexNumber').lean(),
+            ImmovableAsset.countDocuments(query),
+            ImmovableAsset.aggregate(summaryPipeline)
         ]);
 
         res.json({
             docs: assets,
             totalDocs,
+            totalValue: summaryResult[0]?.totalValue || 0, // Add total value to the response
             limit: limitNum,
             totalPages: Math.ceil(totalDocs / limitNum),
             page: pageNum,
