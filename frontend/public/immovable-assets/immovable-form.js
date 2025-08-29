@@ -560,9 +560,14 @@ function initializeForm(user) {
             const asset = await fetchWithAuth(`${API_ENDPOINT}/${assetId}`);
             // Initialize map with asset's location if available, otherwise default.
             initializeMap(asset.latitude, asset.longitude);
+
+            // Load potential parents first and wait for it to complete.
+            await loadPotentialParents(asset.type);
+
+            // Now populate the form. This ensures the parent asset dropdown
+            // is ready to be set with the correct value.
             populateForm(asset);
-            // Load potential parents *after* populating the form, using the correct asset type.
-            loadPotentialParents(asset.type);
+
             formTabs.classList.remove('hidden'); // Show tabs only in edit mode
         } catch (error) {
             showToast(`Error loading asset: ${error.message}`, 'error');
