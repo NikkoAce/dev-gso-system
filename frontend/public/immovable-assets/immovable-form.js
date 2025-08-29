@@ -649,6 +649,7 @@ function initializeForm(user) {
     if (fullscreenMapBtn) {
         fullscreenMapBtn.addEventListener('click', () => {
             gisLocationCard.classList.toggle('gis-fullscreen');
+            document.body.classList.toggle('overflow-hidden');
             const isFullscreen = gisLocationCard.classList.contains('gis-fullscreen');
 
             // Change icon based on state
