@@ -166,25 +166,35 @@ function initializeForm(user) {
     }
 
     // --- NEW: Parent Asset Logic ---
-    async function loadPotentialParents() {
+    async function loadPotentialParents(currentAssetType) {
+        // A 'Land' asset cannot be a child, so disable the dropdown.
+        if (currentAssetType === 'Land') {
+            parentAssetSelect.innerHTML = '<option value="">None (Land cannot be a child asset)</option>';
+            parentAssetSelect.disabled = true;
+            parentAssetSelect.value = ''; // Ensure value is cleared
+            return;
+        }
+
+        parentAssetSelect.disabled = false;
+        parentAssetSelect.innerHTML = '<option value="">Loading parents...</option>';
+
         try {
-            // Fetch all assets to be potential parents. You could filter this further, e.g., `?type=Land`
-            const potentialParents = await fetchWithAuth(API_ENDPOINT);
+            // Fetch only 'Land' assets, as only they can be parents.
+            const potentialParents = await fetchWithAuth(`${API_ENDPOINT}?type=Land`);
             
             parentAssetSelect.innerHTML = '<option value="">None</option>'; // Start with a "None" option
             
             potentialParents.forEach(parent => {
                 // In edit mode, don't allow an asset to be its own parent
-                if (isEditMode && parent._id === assetId) {
-                    return;
-                }
+                if (isEditMode && parent._id === assetId) return;
+
                 const option = document.createElement('option');
                 option.value = parent._id;
                 option.textContent = `${parent.name} (PIN: ${parent.propertyIndexNumber})`;
                 parentAssetSelect.appendChild(option);
             });
         } catch (error) {
-            showToast('Could not load potential parent assets.', 'error');
+            showToast(`Could not load parent assets: ${error.message}`, 'error');
         }
     }
     // --- UI LOGIC ---
@@ -385,6 +395,7 @@ function initializeForm(user) {
     // --- CORE LOGIC ---
     async function loadAssetForEditing() {
         try {
+            loadPotentialParents(typeSelect.value); // Pre-load parents based on initial type
             const asset = await fetchWithAuth(`${API_ENDPOINT}/${assetId}`);
             populateForm(asset);
             formTabs.classList.remove('hidden'); // Show tabs only in edit mode
@@ -495,14 +506,18 @@ function initializeForm(user) {
     if (isEditMode) {
         formTitle.textContent = 'Edit Immovable Asset';
         loadAssetForEditing();
-        loadPotentialParents();
     } else {
         initializeMap(); // Initialize map for new asset
         toggleTypeSpecificFields(typeSelect.value); // Show default section
+        loadPotentialParents(typeSelect.value); // Load parents for the default type
     }
 
     addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
-    typeSelect.addEventListener('change', (e) => toggleTypeSpecificFields(e.target.value));
+    typeSelect.addEventListener('change', (e) => {
+        toggleTypeSpecificFields(e.target.value);
+        // Reload the list of potential parents when the asset type changes.
+        loadPotentialParents(e.target.value);
+    });
     addComponentBtn.addEventListener('click', () => {
         renderComponent();
     });

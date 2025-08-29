@@ -75,6 +75,23 @@ const createImmovableAsset = asyncHandler(async (req, res) => {
         components, attachmentTitles
     } = req.body;
 
+    // --- NEW: Parent-Child Validation ---
+    if (parentAsset) {
+        const parent = await ImmovableAsset.findById(parentAsset);
+        if (!parent) {
+            res.status(400);
+            throw new Error('Selected parent asset does not exist.');
+        }
+        if (type === 'Land') {
+            res.status(400);
+            throw new Error('A "Land" asset cannot be assigned as a child to another asset.');
+        }
+        if (parent.type !== 'Land') {
+            res.status(400);
+            throw new Error(`An asset of type "${type}" can only be assigned to a parent asset of type "Land".`);
+        }
+    }
+
     const assetData = {
         name, propertyIndexNumber, type, location, dateAcquired, assessedValue,
         fundSource, accountCode, status, acquisitionMethod, condition, remarks,
@@ -172,6 +189,25 @@ const updateImmovableAsset = asyncHandler(async (req, res) => {
     
     // Handle parent asset link (set to null if empty string is passed)
     if ('parentAsset' in req.body) updateData.parentAsset = req.body.parentAsset || null;
+
+    // --- NEW: Parent-Child Validation on Update ---
+    if (updateData.parentAsset) {
+        const parent = await ImmovableAsset.findById(updateData.parentAsset);
+        if (!parent) {
+            res.status(400);
+            throw new Error('Selected parent asset does not exist.');
+        }
+        // Use the asset's current type for validation. If type is also being updated, use the new type.
+        const assetType = updateData.type || asset.type;
+        if (assetType === 'Land') {
+            res.status(400);
+            throw new Error('A "Land" asset cannot be assigned as a child to another asset.');
+        }
+        if (parent.type !== 'Land') {
+            res.status(400);
+            throw new Error(`An asset of type "${assetType}" can only be assigned to a parent asset of type "Land".`);
+        }
+    }
 
     // Apply updates
     Object.assign(asset, updateData);
