@@ -156,9 +156,14 @@
                             </div>
 
                             <!-- GIS Location -->
-                            <div class="card bg-base-100 border">
+                            <div id="gis-location-card" class="card bg-base-100 border transition-all duration-300">
                                 <div class="card-body">
-                                    <h2 class="card-title">GIS Location</h2>
+                                    <div class="flex justify-between items-center">
+                                        <h2 class="card-title">GIS Location</h2>
+                                        <button type="button" id="fullscreen-map-btn" class="btn btn-sm btn-ghost" title="Toggle Fullscreen Map">
+                                            <i data-lucide="maximize" id="fullscreen-icon"></i>
+                                        </button>
+                                    </div>
                                     <p class="text-sm text-base-content/70 -mt-2">Click on the map to set the precise location of the asset.</p>
                                     <div id="map" class="h-64 w-full rounded-lg mt-2 z-0"></div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">

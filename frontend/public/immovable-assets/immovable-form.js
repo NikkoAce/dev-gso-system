@@ -54,6 +54,9 @@ function initializeForm(user) {
     const childAssetsList = document.getElementById('child-assets-list');
     const parentAssetSelect = document.getElementById('parentAsset');
     const mapContainer = document.getElementById('map');
+    const gisLocationCard = document.getElementById('gis-location-card');
+    const fullscreenMapBtn = document.getElementById('fullscreen-map-btn');
+    const fullscreenIcon = document.getElementById('fullscreen-icon');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
 
@@ -417,9 +420,10 @@ function initializeForm(user) {
     // --- CORE LOGIC ---
     async function loadAssetForEditing() {
         try {
-            loadPotentialParents(typeSelect.value); // Pre-load parents based on initial type
             const asset = await fetchWithAuth(`${API_ENDPOINT}/${assetId}`);
             populateForm(asset);
+            // Load potential parents *after* populating the form, using the correct asset type.
+            loadPotentialParents(asset.type);
             formTabs.classList.remove('hidden'); // Show tabs only in edit mode
         } catch (error) {
             showToast(`Error loading asset: ${error.message}`, 'error');
@@ -640,4 +644,24 @@ function initializeForm(user) {
             }
         }
     });
+
+    // --- Fullscreen Map Logic ---
+    if (fullscreenMapBtn) {
+        fullscreenMapBtn.addEventListener('click', () => {
+            gisLocationCard.classList.toggle('gis-fullscreen');
+            const isFullscreen = gisLocationCard.classList.contains('gis-fullscreen');
+
+            // Change icon based on state
+            fullscreenIcon.setAttribute('data-lucide', isFullscreen ? 'minimize' : 'maximize');
+            lucide.createIcons(); // Re-render the new icon
+
+            // IMPORTANT: Invalidate map size after a short delay to allow the CSS transition to start.
+            // This tells Leaflet to re-calculate its container size and redraw tiles correctly.
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 150); // A small delay is often needed for the transition
+            }
+        });
+    }
 }
