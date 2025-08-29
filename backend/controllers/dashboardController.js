@@ -416,4 +416,68 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     });
 });
 
-module.exports = { getDashboardStats };
+/**
+ * @desc    Get detailed list of pending requisitions
+ * @route   GET /api/dashboard/details/pending-requisitions
+ * @access  Private/Admin
+ */
+const getPendingRequisitionsDetails = asyncHandler(async (req, res) => {
+    const requisitions = await Requisition.find({ status: 'Pending' })
+        .sort({ dateRequested: -1 })
+        .select('risNumber requestingOffice dateRequested status items')
+        .populate('items.stockItem', 'description unitOfMeasure')
+        .lean();
+    res.json(requisitions);
+});
+
+/**
+ * @desc    Get detailed list of low stock items
+ * @route   GET /api/dashboard/details/low-stock-items
+ * @access  Private/Admin
+ */
+const getLowStockItemsDetails = asyncHandler(async (req, res) => {
+    const lowStockItems = await StockItem.find({
+        $expr: { $lte: ["$quantity", "$reorderPoint"] }
+    })
+    .sort({ description: 1 })
+    .select('stockNumber description quantity reorderPoint unitOfMeasure')
+    .lean();
+    res.json(lowStockItems);
+});
+
+/**
+ * @desc    Get detailed list of unassigned assets
+ * @route   GET /api/dashboard/details/unassigned-assets
+ * @access  Private/Admin
+ */
+const getUnassignedAssetsDetails = asyncHandler(async (req, res) => {
+    const unassignedAssets = await Asset.find({
+        assignedPAR: { $in: [null, ""] },
+        assignedICS: { $in: [null, ""] }
+    })
+    .sort({ createdAt: -1 })
+    .select('propertyNumber description acquisitionCost acquisitionDate')
+    .lean();
+    res.json(unassignedAssets);
+});
+
+/**
+ * @desc    Get detailed list of assets nearing end of life
+ * @route   GET /api/dashboard/details/nearing-eol
+ * @access  Private/Admin
+ */
+const getNearingEOLDetails = asyncHandler(async (req, res) => {
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(new Date().getFullYear() + 1);
+
+    const assets = await Asset.aggregate([
+        { $match: { status: { $in: ['In Use', 'In Storage'] }, usefulLife: { $gt: 0 } } },
+        { $addFields: { endOfLifeDate: { $dateAdd: { startDate: "$acquisitionDate", unit: "year", amount: "$usefulLife" } } } },
+        { $match: { endOfLifeDate: { $lte: oneYearFromNow, $gt: new Date() } } },
+        { $sort: { endOfLifeDate: 1 } },
+        { $project: { propertyNumber: 1, description: 1, endOfLifeDate: 1, acquisitionDate: 1, 'custodian.name': 1 } }
+    ]);
+    res.json(assets);
+});
+
+module.exports = { getDashboardStats, getPendingRequisitionsDetails, getLowStockItemsDetails, getUnassignedAssetsDetails, getNearingEOLDetails };

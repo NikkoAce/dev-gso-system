@@ -79,7 +79,7 @@
                             <div id="stat-portfolio-value-trend" class="stat-desc"></div>
                         </div>
                         <!-- Total Assets -->
-                        <div id="stat-card-total-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="totalAssets">
+                        <div id="stat-card-total-assets" class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="totalAssets" data-url="../assets/asset-registry.html" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-secondary">
                                 <i data-lucide="archive" class="h-6 w-6 md:h-8 md:w-8"></i>
@@ -89,7 +89,7 @@
                             <div id="stat-total-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Immovable Assets -->
-                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="immovableAssets" data-url="../immovable-assets/immovable-registry.html">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="immovableAssets" data-url="../immovable-assets/immovable-registry.html" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-info">
                                 <i data-lucide="building-2" class="h-6 w-6 md:h-8 md:w-8"></i>
@@ -99,7 +99,7 @@
                             <div id="stat-immovable-assets-trend" class="stat-desc"></div>
                         </div>
                         <!-- Pending Requisitions -->
-                        <div class="stat card bg-base-100 border dashboard-component" data-id="pendingRequisitions">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="pendingRequisitions" data-details-id="pending-requisitions" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-warning">
                                 <i data-lucide="clipboard-list" class="h-6 w-6 md:h-8 md:w-8"></i>
@@ -119,7 +119,7 @@
                             <div class="stat-desc">For selected period</div>
                         </div>
                         <!-- Low Stock Items -->
-                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="lowStockItems" data-url="../supplies/inventory.html" data-filter-key="filter" data-filter-value="low_stock">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="lowStockItems" data-details-id="low-stock-items" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-orange-500">
                                 <i data-lucide="package-search" class="h-6 w-6 md:h-8 md:w-8"></i>
@@ -129,7 +129,7 @@
                             <div class="stat-desc text-orange-500">Reorder needed</div>
                         </div>
                         <!-- NEW: Unassigned Assets -->
-                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="unassignedAssets" data-type="card" data-url="../assets/asset-registry.html" data-filter-key="assignment" data-filter-value="unassigned">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="unassignedAssets" data-details-id="unassigned-assets" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-info">
                                 <i data-lucide="package-minus" class="h-6 w-6 md:h-8 md:w-8"></i>
@@ -149,7 +149,7 @@
                             <div class="stat-desc">As of selected date</div>
                         </div>
                         <!-- NEW: Assets Nearing End of Life -->
-                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="nearingEndOfLife" data-type="card" data-url="../assets/asset-registry.html" data-filter-key="filter" data-filter-value="nearing_eol">
+                        <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="nearingEndOfLife" data-details-id="nearing-eol" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-cyan-500">
                                 <i data-lucide="hourglass" class="h-6 w-6 md:h-8 md:w-8"></i>
@@ -159,7 +159,7 @@
                             <div class="stat-desc">Within the next year</div>
                         </div>
                         <!-- Filter Card -->
-                        <div class="card bg-base-100 border lg:col-span-2 dashboard-component" data-id="filters">
+                        <div class="card bg-base-100 border lg:col-span-2 dashboard-component" data-id="filters" data-type="card">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="card-body p-4">
                                 <h2 class="card-title text-base">Filters</h2>
@@ -300,6 +300,19 @@
                 <!-- Checkboxes will be populated by JS -->
             </div>
             <div class="modal-action"><button id="save-preferences-btn" class="btn btn-primary">Save Preferences</button></div>
+        </div>
+    </dialog>
+
+    <!-- Drill-Down Details Modal -->
+    <dialog id="details-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 id="details-modal-title" class="font-bold text-lg">Details</h3>
+            <div id="details-modal-content" class="py-4 max-h-[75vh] overflow-y-auto">
+                <!-- Content will be populated by JS -->
+            </div>
         </div>
     </dialog>
 

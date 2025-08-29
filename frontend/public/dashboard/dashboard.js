@@ -197,6 +197,107 @@ function initializeDashboard(user) {
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
 
+    async function showDetailsModal(detailsId, title) {
+        const modal = document.getElementById('details-modal');
+        const modalTitle = document.getElementById('details-modal-title');
+        const modalContent = document.getElementById('details-modal-content');
+
+        if (!modal || !modalTitle || !modalContent) return;
+
+        modalTitle.textContent = title;
+        modalContent.innerHTML = `<div class="flex justify-center items-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 text-gray-500"></i></div>`;
+        lucide.createIcons();
+        modal.showModal();
+
+        try {
+            const data = await fetchWithAuth(`dashboard/details/${detailsId}`);
+            renderDetailsTable(detailsId, data, modalContent);
+        } catch (error) {
+            modalContent.innerHTML = `<p class="text-red-500 text-center">Error loading details: ${error.message}</p>`;
+        }
+    }
+
+    function renderDetailsTable(detailsId, data, container) {
+        const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
+        let tableHTML = '';
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500 py-4">No items to display.</p>';
+            return;
+        }
+
+        switch (detailsId) {
+            case 'pending-requisitions':
+                tableHTML = `
+                    <table class="table table-zebra table-sm w-full">
+                        <thead><tr><th>RIS No.</th><th>Office</th><th>Date Requested</th><th>Items</th></tr></thead>
+                        <tbody>
+                            ${data.map(req => `
+                                <tr>
+                                    <td>${req.risNumber}</td>
+                                    <td>${req.requestingOffice}</td>
+                                    <td>${formatDate(req.dateRequested)}</td>
+                                    <td>${req.items.map(item => `<div>- ${item.quantity} ${item.stockItem?.unitOfMeasure || ''} ${item.stockItem?.description || 'N/A'}</div>`).join('')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+                break;
+            case 'low-stock-items':
+                tableHTML = `
+                    <table class="table table-zebra table-sm w-full">
+                        <thead><tr><th>Stock No.</th><th>Description</th><th class="text-right">Quantity</th><th class="text-right">Re-order Point</th><th>Unit</th></tr></thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td>${item.stockNumber}</td>
+                                    <td>${item.description}</td>
+                                    <td class="text-right text-red-500 font-bold">${item.quantity}</td>
+                                    <td class="text-right">${item.reorderPoint}</td>
+                                    <td>${item.unitOfMeasure}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+                break;
+            case 'unassigned-assets':
+                tableHTML = `
+                    <table class="table table-zebra table-sm w-full">
+                        <thead><tr><th>Property No.</th><th>Description</th><th class="text-right">Cost</th><th>Acquisition Date</th></tr></thead>
+                        <tbody>
+                            ${data.map(asset => `
+                                <tr>
+                                    <td>${asset.propertyNumber}</td>
+                                    <td>${asset.description}</td>
+                                    <td class="text-right">${formatCurrency(asset.acquisitionCost)}</td>
+                                    <td>${formatDate(asset.acquisitionDate)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+                break;
+            case 'nearing-eol':
+                tableHTML = `
+                    <table class="table table-zebra table-sm w-full">
+                        <thead><tr><th>Property No.</th><th>Description</th><th>Custodian</th><th>End of Life Date</th></tr></thead>
+                        <tbody>
+                            ${data.map(asset => `
+                                <tr>
+                                    <td>${asset.propertyNumber}</td>
+                                    <td>${asset.description}</td>
+                                    <td>${asset.custodian?.name || 'N/A'}</td>
+                                    <td class="text-red-500 font-bold">${formatDate(asset.endOfLifeDate)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+                break;
+            default:
+                tableHTML = '<p>Details view not configured for this item.</p>';
+        }
+        container.innerHTML = `<div class="overflow-x-auto">${tableHTML}</div>`;
+    }
+
     async function fetchDashboardData() {
         try {
             const startDate = document.getElementById('filter-start-date').value;
@@ -447,17 +548,23 @@ function initializeDashboard(user) {
 
         // Delegated event listener for all clickable stat cards
         statsContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.dashboard-component[data-url]');
+            const card = e.target.closest('.dashboard-component[data-url], .dashboard-component[data-details-id]');
             if (!card) return;
 
             const url = card.dataset.url;
+            const detailsId = card.dataset.detailsId;
             const filterKey = card.dataset.filterKey;
             const filterValue = card.dataset.filterValue;
 
-            if (filterKey && filterValue) {
-                window.location.href = `${url}?${filterKey}=${encodeURIComponent(filterValue)}`;
-            } else {
-                window.location.href = url;
+            if (detailsId) {
+                const title = card.querySelector('.stat-title')?.textContent || 'Details';
+                showDetailsModal(detailsId, title);
+            } else if (url) {
+                if (filterKey && filterValue) {
+                    window.location.href = `${url}?${filterKey}=${encodeURIComponent(filterValue)}`;
+                } else {
+                    window.location.href = url;
+                }
             }
         });
 
