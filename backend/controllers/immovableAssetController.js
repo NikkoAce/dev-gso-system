@@ -18,7 +18,7 @@ const parseJSON = (string) => {
  * @access  Private
  */
 const getImmovableAssets = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 15, sort = 'propertyIndexNumber', order = 'asc', search, type, status } = req.query;
+    const { page, limit, sort = 'propertyIndexNumber', order = 'asc', search, type, status } = req.query;
 
     const query = {};
     if (search) {
@@ -33,22 +33,29 @@ const getImmovableAssets = asyncHandler(async (req, res) => {
     if (status) query.status = status;
 
     const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-    const skip = (pageNum - 1) * limitNum;
 
-    const [assets, totalDocs] = await Promise.all([
-        ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
-        ImmovableAsset.countDocuments(query)
-    ]);
+    if (page && limit) {
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
 
-    res.json({
-        docs: assets,
-        totalDocs,
-        limit: limitNum,
-        totalPages: Math.ceil(totalDocs / limitNum),
-        page: pageNum,
-    });
+        const [assets, totalDocs] = await Promise.all([
+            ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
+            ImmovableAsset.countDocuments(query)
+        ]);
+
+        res.json({
+            docs: assets,
+            totalDocs,
+            limit: limitNum,
+            totalPages: Math.ceil(totalDocs / limitNum),
+            page: pageNum,
+        });
+    } else {
+        // If no pagination params, return all matching assets (for map view, etc.)
+        const assets = await ImmovableAsset.find(query).sort(sortOptions).lean();
+        res.json(assets);
+    }
 });
 
 /**
