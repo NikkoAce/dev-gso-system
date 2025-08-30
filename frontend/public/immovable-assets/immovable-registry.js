@@ -36,6 +36,7 @@ function initializeRegistryPage(user) {
     const statusFilter = document.getElementById('status-filter');
     const paginationControls = document.getElementById('pagination-controls');
     const exportCsvBtn = document.getElementById('export-csv-btn');
+    const addAssetBtn = document.getElementById('add-asset-btn');
 
     // --- UTILITY ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -277,5 +278,10 @@ function initializeRegistryPage(user) {
     exportCsvBtn.addEventListener('click', handleExportCSV);
 
     // --- INITIALIZATION ---
+    // Hide "Add" button if user doesn't have create permission
+    if (!user.permissions.includes('immovable:create')) {
+        addAssetBtn.classList.add('hidden');
+    }
+
     fetchAndRenderAssets();
 }
