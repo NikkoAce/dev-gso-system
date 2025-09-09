@@ -119,12 +119,20 @@ const getAssetById = async (req, res) => {
 const createAsset = async (req, res) => {
   try {
     // Since we are using multipart/form-data, nested objects might be stringified.
-    const assetData = {};
-    for (const key in req.body) {
-        try {
-            assetData[key] = JSON.parse(req.body[key]);
-        } catch (e) {
-            assetData[key] = req.body[key];
+    const assetData = { ...req.body };
+
+    // Safely parse fields that are expected to be JSON strings from FormData
+    const fieldsToParse = ['custodian', 'specifications'];
+    for (const field of fieldsToParse) {
+        if (assetData[field] && typeof assetData[field] === 'string') {
+            try {
+                assetData[field] = JSON.parse(assetData[field]);
+            } catch (e) {
+                // This indicates a malformed request from the client.
+                console.error(`Error parsing JSON for field '${field}':`, assetData[field]);
+                res.status(400);
+                throw new Error(`Invalid data format for ${field}.`);
+            }
         }
     }
 
@@ -157,6 +165,7 @@ const createAsset = async (req, res) => {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.propertyNumber) {
         return res.status(400).json({ message: `Property Number '${error.keyValue.propertyNumber}' already exists.` });
     }
+    console.error("Error in createAsset:", error); // Log the full error for better debugging
     res.status(400).json({ message: 'Invalid asset data', error: error.message });
   }
 };
@@ -227,14 +236,22 @@ const generateMovableAssetUpdateHistory = (original, updates, user) => {
 const updateAsset = async (req, res) => {
   try {
     const assetId = req.params.id;
-    
+
     // Since we are using multipart/form-data, nested objects might be stringified.
-    const updateData = {};
-    for (const key in req.body) {
-        try {
-            updateData[key] = JSON.parse(req.body[key]);
-        } catch (e) {
-            updateData[key] = req.body[key];
+    const updateData = { ...req.body };
+
+    // Safely parse fields that are expected to be JSON strings from FormData
+    const fieldsToParse = ['custodian', 'specifications'];
+    for (const field of fieldsToParse) {
+        if (updateData[field] && typeof updateData[field] === 'string') {
+            try {
+                updateData[field] = JSON.parse(updateData[field]);
+            } catch (e) {
+                // This indicates a malformed request from the client.
+                console.error(`Error parsing JSON for field '${field}':`, updateData[field]);
+                res.status(400);
+                throw new Error(`Invalid data format for ${field}.`);
+            }
         }
     }
     const user = req.user; // The user performing the action
@@ -267,7 +284,10 @@ const updateAsset = async (req, res) => {
 
     const updatedAsset = await asset.save({ runValidators: true });
     res.json(updatedAsset);
-  } catch (error) { res.status(400).json({ message: 'Invalid asset data', error: error.message }); }
+  } catch (error) {
+    console.error("Error in updateAsset:", error); // Log the full error for better debugging
+    res.status(400).json({ message: 'Invalid asset data', error: error.message });
+  }
 };
 
 const deleteAsset = async (req, res) => {
