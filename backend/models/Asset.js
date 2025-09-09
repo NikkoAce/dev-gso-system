@@ -53,7 +53,7 @@ const AssetSchema = new mongoose.Schema({
   usefulLife: { type: Number, required: [true, 'Please add the useful life in years'] },
   salvageValue: { type: Number, default: 0 },
   impairmentLosses: { type: Number, default: 0 },
-  status: { type: String, enum: ['In Use', 'In Storage', 'For Repair', 'Disposed'], default: 'In Use' },
+  status: { type: String, enum: ['In Use', 'In Storage', 'For Repair', 'Waste', 'Disposed'], default: 'In Use' },
   assignedPAR: { type: String, default: null },
   assignedICS: { type: String, default: null }, // NEW
   maintenanceSchedule: { type: Date },
