@@ -5,6 +5,7 @@ import { getCurrentUser, gsoLogout } from '../js/auth.js';
 let currentPageRoles = [];
 let allPermissions = [];
 let currentPage = 1;
+let totalPages = 1;
 const itemsPerPage = 10;
 let sortKey = 'name';
 let sortDirection = 'asc';
@@ -69,6 +70,7 @@ async function loadRoles() {
     try {
         const data = await fetchWithAuth(`roles?${params.toString()}`);
         currentPageRoles = data.docs;
+        totalPages = data.totalPages;
         renderRolesTable(data.docs);
         renderPagination(document.getElementById('pagination-controls'), data);
         updateSortIndicators();
@@ -135,13 +137,16 @@ function setupEventListeners() {
 
     const paginationControls = document.getElementById('pagination-controls');
     paginationControls.addEventListener('click', (e) => {
-        if (e.target.id === 'prev-page-btn' && currentPage > 1) {
-            currentPage--;
-            loadRoles();
-        }
-        if (e.target.id === 'next-page-btn') {
-            currentPage++;
-            loadRoles();
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) {
+            currentPage--; loadRoles();
+        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
+            currentPage++; loadRoles();
+        } else if (target.classList.contains('page-btn')) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page !== currentPage) { currentPage = page; loadRoles(); }
         }
     });
 

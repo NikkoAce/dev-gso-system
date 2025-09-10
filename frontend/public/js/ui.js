@@ -109,24 +109,57 @@ export function createUIManager() {
     function renderPagination(container, pagination) {
         if (!container) return;
         container.innerHTML = '';
-        const { currentPage, totalPages, totalDocs, itemsPerPage } = pagination;
+        const { page: currentPage, totalPages, totalDocs, limit: itemsPerPage } = pagination;
 
-        if (totalPages <= 1) return;
+        if (totalPages <= 1) {
+            if (totalDocs > 0) {
+                container.innerHTML = `
+                    <span class="text-sm text-base-content/70">
+                        Showing <span class="font-semibold">1</span>
+                        to <span class="font-semibold">${totalDocs}</span>
+                        of <span class="font-semibold">${totalDocs}</span> Results
+                    </span>
+                `;
+            }
+            return;
+        }
 
         const startItem = (currentPage - 1) * itemsPerPage + 1;
         const endItem = Math.min(currentPage * itemsPerPage, totalDocs);
 
-        container.innerHTML = `
+        const createPageButton = (page) => {
+            if (page === '...') return `<button class="btn btn-sm btn-disabled">...</button>`;
+            const isActive = page === currentPage ? 'btn-active' : '';
+            return `<button class="btn btn-sm page-btn ${isActive}" data-page="${page}">${page}</button>`;
+        };
+
+        let paginationHTML = `
             <span class="text-sm text-base-content/70">
                 Showing <span class="font-semibold">${startItem}</span>
                 to <span class="font-semibold">${endItem}</span>
                 of <span class="font-semibold">${totalDocs}</span> Results
             </span>
             <div class="btn-group">
-                ${currentPage > 1 ? `<button id="prev-page-btn" class="btn btn-sm">Prev</button>` : ''}
-                ${currentPage < totalPages ? `<button id="next-page-btn" class="btn btn-sm">Next</button>` : ''}
-            </div>
         `;
+
+        paginationHTML += `<button id="prev-page-btn" class="btn btn-sm" ${currentPage === 1 ? 'disabled' : ''}>«</button>`;
+
+        const pages = [];
+        const pagesToShow = 1;
+        pages.push(1);
+        if (currentPage > pagesToShow + 2) pages.push('...');
+        for (let i = Math.max(2, currentPage - pagesToShow); i <= Math.min(totalPages - 1, currentPage + pagesToShow); i++) {
+            pages.push(i);
+        }
+        if (currentPage < totalPages - pagesToShow - 1) pages.push('...');
+        if (totalPages > 1) pages.push(totalPages);
+
+        const uniquePages = [...new Set(pages)];
+        uniquePages.forEach(p => { paginationHTML += createPageButton(p); });
+
+        paginationHTML += `<button id="next-page-btn" class="btn btn-sm" ${currentPage === totalPages ? 'disabled' : ''}>»</button>`;
+        paginationHTML += `</div>`;
+        container.innerHTML = paginationHTML;
     }
 
     /**

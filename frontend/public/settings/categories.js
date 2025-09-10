@@ -8,6 +8,7 @@ const ENTITY_NAME = 'Category';
 
 let currentPageItems = [];
 let currentPage = 1;
+let totalPages = 1;
 const itemsPerPage = 15;
 let sortKey = 'name';
 let sortDirection = 'asc';
@@ -57,6 +58,7 @@ async function loadItems() {
     try {
         const data = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
         currentPageItems = data.docs;
+        totalPages = data.totalPages;
         renderTable(data.docs);
         renderPagination(paginationControls, data);
         updateSortIndicators();
@@ -115,9 +117,17 @@ function setupEventListeners() {
     form.addEventListener('submit', handleSave);
     cancelBtn.addEventListener('click', resetForm);
     searchInput.addEventListener('input', () => { currentPage = 1; loadItems(); });
+
     paginationControls.addEventListener('click', (e) => {
-        if (e.target.id === 'prev-page-btn' && currentPage > 1) { currentPage--; loadItems(); }
-        if (e.target.id === 'next-page-btn') { currentPage++; loadItems(); }
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) { currentPage--; loadItems(); }
+        else if (target.id === 'next-page-btn' && currentPage < totalPages) { currentPage++; loadItems(); }
+        else if (target.classList.contains('page-btn')) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page !== currentPage) { currentPage = page; loadItems(); }
+        }
     });
     tableHeader.addEventListener('click', (e) => {
         const th = e.target.closest('th[data-sort-key]');

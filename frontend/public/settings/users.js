@@ -5,6 +5,7 @@ import { getCurrentUser, gsoLogout } from '../js/auth.js';
 let currentPageUsers = [];
 let metadata = { roles: [], permissions: [] };
 let currentPage = 1;
+let totalPages = 1;
 const itemsPerPage = 15;
 let sortKey = 'name';
 let sortDirection = 'asc';
@@ -53,6 +54,7 @@ async function loadUsers() {
     try {
         const data = await fetchWithAuth(`users?${params.toString()}`);
         currentPageUsers = data.docs;
+        totalPages = data.totalPages;
         renderUsersTable(data.docs);
         renderPagination(document.getElementById('pagination-controls'), data);
         updateSortIndicators();
@@ -76,15 +78,16 @@ function setupEventListeners() {
 
     const paginationControls = document.getElementById('pagination-controls');
     paginationControls.addEventListener('click', (e) => {
-        if (e.target.id === 'prev-page-btn') {
-            if (currentPage > 1) {
-                currentPage--;
-                loadUsers();
-            }
-        }
-        if (e.target.id === 'next-page-btn') {
-            currentPage++;
-            loadUsers();
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) {
+            currentPage--; loadUsers();
+        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
+            currentPage++; loadUsers();
+        } else if (target.classList.contains('page-btn')) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page !== currentPage) { currentPage = page; loadUsers(); }
         }
     });
 
