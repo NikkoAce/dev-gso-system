@@ -3,7 +3,7 @@ const Asset = require('../models/Asset');
 
 const getCategories = async (req, res) => {
     try {
-           const { page = 1, limit = 15, sort = 'name', order = 'asc', search = '' } = req.query;
+        const { page, limit, sort = 'name', order = 'asc', search = '' } = req.query;
 
         const pipeline = [];
         if (search) {
@@ -17,6 +17,13 @@ const getCategories = async (req, res) => {
             { $sort: { [sort]: order === 'asc' ? 1 : -1 } }
         );
 
+        // If no pagination, return all items (for dropdowns)
+        if (!page || !limit) {
+            const categories = await Category.aggregate(pipeline);
+            return res.json(categories);
+        }
+
+        // If pagination is requested, continue with pagination logic
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const skip = (pageNum - 1) * limitNum;
