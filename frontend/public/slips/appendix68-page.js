@@ -1,5 +1,6 @@
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { initializeSlipPage } from '../js/slip-page-common.js';
+import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -36,8 +37,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reprint: '../slips/slip-history.html'
             },
             populateFormFn: (slipData) => {
-                document.getElementById('appendix-number').textContent = slipData.appendixNumber;
-                document.getElementById('issued-date').value = new Date(slipData.date || Date.now()).toISOString().split('T')[0];
+                // Handle both create (temporary number) and reprint (final number) modes
+                document.getElementById('appendix-number').textContent = slipData.appendixNumber || 'Pending...';
+                const slipDate = slipData.date || slipData.issuedDate || Date.now();
+                document.getElementById('issued-date').value = new Date(slipDate).toISOString().split('T')[0];
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
 
                 const assetList = document.getElementById('asset-list');
@@ -60,7 +63,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             checkFundSource: false // No fund source check needed for this slip
         };
 
-        initializeSlipPage(config, user);
+        // Custom initializer to override the default save behavior
+        function customInitializeA68Page(config, currentUser) {
+            initializeSlipPage(config, currentUser); // Run the original setup
+
+            const saveButton = document.getElementById(config.domIds.saveButton);
+            if (saveButton) {
+                const createDataString = localStorage.getItem(config.localStorageKeys.create);
+                if (createDataString) {
+                    // Replace the default event listener to handle the specific payload for A68
+                    const newSaveButton = saveButton.cloneNode(true);
+                    saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+
+                    newSaveButton.addEventListener('click', async () => {
+                        const selectedAssets = JSON.parse(createDataString);
+                        const dataToSave = {
+                            assetIds: selectedAssets.map(a => a._id),
+                            date: document.getElementById('issued-date').value,
+                            placeOfStorage: document.getElementById('place-of-storage').value
+                        };
+
+                        if (!dataToSave.date) {
+                            alert('Please select a date for the report.');
+                            return;
+                        }
+
+                        try {
+                            const savedSlip = await fetchWithAuth(config.apiEndpoint, {
+                                method: 'POST',
+                                body: JSON.stringify(dataToSave)
+                            });
+                            alert(`${config.slipType} saved successfully!`);
+                            localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
+                            window.print();
+                            window.location.href = config.backUrls.create;
+                        } catch (error) {
+                            alert(`Error: ${error.message}`);
+                        }
+                    });
+                }
+            }
+        }
+
+        customInitializeA68Page(config, user);
 
     } catch (error) {
         console.error("Initialization failed:", error);

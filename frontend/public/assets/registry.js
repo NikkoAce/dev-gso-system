@@ -407,13 +407,18 @@ function initializeRegistryPage(user) {
             DOM.confirmAppendix68Btn.disabled = true;
             DOM.confirmAppendix68Btn.textContent = 'Generating...';
 
-            try {
-                const assetIds = state.selectedAssets.filter(a => ['In Storage', 'For Repair'].includes(a.status)).map(a => a._id);
-                const payload = { assetIds };
-
-                const slipData = await fetchWithAuth('appendix68', { method: 'POST', body: payload });
-
-                localStorage.setItem('reprintA68', JSON.stringify(slipData));
+            try {                
+                // Get the full asset objects that are eligible
+                const eligibleAssets = state.selectedAssets.filter(a => ['In Storage', 'For Repair'].includes(a.status));
+                
+                if (eligibleAssets.length === 0) {
+                    uiManager.showToast('No eligible assets selected for Appendix 68.', 'warning');
+                    return;
+                }
+        
+                // Use the 'create' flow, consistent with other slips, by passing the full asset objects.
+                // The key 'assetsForA68' matches the config in appendix68-page.js
+                localStorage.setItem('assetsForA68', JSON.stringify(eligibleAssets));
                 window.location.href = '../slips/appendix68-page.html';
 
             } catch (error) {
