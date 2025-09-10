@@ -93,6 +93,13 @@
                                     <option>Disposed</option>
                                 </select>
                             </div>
+                            <!-- Office Filter -->
+                            <div class="w-full md:w-48">
+                                <select id="office-filter" class="select select-bordered w-full font-normal">
+                                    <option value="">All Offices</option>
+                                    <!-- JS will populate this -->
+                                </select>
+                            </div>
                             <!-- Action Buttons -->
                             <div class="flex items-center gap-2">
                                 <button id="more-filters-btn" aria-expanded="false" class="btn btn-ghost">
@@ -115,14 +122,6 @@
                                         <span class="text-gray-500">-</span>
                                         <input type="date" id="end-date-filter" class="input input-bordered w-full text-sm">
                                     </div>
-                                </div>
-                                <!-- Office Filter -->
-                                <div>
-                                    <label for="office-filter" class="block text-sm font-medium text-gray-700">Office</label>
-                                    <select id="office-filter" class="select select-bordered w-full mt-1 font-normal">
-                                        <option value="">All Offices</option>
-                                        <!-- JS will populate this -->
-                                    </select>
                                 </div>
                                 <!-- Fund Source Filter -->
                                 <div>

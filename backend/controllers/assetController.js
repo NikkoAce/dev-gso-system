@@ -757,56 +757,11 @@ const generateMovableLedgerCard = asyncHandler(async (req, res) => {
     res.status(200).json({ asset, ledgerRows });
 });
 
-/**
- * @desc    Generate a Waste Material Report
- * @route   GET /api/assets/reports/waste-material
- * @access  Private (Requires report:generate permission)
- */
-const generateWasteMaterialReport = asyncHandler(async (req, res) => {
-    const { asAtDate } = req.query;
-
-    if (!asAtDate) {
-        res.status(400);
-        throw new Error('The "As at Date" is required for this report.');
-    }
-
-    const reportDate = new Date(asAtDate);
-    reportDate.setUTCHours(23, 59, 59, 999); // Ensure we cover the entire day
-
-    // Find all assets marked as 'Waste' that were acquired on or before the report date.
-    const wasteAssets = await Asset.find({
-        status: 'Waste',
-        acquisitionDate: { $lte: reportDate }
-    }).sort({ propertyNumber: 1 }).lean();
-
-    if (wasteAssets.length === 0) {
-        return res.json({ headers: [], rows: [], message: 'No assets with status "Waste" found for the selected date.' });
-    }
-
-    // Columns adjusted to better match a standard COA report like IIRUP.
-    const headers = ['Item No.', 'Quantity', 'Unit', 'Description', 'Property Number', 'Date Acquired', 'Amount', 'Remarks'];
-
-    const rows = wasteAssets.map((asset, index) => {
-        return [
-            index + 1,
-            1, // Assuming quantity is always 1 for movable assets
-            'unit', // Assuming unit of measure is 'unit'
-            asset.description,
-            asset.propertyNumber,
-            asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A',
-            asset.acquisitionCost,
-            asset.remarks || '' // Use the asset's remarks field
-        ];
-    });
-
-    res.status(200).json({ headers, rows });
-});
-
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
     deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount, exportAssetsToCsv,
     createPtrAndTransferAssets,
     getMyOfficeAssets, addRepairRecord,
-    deleteRepairRecord, generateMovableLedgerCard, generateWasteMaterialReport
+    deleteRepairRecord, generateMovableLedgerCard
 };

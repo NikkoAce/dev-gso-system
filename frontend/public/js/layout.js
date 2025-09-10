@@ -6,8 +6,7 @@ const GSO_NAV_CONFIG = [
     icon: 'file-text', text: 'Reports', permission: 'report:generate',
     children: [
       { href: '../reports/reports.html', icon: 'archive', text: 'Movable Assets', permission: 'report:generate' },
-      { href: '../reports/immovable-reports.html', icon: 'file-text', text: 'Immovable Assets', permission: 'report:generate' },
-      { href: '../reports/waste-material-report.html', icon: 'archive-restore', text: 'IIRUP', permission: 'report:generate' }
+      { href: '../reports/immovable-reports.html', icon: 'file-text', text: 'Immovable Assets', permission: 'report:generate' }
     ]
   },
   {
