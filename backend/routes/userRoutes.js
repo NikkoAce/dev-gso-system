@@ -1,5 +1,4 @@
 const express = require('express');
-console.log('--- userRoutes.js file is being loaded ---');
 const router = express.Router();
 const {
     getUsers,
@@ -13,7 +12,7 @@ const PERMISSIONS = require('../config/permissions');
 
 // @desc    Get metadata (roles, permissions) for building the UI
 // @route   GET /api/users/meta
-router.route('/meta').get(protect, checkPermission(PERMISSIONS.USER_READ), getRolesAndPermissions);
+router.route('/meta').get(protect, checkPermission(PERMISSIONS.USER_MANAGE), getRolesAndPermissions);
 
 // @desc    Get the currently logged-in user's full profile
 // @route   GET /api/users/profile
