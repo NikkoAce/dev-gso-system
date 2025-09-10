@@ -1,12 +1,16 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
-
-let allUsers = [];
+ 
+let currentPageUsers = [];
 let metadata = { roles: [], permissions: [] };
-
-const { showToast } = createUIManager();
-
+let currentPage = 1;
+const itemsPerPage = 15;
+let sortKey = 'name';
+let sortDirection = 'asc';
+ 
+const { showToast, renderPagination, setLoading } = createUIManager();
+ 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const user = await getCurrentUser();
@@ -22,12 +26,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         initializeLayout(user, gsoLogout);
-
-        [allUsers, metadata] = await Promise.all([
-            fetchWithAuth('users'),
-            fetchWithAuth('users/meta')
-        ]);
-        renderUsersTable(allUsers);
+ 
+        metadata = await fetchWithAuth('users/meta');
+        await loadUsers();
         setupEventListeners();
     } catch (error) {
         console.error('Error initializing user management page:', error);
@@ -36,19 +37,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+async function loadUsers() {
+    const tableBody = document.getElementById('user-list');
+    setLoading(true, tableBody, { colSpan: 4 });
+
+    const searchInput = document.getElementById('search-input');
+    const params = new URLSearchParams({
+        page: currentPage,
+        limit: itemsPerPage,
+        sort: sortKey,
+        order: sortDirection,
+        search: searchInput.value,
+    });
+
+    try {
+        const data = await fetchWithAuth(`users?${params.toString()}`);
+        currentPageUsers = data.docs;
+        renderUsersTable(data.docs);
+        renderPagination(document.getElementById('pagination-controls'), data);
+        updateSortIndicators();
+    } catch (error) {
+        console.error('Failed to load users:', error);
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-error">Could not load users.</td></tr>`;
+    } finally {
+        setLoading(false, tableBody);
+    }
+}
+
 function setupEventListeners() {
     const searchInput = document.getElementById('search-input');
     searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredUsers = allUsers.filter(user =>
-            user.name.toLowerCase().includes(searchTerm) ||
-            user.email.toLowerCase().includes(searchTerm)
-        );
-        renderUsersTable(filteredUsers);
+        currentPage = 1;
+        loadUsers();
     });
 
     const editForm = document.getElementById('edit-user-form');
     editForm.addEventListener('submit', handleSaveChanges);
+
+    const paginationControls = document.getElementById('pagination-controls');
+    paginationControls.addEventListener('click', (e) => {
+        if (e.target.id === 'prev-page-btn') {
+            if (currentPage > 1) {
+                currentPage--;
+                loadUsers();
+            }
+        }
+        if (e.target.id === 'next-page-btn') {
+            currentPage++;
+            loadUsers();
+        }
+    });
+
+    const tableHeader = document.querySelector('#user-list').parentElement.querySelector('thead');
+    tableHeader.addEventListener('click', (e) => {
+        const th = e.target.closest('th[data-sort-key]');
+        if (th) {
+            const key = th.dataset.sortKey;
+            sortDirection = (sortKey === key && sortDirection === 'asc') ? 'desc' : 'asc';
+            sortKey = key;
+            loadUsers();
+        }
+    });
 
     const roleSelect = document.getElementById('edit-role');
     roleSelect.addEventListener('change', handleRoleChange);
@@ -67,12 +116,12 @@ function renderUsersTable(users) {
 
     userList.innerHTML = users.map(user => `
         <tr id="user-row-${user._id}">
-            <td>
+            <td data-sort-key="name">
                 <div class="font-bold">${user.name}</div>
                 <div class="text-sm opacity-70">${user.email}</div>
             </td>
-            <td>${user.office}</td>
-            <td><span class="badge badge-ghost">${user.role}</span></td>
+            <td data-sort-key="office">${user.office}</td>
+            <td data-sort-key="role"><span class="badge badge-ghost">${user.role}</span></td>
             <td class="text-center">
                 <button class="btn btn-sm btn-ghost edit-btn" data-user-id="${user._id}">
                     <i data-lucide="edit" class="h-4 w-4"></i> Edit
@@ -85,9 +134,26 @@ function renderUsersTable(users) {
     document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const userId = e.currentTarget.dataset.userId;
-            const user = allUsers.find(u => u._id === userId);
+            const user = currentPageUsers.find(u => u._id === userId);
             openEditModal(user);
         });
+    });
+    lucide.createIcons();
+}
+
+function updateSortIndicators() {
+    const tableHeader = document.querySelector('#user-list').parentElement.querySelector('thead');
+    const headers = tableHeader.querySelectorAll('th[data-sort-key]');
+    headers.forEach(th => {
+        const existingIcon = th.querySelector('i[data-lucide]');
+        if (existingIcon) {
+            existingIcon.remove();
+        }
+
+        if (th.dataset.sortKey === sortKey) {
+            const iconHTML = `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`;
+            th.insertAdjacentHTML('beforeend', iconHTML);
+        }
     });
     lucide.createIcons();
 }
@@ -150,18 +216,11 @@ async function handleSaveChanges(event) {
     saveButton.disabled = true;
 
     try {
-        const updatedUser = await fetchWithAuth(`users/${userId}`, {
+        await fetchWithAuth(`users/${userId}`, {
             method: 'PUT',
             body: JSON.stringify(updatedData)
         });
-
-        // Update the user in the local `allUsers` array
-        const userIndex = allUsers.findIndex(u => u._id === userId);
-        if (userIndex !== -1) {
-            allUsers[userIndex] = { ...allUsers[userIndex], ...updatedUser };
-        }
-
-        renderUsersTable(allUsers); // Re-render the table to show changes
+        await loadUsers(); // Re-fetch the current page to show changes
         document.getElementById('edit-user-modal').close();
         showToast('User updated successfully!', 'success');
     } catch (error) {

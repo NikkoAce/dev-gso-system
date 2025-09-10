@@ -11,8 +11,41 @@ const PERMISSIONS = require('../config/permissions');
  * @access  Private/Admin (Requires 'user:read' permission)
  */
 const getUsers = asyncHandler(async (req, res) => {
-    const users = await User.find({}).select('-password').sort({ name: 1 });
-    res.json(users);
+    const {
+        page = 1,
+        limit = 20,
+        sort = 'name',
+        order = 'asc',
+        search = ''
+    } = req.query;
+
+    const query = {};
+    if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        query.$or = [
+            { name: searchRegex },
+            { email: searchRegex },
+            { office: searchRegex }
+        ];
+    }
+
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [users, totalDocs] = await Promise.all([
+        User.find(query).select('-password').sort(sortOptions).skip(skip).limit(limitNum).lean(),
+        User.countDocuments(query)
+    ]);
+
+    res.json({
+        docs: users,
+        totalDocs,
+        limit: limitNum,
+        totalPages: Math.ceil(totalDocs / limitNum),
+        page: pageNum,
+    });
 });
 
 /**
