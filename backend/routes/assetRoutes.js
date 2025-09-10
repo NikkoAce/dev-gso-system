@@ -16,7 +16,6 @@ const {
     updatePhysicalCount,
     exportAssetsToCsv,
     getMyOfficeAssets,
-    updateScanResults,
     addRepairRecord,
     deleteRepairRecord,
     generateMovableLedgerCard
@@ -38,9 +37,6 @@ router.post('/bulk-transfer', protect, checkPermission(PERMISSIONS.ASSET_TRANSFE
 
 // Route for updating physical count
 router.put('/physical-count', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updatePhysicalCount);
-
-// Route for updating from scanner
-router.post('/scan', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updateScanResults);
 
 // Route for generating a Property Card for a specific asset (shows history)
 router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetById);

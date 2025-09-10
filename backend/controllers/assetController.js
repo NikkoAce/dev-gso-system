@@ -507,45 +507,6 @@ const updatePhysicalCount = async (req, res) => {
     }
 };
 
-// NEW: Controller for saving scan results
-const updateScanResults = async (req, res) => {
-    const { foundAssetNumbers } = req.body;
-
-    if (!Array.isArray(foundAssetNumbers)) {
-        return res.status(400).json({ message: 'Invalid data format. Expected an array of property numbers.' });
-    }
-
-    try {
-        const today = new Date().toLocaleDateString('en-CA');
-        const remarks = `Verified during physical count on ${today}`;
-        const newCondition = 'Serviceable';
-
-        const assets = await Asset.find({ propertyNumber: { $in: foundAssetNumbers } });
-
-        const updatePromises = assets.map(asset => {
-            const oldCondition = asset.condition;
-
-            if (oldCondition !== newCondition) {
-                asset.history.push({
-                    event: 'Physical Count (Scanner)',
-                    details: `Condition changed from "${oldCondition || 'N/A'}" to "${newCondition}". Remarks: ${remarks}`,
-                    from: oldCondition,
-                    to: newCondition,
-                    user: req.user.name // Use authenticated user
-                });
-            }
-            asset.condition = newCondition;
-            asset.remarks = remarks;
-            return asset.save();
-        });
-
-        await Promise.all(updatePromises);
-        res.json({ message: 'Scan results saved successfully.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error while saving scan results.', error: error.message });
-    }
-};
-
 const bulkTransferAssets = async (req, res) => {
     const { assetIds, newOffice, newCustodian, transferDate } = req.body;
 
@@ -799,7 +760,7 @@ const generateMovableLedgerCard = asyncHandler(async (req, res) => {
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
-    deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount, updateScanResults,
+    deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount,
     bulkTransferAssets, exportAssetsToCsv,
     getMyOfficeAssets, addRepairRecord,
     deleteRepairRecord, generateMovableLedgerCard
