@@ -34,6 +34,7 @@ function initializeRegistryPage(user) {
         assetsPerPage: 20,
         sortKey: 'createdAt',
         sortDirection: 'desc',
+        totalPages: 1,
     };
 
     // --- MODULE: DOM ELEMENT CACHE ---
@@ -158,18 +159,24 @@ function initializeRegistryPage(user) {
                 return;
             }
 
-            // NEW CHECK: Ensure selected assets are not already assigned to another slip.
-            const alreadyAssignedAssets = state.selectedAssets.filter(asset => asset.assignedPAR || asset.assignedICS);
-            if (alreadyAssignedAssets.length > 0) {
-                const assignedNumbers = alreadyAssignedAssets.map(a => a.propertyNumber).join(', ');
-                uiManager.showToast(`Error: The following assets are already assigned to a slip and cannot be added to a new one: ${assignedNumbers}`, 'error');
-                return;
+            // For PAR and ICS, all assets must belong to the same custodian and not be assigned to another slip.
+            if (slipType === 'PAR' || slipType === 'ICS') {
+                const alreadyAssignedAssets = state.selectedAssets.filter(asset => asset.assignedPAR || asset.assignedICS);
+                if (alreadyAssignedAssets.length > 0) {
+                    const assignedNumbers = alreadyAssignedAssets.map(a => a.propertyNumber).join(', ');
+                    uiManager.showToast(`Error: The following assets are already assigned to a slip and cannot be added to a new one: ${assignedNumbers}`, 'error');
+                    return;
+                }
+                const firstCustodian = state.selectedAssets[0].custodian.name;
+                if (!state.selectedAssets.every(asset => asset.custodian.name === firstCustodian)) {
+                    uiManager.showToast(`Error: All selected assets must belong to the same custodian to be on one ${slipType}.`, 'error');
+                    return;
+                }
             }
-            const firstCustodian = state.selectedAssets[0].custodian.name;
-            if (!state.selectedAssets.every(asset => asset.custodian.name === firstCustodian)) {
-                uiManager.showToast(`Error: All selected assets must belong to the same custodian to be on one ${slipType}.`, 'error');
-                return;
-            }
+
+            // For IIRUP and Appendix 68, the custodian check is not needed as they are GSO-level documents.
+            // The visibility logic in ui.js already ensures the correct assets are selected based on status.
+
             localStorage.setItem(`assetsFor${slipType}`, JSON.stringify(state.selectedAssets));
             window.location.href = `../slips/${slipType.toLowerCase()}-page.html`;
         }
@@ -256,8 +263,20 @@ function initializeRegistryPage(user) {
         },
 
         async handlePaginationClick(e) {
-            if (e.target.id === 'prev-page-btn' && state.currentPage > 1) state.currentPage--;
-            if (e.target.id === 'next-page-btn') state.currentPage++;
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const originalPage = state.currentPage;
+
+            if (target.id === 'prev-page-btn' && state.currentPage > 1) {
+                state.currentPage--;
+            } else if (target.id === 'next-page-btn' && state.currentPage < state.totalPages) {
+                state.currentPage++;
+            } else if (target.classList.contains('page-btn')) {
+                state.currentPage = parseInt(target.dataset.page, 10);
+            }
+
+            if (originalPage !== state.currentPage)
             await loadAssets();
         },
 
@@ -331,7 +350,8 @@ function initializeRegistryPage(user) {
                 generateIcsBtn: DOM.generateIcsBtn,
                 transferSelectedBtn: DOM.transferSelectedBtn,
                 transferTooltipWrapper: DOM.transferTooltipWrapper,
-                generateAppendix68Btn: DOM.generateAppendix68Btn
+                generateAppendix68Btn: DOM.generateAppendix68Btn,
+                generateIIRUPBtn: DOM.generateIIRUPBtn
             });
         },
 
@@ -459,8 +479,8 @@ function initializeRegistryPage(user) {
             }
 
             const params = {
-                currentPage: state.currentPage,
-                assetsPerPage: state.assetsPerPage,
+                page: state.currentPage,
+                limit: state.assetsPerPage,
                 sort: state.sortKey,
                 order: state.sortDirection,
                 search: DOM.searchInput?.value,
@@ -482,11 +502,16 @@ function initializeRegistryPage(user) {
             // This prevents errors if `data` is an empty array or an object without a `docs` property.
             const assets = (data && data.docs) ? data.docs : (Array.isArray(data) ? data : []);
             const totalDocs = (data && data.totalDocs) ? data.totalDocs : assets.length;
-            const totalPages = (data && data.totalPages) ? data.totalPages : 1;
+            state.totalPages = (data && data.totalPages) ? data.totalPages : 1;
 
             state.currentPageAssets = assets;
             state.totalAssets = totalDocs;
-            const paginationInfo = { totalDocs, totalPages, currentPage: state.currentPage, assetsPerPage: state.assetsPerPage };
+            const paginationInfo = {
+                totalDocs,
+                totalPages: state.totalPages,
+                page: state.currentPage,
+                limit: state.assetsPerPage
+            };
             const domElements = { tableBody: DOM.tableBody, paginationControls: DOM.paginationControls };
 
             uiManager.renderAssetTable(assets, domElements);
