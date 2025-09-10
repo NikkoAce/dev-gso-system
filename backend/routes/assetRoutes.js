@@ -18,7 +18,8 @@ const {
     getMyOfficeAssets,
     addRepairRecord,
     deleteRepairRecord,
-    generateMovableLedgerCard
+    generateMovableLedgerCard,
+    generateWasteMaterialReport
 } = require('../controllers/assetController'); // Assuming a controller file
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
@@ -43,6 +44,9 @@ router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ
 
 // Route for generating a Ledger Card for a specific asset (shows depreciation)
 router.get('/:id/ledger-card', protect, checkPermission(PERMISSIONS.ASSET_READ), generateMovableLedgerCard);
+
+// NEW: Route for generating a Waste Material Report
+router.get('/reports/waste-material', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateWasteMaterialReport);
 
 // Routes for managing repairs on a specific asset
 router.route('/:id/repairs')
