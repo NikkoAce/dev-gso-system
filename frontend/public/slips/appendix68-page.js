@@ -41,15 +41,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
 
                 const assetList = document.getElementById('asset-list');
-                assetList.innerHTML = slipData.assets.map((asset, index) => `
+                let totalAmount = 0;
+                assetList.innerHTML = slipData.assets.map((asset, index) => {
+                    // In a real scenario, sales data would come from the slipData. For now, it's blank.
+                    return `
                     <tr>
                         <td class="border border-black p-1 text-center">${index + 1}</td>
                         <td class="border border-black p-1 text-center">${asset.quantity || 1}</td>
                         <td class="border border-black p-1 text-center">${asset.unit || 'unit'}</td>
                         <td class="border border-black p-1">${asset.description}</td>
-                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1"></td> <!-- OR No. -->
+                        <td class="border border-black p-1"></td> <!-- Date -->
+                        <td class="border border-black p-1"></td> <!-- Amount -->
                     </tr>
-                `).join('');
+                `}).join('');
+                document.getElementById('total-amount').textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalAmount);
             },
             checkFundSource: false // No fund source check needed for this slip
         };
