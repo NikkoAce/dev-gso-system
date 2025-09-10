@@ -75,6 +75,7 @@ function initializeRegistryPage(user) {
         appendix68AssetListContainer: document.getElementById('appendix68-asset-list-container'),
         confirmAppendix68Btn: document.getElementById('confirm-appendix68-modal-btn'),
         cancelAppendix68Btn: document.getElementById('cancel-appendix68-modal-btn'),
+        totalValueContainer: document.getElementById('total-value-container'),
     };
 
     // --- MODULE: UI MANAGER ---
@@ -503,6 +504,7 @@ function initializeRegistryPage(user) {
             const assets = (data && data.docs) ? data.docs : (Array.isArray(data) ? data : []);
             const totalDocs = (data && data.totalDocs) ? data.totalDocs : assets.length;
             state.totalPages = (data && data.totalPages) ? data.totalPages : 1;
+            const totalValue = data?.totalValue || 0;
 
             state.currentPageAssets = assets;
             state.totalAssets = totalDocs;
@@ -516,6 +518,7 @@ function initializeRegistryPage(user) {
 
             uiManager.renderAssetTable(assets, domElements);
             uiManager.renderPagination(DOM.paginationControls, paginationInfo);
+            uiManager.renderTotalValue(DOM.totalValueContainer, totalValue);
             eventManager.updateSelectionState(); // Update buttons for the new view
 
             // --- FIX: Manage sort indicators correctly ---
