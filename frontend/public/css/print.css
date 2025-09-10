@@ -7,19 +7,19 @@
   }
 
   /* 2. Make the report container and everything inside it visible */
-  #report-output,
-  #report-output * {
+  .printable-area,
+  .printable-area * {
     visibility: visible;
   }
 
   /* 3. Position the report to take up the whole page */
-  #report-output {
+  .printable-area {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    margin: 0;
-    padding: 1cm; /* Add some margin for the printer */
+    margin: 0 !important;
+    padding: 1cm !important; /* Add some margin for the printer */
     box-shadow: none;
     border: none;
   }
@@ -35,4 +35,3 @@
     display: table-header-group; /* Repeat table headers on each new page */
   }
 }
-
