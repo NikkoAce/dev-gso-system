@@ -31,7 +31,13 @@ function initializeReportPage() {
     const tableHead = document.getElementById('report-table-head');
     const tableBody = document.getElementById('report-table-body');
     const noDataMessage = document.getElementById('no-data-message');
+    const reportHeader = document.getElementById('report-header');
+    const reportFooter = document.getElementById('report-footer');
     const reportDateDisplay = document.getElementById('report-date-display');
+    const signatory1Name = document.getElementById('signatory-1-name');
+    const signatory1Title = document.getElementById('signatory-1-title');
+    const signatory2Name = document.getElementById('signatory-2-name');
+    const signatory2Title = document.getElementById('signatory-2-title');
 
     // Set default date to today
     asAtDateInput.value = new Date().toISOString().split('T')[0];
@@ -41,6 +47,20 @@ function initializeReportPage() {
     printBtn.addEventListener('click', () => window.print());
 
     // --- LOGIC ---
+    function populateSignatories() {
+        // In a real app, this might come from a config or API.
+        const signatories = {
+            certifier: { name: 'INVENTORY COMMITTEE CHAIR', title: 'Signature over Printed Name' },
+            approver: { name: 'HEAD OF AGENCY/ENTITY', title: 'Signature over Printed Name' },
+        };
+        signatory1Name.textContent = signatories.certifier.name;
+        signatory1Title.textContent = signatories.certifier.title;
+        signatory2Name.textContent = signatories.approver.name;
+        signatory2Title.textContent = signatories.approver.title;
+    }
+
+    const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
+
     async function handleGenerateReport() {
         const asAtDate = asAtDateInput.value;
         if (!asAtDate) {
@@ -89,8 +109,15 @@ function initializeReportPage() {
 
     function renderReportTable(headers, rows) {
         tableHead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
-        tableBody.innerHTML = rows.map(row => 
-            `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`
-        ).join('');
+        tableBody.innerHTML = rows.map(row => {
+            const formattedRow = row.map((cell, index) => {
+                // The 'Amount' column is at index 6, which needs currency formatting.
+                if (index === 6) {
+                    return `<td class="text-right">${formatCurrency(cell)}</td>`;
+                }
+                return `<td>${cell}</td>`;
+            });
+            return `<tr>${formattedRow.join('')}</tr>`;
+        }).join('');
     }
 }
