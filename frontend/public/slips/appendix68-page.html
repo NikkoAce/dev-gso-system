@@ -58,22 +58,58 @@
                         </tbody>
                     </table>
 
-                    <footer class="mt-16 text-xs">
-                        <div class="grid grid-cols-3 gap-8">
-                            <div>
-                                <p class="font-bold">CERTIFICATION</p>
-                                <p class="mt-4">I hereby certify that the materials and equipment listed above are waste materials and are not serviceable.</p>
-                                <div class="mt-16 border-t border-black pt-1"><p id="signatory-1-name" class="font-bold uppercase text-center"></p><p class="text-center">Property Officer</p></div>
+                    <footer class="mt-8 text-xs">
+                        <div class="grid grid-cols-2 gap-x-8">
+                            <!-- LEFT COLUMN -->
+                            <div class="space-y-8 flex flex-col">
+                                <!-- Certified Correct -->
+                                <div class="border border-black p-2 flex-grow flex flex-col">
+                                    <p class="text-center font-bold">CERTIFIED CORRECT</p>
+                                    <div class="mt-auto pt-12 text-center">
+                                        <p id="signatory-1-name" class="font-bold uppercase border-t border-black pt-1"></p>
+                                        <p>Signature over Printed Name of Property Officer</p>
+                                    </div>
+                                </div>
+                                <!-- Disposal Approved -->
+                                <div class="border border-black p-2 flex-grow flex flex-col">
+                                    <p class="text-center font-bold">DISPOSAL APPROVED</p>
+                                    <div class="mt-auto pt-12 text-center">
+                                        <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                        <p>Signature over Printed Name of Head of Agency/Entity</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p class="font-bold">CERTIFICATE OF INSPECTION</p>
-                                <p class="mt-4">I have inspected the items listed above and certify that the same are waste materials and recommend for their disposal.</p>
-                                <div class="mt-16 border-t border-black pt-1"><p id="signatory-2-name" class="font-bold uppercase text-center">________________________</p><p class="text-center">Inspector</p></div>
-                            </div>
-                            <div>
-                                <p class="font-bold">WITNESS TO THE DISPOSAL</p>
-                                <p class="mt-4">I have witnessed the disposal of the items listed above this date ____________.</p>
-                                <div class="mt-16 border-t border-black pt-1"><p id="signatory-3-name" class="font-bold uppercase text-center">________________________</p><p class="text-center">COA Representative</p></div>
+
+                            <!-- RIGHT COLUMN -->
+                            <div class="space-y-8 flex flex-col">
+                                <!-- Certificate of Inspection -->
+                                <div class="border border-black p-2">
+                                    <p class="text-center font-bold">CERTIFICATE OF INSPECTION</p>
+                                    <p class="mt-4">I have inspected the property/ies enumerated above and certify that the same are waste materials and recommend for their disposal.</p>
+                                    <div class="mt-8 text-center">
+                                        <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                        <p>Signature over Printed Name of Inspector</p>
+                                    </div>
+                                </div>
+                                <!-- Disposal -->
+                                <div class="border border-black p-2">
+                                    <p class="text-center font-bold">DISPOSAL</p>
+                                    <p class="mt-4">I CERTIFY that the property/ies enumerated above was/were disposed of as follows:</p>
+                                    <div class="mt-4 space-y-2 pl-4">
+                                        <div><input type="checkbox" class="mr-2"> Destroyed</div>
+                                        <div><input type="checkbox" class="mr-2"> Sold at private sale</div>
+                                        <div><input type="checkbox" class="mr-2"> Sold at public auction</div>
+                                        <div><input type="checkbox" class="mr-2"> Transferred without cost to _________________</div>
+                                    </div>
+                                </div>
+                                <!-- Witness -->
+                                <div class="border border-black p-2 mt-auto">
+                                    <p class="text-center font-bold">WITNESS TO DISPOSAL</p>
+                                    <div class="mt-12 text-center">
+                                        <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                        <p>Signature over Printed Name of Witness</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </footer>
