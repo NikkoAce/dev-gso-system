@@ -104,7 +104,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 backButton.href = config.backUrls.reprint;
 
                 config.populateFormFn(slipData);
-                reprintButton.addEventListener('click', () => window.print());
+
+                // Enhanced print function to handle layout issues
+                reprintButton.addEventListener('click', () => {
+                    const rootFlexContainer = document.querySelector('body > .flex');
+                    const mainContentContainer = document.querySelector('main');
+                    
+                    // Store original styles to restore them later
+                    const originalRootStyle = rootFlexContainer ? rootFlexContainer.style.display : '';
+                    const originalMainStyle = mainContentContainer ? mainContentContainer.style.overflow : '';
+
+                    // Apply print-friendly styles
+                    if (rootFlexContainer) rootFlexContainer.style.display = 'block';
+                    if (mainContentContainer) mainContentContainer.style.overflow = 'visible';
+
+                    window.print();
+
+                    // Restore original styles after printing is done
+                    window.addEventListener('afterprint', () => {
+                        if (rootFlexContainer) rootFlexContainer.style.display = originalRootStyle;
+                        if (mainContentContainer) mainContentContainer.style.overflow = originalMainStyle;
+                    }, { once: true });
+                });
 
             } else if (createDataString) {
                 // --- CREATE MODE ---
