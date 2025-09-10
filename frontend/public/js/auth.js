@@ -56,7 +56,7 @@ export async function getCurrentUser() {
         } catch (error) {
             // The backend error will be caught here.
             // We can alert the user with the specific message.
-            alert(`Authentication Error: ${error.message}`);
+            alert(`Authentication Error from Portal: ${error.message}\n\nYou will be redirected to the login page. This may be due to an expired or invalid login token from the portal.`);
             console.error('SSO login failed:', error);
             gsoLogout(); // Redirect to portal on failure
             return null;
