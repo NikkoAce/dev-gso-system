@@ -1,10 +1,15 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
-
-let allRoles = [];
+ 
+let currentPageRoles = [];
 let allPermissions = [];
-const { showToast, showConfirmationModal } = createUIManager();
+let currentPage = 1;
+const itemsPerPage = 10;
+let sortKey = 'name';
+let sortDirection = 'asc';
+ 
+const { showToast, showConfirmationModal, renderPagination, setLoading } = createUIManager();
 
 // --- DOM CACHE ---
 const form = document.getElementById('role-form');
@@ -41,22 +46,38 @@ async function initializePage() {
         const meta = await fetchWithAuth('users/meta');
         allPermissions = meta.permissions;
         renderPermissionsCheckboxes(allPermissions);
-
-        await fetchAndRenderRoles();
+ 
+        await loadRoles();
         setupEventListeners();
     } catch (error) {
         console.error('Error fetching initial data:', error);
         showToast('Could not load roles or permissions.', 'error');
+        roleList.innerHTML = `<tr><td colspan="3" class="text-center text-error">Could not load roles.</td></tr>`;
     }
 }
-
-async function fetchAndRenderRoles() {
+ 
+async function loadRoles() {
+    setLoading(true, roleList, { colSpan: 3 });
+    const params = new URLSearchParams({
+        page: currentPage,
+        limit: itemsPerPage,
+        sort: sortKey,
+        order: sortDirection,
+        search: searchInput.value,
+    });
+ 
     try {
-        allRoles = await fetchWithAuth('roles');
-        renderRolesTable(allRoles);
+        const data = await fetchWithAuth(`roles?${params.toString()}`);
+        currentPageRoles = data.docs;
+        renderRolesTable(data.docs);
+        renderPagination(document.getElementById('pagination-controls'), data);
+        updateSortIndicators();
     } catch (error) {
         console.error('Error fetching roles:', error);
         showToast('Failed to load roles.', 'error');
+        roleList.innerHTML = `<tr><td colspan="3" class="text-center text-error">Could not load roles.</td></tr>`;
+    } finally {
+        setLoading(false, roleList);
     }
 }
 
@@ -79,7 +100,7 @@ function renderRolesTable(roles) {
     roleList.innerHTML = roles.map(role => `
         <tr id="role-row-${role._id}">
             <td><div class="font-bold">${role.name}</div></td>
-            <td class="text-center"><span class="badge badge-ghost">${role.permissions.length}</span></td>
+            <td class="text-center"><span class="badge badge-ghost">${role.permissionsCount}</span></td>
             <td class="text-center">
                 <button class="btn btn-sm btn-ghost edit-btn" data-id="${role._id}"><i data-lucide="edit" class="h-4 w-4"></i></button>
                 <button class="btn btn-sm btn-ghost delete-btn text-error" data-id="${role._id}"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
@@ -89,25 +110,62 @@ function renderRolesTable(roles) {
     lucide.createIcons();
 }
 
+function updateSortIndicators() {
+    const tableHeader = document.querySelector('#role-list').parentElement.querySelector('thead');
+    const headers = tableHeader.querySelectorAll('th[data-sort-key]');
+    headers.forEach(th => {
+        const existingIcon = th.querySelector('i[data-lucide]');
+        if (existingIcon) existingIcon.remove();
+
+        if (th.dataset.sortKey === sortKey) {
+            const iconHTML = `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`;
+            th.insertAdjacentHTML('beforeend', iconHTML);
+        }
+    });
+    lucide.createIcons();
+}
+
 function setupEventListeners() {
     form.addEventListener('submit', handleSave);
     cancelBtn.addEventListener('click', resetForm);
     searchInput.addEventListener('input', () => {
-        const searchTerm = searchInput.value.toLowerCase();
-        const filtered = allRoles.filter(role => role.name.toLowerCase().includes(searchTerm));
-        renderRolesTable(filtered);
+        currentPage = 1;
+        loadRoles();
+    });
+
+    const paginationControls = document.getElementById('pagination-controls');
+    paginationControls.addEventListener('click', (e) => {
+        if (e.target.id === 'prev-page-btn' && currentPage > 1) {
+            currentPage--;
+            loadRoles();
+        }
+        if (e.target.id === 'next-page-btn') {
+            currentPage++;
+            loadRoles();
+        }
+    });
+
+    const tableHeader = document.querySelector('#role-list').parentElement.querySelector('thead');
+    tableHeader.addEventListener('click', (e) => {
+        const th = e.target.closest('th[data-sort-key]');
+        if (th) {
+            const key = th.dataset.sortKey;
+            sortDirection = (sortKey === key && sortDirection === 'asc') ? 'desc' : 'asc';
+            sortKey = key;
+            loadRoles();
+        }
     });
 
     roleList.addEventListener('click', e => {
         const editBtn = e.target.closest('.edit-btn');
         if (editBtn) {
-            const role = allRoles.find(r => r._id === editBtn.dataset.id);
+            const role = currentPageRoles.find(r => r._id === editBtn.dataset.id);
             populateFormForEdit(role);
         }
 
         const deleteBtn = e.target.closest('.delete-btn');
         if (deleteBtn) {
-            const role = allRoles.find(r => r._id === deleteBtn.dataset.id);
+            const role = currentPageRoles.find(r => r._id === deleteBtn.dataset.id);
             handleDelete(role);
         }
     });
@@ -154,7 +212,7 @@ async function handleSave(e) {
         await fetchWithAuth(endpoint, { method, body: JSON.stringify(body) });
         showToast(`Role ${roleId ? 'updated' : 'created'} successfully!`, 'success');
         resetForm();
-        await fetchAndRenderRoles();
+        await loadRoles();
     } catch (error) {
         showToast(`Error: ${error.message}`, 'error');
     } finally {
@@ -172,7 +230,7 @@ function handleDelete(role) {
                 await fetchWithAuth(`roles/${role._id}`, { method: 'DELETE' });
                 showToast('Role deleted successfully.', 'success');
                 resetForm();
-                await fetchAndRenderRoles();
+                await loadRoles();
             } catch (error) {
                 showToast(`Error: ${error.message}`, 'error');
             }

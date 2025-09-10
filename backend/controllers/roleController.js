@@ -8,8 +8,55 @@ const User = require('../models/User');
  * @access  Private/Admin (Requires 'user:manage')
  */
 const getRoles = asyncHandler(async (req, res) => {
-    const roles = await Role.find({}).sort({ name: 1 });
-    res.status(200).json(roles);
+    const {
+        page = 1,
+        limit = 10, // Roles are fewer, so a smaller limit is fine
+        sort = 'name',
+        order = 'asc',
+        search = ''
+    } = req.query;
+
+    const query = {};
+    if (search) {
+        query.name = { $regex: search, $options: 'i' };
+    }
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Use an aggregation pipeline to allow sorting by the number of permissions.
+    const pipeline = [];
+
+    // Match stage for searching
+    if (Object.keys(query).length > 0) {
+        pipeline.push({ $match: query });
+    }
+
+    // Add a field for the count of permissions
+    pipeline.push({
+        $addFields: {
+            permissionsCount: { $size: "$permissions" }
+        }
+    });
+
+    // Sort stage
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+    pipeline.push({ $sort: sortOptions });
+
+    // Facet for pagination and total count
+    pipeline.push({
+        $facet: {
+            docs: [{ $skip: skip }, { $limit: limitNum }],
+            totalDocs: [{ $count: 'count' }]
+        }
+    });
+
+    const results = await Role.aggregate(pipeline);
+    const roles = results[0].docs;
+    const totalDocs = results[0].totalDocs.length > 0 ? results[0].totalDocs[0].count : 0;
+
+    res.json({ docs: roles, totalDocs, limit: limitNum, totalPages: Math.ceil(totalDocs / limitNum), page: pageNum });
 });
 
 /**
