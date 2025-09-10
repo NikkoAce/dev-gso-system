@@ -1,5 +1,4 @@
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
-import { initializeSlipPage } from '../js/slip-page-common.js';
 import { fetchWithAuth } from '../js/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -61,20 +60,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             checkFundSource: false // No fund source check needed for this slip
         };
 
-        // Custom initializer to override the default save behavior
-        function customInitializeA68Page(config, currentUser) {
-            initializeSlipPage(config, currentUser); // Run the original setup
+        // This custom initializer handles the entire page logic for A68,
+        // as it has different requirements than standard slips.
+        function initializeA68Page(config, currentUser) {
+            const createDataString = localStorage.getItem(config.localStorageKeys.create);
+            const reprintDataString = localStorage.getItem(config.localStorageKeys.reprint);
 
+            const pageTitle = document.getElementById(config.domIds.pageTitle);
+            const backButton = document.getElementById(config.domIds.backButton);
             const saveButton = document.getElementById(config.domIds.saveButton);
-            if (saveButton) {
-                const createDataString = localStorage.getItem(config.localStorageKeys.create);
-                if (createDataString) {
-                    // Replace the default event listener to handle the specific payload for A68
-                    const newSaveButton = saveButton.cloneNode(true);
-                    saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+            const reprintButton = document.getElementById(config.domIds.reprintButton);
+            const formContainer = document.getElementById(config.domIds.formContainer);
 
-                    newSaveButton.addEventListener('click', async () => {
-                        const selectedAssets = JSON.parse(createDataString);
+            if (reprintDataString) {
+                // --- REPRINT MODE ---
+                const slipData = JSON.parse(reprintDataString);
+                localStorage.removeItem(config.localStorageKeys.reprint);
+
+                pageTitle.textContent = `Reprint ${config.slipTitle}`;
+                saveButton.classList.add('hidden');
+                reprintButton.classList.remove('hidden');
+                backButton.href = config.backUrls.reprint;
+
+                config.populateFormFn(slipData);
+                reprintButton.addEventListener('click', () => window.print());
+
+            } else if (createDataString) {
+                // --- CREATE MODE ---
+                const selectedAssets = JSON.parse(createDataString);
+                localStorage.removeItem(config.localStorageKeys.create);
+
+                if (selectedAssets.length > 0) {
+                    const slipDataForDisplay = { assets: selectedAssets, user: currentUser };
+                    config.populateFormFn(slipDataForDisplay);
+                    backButton.href = config.backUrls.create;
+
+                    saveButton.addEventListener('click', async () => {
                         const dataToSave = {
                             assetIds: selectedAssets.map(a => a._id),
                             date: document.getElementById('issued-date').value,
@@ -82,28 +103,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                         };
 
                         if (!dataToSave.date) {
-                            alert('Please select a date for the report.');
-                            return;
+                            alert('Please select a date for the report.'); return;
                         }
 
                         try {
-                            const savedSlip = await fetchWithAuth(config.apiEndpoint, {
-                                method: 'POST',
-                                body: JSON.stringify(dataToSave)
-                            });
+                            const savedSlip = await fetchWithAuth(config.apiEndpoint, { method: 'POST', body: JSON.stringify(dataToSave) });
                             alert(`${config.slipType} saved successfully!`);
                             localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
                             window.print();
                             window.location.href = config.backUrls.create;
-                        } catch (error) {
-                            alert(`Error: ${error.message}`);
-                        }
+                        } catch (error) { alert(`Error: ${error.message}`); }
                     });
+                } else {
+                    formContainer.innerHTML = `<p class="text-center text-red-500">No assets selected. Please go back to the <a href="${config.backUrls.create}" class="text-blue-600 hover:underline">Asset Registry</a>.</p>`;
+                    saveButton.classList.add('hidden');
                 }
+            } else {
+                formContainer.innerHTML = `<p class="text-center text-red-500">No data found. Please go back to the <a href="${config.backUrls.create}" class="text-blue-600 hover:underline">Asset Registry</a>.</p>`;
+                saveButton.classList.add('hidden');
+                reprintButton.classList.add('hidden');
             }
         }
 
-        customInitializeA68Page(config, user);
+        initializeA68Page(config, user);
 
     } catch (error) {
         console.error("Initialization failed:", error);
