@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initializePhysicalCountPage(user) {
     let currentPage = 1;
+    let totalPages = 1;
     const itemsPerPage = 20;
     const { populateFilters, setLoading, showToast, renderPagination } = createUIManager();
 
@@ -113,13 +114,14 @@ function initializePhysicalCountPage(user) {
 
             // Defensive check to handle both paginated (object) and non-paginated (array) responses
             const assets = data?.docs ?? (Array.isArray(data) ? data : []);
-            const pagination = data?.docs ? data : {
+            const pagination = data?.docs ? data : { // Fallback for non-paginated responses
                 docs: assets,
                 totalDocs: assets.length,
                 totalPages: Math.ceil(assets.length / itemsPerPage),
-                currentPage: 1,
-                itemsPerPage
+                page: currentPage,
+                limit: itemsPerPage
             };
+            totalPages = pagination.totalPages; // Update total pages from the response
             renderTable(assets, pagination);
         } catch (error) {
             console.error('Failed to load assets:', error);
@@ -136,15 +138,21 @@ function initializePhysicalCountPage(user) {
     });
 
     paginationControls.addEventListener('click', (e) => {
-        if (e.target && e.target.id === 'prev-page-btn') {
-            if (currentPage > 1) {
-                currentPage--;
-                loadAssets();
-            }
-        }
-        if (e.target && e.target.id === 'next-page-btn') {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) {
+            currentPage--;
+            loadAssets();
+        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
             currentPage++;
             loadAssets();
+        } else if (target.classList.contains('page-btn')) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page !== currentPage) {
+                currentPage = page;
+                loadAssets();
+            }
         }
     });
 
