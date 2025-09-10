@@ -32,9 +32,9 @@ const createAppendix68 = async (req, res) => {
     session.startTransaction();
 
     try {
-        const assets = await Asset.find({ _id: { $in: assetIds }, status: 'Waste' }).session(session);
+        const assets = await Asset.find({ _id: { $in: assetIds }, status: { $ne: 'Disposed' } }).session(session);
         if (assets.length !== assetIds.length) {
-            throw new Error('One or more selected assets are not found or are not marked as "Waste".');
+            throw new Error('One or more selected assets are not found or have already been disposed.');
         }
 
         const appendixNumber = await getNextAppendix68Number();
@@ -48,8 +48,8 @@ const createAppendix68 = async (req, res) => {
 
         const savedSlip = await newAppendix68.save({ session });
 
-        const historyEntry = { event: 'Disposed', details: `Included in Report of Waste Materials #${appendixNumber}.`, user: name };
-        await Asset.updateMany({ _id: { $in: assetIds } }, { $set: { status: 'Disposed' }, $push: { history: historyEntry } }, { session });
+        const historyEntry = { event: 'Certified as Waste', details: `Included in Report of Waste Materials (Appendix 68) #${appendixNumber}.`, user: name };
+        await Asset.updateMany({ _id: { $in: assetIds } }, { $set: { status: 'Waste' }, $push: { history: historyEntry } }, { session });
 
         await session.commitTransaction();
         res.status(201).json(savedSlip);

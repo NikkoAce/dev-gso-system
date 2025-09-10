@@ -32,9 +32,9 @@ const createIIRUP = async (req, res) => {
     session.startTransaction();
 
     try {
-        const assets = await Asset.find({ _id: { $in: assetIds } }).session(session);
+        const assets = await Asset.find({ _id: { $in: assetIds }, status: 'Waste' }).session(session);
         if (assets.length !== assetIds.length) {
-            throw new Error('One or more selected assets are not found.');
+            throw new Error('One or more selected assets are not found or are not marked as "Waste". Only waste items can be included in an IIRUP for disposal.');
         }
 
         const iirupNumber = await getNextIIRUPNumber();
@@ -42,13 +42,13 @@ const createIIRUP = async (req, res) => {
         const newIIRUP = new IIRUP({
             iirupNumber,
             date: new Date(),
-            assets: assets.map(a => ({ propertyNumber: a.propertyNumber, description: a.description, acquisitionCost: a.acquisitionCost, remarks: a.condition })),
+            assets: assets.map(a => ({ propertyNumber: a.propertyNumber, acquisitionDate: a.acquisitionDate, description: a.description, acquisitionCost: a.acquisitionCost, remarks: a.condition })),
             user: { name, office }
         });
 
         await newIIRUP.save({ session });
-        const historyEntry = { event: 'Inspection', details: `Included in IIRUP #${iirupNumber}.`, user: name };
-        await Asset.updateMany({ _id: { $in: assetIds } }, { $push: { history: historyEntry } }, { session });
+        const historyEntry = { event: 'Disposed', details: `Disposed via IIRUP #${iirupNumber}.`, user: name };
+        await Asset.updateMany({ _id: { $in: assetIds } }, { $set: { status: 'Disposed' }, $push: { history: historyEntry } }, { session });
 
         await session.commitTransaction();
         res.status(201).json(newIIRUP);

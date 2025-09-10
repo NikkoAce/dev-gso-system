@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const iirupAssetSchema = new mongoose.Schema({
     propertyNumber: { type: String, required: true },
+    acquisitionDate: { type: Date },
     description: { type: String, required: true },
     acquisitionCost: { type: Number, required: true },
     remarks: { type: String } // To store the asset's condition at the time of inspection

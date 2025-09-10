@@ -131,13 +131,14 @@ function initializeRegistryPage(user) {
     }
 
     function openAppendix68Modal() {
-        const wasteAssets = state.selectedAssets.filter(a => a.status === 'Waste');
-        if (wasteAssets.length === 0) {
-            uiManager.showToast('Please select at least one asset with status "Waste".', 'warning');
+        // The button is only visible if there are eligible assets.
+        const eligibleAssets = state.selectedAssets.filter(a => ['In Storage', 'For Repair'].includes(a.status));
+        if (eligibleAssets.length === 0) {
+            uiManager.showToast('Please select at least one asset that is "In Storage" or "For Repair".', 'warning');
             return;
         }
 
-        const listHTML = wasteAssets.map(asset =>
+        const listHTML = eligibleAssets.map(asset =>
             `<div class="text-xs p-1">${asset.propertyNumber} - ${asset.description}</div>`
         ).join('');
 
@@ -386,7 +387,7 @@ function initializeRegistryPage(user) {
             DOM.confirmAppendix68Btn.textContent = 'Generating...';
 
             try {
-                const assetIds = state.selectedAssets.filter(a => a.status === 'Waste').map(a => a._id);
+                const assetIds = state.selectedAssets.filter(a => ['In Storage', 'For Repair'].includes(a.status)).map(a => a._id);
                 const payload = { assetIds };
 
                 const slipData = await fetchWithAuth('appendix68', { method: 'POST', body: payload });

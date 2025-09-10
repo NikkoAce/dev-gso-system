@@ -291,12 +291,14 @@ export function createUIManager() {
         generateIcsBtn.classList.toggle('hidden', !allAreForICS);
 
         // --- Appendix 68 Button Logic ---
-        const anyAreWaste = selectedAssets.some(asset => asset.status === 'Waste');
-        generateAppendix68Btn.classList.toggle('hidden', !anyAreWaste);
+        // Show if any selected assets are candidates for being declared waste.
+        const anyAreCandidatesForWaste = selectedAssets.some(asset => ['In Storage', 'For Repair'].includes(asset.status));
+        generateAppendix68Btn.classList.toggle('hidden', !anyAreCandidatesForWaste);
 
         // --- IIRUP Button Logic ---
         if (generateIIRUPBtn) {
-            const anyAreForIIRUP = selectedAssets.some(asset => ['For Repair', 'Waste'].includes(asset.status));
+            // IIRUP is now for disposing of items that are already declared as waste.
+            const anyAreForIIRUP = selectedAssets.some(asset => asset.status === 'Waste');
             generateIIRUPBtn.classList.toggle('hidden', !anyAreForIIRUP);
         }
     }
