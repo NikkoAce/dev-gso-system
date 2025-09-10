@@ -245,7 +245,7 @@ export function createUIManager() {
      * @param {object} domElements - The DOM elements for the buttons.
      */
     function updateSlipButtonVisibility(selectedAssets, domElements) {
-        const { generateParBtn, generateIcsBtn, transferSelectedBtn, transferTooltipWrapper } = domElements;
+        const { generateParBtn, generateIcsBtn, transferSelectedBtn, transferTooltipWrapper, generateAppendix68Btn } = domElements;
         const selectionCount = selectedAssets.length; // selectedAssets now contains full asset objects
 
         // If nothing is selected, hide all buttons
@@ -253,6 +253,7 @@ export function createUIManager() {
             generateParBtn.classList.add('hidden');
             generateIcsBtn.classList.add('hidden');
             transferSelectedBtn.classList.add('hidden');
+            generateAppendix68Btn.classList.add('hidden');
             return;
         }
 
@@ -287,6 +288,10 @@ export function createUIManager() {
 
         // Show ICS button only if ALL selected items are eligible for ICS
         generateIcsBtn.classList.toggle('hidden', !allAreForICS);
+
+        // --- Appendix 68 Button Logic ---
+        const anyAreWaste = selectedAssets.some(asset => asset.status === 'Waste');
+        generateAppendix68Btn.classList.toggle('hidden', !anyAreWaste);
     }
 
     return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination, renderAssetTable, updateSlipButtonVisibility };

@@ -12,15 +12,14 @@ const {
     updateAsset,
     deleteAsset,
     getNextPropertyNumber,
-    bulkTransferAssets,
+    createPtrAndTransferAssets,
     updatePhysicalCount,
     exportAssetsToCsv,
     getMyOfficeAssets,
     addRepairRecord,
     deleteRepairRecord,
     generateMovableLedgerCard,
-    generateWasteMaterialReport,
-    generateAppendix68WasteReport
+    generateWasteMaterialReport
 } = require('../controllers/assetController'); // Assuming a controller file
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
@@ -34,8 +33,8 @@ router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), export
 // Route for bulk asset creation
 router.post('/bulk', protect, checkPermission(PERMISSIONS.ASSET_CREATE), createBulkAssets);
 
-// Route for bulk asset transfer
-router.post('/bulk-transfer', protect, checkPermission(PERMISSIONS.ASSET_TRANSFER), bulkTransferAssets);
+// Route for creating a PTR and transferring assets
+router.post('/ptr', protect, checkPermission(PERMISSIONS.ASSET_TRANSFER), createPtrAndTransferAssets);
 
 // Route for updating physical count
 router.put('/physical-count', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updatePhysicalCount);
@@ -48,9 +47,6 @@ router.get('/:id/ledger-card', protect, checkPermission(PERMISSIONS.ASSET_READ),
 
 // Route for generating a Waste Material Report (IIRUP Style)
 router.get('/reports/waste-material', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateWasteMaterialReport);
-
-// NEW: Route for generating Appendix 68 Waste Material Report
-router.get('/reports/appendix68-waste', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateAppendix68WasteReport);
 
 // Routes for managing repairs on a specific asset
 router.route('/:id/repairs')

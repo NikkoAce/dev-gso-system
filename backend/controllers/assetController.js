@@ -507,7 +507,7 @@ const updatePhysicalCount = async (req, res) => {
     }
 };
 
-const bulkTransferAssets = async (req, res) => {
+const createPtrAndTransferAssets = async (req, res) => {
     const { assetIds, newOffice, newCustodian, transferDate } = req.body;
 
     if (!assetIds || !Array.isArray(assetIds) || assetIds.length === 0) {
@@ -802,47 +802,11 @@ const generateWasteMaterialReport = asyncHandler(async (req, res) => {
     res.status(200).json({ headers, rows });
 });
 
-/**
- * @desc    Generate a Waste Material Report (Appendix 68)
- * @route   GET /api/assets/reports/appendix68-waste
- * @access  Private (Requires report:generate permission)
- */
-const generateAppendix68WasteReport = asyncHandler(async (req, res) => {
-    const { asAtDate } = req.query;
-
-    if (!asAtDate) {
-        res.status(400);
-        throw new Error('The "As at Date" is required for this report.');
-    }
-
-    const reportDate = new Date(asAtDate);
-    reportDate.setUTCHours(23, 59, 59, 999);
-
-    const wasteAssets = await Asset.find({
-        status: 'Waste',
-        acquisitionDate: { $lte: reportDate }
-    }).sort({ propertyNumber: 1 }).lean();
-
-    if (wasteAssets.length === 0) {
-        return res.json({ headers: [], rows: [], message: 'No assets with status "Waste" found for the selected date.' });
-    }
-
-    // Columns for COA Appendix 68
-    const headers = ['Item No.', 'Quantity', 'Unit', 'Description', 'Official Receipt No. & Date of Sale'];
-
-    const rows = wasteAssets.map((asset, index) => {
-        return [ index + 1, 1, 'unit', asset.description, '' ];
-    });
-
-    res.status(200).json({ headers, rows });
-});
-
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
-    deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount,
-    bulkTransferAssets, exportAssetsToCsv,
+    deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount, exportAssetsToCsv,
+    createPtrAndTransferAssets,
     getMyOfficeAssets, addRepairRecord,
-    deleteRepairRecord, generateMovableLedgerCard, generateWasteMaterialReport,
-    generateAppendix68WasteReport
+    deleteRepairRecord, generateMovableLedgerCard, generateWasteMaterialReport
 };

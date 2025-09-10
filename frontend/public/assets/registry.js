@@ -68,6 +68,11 @@ function initializeRegistryPage(user) {
         cancelTransferBtn: document.getElementById('cancel-transfer-modal-btn'),
         transferModalDate: document.getElementById('transfer-modal-date'),
         bulkTransferAssetListContainer: document.getElementById('bulk-transfer-asset-list-container'),
+        generateAppendix68Btn: document.getElementById('generate-appendix68-btn'),
+        appendix68Modal: document.getElementById('appendix68-modal'),
+        appendix68AssetListContainer: document.getElementById('appendix68-asset-list-container'),
+        confirmAppendix68Btn: document.getElementById('confirm-appendix68-modal-btn'),
+        cancelAppendix68Btn: document.getElementById('cancel-appendix68-modal-btn'),
     };
 
     // --- MODULE: UI MANAGER ---
@@ -122,6 +127,25 @@ function initializeRegistryPage(user) {
         // Set today's date as the default for the transfer
         DOM.transferModalDate.value = new Date().toISOString().split('T')[0];
         DOM.transferModal.showModal();
+    }
+
+    function openAppendix68Modal() {
+        const wasteAssets = state.selectedAssets.filter(a => a.status === 'Waste');
+        if (wasteAssets.length === 0) {
+            uiManager.showToast('Please select at least one asset with status "Waste".', 'warning');
+            return;
+        }
+
+        const listHTML = wasteAssets.map(asset =>
+            `<div class="text-xs p-1">${asset.propertyNumber} - ${asset.description}</div>`
+        ).join('');
+
+        DOM.appendix68AssetListContainer.innerHTML = `<p class="font-bold text-sm mb-1">Assets to be included:</p>${listHTML}`;
+        DOM.appendix68Modal.showModal();
+    }
+
+    function closeAppendix68Modal() {
+        DOM.appendix68Modal.close();
     }
 
     // --- MODULE: SLIP MANAGER ---
@@ -304,7 +328,8 @@ function initializeRegistryPage(user) {
                 generateParBtn: DOM.generateParBtn,
                 generateIcsBtn: DOM.generateIcsBtn,
                 transferSelectedBtn: DOM.transferSelectedBtn,
-                transferTooltipWrapper: DOM.transferTooltipWrapper
+                transferTooltipWrapper: DOM.transferTooltipWrapper,
+                generateAppendix68Btn: DOM.generateAppendix68Btn
             });
         },
 
@@ -339,7 +364,7 @@ function initializeRegistryPage(user) {
                     user: userPayload
                 };
 
-                const transferResult = await fetchWithAuth('assets/bulk-transfer', {
+                const transferResult = await fetchWithAuth('assets/ptr', {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
@@ -352,6 +377,27 @@ function initializeRegistryPage(user) {
             } finally {
                 DOM.confirmTransferBtn.disabled = false;
                 DOM.confirmTransferBtn.textContent = 'Confirm Transfer';
+            }
+        },
+
+        async handleConfirmAppendix68() {
+            DOM.confirmAppendix68Btn.disabled = true;
+            DOM.confirmAppendix68Btn.textContent = 'Generating...';
+
+            try {
+                const assetIds = state.selectedAssets.filter(a => a.status === 'Waste').map(a => a._id);
+                const payload = { assetIds };
+
+                const slipData = await fetchWithAuth('appendix68', { method: 'POST', body: payload });
+
+                localStorage.setItem('reprintA68', JSON.stringify(slipData));
+                window.location.href = '../slips/appendix68-page.html';
+
+            } catch (error) {
+                uiManager.showToast(`Error: ${error.message}`, 'error');
+            } finally {
+                DOM.confirmAppendix68Btn.disabled = false;
+                DOM.confirmAppendix68Btn.textContent = 'Confirm & Generate';
             }
         },
 
@@ -388,6 +434,10 @@ function initializeRegistryPage(user) {
             // Transfer Modal Listeners
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
+            // Appendix 68 Modal Listeners
+            DOM.generateAppendix68Btn?.addEventListener('click', openAppendix68Modal);
+            DOM.confirmAppendix68Btn?.addEventListener('click', () => this.handleConfirmAppendix68());
+            DOM.cancelAppendix68Btn?.addEventListener('click', closeAppendix68Modal);
         }
     };
 

@@ -56,6 +56,9 @@
                                     <i data-lucide="arrow-right-left"></i> Transfer
                                 </button>
                             </div>
+                            <button id="generate-appendix68-btn" class="btn btn-error hidden">
+                                <i data-lucide="file-x"></i> Appendix 68
+                            </div>
                         </div>
                     </div>
                     
@@ -215,6 +218,26 @@
             <div class="modal-action">
                 <button id="cancel-transfer-modal-btn" class="btn">Cancel</button>
                 <button id="confirm-transfer-modal-btn" class="btn btn-primary">Confirm Transfer</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Appendix 68 Modal -->
+    <dialog id="appendix68-modal" class="modal">
+        <div class="modal-box">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
+                    <i data-lucide="file-x" class="h-6 w-6 text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 ml-4" id="appendix68-modal-title">Generate Report of Waste Materials</h3>
+            </div>
+            <p class="text-sm text-gray-600 mb-4">This will generate an Appendix 68 slip for the selected assets and mark them as 'Disposed'. This action cannot be undone.</p>
+            <div id="appendix68-asset-list-container" class="max-h-48 overflow-y-auto border rounded-md p-2 mb-4 bg-gray-50">
+                <!-- List of assets will be populated here -->
+            </div>
+            <div class="modal-action">
+                <button id="cancel-appendix68-modal-btn" class="btn">Cancel</button>
+                <button id="confirm-appendix68-modal-btn" class="btn btn-error">Confirm & Generate</button>
             </div>
         </div>
     </dialog>

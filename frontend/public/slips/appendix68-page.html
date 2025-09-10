@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appendix 68 - Report of Waste Materials</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/print.css" media="print">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="/js/auth.js" defer></script>
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable hide-in-preview">
+            <!-- Sidebar is dynamically loaded -->
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable hide-in-preview">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="flex justify-between items-center mb-6 non-printable hide-in-preview">
+                    <h1 id="page-title" class="text-3xl font-bold text-gray-800">Appendix 68 - Report of Waste Materials</h1>
+                    <div class="flex gap-2">
+                        <a id="back-button" href="../assets/asset-registry.html" class="btn btn-ghost">&larr; Back to Registry</a>
+                        <button id="reprint-button" class="btn btn-primary hidden"><i data-lucide="printer"></i> Reprint</button>
+                        <button id="save-button" class="btn btn-success"><i data-lucide="save"></i> Save & Print</button>
+                    </div>
+                </div>
+
+                <div id="form-container" class="bg-white p-8 rounded-lg border printable-area">
+                    <div class="text-center mb-4">
+                        <p class="font-bold">Appendix 68</p>
+                        <h3 class="font-bold text-lg">REPORT OF WASTE MATERIALS</h3>
+                        <p class="text-sm">(Name of Local Government Unit)</p>
+                        <div class="flex justify-between items-end mt-4">
+                            <p class="text-left text-sm">No. <span id="appendix-number" class="font-bold"></span></p>
+                            <p class="text-right text-sm">As at: <input type="date" id="issued-date" class="input input-bordered input-xs w-40"></p>
+                        </div>
+                    </div>
+
+                    <table class="w-full text-xs border-collapse border border-black mt-4">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-black p-1 w-[12%]">Item No.</th>
+                                <th class="border border-black p-1 w-[15%]">Quantity</th>
+                                <th class="border border-black p-1 w-[15%]">Unit</th>
+                                <th class="border border-black p-1">Description</th>
+                                <th class="border border-black p-1 w-[31%]">Official Receipt No. & Date of Sale</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asset-list">
+                            <!-- Assets will be populated by JS -->
+                        </tbody>
+                    </table>
+
+                    <footer class="mt-16 text-xs">
+                        <div class="grid grid-cols-3 gap-8">
+                            <div>
+                                <p class="font-bold">CERTIFICATION</p>
+                                <p class="mt-4">I hereby certify that the materials and equipment listed above are waste materials and are not serviceable.</p>
+                                <div class="mt-16 border-t border-black pt-1"><p id="signatory-1-name" class="font-bold uppercase text-center"></p><p class="text-center">Property Officer</p></div>
+                            </div>
+                            <div>
+                                <p class="font-bold">CERTIFICATE OF INSPECTION</p>
+                                <p class="mt-4">I have inspected the items listed above and certify that the same are waste materials and recommend for their disposal.</p>
+                                <div class="mt-16 border-t border-black pt-1"><p id="signatory-2-name" class="font-bold uppercase text-center">________________________</p><p class="text-center">Inspector</p></div>
+                            </div>
+                            <div>
+                                <p class="font-bold">WITNESS TO THE DISPOSAL</p>
+                                <p class="mt-4">I have witnessed the disposal of the items listed above this date ____________.</p>
+                                <div class="mt-16 border-t border-black pt-1"><p id="signatory-3-name" class="font-bold uppercase text-center">________________________</p><p class="text-center">COA Representative</p></div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./appendix68-page.js"></script>
+</body>
+</html>
