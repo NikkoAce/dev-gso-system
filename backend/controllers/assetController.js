@@ -783,7 +783,8 @@ const generateWasteMaterialReport = asyncHandler(async (req, res) => {
         return res.json({ headers: [], rows: [], message: 'No assets with status "Waste" found for the selected date.' });
     }
 
-    const headers = ['Item No.', 'Quantity', 'Unit', 'Description', 'Property Number', 'Acquisition Date', 'Acquisition Cost', 'Condition', 'Office'];
+    // Columns adjusted to better match a standard COA report like IIRUP.
+    const headers = ['Item No.', 'Quantity', 'Unit', 'Description', 'Property Number', 'Date Acquired', 'Amount', 'Remarks'];
 
     const rows = wasteAssets.map((asset, index) => {
         return [
@@ -794,8 +795,7 @@ const generateWasteMaterialReport = asyncHandler(async (req, res) => {
             asset.propertyNumber,
             asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A',
             asset.acquisitionCost,
-            asset.condition || 'N/A',
-            asset.office || 'N/A'
+            asset.remarks || '' // Use the asset's remarks field
         ];
     });
 

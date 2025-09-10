@@ -51,6 +51,8 @@ function initializeReportPage() {
         reportContainer.classList.add('hidden');
         noDataMessage.classList.add('hidden');
         loadingContainer.classList.remove('hidden');
+        reportHeader.classList.add('hidden');
+        reportFooter.classList.add('hidden');
         printBtn.classList.add('hidden');
         generateBtn.classList.add('loading');
         generateBtn.disabled = true;
@@ -63,7 +65,10 @@ function initializeReportPage() {
 
             if (data.rows && data.rows.length > 0) {
                 renderReportTable(data.headers, data.rows);
+                populateSignatories();
                 reportContainer.classList.remove('hidden');
+                reportHeader.classList.remove('hidden');
+                reportFooter.classList.remove('hidden');
                 printBtn.classList.remove('hidden');
             } else {
                 noDataMessage.textContent = data.message || 'No waste materials found for the selected date.';

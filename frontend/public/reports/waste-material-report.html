@@ -46,10 +46,19 @@
                     <!-- Report Display Area -->
                     <div id="report-container" class="card bg-base-100 border hidden">
                         <div class="card-body">
-                            <div class="text-center mb-4 printable-only">
-                                <h2 class="text-xl font-bold">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT</h2>
-                                <h3 class="text-lg font-semibold">Waste Materials</h3>
-                                <p>As at <span id="report-date-display"></span></p>
+                            <div id="report-header" class="hidden">
+                                <div class="flex flex-col items-center mb-4 printable-only">
+                                    <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                                    <div class="text-center mt-2">
+                                        <p>Republic of the Philippines</p>
+                                        <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                                        <p class="font-bold">MUNICIPALITY OF DAET</p>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-4">
+                                    <h3 id="report-header-title" class="font-bold text-lg">REPORT OF WASTE MATERIALS</h3>
+                                    <p class="text-sm">As at <span id="report-date-display" class="font-semibold"></span></p>
+                                </div>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="table table-zebra w-full">
@@ -62,6 +71,25 @@
                                 </table>
                             </div>
                             <div id="no-data-message" class="text-center py-8 text-gray-500 hidden"></div>
+                            <!-- NEW: Report Footer for Signatories -->
+                            <footer id="report-footer" class="hidden mt-16 text-xs printable-only">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div>
+                                        <p class="font-bold">Certified Correct:</p>
+                                        <div class="mt-16 border-t border-black pt-1">
+                                            <p id="signatory-1-name" class="font-bold uppercase text-center"></p>
+                                            <p id="signatory-1-title" class="text-center"></p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold">Approved for Disposal:</p>
+                                        <div class="mt-16 border-t border-black pt-1">
+                                            <p id="signatory-2-name" class="font-bold uppercase text-center"></p>
+                                            <p id="signatory-2-title" class="text-center"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </footer>
                         </div>
                     </div>
                     <div id="loading-container" class="text-center py-8 hidden">
