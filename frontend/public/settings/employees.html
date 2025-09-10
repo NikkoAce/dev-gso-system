@@ -78,8 +78,8 @@
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Designation</th>
+                                        <th class="cursor-pointer" data-sort-key="name">Name</th>
+                                        <th class="cursor-pointer" data-sort-key="designation">Designation</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -88,6 +88,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div id="pagination-controls" class="flex justify-between items-center py-4">
+                        <!-- JS will populate this -->
                     </div>
                 </div>
             </main>

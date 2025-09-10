@@ -3,26 +3,46 @@ const Asset = require('../models/Asset');
 
 const getEmployees = async (req, res) => {
     try {
-        const employees = await Employee.aggregate([
+        const { page = 1, limit = 15, sort = 'name', order = 'asc', search = '' } = req.query;
+
+        const pipeline = [];
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            pipeline.push({ $match: { $or: [{ name: searchRegex }, { designation: searchRegex }] } });
+        }
+
+        pipeline.push(
+            { $lookup: { from: 'assets', localField: 'name', foreignField: 'custodian.name', as: 'assets' } },
+            { $addFields: { assetCount: { $size: '$assets' } } },
+            { $project: { assets: 0 } },
+            { $sort: { [sort]: order === 'asc' ? 1 : -1 } }
+        );
+
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+
+        const facetPipeline = [
+            ...pipeline,
             {
-                $lookup: {
-                    from: 'assets',
-                    localField: 'name',
-                    foreignField: 'custodian.name',
-                    as: 'assets'
+                $facet: {
+                    docs: [{ $skip: skip }, { $limit: limitNum }],
+                    totalDocs: [{ $group: { _id: null, count: { $sum: 1 } } }]
                 }
-            },
-            {
-                $addFields: {
-                    assetCount: { $size: '$assets' }
-                }
-            },
-            {
-                $project: { assets: 0 }
-            },
-            { $sort: { name: 1 } }
-        ]);
-        res.json(employees);
+            }
+        ];
+
+        const results = await Employee.aggregate(facetPipeline);
+        const docs = results[0].docs;
+        const totalDocs = results[0].totalDocs[0] ? results[0].totalDocs[0].count : 0;
+
+        res.json({
+            docs,
+            totalDocs,
+            limit: limitNum,
+            totalPages: Math.ceil(totalDocs / limitNum),
+            page: pageNum,
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }

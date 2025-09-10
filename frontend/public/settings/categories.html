@@ -92,11 +92,11 @@
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
-                                        <th>Category Name</th>
-                                        <th>Account Group</th>
-                                        <th>Major Account</th>
-                                        <th>Sub-Major Group</th>
-                                        <th>GL Account</th>
+                                        <th class="cursor-pointer" data-sort-key="name">Category Name</th>
+                                        <th class="cursor-pointer" data-sort-key="accountGroup">Account Group</th>
+                                        <th class="cursor-pointer" data-sort-key="majorAccountGroup">Major Account</th>
+                                        <th class="cursor-pointer" data-sort-key="subMajorGroup">Sub-Major Group</th>
+                                        <th class="cursor-pointer" data-sort-key="glAccount">GL Account</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -105,6 +105,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div id="pagination-controls" class="flex justify-between items-center py-4">
+                        <!-- JS will populate this -->
                     </div>
                 </div>
             </main>
