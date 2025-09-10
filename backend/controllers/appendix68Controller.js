@@ -21,11 +21,11 @@ async function getNextAppendix68Number() {
 }
 
 const createAppendix68 = async (req, res) => {
-    const { assetIds } = req.body;
+    const { assetIds, date, placeOfStorage, disposalApprovedBy, certifiedByInspector, witnessToDisposal, inspectionCertificate } = req.body;
     const { name, office } = req.user;
 
-    if (!assetIds || assetIds.length === 0) {
-        return res.status(400).json({ message: 'Must contain at least one asset.' });
+    if (!assetIds || assetIds.length === 0 || !date) {
+        return res.status(400).json({ message: 'Must contain at least one asset and a valid date.' });
     }
 
     const session = await mongoose.startSession();
@@ -41,9 +41,18 @@ const createAppendix68 = async (req, res) => {
         
         const newAppendix68 = new Appendix68({
             appendixNumber,
-            date: new Date(),
-            assets: assets.map(a => ({ propertyNumber: a.propertyNumber, description: a.description })),
-            user: { name, office }
+            date: new Date(date),
+            placeOfStorage: placeOfStorage,
+            assets: assets.map(a => ({
+                propertyNumber: a.propertyNumber,
+                description: a.description,
+                // Since quantity and unit are not on the Asset model, the schema defaults will be used.
+            })),
+            user: { name, office },
+            disposalApprovedBy,
+            certifiedByInspector,
+            witnessToDisposal,
+            inspectionCertificate
         });
 
         const savedSlip = await newAppendix68.save({ session });

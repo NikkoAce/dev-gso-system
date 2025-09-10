@@ -40,6 +40,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('issued-date').value = new Date(slipDate).toISOString().split('T')[0];
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
 
+                // Populate fields for reprint mode
+                if (slipData.placeOfStorage) {
+                    document.getElementById('place-of-storage').value = slipData.placeOfStorage;
+                }
+                if (slipData.disposalApprovedBy) {
+                    document.getElementById('disposal-approved-by').value = slipData.disposalApprovedBy;
+                }
+                if (slipData.certifiedByInspector) {
+                    document.getElementById('certified-by-inspector').value = slipData.certifiedByInspector;
+                }
+                if (slipData.witnessToDisposal) {
+                    document.getElementById('witness-to-disposal').value = slipData.witnessToDisposal;
+                }
+                if (slipData.inspectionCertificate) {
+                    document.getElementById('inspection-destroyed').checked = slipData.inspectionCertificate.isDestroyed;
+                    document.getElementById('inspection-sold-private').checked = slipData.inspectionCertificate.isSoldPrivate;
+                    document.getElementById('inspection-sold-public').checked = slipData.inspectionCertificate.isSoldPublic;
+                    document.getElementById('inspection-transferred').checked = slipData.inspectionCertificate.isTransferred;
+                    document.getElementById('inspection-transferred-to').value = slipData.inspectionCertificate.transferredTo || '';
+                }
+
                 const assetList = document.getElementById('asset-list');
                 let totalAmount = 0;
                 assetList.innerHTML = slipData.assets.map((asset, index) => {
@@ -99,7 +120,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const dataToSave = {
                             assetIds: selectedAssets.map(a => a._id),
                             date: document.getElementById('issued-date').value,
-                            placeOfStorage: document.getElementById('place-of-storage').value
+                            placeOfStorage: document.getElementById('place-of-storage').value,
+                            // New fields
+                            disposalApprovedBy: document.getElementById('disposal-approved-by').value,
+                            certifiedByInspector: document.getElementById('certified-by-inspector').value,
+                            witnessToDisposal: document.getElementById('witness-to-disposal').value,
+                            inspectionCertificate: {
+                                isDestroyed: document.getElementById('inspection-destroyed').checked,
+                                isSoldPrivate: document.getElementById('inspection-sold-private').checked,
+                                isSoldPublic: document.getElementById('inspection-sold-public').checked,
+                                isTransferred: document.getElementById('inspection-transferred').checked,
+                                transferredTo: document.getElementById('inspection-transferred-to').value,
+                            }
                         };
 
                         if (!dataToSave.date) {

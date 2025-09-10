@@ -90,7 +90,7 @@
                             <div>
                                 <p>Disposal Approved:</p>
                                 <div class="mt-16 text-center">
-                                    <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                    <input type="text" id="disposal-approved-by" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
                                     <p>Signature over Printed Name of Head of the Agency/Entity or his/her Authorized Representative</p>
                                 </div>
                             </div>
@@ -100,11 +100,11 @@
                         <div>
                             <p class="font-bold text-center">CERTIFICATE OF INSPECTION</p>
                             <p class="mt-4">I hereby certify that the property enumerated above was disposed of as follows:</p>
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                                <div class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" /> <span>Destroyed</span></div>
-                                <div class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" /> <span>Sold at private sale</span></div>
-                                <div class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" /> <span>Sold at public auction</span></div>
-                                <div class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-sm" /> <span>Transferred without cost to <input type="text" class="input input-bordered input-xs w-48"></span></div>
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2" id="inspection-certificate-options">
+                                <div class="flex items-center gap-2"><input type="checkbox" id="inspection-destroyed" class="checkbox checkbox-sm" /> <span>Destroyed</span></div>
+                                <div class="flex items-center gap-2"><input type="checkbox" id="inspection-sold-private" class="checkbox checkbox-sm" /> <span>Sold at private sale</span></div>
+                                <div class="flex items-center gap-2"><input type="checkbox" id="inspection-sold-public" class="checkbox checkbox-sm" /> <span>Sold at public auction</span></div>
+                                <div class="flex items-center gap-2"><input type="checkbox" id="inspection-transferred" class="checkbox checkbox-sm" /> <span>Transferred without cost to <input type="text" id="inspection-transferred-to" class="input input-bordered input-xs w-48"></span></div>
                             </div>
                         </div>
                 
@@ -113,14 +113,14 @@
                             <div>
                                 <p>Certified Correct:</p>
                                 <div class="mt-16 text-center">
-                                    <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                    <input type="text" id="certified-by-inspector" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
                                     <p>Signature over Printed Name of Inspection Officer</p>
                                 </div>
                             </div>
                             <div>
                                 <p>Witness to Disposal:</p>
                                 <div class="mt-16 text-center">
-                                    <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                    <input type="text" id="witness-to-disposal" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
                                     <p>Signature over Printed Name of Witness</p>
                                 </div>
                             </div>
