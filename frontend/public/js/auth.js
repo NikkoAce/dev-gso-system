@@ -1,13 +1,9 @@
 // FILE: /_GSO MANAGEMENT SYSTEM dev/frontend/public/js/auth.js
+import { API_ROOT_URL } from './api.js';
 
 // --- CONFIGURATION ---
 const isProduction = window.location.hostname === 'lgudaet-gso-system.netlify.app';
 
-// IMPORTANT: This must be the correct URL of your DEPLOYED PRODUCTION GSO backend.
-const PROD_API_URL = 'https://lgu-gso-system.onrender.com';
-const DEV_API_URL = 'https://dev-gso-system.onrender.com';
-
-const API_BASE_URL = isProduction ? PROD_API_URL : DEV_API_URL;
 const PORTAL_LOGIN_URL = 'https://lgu-employee-portal.netlify.app/index.html';
 
 /**
@@ -37,7 +33,7 @@ export async function getCurrentUser() {
     // This should always be prioritized to get a fresh GSO session and overwrite any old local token.
     if (portalToken) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/auth/sso-login`, {
+            const response = await fetch(`${API_ROOT_URL}/api/auth/sso-login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: portalToken })

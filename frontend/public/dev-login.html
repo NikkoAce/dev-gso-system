@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Login - GSO System</title>
+    <link href="css/output.css" rel="stylesheet">
+</head>
+<body class="bg-base-200 flex items-center justify-center min-h-screen">
+    <div class="card w-full max-w-md bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Developer Login Helper</h2>
+            <p class="text-sm text-base-content/70">
+                To log into your local development environment:
+                <ol class="list-decimal list-inside text-xs mt-2 space-y-1">
+                    <li>Log in via the production Employee Portal as usual.</li>
+                    <li>You will be redirected to the live GSO system. Copy the full URL from your browser's address bar.</li>
+                    <li>Paste the entire URL into the box below and click "Get Token".</li>
+                </ol>
+            </p>
+            <div class="form-control mt-4">
+                <label for="url-input" class="label">
+                    <span class="label-text">Pasted URL from Production</span>
+                </label>
+                <input type="text" id="url-input" placeholder="https://lgudaet-gso-system.netlify.app/dashboard?token=..." class="input input-bordered w-full">
+            </div>
+            <div id="message-container" class="text-sm mt-2"></div>
+            <div class="card-actions justify-end mt-4">
+                <button id="get-token-btn" class="btn btn-primary">Get Token & Login</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="js/dev-login.js"></script>
+</body>
+</html>
