@@ -156,28 +156,29 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-lg border overflow-x-auto">
-                        <table class="table table-zebra w-full">
-                            <thead>
-                                <tr>
-                                    <th class="non-printable"><input type="checkbox" id="select-all-assets" class="checkbox checkbox-sm"></th>
-                                    <th class="cursor-pointer" data-sort-key="propertyNumber">Property No.</th>
-                                    <th class="cursor-pointer" data-sort-key="description">Description</th>
-                                    <th class="cursor-pointer" data-sort-key="category">Category</th>
-                                    <th class="cursor-pointer" data-sort-key="custodian.name">Custodian</th>
-                                    <th class="cursor-pointer" data-sort-key="status">Status</th>
-                                    <th class="cursor-pointer" data-sort-key="createdAt">Date Created</th>
-                                    <th class="text-center non-printable">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="asset-table-body">
-                                <tr><td colspan="8" class="text-center p-8">Loading assets...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div id="pagination-controls" class="flex justify-between items-center non-printable">
-                        <!-- JS will populate this -->
+                    <div class="card bg-base-100 border">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="non-printable"><input type="checkbox" id="select-all-assets" class="checkbox checkbox-sm"></th>
+                                        <th class="cursor-pointer" data-sort-key="propertyNumber">Property No.</th>
+                                        <th class="cursor-pointer" data-sort-key="description">Description</th>
+                                        <th class="cursor-pointer" data-sort-key="category">Category</th>
+                                        <th class="cursor-pointer" data-sort-key="custodian.name">Custodian</th>
+                                        <th class="cursor-pointer" data-sort-key="status">Status</th>
+                                        <th class="cursor-pointer" data-sort-key="createdAt">Date Created</th>
+                                        <th class="text-center non-printable">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-table-body">
+                                    <tr><td colspan="8" class="text-center p-8">Loading assets...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pagination-controls" class="p-4 flex justify-between items-center non-printable">
+                            <!-- JS will populate this -->
+                        </div>
                     </div>
                 </div>
             </main>
