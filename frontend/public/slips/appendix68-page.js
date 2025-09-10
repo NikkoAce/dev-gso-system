@@ -37,8 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reprint: '../slips/slip-history.html'
             },
             populateFormFn: (slipData) => {
-                // Handle both create (temporary number) and reprint (final number) modes
-                document.getElementById('appendix-number').textContent = slipData.appendixNumber || 'Pending...';
                 const slipDate = slipData.date || slipData.issuedDate || Date.now();
                 document.getElementById('issued-date').value = new Date(slipDate).toISOString().split('T')[0];
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
