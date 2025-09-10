@@ -57,7 +57,9 @@ const getAssets = async (req, res) => {
       query.acquisitionDate = {};
       if (startDate) query.acquisitionDate.$gte = new Date(startDate);
       if (endDate) {
-        query.acquisitionDate.$lte = new Date(endDate);
+        const endOfDay = new Date(endDate);
+        endOfDay.setUTCHours(23, 59, 59, 999); // Ensure the entire day is included
+        query.acquisitionDate.$lte = endOfDay;
       }
     }
 
@@ -71,24 +73,41 @@ const getAssets = async (req, res) => {
       const limitNum = parseInt(limit, 10) || 20;
       const skip = (pageNum - 1) * limitNum;
 
-      // Using Promise.all to run queries concurrently for better performance
-      const [assets, totalDocs] = await Promise.all([
+      // Using Promise.all to run queries concurrently for better performance.
+      // This now includes the total value calculation.
+      const [assets, totalDocs, summaryResult] = await Promise.all([
         Asset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
-        Asset.countDocuments(query)
+        Asset.countDocuments(query),
+        Asset.aggregate([
+            { $match: query },
+            { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
+        ])
       ]);
+
+      const totalValue = summaryResult[0]?.totalValue || 0;
 
       // Send the structured paginated response
       res.json({
         docs: assets,
         totalDocs,
+        totalValue,
         limit: limitNum,
         totalPages: Math.ceil(totalDocs / limitNum),
         page: pageNum,
       });
     } else {
-      // No pagination, return all matching assets (for dashboard, etc.)
-      const assets = await Asset.find(query).sort(sortOptions).lean();
-      res.json(assets); // The dashboard expects an array
+      // No pagination, return all matching assets but in a consistent format.
+      const [assets, summaryResult] = await Promise.all([
+          Asset.find(query).sort(sortOptions).lean(),
+          Asset.aggregate([
+              { $match: query },
+              { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
+          ])
+      ]);
+      const totalValue = summaryResult[0]?.totalValue || 0;
+
+      // Return a response object consistent with the paginated one.
+      res.json({ docs: assets, totalDocs: assets.length, totalValue, limit: assets.length, totalPages: 1, page: 1 });
     }
   } catch (error) {
     console.error('Error in getAssets:', error);
