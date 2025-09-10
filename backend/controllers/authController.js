@@ -66,14 +66,10 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     // Step 2: Determine the user's GSO role and permissions based on portal data.
     // This makes the logic consistent for both new and existing users.
     let targetGsoRoleName;
-    const adminOfficeNames = ['GSO', 'General Service Office', 'IT'];
-    const adminRoleNames = ['IT'];
-    
-    if (adminOfficeNames.includes(lguUser.office) || adminRoleNames.includes(lguUser.role)) {
-        targetGsoRoleName = 'GSO Admin';
-    } else if (lguUser.role === 'GSO Admin') { // NEW: Explicitly check for 'GSO Admin' role from portal
-        targetGsoRoleName = 'GSO Admin';
-    } else if (lguUser.role === 'Department Head') {
+    // The logic is now simplified to prevent automatic admin assignment.
+    // New users are either 'Department Head' or 'Employee'.
+    // Admin roles must be granted manually within the GSO system for security.
+    if (lguUser.role === 'Department Head') {
         targetGsoRoleName = 'Department Head';
     } else {
         targetGsoRoleName = 'Employee';
