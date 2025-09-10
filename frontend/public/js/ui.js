@@ -245,7 +245,7 @@ export function createUIManager() {
      * @param {object} domElements - The DOM elements for the buttons.
      */
     function updateSlipButtonVisibility(selectedAssets, domElements) {
-        const { generateParBtn, generateIcsBtn, transferSelectedBtn, transferTooltipWrapper, generateAppendix68Btn } = domElements;
+        const { generateParBtn, generateIcsBtn, transferSelectedBtn, transferTooltipWrapper, generateAppendix68Btn, generateIIRUPBtn } = domElements;
         const selectionCount = selectedAssets.length; // selectedAssets now contains full asset objects
 
         // If nothing is selected, hide all buttons
@@ -254,6 +254,7 @@ export function createUIManager() {
             generateIcsBtn.classList.add('hidden');
             transferSelectedBtn.classList.add('hidden');
             generateAppendix68Btn.classList.add('hidden');
+            if (generateIIRUPBtn) generateIIRUPBtn.classList.add('hidden');
             return;
         }
 
@@ -292,6 +293,12 @@ export function createUIManager() {
         // --- Appendix 68 Button Logic ---
         const anyAreWaste = selectedAssets.some(asset => asset.status === 'Waste');
         generateAppendix68Btn.classList.toggle('hidden', !anyAreWaste);
+
+        // --- IIRUP Button Logic ---
+        if (generateIIRUPBtn) {
+            const anyAreForIIRUP = selectedAssets.some(asset => ['For Repair', 'Waste'].includes(asset.status));
+            generateIIRUPBtn.classList.toggle('hidden', !anyAreForIIRUP);
+        }
     }
 
     return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination, renderAssetTable, updateSlipButtonVisibility };

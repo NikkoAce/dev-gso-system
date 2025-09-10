@@ -69,6 +69,7 @@ function initializeRegistryPage(user) {
         transferModalDate: document.getElementById('transfer-modal-date'),
         bulkTransferAssetListContainer: document.getElementById('bulk-transfer-asset-list-container'),
         generateAppendix68Btn: document.getElementById('generate-appendix68-btn'),
+        generateIIRUPBtn: document.getElementById('generate-iirup-btn'),
         appendix68Modal: document.getElementById('appendix68-modal'),
         appendix68AssetListContainer: document.getElementById('appendix68-asset-list-container'),
         confirmAppendix68Btn: document.getElementById('confirm-appendix68-modal-btn'),
@@ -419,6 +420,7 @@ function initializeRegistryPage(user) {
             DOM.tableHeader?.addEventListener('click', (e) => this.handleSort(e));
             DOM.generateParBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('PAR'));
             DOM.generateIcsBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
+            DOM.generateIIRUPBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('IIRUP'));
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
             DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(state.selectedAssets.map(a => a._id)));
             DOM.moreFiltersBtn?.addEventListener('click', () => {

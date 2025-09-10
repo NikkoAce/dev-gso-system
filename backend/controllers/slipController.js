@@ -3,22 +3,25 @@ const PAR = require('../models/PAR');
 const ICS = require('../models/ICS');
 const PTR = require('../models/PTR');
 const Appendix68 = require('../models/Appendix68');
+const IIRUP = require('../models/IIRUP');
 
 const getSlips = asyncHandler(async (req, res) => {
     // Since this is an admin-only page, we fetch all slips.
-    const [pars, ics, ptrs, a68s] = await Promise.all([
+    const [pars, ics, ptrs, a68s, iirups] = await Promise.all([
         PAR.find({}).populate('assets').lean(),
         ICS.find({}).populate('assets').lean(),
         PTR.find({}).lean(),
-        Appendix68.find({}).lean()
+        Appendix68.find({}).lean(),
+        IIRUP.find({}).lean()
     ]);
 
     const formattedPars = pars.map(p => ({ ...p, slipType: 'PAR', number: p.parNumber }));
     const formattedIcs = ics.map(i => ({ ...i, slipType: 'ICS', number: i.icsNumber }));
     const formattedPtrs = ptrs.map(ptr => ({ ...ptr, slipType: 'PTR', number: ptr.ptrNumber, issuedDate: ptr.date }));
     const formattedA68s = a68s.map(a => ({ ...a, slipType: 'A68', number: a.appendixNumber, issuedDate: a.date }));
+    const formattedIIRUPs = iirups.map(i => ({ ...i, slipType: 'IIRUP', number: i.iirupNumber, issuedDate: i.date }));
 
-    const allSlips = [...formattedPars, ...formattedIcs, ...formattedPtrs, ...formattedA68s];
+    const allSlips = [...formattedPars, ...formattedIcs, ...formattedPtrs, ...formattedA68s, ...formattedIIRUPs];
 
     allSlips.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -34,11 +37,12 @@ const getSlipById = asyncHandler(async (req, res) => {
     const slipId = req.params.id;
 
     // Query all three collections in parallel for better performance
-    const [parSlip, icsSlip, ptrSlip, a68Slip] = await Promise.all([
+    const [parSlip, icsSlip, ptrSlip, a68Slip, iirupSlip] = await Promise.all([
         PAR.findById(slipId).populate('assets').lean(),
         ICS.findById(slipId).populate('assets').lean(),
         PTR.findById(slipId).lean(), // PTR assets are embedded, no need to populate
-        Appendix68.findById(slipId).lean()
+        Appendix68.findById(slipId).lean(),
+        IIRUP.findById(slipId).lean()
     ]);
 
     let slipData = null;
@@ -61,6 +65,10 @@ const getSlipById = asyncHandler(async (req, res) => {
         slipData = a68Slip;
         slipType = 'A68';
         slipNumber = a68Slip.appendixNumber;
+    } else if (iirupSlip) {
+        slipData = iirupSlip;
+        slipType = 'IIRUP';
+        slipNumber = iirupSlip.iirupNumber;
     }
 
     if (!slipData) {

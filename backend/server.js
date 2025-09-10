@@ -41,6 +41,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/assets', require('./routes/assetRoutes'));
 app.use('/api/pars', require('./routes/parRoutes'));
 app.use('/api/ics', require('./routes/icsRoutes'));
+app.use('/api/iirups', require('./routes/iirupRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/offices', require('./routes/officeRoutes'));
 app.use('/api/slips', require('./routes/slipRoutes'));
