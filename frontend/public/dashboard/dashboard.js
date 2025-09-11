@@ -149,12 +149,14 @@ function renderActiveFilters() {
     const bar = document.getElementById('active-filters-bar');
     const container = document.getElementById('active-filters-container');
 
-    if (!bar || !container) return;
-
-    if (Object.keys(dashboardFilters).length === 0) {
-        bar.classList.add('hidden');
+    if (!bar || !container) {
+        console.error("Active filters bar or container not found.");
         return;
     }
+
+    // Always clear the container first
+    container.innerHTML = '';
+    const hasFilters = Object.keys(dashboardFilters).length > 0;
 
     bar.classList.remove('hidden');
     container.innerHTML = '';
@@ -169,24 +171,37 @@ function renderActiveFilters() {
         `;
         container.insertAdjacentHTML('beforeend', filterPill);
     }
+
+    // Hide the entire bar if there are no filters
+    bar.classList.toggle('hidden', !hasFilters);
+
     lucide.createIcons();
 }
 
 function setupFilterInteractivity() {
     const bar = document.getElementById('active-filters-bar');
-    if (!bar) return;
+    const clearAllBtn = document.getElementById('clear-filters-btn');
 
-    document.getElementById('clear-filters-btn').addEventListener('click', () => {
-        dashboardFilters = {};
-        renderActiveFilters();
-        fetchDashboardData();
-    });
+    if (!bar || !clearAllBtn) {
+        console.error("Could not set up filter interactivity: buttons not found.");
+        return;
+    }
 
+    // Use a single delegated event listener for all clear actions
     bar.addEventListener('click', (e) => {
+        // Handle individual filter clear
         const clearButton = e.target.closest('.clear-filter-btn');
         if (clearButton) {
             const keyToRemove = clearButton.dataset.filterKey;
-            delete dashboardFilters[keyToRemove];
+            if (dashboardFilters[keyToRemove]) {
+                delete dashboardFilters[keyToRemove];
+                renderActiveFilters();
+                fetchDashboardData();
+            }
+        }
+        // Handle "Clear All" button
+        if (e.target.closest('#clear-filters-btn')) {
+            dashboardFilters = {};
             renderActiveFilters();
             fetchDashboardData();
         }
@@ -758,5 +773,4 @@ function initializeDashboard(user) {
     fetchDashboardData(); // Initial load
     setupEventListeners();
     setupDashboardInteractivity();
-    setupFilterInteractivity();
 }
