@@ -355,8 +355,14 @@ function initializeDashboard(user) {
             const dateFilters = { startDate, endDate };
             const allFilters = { ...dateFilters, ...dashboardFilters };
 
-            const params = new URLSearchParams(allFilters).toString();
-            const data = await fetchWithAuth(`dashboard/stats?${params}`);
+            // Build query params, excluding empty values to ensure clean requests
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(allFilters)) {
+                if (value) { // Only append if value is not empty, null, or undefined
+                    params.append(key, value);
+                }
+            }
+            const data = await fetchWithAuth(`dashboard/stats?${params.toString()}`);
             renderStatCards(data.stats);
             applyPreferences(); // Apply layout after data is fetched
             createOrUpdateCharts(data.charts);
