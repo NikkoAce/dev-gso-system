@@ -25,16 +25,15 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const end = endDate ? new Date(endDate) : new Date();
     end.setUTCHours(23, 59, 59, 999);
 
-    // The 'start' date is now only used for calculating trends, not for filtering most widgets.
-    const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30)); // Default to 30 days for trend
+    // The 'start' date is now the primary start for all filters. Default to a 30-day window if not provided.
+    const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
     start.setUTCHours(0, 0, 0, 0);
 
-    // Define fixed time windows for activity widgets, based on the 'end' date, to ensure a consistent "point-in-time" view.
+    // Define the previous period for trend calculations, which will compare the selected range to the equivalent range immediately prior.
     const startOfYear = new Date(end.getFullYear(), 0, 1);
-    const twelveMonthsAgo = new Date(end);
-    twelveMonthsAgo.setMonth(end.getMonth() - 12);
-    const ninetyDaysAgo = new Date(end);
-    ninetyDaysAgo.setDate(end.getDate() - 90);
+    const periodDuration = end.getTime() - start.getTime();
+    const previousPeriodEnd = new Date(start);
+    const previousPeriodStart = new Date(start.getTime() - periodDuration);
 
     // --- NEW: Build the interactive filter match stage ---
     // This will be applied to the main asset pipeline to filter all stats and charts.
@@ -71,7 +70,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             $facet: {
                 currentPeriodStats: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $lte: end }, status: { $ne: 'Disposed' } } },
+                    { $match: { acquisitionDate: { $gte: start, $lte: end }, status: { $ne: 'Disposed' } } },
                     {
                         $group: {
                             _id: null,
@@ -84,7 +83,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 ],
                 previousPeriodStats: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $lte: start }, status: { $ne: 'Disposed' } } },
+                    { $match: { acquisitionDate: { $gte: previousPeriodStart, $lt: previousPeriodEnd }, status: { $ne: 'Disposed' } } },
                     {
                         $group: {
                             _id: null,
@@ -97,24 +96,24 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 ],
                 monthlyAcquisitions: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $gte: twelveMonthsAgo, $lte: end } } },
+                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
                     { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } }, totalValue: { $sum: '$acquisitionCost' } } },
                     { $sort: { _id: 1 } }
                 ],
                 assetsByStatus: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $lte: end } } },
+                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
                     { $group: { _id: '$status', count: { $sum: 1 } } }
                 ],
                 assetsByOffice: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $lte: end } } },
+                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
                     { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
                 ],
                 assetsByCondition: [
                     ...matchStage,
                     {
-                        $match: { acquisitionDate: { $lte: end } }
+                        $match: { acquisitionDate: { $gte: start, $lte: end } }
                     },
                     {
                         $group: {
@@ -127,15 +126,13 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 recentAssets: [
-                    ...matchStage,
-                    { $match: { acquisitionDate: { $lte: end } } },
-                    { $sort: { acquisitionDate: -1, createdAt: -1 } },
+                    { $sort: { acquisitionDate: -1, createdAt: -1 } }, // No filters, always show latest
                     { $limit: 5 },
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
                 ],
                 unassignedAssetsCount: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $lte: end }, assignedPAR: { $in: [null, ""] }, assignedICS: { $in: [null, ""] } } },
+                    { $match: { acquisitionDate: { $gte: start, $lte: end }, assignedPAR: { $in: [null, ""] }, assignedICS: { $in: [null, ""] } } },
                     { $count: "count" }
                 ]
             }
@@ -145,10 +142,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const immovableAssetPipeline = ImmovableAsset.aggregate([
         {
             $facet: {
-                currentImmovableStats: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                previousImmovableStats: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                currentImmovableCount: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ],
-                previousImmovableCount: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ]
+                currentImmovableStats: [ ...immovableMatchStage, { $match: { dateAcquired: { $gte: start, $lte: end }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                previousImmovableStats: [ ...immovableMatchStage, { $match: { dateAcquired: { $gte: previousPeriodStart, $lt: previousPeriodEnd }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                currentImmovableCount: [ ...immovableMatchStage, { $match: { dateAcquired: { $gte: start, $lte: end }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ],
+                previousImmovableCount: [ ...immovableMatchStage, { $match: { dateAcquired: { $gte: previousPeriodStart, $lt: previousPeriodEnd }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ]
             }
         }
     ]);
@@ -156,11 +153,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const requisitionPipeline = Requisition.aggregate([
         {
             $facet: {
-                currentPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lte: end } } }, { $count: 'count' } ],
-                previousPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lt: start } } }, { $count: 'count' } ],
+                currentPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $gte: start, $lte: end } } }, { $count: 'count' } ],
+                previousPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $gte: previousPeriodStart, $lt: previousPeriodEnd } } }, { $count: 'count' } ],
                 recentRequisitions: [
-                    { $match: { dateRequested: { $lte: end } } },
-                    { $sort: { dateRequested: -1, createdAt: -1 } },
+                    { $sort: { dateRequested: -1, createdAt: -1 } }, // No filters, always show latest
                     { $limit: 5 },
                     { $project: { risNumber: 1, requestingOffice: 1, status: 1 } }
                 ]
@@ -174,7 +170,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Transfers
     const recentTransfersPipeline = PTR.aggregate([
-        { $match: { date: { $lte: end } } }, // Show most recent as of end date
+        // No filters, always show latest
         { $sort: { date: -1, createdAt: -1 } }, // Sort by transfer date, most recent first
         { $limit: 5 }, // Get the top 5 recent transfers
         { $project: { ptrNumber: 1, date: 1, 'from.name': 1, 'from.office': 1, 'to.name': 1, 'to.office': 1, assets: 1 } }
@@ -182,8 +178,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Immovable Assets
     const recentImmovableAssetsPipeline = ImmovableAsset.aggregate([
-        ...immovableMatchStage,
-        { $match: { dateAcquired: { $lte: end } } }, // Show most recent as of end date
+        // No filters, always show latest
         { $sort: { dateAcquired: -1, createdAt: -1 } }, // Sort by acquisition date, then creation date
         { $limit: 5 }, // Get the top 5 recent immovable assets
         { $project: { propertyIndexNumber: 1, name: 1, type: 1, location: 1, dateAcquired: 1 } }
@@ -194,7 +189,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // NEW: Pipeline for Total Depreciation (Year-to-Date)
     const totalDepreciationPipeline = Asset.aggregate([
         ...matchStage,
-        { $match: { acquisitionDate: { $lte: end }, status: { $ne: 'Disposed' } } },
+        { $match: { acquisitionDate: { $gte: start, $lte: end }, status: { $ne: 'Disposed' } } },
         {
             $addFields: {
                 depreciableCost: { $subtract: ["$acquisitionCost", { $ifNull: ["$salvageValue", 0] }] },
@@ -233,7 +228,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         ...matchStage,
         {
             $match: {
-                acquisitionDate: { $lte: end },
+                acquisitionDate: { $gte: start, $lte: end },
                 status: { $in: ['In Use', 'In Storage'] },
                 usefulLife: { $gt: 0 }
             }
@@ -251,12 +246,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $count: "count" }
     ]);
 
-    // NEW: Pipeline for Top 5 Requested Supplies (last 90 days from end date)
+    // NEW: Pipeline for Top 5 Requested Supplies within the selected date range
     const topSuppliesPipeline = Requisition.aggregate([
         {
             $match: {
                 status: 'Issued',
-                updatedAt: { $gte: ninetyDaysAgo, $lte: end }
+                updatedAt: { $gte: start, $lte: end }
             }
         },
         { $unwind: '$items' },
@@ -285,12 +280,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $project: { _id: 0, description: { $ifNull: ['$stockItemInfo.description', 'Unknown Item'] }, stockNumber: { $ifNull: ['$stockItemInfo.stockNumber', 'N/A'] }, totalIssued: '$totalIssued' } }
     ]);
 
-    // NEW: Pipeline for Average Requisition Fulfillment Time (last 90 days from end date)
+    // NEW: Pipeline for Average Requisition Fulfillment Time within the selected date range
     const avgFulfillmentTimePipeline = Requisition.aggregate([
         {
             $match: {
                 status: 'Issued',
-                updatedAt: { $gte: ninetyDaysAgo, $lte: end }
+                updatedAt: { $gte: start, $lte: end }
             }
         },
         {
@@ -306,17 +301,15 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
-    // NEW: Pipeline for Sparkline Data (last 30 days)
-    const thirtyDaysAgo = new Date(end);
-    thirtyDaysAgo.setDate(end.getDate() - 30);
-
+    // NEW: Pipeline for Sparkline Data over the selected date range
     const sparklineDataPipeline = Asset.aggregate([
         ...matchStage,
-        { $match: { acquisitionDate: { $lte: end } } },
+        { $match: { acquisitionDate: { $gte: start, $lte: end } } },
         {
             $facet: {
                 initialTotals: [
-                    { $match: { acquisitionDate: { $lt: thirtyDaysAgo } } },
+                    // This is now used to get a zero-value starting point
+                    { $match: { _id: null } }, // Will return empty array
                     {
                         $group: {
                             _id: null,
@@ -326,7 +319,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 dailyChanges: [
-                    { $match: { acquisitionDate: { $gte: thirtyDaysAgo, $lte: end } } },
                     {
                         $group: {
                             _id: { $dateToString: { format: "%Y-%m-%d", date: "$acquisitionDate" } },
@@ -340,14 +332,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
-    // NEW: Pipeline for Immovable Asset Sparkline Data (last 30 days)
+    // NEW: Pipeline for Immovable Asset Sparkline Data over the selected date range
     const immovableSparklineDataPipeline = ImmovableAsset.aggregate([
         ...immovableMatchStage,
-        { $match: { dateAcquired: { $lte: end } } },
+        { $match: { dateAcquired: { $gte: start, $lte: end } } },
         {
             $facet: {
                 initialTotals: [
-                    { $match: { dateAcquired: { $lt: thirtyDaysAgo } } },
+                    { $match: { _id: null } },
                     {
                         $group: {
                             _id: null,
@@ -356,7 +348,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 dailyChanges: [
-                    { $match: { dateAcquired: { $gte: thirtyDaysAgo, $lte: end } } },
                     {
                         $group: {
                             _id: { $dateToString: { format: "%Y-%m-%d", date: "$dateAcquired" } },
@@ -431,17 +422,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const avgTimeInMs = avgFulfillmentTimeResult[0]?.avgTime || 0;
     const avgFulfillmentTimeInDays = avgTimeInMs > 0 ? (avgTimeInMs / (1000 * 60 * 60 * 24)) : 0;
 
-    // NEW: Process sparkline data by combining movable and immovable results
+    // NEW: Process sparkline data to show cumulative growth WITHIN the selected period
     const movableSparklineResults = sparklineDataResult[0] || {};
     const immovableSparklineResults = immovableSparklineDataResult[0] || {};
-
-    const movableInitialTotals = movableSparklineResults.initialTotals?.[0] || { assetCount: 0, portfolioValue: 0 };
-    const immovableInitialTotals = immovableSparklineResults.initialTotals?.[0] || { portfolioValue: 0 };
-
-    const initialTotals = {
-        assetCount: movableInitialTotals.assetCount, // Asset count is only for movable
-        portfolioValue: movableInitialTotals.portfolioValue + immovableInitialTotals.portfolioValue
-    };
 
     const movableDailyChangesMap = new Map(
         (movableSparklineResults.dailyChanges || []).map(d => [d._id, { assetCount: d.assetCount, portfolioValue: d.portfolioValue }])
@@ -449,23 +432,32 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const immovableDailyChangesMap = new Map(
         (immovableSparklineResults.dailyChanges || []).map(d => [d._id, { portfolioValue: d.portfolioValue }])
     );
-
-    let currentAssetTotal = initialTotals.assetCount;
-    let currentPortfolioValue = initialTotals.portfolioValue;
+    
+    let currentPeriodAssetTotal = 0;
+    let currentPeriodPortfolioValue = 0;
     const assetSparkline = [];
     const portfolioSparkline = [];
-
-    for (let i = 0; i < 30; i++) {
-        const date = new Date(end);
-        date.setDate(end.getDate() - (29 - i));
+    const durationInDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+    
+    for (let i = 0; i < durationInDays; i++) {
+        const date = new Date(start);
+        date.setUTCDate(start.getUTCDate() + i);
         const dateString = date.toISOString().split('T')[0];
-        const movableDailyChange = movableDailyChangesMap.get(dateString);
-        const immovableDailyChange = immovableDailyChangesMap.get(dateString);
-        if (movableDailyChange) { currentAssetTotal += movableDailyChange.assetCount; currentPortfolioValue += movableDailyChange.portfolioValue; }
-        if (immovableDailyChange) { currentPortfolioValue += immovableDailyChange.portfolioValue; }
-        assetSparkline.push(currentAssetTotal);
-        portfolioSparkline.push(currentPortfolioValue);
+        
+        const movableChange = movableDailyChangesMap.get(dateString);
+        const immovableChange = immovableDailyChangesMap.get(dateString);
+
+        if (movableChange) {
+            currentPeriodAssetTotal += movableChange.assetCount;
+            currentPeriodPortfolioValue += movableChange.portfolioValue;
+        }
+        if (immovableChange) {
+            currentPeriodPortfolioValue += immovableChange.portfolioValue;
+        }
+        assetSparkline.push(currentPeriodAssetTotal);
+        portfolioSparkline.push(currentPeriodPortfolioValue);
     }
+
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
     const previousImmovable = previousImmovableStats[0] || { totalValue: 0 };
 
