@@ -197,9 +197,10 @@ export function createUIManager() {
 
         const statusMap = {
             'In Use': 'badge-success',
-            'In Storage': 'badge-info',
+            'In Storage': 'badge-ghost', // Changed from blue to gray as an example
             'For Repair': 'badge-warning',
-            'Disposed': 'badge-error'
+            'Waste': 'badge-warning', // Added missing 'Waste' status
+            'Disposed': 'badge-error',
         };
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
 
@@ -208,7 +209,7 @@ export function createUIManager() {
             const isAssigned = asset.assignedPAR || asset.assignedICS;
             const assignedTo = isAssigned ? (asset.assignedPAR || asset.assignedICS) : '';
             const assignedIndicator = isAssigned ? `<span class="text-xs text-blue-600 block font-normal">Assigned: ${assignedTo}</span>` : '';
-            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm">${asset.status}</span>`;
+            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm w-full">${asset.status}</span>`;
 
             tr.innerHTML = `
                 <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}"></td>
