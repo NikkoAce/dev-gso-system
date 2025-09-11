@@ -121,7 +121,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 ],
                 recentAssets: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $lte: end } } },
+                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
                     { $sort: { acquisitionDate: -1, createdAt: -1 } },
                     { $limit: 5 },
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
@@ -152,7 +152,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 currentPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lte: end } } }, { $count: 'count' } ],
                 previousPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lt: start } } }, { $count: 'count' } ],
                 recentRequisitions: [
-                    { $match: { dateRequested: { $lte: end } } },
+                    { $match: { dateRequested: { $gte: start, $lte: end } } },
                     { $sort: { dateRequested: -1, createdAt: -1 } },
                     { $limit: 5 },
                     { $project: { risNumber: 1, requestingOffice: 1, status: 1 } }
@@ -167,7 +167,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Transfers
     const recentTransfersPipeline = PTR.aggregate([
-        { $match: { date: { $lte: end } } }, // Filter by end date
+        { $match: { date: { $gte: start, $lte: end } } }, // Filter by date range
         { $sort: { date: -1, createdAt: -1 } }, // Sort by transfer date, most recent first
         { $limit: 5 }, // Get the top 5 recent transfers
         { $project: { ptrNumber: 1, date: 1, 'from.name': 1, 'from.office': 1, 'to.name': 1, 'to.office': 1, assets: 1 } }
@@ -176,7 +176,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // NEW: Pipeline for Recent Immovable Assets
     const recentImmovableAssetsPipeline = ImmovableAsset.aggregate([
         ...immovableMatchStage,
-        { $match: { dateAcquired: { $lte: end } } }, // Filter by end date
+        { $match: { dateAcquired: { $gte: start, $lte: end } } }, // Filter by date range
         { $sort: { dateAcquired: -1, createdAt: -1 } }, // Sort by acquisition date, then creation date
         { $limit: 5 }, // Get the top 5 recent immovable assets
         { $project: { propertyIndexNumber: 1, name: 1, type: 1, location: 1, dateAcquired: 1 } }
@@ -244,17 +244,13 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $count: "count" }
     ]);
 
-    // NEW: Pipeline for Top 5 Requested Supplies (last 90 days)
-    const ninetyDaysAgo = new Date(end);
-    ninetyDaysAgo.setDate(end.getDate() - 90);
-
+    // NEW: Pipeline for Top 5 Requested Supplies within the selected date range
     const topSuppliesPipeline = Requisition.aggregate([
         {
-            // This filter is for requisitions fulfilled within the period, not just requested
+            // This filter is for requisitions fulfilled (issued) within the period.
             $match: {
                 status: 'Issued',
-                // Using dateRequested as the filter date. A dedicated `dateIssued` would be more accurate if available.
-                dateRequested: { $gte: ninetyDaysAgo, $lte: end }
+                updatedAt: { $gte: start, $lte: end }
             }
         },
         { $unwind: '$items' },
