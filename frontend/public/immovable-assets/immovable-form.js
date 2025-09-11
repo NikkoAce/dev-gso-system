@@ -51,6 +51,10 @@ function initializeForm(user) {
     const repairsContainer = document.getElementById('repairs-container');
     const repairForm = document.getElementById('repair-form');
     // --- NEW: GIS Elements ---
+    const assessedValueInput = document.getElementById('assessedValue');
+    const buildingSalvageValueInput = document.getElementById('salvageValue');
+    const impairmentLossesInput = document.getElementById('impairmentLosses');
+    const newRepairAmountInput = document.getElementById('new-repair-amount');
     const childAssetsSection = document.getElementById('child-assets-section');
     const childAssetsList = document.getElementById('child-assets-list');
     const parentAssetSelect = document.getElementById('parentAsset');
@@ -75,6 +79,21 @@ function initializeForm(user) {
     let marker = null;
     let assetGeometry = null; // To store GeoJSON geometry
     let drawnItems = null; // To hold the feature group for drawing
+
+    /**
+     * Formats the value of a given input element to include commas for thousands separators.
+     * @param {HTMLInputElement} inputElement The input element to format.
+     */
+    function formatNumberOnInput(inputElement) {
+        if (!inputElement) return;
+        let value = inputElement.value.replace(/[^0-9.]/g, '');
+        const parts = value.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (parts.length > 2) {
+            parts.splice(2); // Keep only the first decimal point
+        }
+        inputElement.value = parts.join('.');
+    }
 
     // --- NEW: GIS Measurement Calculation ---
     function calculateAndDisplayMeasurement(layer) {
@@ -445,6 +464,9 @@ function initializeForm(user) {
             if (field) {
                 if (field.type === 'date' && value) {
                     field.value = new Date(value).toISOString().split('T')[0];
+                } else if (['assessedValue', 'impairmentLosses', 'buildingAndStructureDetails.salvageValue'].includes(name) && typeof value === 'number') {
+                    // Format currency fields on load
+                    field.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
                 } else {
                     // Use empty string for null/undefined to clear the field
                     field.value = value || '';
@@ -609,11 +631,18 @@ function initializeForm(user) {
         // 1. Structure the data from form fields
         for (const element of formElements) {
             if (!element.name || element.type === 'file') continue;
+
+            let value = element.value;
+            // Un-format currency fields before sending
+            if (['assessedValue', 'impairmentLosses', 'buildingAndStructureDetails.salvageValue'].includes(element.name) && typeof value === 'string') {
+                value = value.replace(/,/g, '');
+            }
+
             const keys = element.name.split('.');
             let current = assetData;
             keys.forEach((k, i) => {
                 if (i === keys.length - 1) {
-                    current[k] = element.value === '' ? null : element.value;
+                    current[k] = value === '' ? null : value;
                 } else {
                     current[k] = current[k] || {};
                     current = current[k];
@@ -778,7 +807,7 @@ function initializeForm(user) {
         const repairData = {
             date: document.getElementById('new-repair-date').value,
             natureOfRepair: document.getElementById('new-repair-nature').value,
-            amount: document.getElementById('new-repair-amount').value,
+            amount: document.getElementById('new-repair-amount').value.replace(/,/g, ''),
         };
 
         if (!repairData.date || !repairData.natureOfRepair || !repairData.amount) {

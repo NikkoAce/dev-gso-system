@@ -80,7 +80,7 @@
                                         </div>
                                         <div class="form-control">
                                             <label for="assessedValue" class="label"><span class="label-text">Assessed Value (PHP)</span></label>
-                                            <input type="number" id="assessedValue" name="assessedValue" class="input input-bordered" required step="0.01">
+                                            <input type="text" inputmode="decimal" id="assessedValue" name="assessedValue" class="input input-bordered" required>
                                         </div>
                                         <div class="form-control">
                                             <label for="fundSource" class="label"><span class="label-text">Fund Source</span></label>
@@ -228,8 +228,8 @@
                                         <div class="form-control"><label for="constructionDate" class="label"><span class="label-text">Construction Date</span></label><input type="date" id="constructionDate" name="buildingAndStructureDetails.constructionDate" class="input input-bordered"></div>
                                         <div class="form-control"><label for="constructionMaterials" class="label"><span class="label-text">Construction Materials</span></label><input type="text" id="constructionMaterials" name="buildingAndStructureDetails.constructionMaterials" placeholder="e.g., Concrete, Steel, Wood" class="input input-bordered"></div>
                                         <div class="form-control"><label for="estimatedUsefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="estimatedUsefulLife" name="buildingAndStructureDetails.estimatedUsefulLife" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="number" id="salvageValue" name="buildingAndStructureDetails.salvageValue" class="input input-bordered" step="0.01"></div>
-                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="number" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" step="0.01" value="0"></div>
+                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="text" inputmode="decimal" id="salvageValue" name="buildingAndStructureDetails.salvageValue" class="input input-bordered"></div>
+                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="text" inputmode="decimal" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" value="0.00"></div>
                                     </div>
                                 </div>
                             </div>
@@ -290,7 +290,7 @@
                                 <form id="repair-form" class="grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-end p-4 border rounded-lg bg-base-200 mb-4">
                                     <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Date</span></label><input type="date" id="new-repair-date" class="input input-bordered input-sm" required></div>
                                     <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Nature of Repair</span></label><input type="text" id="new-repair-nature" placeholder="e.g., Roof resealing" class="input input-bordered input-sm" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Amount</span></label><input type="number" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" step="0.01" required></div>
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Amount</span></label><input type="text" inputmode="decimal" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" required></div>
                                     <button type="submit" class="btn btn-sm btn-primary">Add</button>
                                 </form>
                                 <!-- Container for existing repair records -->
