@@ -52,6 +52,7 @@ app.use('/api/requisitions', require('./routes/requisitionRoutes'));
 app.use('/api/immovable-assets', require('./routes/immovableAssetRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/appendix68', require('./routes/appendix68Routes'));
+app.use('/api/admin', require('./routes/adminRoutes')); 
 
 console.log('Registering /api/users routes...');
 app.use('/api/roles', require('./routes/roleRoutes'));
