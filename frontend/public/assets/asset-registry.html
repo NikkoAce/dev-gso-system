@@ -67,25 +67,28 @@
                                     </button>
                                 </div>
                             </div>
-                            
-                            <!-- Primary Filters -->
-                            <div class="flex flex-col md:flex-row gap-4">
+
+                            <!-- Combined Filters -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end pt-4 border-t">
                                 <!-- Search Input -->
-                                <div class="relative flex-grow">
+                                <div class="relative md:col-span-2">
+                                    <label for="search-input" class="label py-0"><span class="label-text">Search</span></label>
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
                                     </div>
                                     <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="input input-bordered w-full pl-10">
                                 </div>
                                 <!-- Category Filter -->
-                                <div class="w-full md:w-48">
+                                <div class="w-full">
+                                    <label for="category-filter" class="label py-0"><span class="label-text">Category</span></label>
                                     <select id="category-filter" class="select select-bordered w-full">
                                         <option value="">All Categories</option>
                                         <!-- JS will populate this -->
                                     </select>
                                 </div>
                                 <!-- Status Filter -->
-                                <div class="w-full md:w-48">
+                                <div class="w-full">
+                                    <label for="status-filter" class="label py-0"><span class="label-text">Status</span></label>
                                     <select id="status-filter" class="select select-bordered w-full">
                                         <option value="">All Statuses</option>
                                         <option>In Use</option>
@@ -96,61 +99,46 @@
                                     </select>
                                 </div>
                                 <!-- Office Filter -->
-                                <div class="w-full md:w-48">
+                                <div class="w-full">
+                                    <label for="office-filter" class="label py-0"><span class="label-text">Office</span></label>
                                     <select id="office-filter" class="select select-bordered w-full font-normal">
                                         <option value="">All Offices</option>
                                         <!-- JS will populate this -->
                                     </select>
                                 </div>
-                                <!-- Action Buttons -->
-                                <div class="flex items-center gap-2">
-                                    <button id="more-filters-btn" aria-expanded="false" class="btn btn-ghost">
-                                        More Filters <i data-lucide="chevron-down" class="h-5 w-5"></i>
-                                    </button>
-                                    <button id="export-csv-btn" class="btn btn-outline btn-success">
-                                        <i data-lucide="download" class="h-5 w-5"></i> Export
-                                    </button>
+                                <!-- Date Range Filter -->
+                                <div class="md:col-span-2">
+                                    <label for="start-date-filter" class="label py-0"><span class="label-text">Acquired Between</span></label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="date" id="start-date-filter" class="input input-bordered w-full text-sm">
+                                        <span class="text-gray-500">-</span>
+                                        <input type="date" id="end-date-filter" class="input input-bordered w-full text-sm">
+                                    </div>
                                 </div>
-                            </div>
-
-                            <!-- Advanced Filters (collapsible) -->
-                            <div id="advanced-filters" class="hidden pt-4 border-t border-gray-200">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <!-- Date Range Filter -->
-                                    <div class="md:col-span-2">
-                                        <label for="start-date-filter" class="block text-sm font-medium text-gray-700">Acquired Between</label>
-                                        <div class="mt-1 flex items-center gap-2">
-                                            <input type="date" id="start-date-filter" class="input input-bordered w-full text-sm">
-                                            <span class="text-gray-500">-</span>
-                                            <input type="date" id="end-date-filter" class="input input-bordered w-full text-sm">
-                                        </div>
-                                    </div>
-                                    <!-- Fund Source Filter -->
-                                    <div>
-                                        <label for="fund-source-filter" class="block text-sm font-medium text-gray-700">Fund Source</label>
-                                        <select id="fund-source-filter" class="select select-bordered w-full mt-1 font-normal">
-                                            <option value="">All Fund Sources</option>
-                                            <option>General Fund</option>
-                                            <option>Special Education Fund</option>
-                                            <option>Trust Fund</option>
-                                        </select>
-                                    </div>
-                                    <!-- Assignment Filter -->
-                                    <div class="md:col-span-2">
-                                        <label for="assignment-filter" class="block text-sm font-medium text-gray-700">Assignment Status</label>
-                                        <select id="assignment-filter" class="select select-bordered w-full mt-1 font-normal">
-                                            <option value="">All Assignments</option>
-                                            <option value="unassigned">Unassigned</option>
-                                            <option value="par">Assigned to PAR</option>
-                                            <option value="ics">Assigned to ICS</option>
-                                        </select>
-                                    </div>
-                                    <!-- Reset Button -->
-                                    <div class="flex items-end md:col-span-1">
-                                        <button id="reset-filters-btn" class="btn btn-ghost w-full md:w-auto mt-1">
-                                            <i data-lucide="rotate-cw" class="h-5 w-5"></i> Reset
-                                        </button>
-                                    </div>
+                                <!-- Fund Source Filter -->
+                                <div class="w-full">
+                                    <label for="fund-source-filter" class="label py-0"><span class="label-text">Fund Source</span></label>
+                                    <select id="fund-source-filter" class="select select-bordered w-full font-normal">
+                                        <option value="">All Fund Sources</option>
+                                        <option>General Fund</option>
+                                        <option>Special Education Fund</option>
+                                        <option>Trust Fund</option>
+                                    </select>
+                                </div>
+                                <!-- Assignment Filter -->
+                                <div class="w-full">
+                                    <label for="assignment-filter" class="label py-0"><span class="label-text">Assignment</span></label>
+                                    <select id="assignment-filter" class="select select-bordered w-full font-normal">
+                                        <option value="">All Assignments</option>
+                                        <option value="unassigned">Unassigned</option>
+                                        <option value="par">Assigned to PAR</option>
+                                        <option value="ics">Assigned to ICS</option>
+                                    </select>
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="flex items-center gap-2 w-full">
+                                    <button id="export-csv-btn" class="btn btn-outline btn-success w-1/2"><i data-lucide="download" class="h-5 w-5"></i> Export</button>
+                                    <button id="reset-filters-btn" class="btn btn-ghost w-1/2"><i data-lucide="rotate-cw" class="h-5 w-5"></i> Reset</button>
                                 </div>
                             </div>
                         </div>

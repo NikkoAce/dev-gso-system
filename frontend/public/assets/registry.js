@@ -44,8 +44,6 @@ function initializeRegistryPage(user) {
         statusFilter: document.getElementById('status-filter'),
         officeFilter: document.getElementById('office-filter'),
         fundSourceFilter: document.getElementById('fund-source-filter'),
-        moreFiltersBtn: document.getElementById('more-filters-btn'),
-        advancedFilters: document.getElementById('advanced-filters'),
         resetFiltersBtn: document.getElementById('reset-filters-btn'),
         assignmentFilter: document.getElementById('assignment-filter'),
         startDateFilter: document.getElementById('start-date-filter'),
@@ -450,16 +448,6 @@ function initializeRegistryPage(user) {
             DOM.generateIIRUPBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('IIRUP'));
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
             DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(state.selectedAssets.map(a => a._id)));
-            DOM.moreFiltersBtn?.addEventListener('click', () => {
-                DOM.advancedFilters.classList.toggle('hidden');
-                const isVisible = !DOM.advancedFilters.classList.contains('hidden');
-                DOM.moreFiltersBtn.setAttribute('aria-expanded', String(isVisible));
-                const icon = DOM.moreFiltersBtn.querySelector('i');
-                if (icon) {
-                    icon.setAttribute('data-lucide', isVisible ? 'chevron-up' : 'chevron-down');
-                    lucide.createIcons();
-                }
-            });
             // Transfer Modal Listeners
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
@@ -565,9 +553,6 @@ function initializeRegistryPage(user) {
 
         const office = urlParams.get('office');
         if (office) {
-            if (DOM.advancedFilters.classList.contains('hidden')) {
-                DOM.moreFiltersBtn.click();
-            }
             DOM.officeFilter.value = office;
             hasFilters = true;
         }
