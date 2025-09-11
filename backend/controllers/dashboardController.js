@@ -25,9 +25,16 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const end = endDate ? new Date(endDate) : new Date();
     end.setUTCHours(23, 59, 59, 999);
 
-    const startOfYear = new Date(end.getFullYear(), 0, 1); // Start of the current year
-    const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
+    // The 'start' date is now only used for calculating trends, not for filtering most widgets.
+    const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30)); // Default to 30 days for trend
     start.setUTCHours(0, 0, 0, 0);
+
+    // Define fixed time windows for activity widgets, based on the 'end' date, to ensure a consistent "point-in-time" view.
+    const startOfYear = new Date(end.getFullYear(), 0, 1);
+    const twelveMonthsAgo = new Date(end);
+    twelveMonthsAgo.setMonth(end.getMonth() - 12);
+    const ninetyDaysAgo = new Date(end);
+    ninetyDaysAgo.setDate(end.getDate() - 90);
 
     // --- NEW: Build the interactive filter match stage ---
     // This will be applied to the main asset pipeline to filter all stats and charts.
@@ -90,7 +97,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 ],
                 monthlyAcquisitions: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
+                    { $match: { acquisitionDate: { $gte: twelveMonthsAgo, $lte: end } } },
                     { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } }, totalValue: { $sum: '$acquisitionCost' } } },
                     { $sort: { _id: 1 } }
                 ],
@@ -121,7 +128,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 ],
                 recentAssets: [
                     ...matchStage,
-                    { $match: { acquisitionDate: { $gte: start, $lte: end } } },
+                    { $match: { acquisitionDate: { $lte: end } } },
                     { $sort: { acquisitionDate: -1, createdAt: -1 } },
                     { $limit: 5 },
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
@@ -152,7 +159,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 currentPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lte: end } } }, { $count: 'count' } ],
                 previousPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lt: start } } }, { $count: 'count' } ],
                 recentRequisitions: [
-                    { $match: { dateRequested: { $gte: start, $lte: end } } },
+                    { $match: { dateRequested: { $lte: end } } },
                     { $sort: { dateRequested: -1, createdAt: -1 } },
                     { $limit: 5 },
                     { $project: { risNumber: 1, requestingOffice: 1, status: 1 } }
@@ -167,7 +174,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Transfers
     const recentTransfersPipeline = PTR.aggregate([
-        { $match: { date: { $gte: start, $lte: end } } }, // Filter by date range
+        { $match: { date: { $lte: end } } }, // Show most recent as of end date
         { $sort: { date: -1, createdAt: -1 } }, // Sort by transfer date, most recent first
         { $limit: 5 }, // Get the top 5 recent transfers
         { $project: { ptrNumber: 1, date: 1, 'from.name': 1, 'from.office': 1, 'to.name': 1, 'to.office': 1, assets: 1 } }
@@ -176,7 +183,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // NEW: Pipeline for Recent Immovable Assets
     const recentImmovableAssetsPipeline = ImmovableAsset.aggregate([
         ...immovableMatchStage,
-        { $match: { dateAcquired: { $gte: start, $lte: end } } }, // Filter by date range
+        { $match: { dateAcquired: { $lte: end } } }, // Show most recent as of end date
         { $sort: { dateAcquired: -1, createdAt: -1 } }, // Sort by acquisition date, then creation date
         { $limit: 5 }, // Get the top 5 recent immovable assets
         { $project: { propertyIndexNumber: 1, name: 1, type: 1, location: 1, dateAcquired: 1 } }
@@ -244,13 +251,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $count: "count" }
     ]);
 
-    // NEW: Pipeline for Top 5 Requested Supplies within the selected date range
+    // NEW: Pipeline for Top 5 Requested Supplies (last 90 days from end date)
     const topSuppliesPipeline = Requisition.aggregate([
         {
-            // This filter is for requisitions fulfilled (issued) within the period.
             $match: {
                 status: 'Issued',
-                updatedAt: { $gte: start, $lte: end }
+                updatedAt: { $gte: ninetyDaysAgo, $lte: end }
             }
         },
         { $unwind: '$items' },
@@ -279,13 +285,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $project: { _id: 0, description: { $ifNull: ['$stockItemInfo.description', 'Unknown Item'] }, stockNumber: { $ifNull: ['$stockItemInfo.stockNumber', 'N/A'] }, totalIssued: '$totalIssued' } }
     ]);
 
-    // NEW: Pipeline for Average Requisition Fulfillment Time
+    // NEW: Pipeline for Average Requisition Fulfillment Time (last 90 days from end date)
     const avgFulfillmentTimePipeline = Requisition.aggregate([
         {
             $match: {
                 status: 'Issued',
-                // Filter by when the requisition was fulfilled (i.e., when its status was updated to 'Issued')
-                updatedAt: { $gte: start, $lte: end }
+                updatedAt: { $gte: ninetyDaysAgo, $lte: end }
             }
         },
         {
