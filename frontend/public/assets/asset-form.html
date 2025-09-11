@@ -106,10 +106,10 @@
                                     <h2 class="card-title">Acquisition & Value</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="form-control"><label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label><input type="date" id="acquisitionDate" name="acquisitionDate" class="input input-bordered" required></div>
-                                        <div class="form-control"><label for="acquisitionCost" class="label"><span class="label-text">Acquisition Cost (PHP)</span></label><input type="number" id="acquisitionCost" name="acquisitionCost" class="input input-bordered" required step="0.01"></div>
+                                        <div class="form-control"><label for="acquisitionCost" class="label"><span class="label-text">Acquisition Cost (PHP)</span></label><input type="text" inputmode="decimal" id="acquisitionCost" name="acquisitionCost" class="input input-bordered" required></div>
                                         <div class="form-control"><label for="usefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="usefulLife" name="usefulLife" class="input input-bordered" required></div>
-                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="number" id="salvageValue" name="salvageValue" class="input input-bordered" step="0.01"></div>
-                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="number" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" step="0.01" value="0"></div>
+                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="text" inputmode="decimal" id="salvageValue" name="salvageValue" class="input input-bordered"></div>
+                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="text" inputmode="decimal" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" value="0.00"></div>
                                     </div>
                                 </div>
                             </div>
