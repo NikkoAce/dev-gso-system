@@ -99,7 +99,15 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
                 ],
                 assetsByCondition: [
-                    { $group: { _id: '$condition', count: { $sum: 1 } } }
+                    {
+                        $group: {
+                            _id: {
+                                // Coalesce null and empty strings into a single "Not Set" category
+                                $cond: { if: { $in: ["$condition", [null, ""]] }, then: "Not Set", else: "$condition" }
+                            },
+                            count: { $sum: 1 }
+                        }
+                    }
                 ],
                 recentAssets: [
                     { $match: { acquisitionDate: { $lte: end } } },
