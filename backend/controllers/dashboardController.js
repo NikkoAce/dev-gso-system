@@ -146,6 +146,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 currentPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lte: end } } }, { $count: 'count' } ],
                 previousPendingReqs: [ { $match: { status: 'Pending', dateRequested: { $lt: start } } }, { $count: 'count' } ],
                 recentRequisitions: [
+                    { $match: { dateRequested: { $lte: end } } }, // Filter by end date
                     { $sort: { dateRequested: -1 } },
                     { $limit: 5 },
                     { $project: { risNumber: 1, requestingOffice: 1, status: 1 } }
@@ -160,6 +161,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Transfers
     const recentTransfersPipeline = PTR.aggregate([
+        { $match: { date: { $lte: end } } }, // Filter by end date
         { $sort: { date: -1 } }, // Sort by transfer date, most recent first
         { $limit: 5 }, // Get the top 5 recent transfers
         { $project: { ptrNumber: 1, date: 1, 'from.name': 1, 'from.office': 1, 'to.name': 1, 'to.office': 1, assets: 1 } }
@@ -167,6 +169,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Immovable Assets
     const recentImmovableAssetsPipeline = ImmovableAsset.aggregate([
+        { $match: { dateAcquired: { $lte: end } } }, // Filter by end date
         { $sort: { dateAcquired: -1, createdAt: -1 } }, // Sort by acquisition date, then creation date
         { $limit: 5 }, // Get the top 5 recent immovable assets
         { $project: { propertyIndexNumber: 1, name: 1, type: 1, location: 1, dateAcquired: 1 } }
