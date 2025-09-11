@@ -437,6 +437,42 @@ function initializeRegistryPage(user) {
             }
         },
 
+        async handleDownloadTemplate() {
+            const originalContent = DOM.downloadTemplateBtn.innerHTML;
+            DOM.downloadTemplateBtn.classList.add('disabled'); // Using a class to prevent clicks
+            DOM.downloadTemplateBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Downloading...`;
+            try {
+                const token = getGsoToken();
+                if (!token) {
+                    throw new Error('Authentication token not found.');
+                }
+
+                const response = await fetch(`${BASE_URL}/assets/import/template`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to download template. Status: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'asset_import_template.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (error) {
+                uiManager.showToast(`Download failed: ${error.message}`, 'error');
+            } finally {
+                DOM.downloadTemplateBtn.classList.remove('disabled');
+                DOM.downloadTemplateBtn.innerHTML = originalContent;
+            }
+        },
+
         async handleImportCsv() {
             const file = DOM.csvFileInput.files[0];
             if (!file) {
@@ -510,6 +546,17 @@ function initializeRegistryPage(user) {
             DOM.generateAppendix68Btn?.addEventListener('click', openAppendix68Modal);
             DOM.confirmAppendix68Btn?.addEventListener('click', () => this.handleConfirmAppendix68());
             DOM.cancelAppendix68Btn?.addEventListener('click', closeAppendix68Modal);
+            // Import Modal Listeners
+            DOM.importCsvBtn?.addEventListener('click', () => {
+                DOM.importResultsContainer.classList.add('hidden');
+                DOM.csvFileInput.value = ''; // Reset file input
+                DOM.importModal.showModal();
+            });
+            DOM.cancelImportBtn?.addEventListener('click', () => DOM.importModal.close());
+            DOM.confirmImportBtn?.addEventListener('click', () => this.handleImportCsv());
+            DOM.downloadTemplateBtn?.addEventListener('click', (e) => { 
+                e.preventDefault(); this.handleDownloadTemplate(); 
+            });
         }
     };
 
