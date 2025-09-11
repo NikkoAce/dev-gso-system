@@ -44,6 +44,7 @@ function initializeForm(user) {
     const salvageValueInput = document.getElementById('salvageValue');
     const propertyNumberInput = document.getElementById('propertyNumber');
     const propertyNumberLabel = document.querySelector('#property-number-container .label-text');
+    const impairmentLossesInput = document.getElementById('impairmentLosses');
     const generatePropertyNumberBtn = document.getElementById('generate-property-number-btn');
     const custodianDesignationInput = document.getElementById('custodianDesignation');
     const categoryList = document.getElementById('category-list');
@@ -79,6 +80,21 @@ function initializeForm(user) {
             option.value = item[valueField];
             datalistEl.appendChild(option);
         });
+    }
+
+    /**
+     * Formats the value of a given input element to include commas for thousands separators.
+     * @param {HTMLInputElement} inputElement The input element to format.
+     */
+    function formatNumberOnInput(inputElement) {
+        if (!inputElement) return;
+        let value = inputElement.value.replace(/[^0-9.]/g, '');
+        const parts = value.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (parts.length > 2) {
+            parts.splice(2); // Keep only the first decimal point
+        }
+        inputElement.value = parts.join('.');
     }
 
     function renderSpecification(spec = { key: '', value: '' }) {
@@ -180,6 +196,11 @@ function initializeForm(user) {
                     if (field.type === 'date' && asset[key]) {
                         field.value = new Date(asset[key]).toISOString().split('T')[0];
                     } else {
+                        // Format number fields with commas on load
+                        if (['acquisitionCost', 'salvageValue', 'impairmentLosses'].includes(key) && typeof asset[key] === 'number') {
+                            field.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(asset[key]);
+                            continue; // Skip the default assignment below
+                        }
                         field.value = asset[key];
                     }
                 }
@@ -293,12 +314,18 @@ function initializeForm(user) {
         for (const element of form.elements) {
             // Skip files, and propertyNumber if in bulk mode
             if (!element.name || element.type === 'file' || (isBulkCreate && element.name === 'propertyNumber')) continue;
-            
+
+            let value = element.value;
+            // Un-format number fields before sending to backend
+            if (['acquisitionCost', 'salvageValue', 'impairmentLosses'].includes(element.name) && typeof value === 'string') {
+                value = value.replace(/,/g, '');
+            }
+
             const keys = element.name.split('.');
             let current = assetData;
             keys.forEach((k, i) => {
                 if (i === keys.length - 1) {
-                    current[k] = element.value === '' ? null : element.value;
+                    current[k] = value === '' ? null : value;
                 } else {
                     current[k] = current[k] || {};
                     current = current[k];
@@ -420,14 +447,20 @@ function initializeForm(user) {
     });
 
     acquisitionCostInput.addEventListener('input', (e) => {
-        const cost = parseFloat(e.target.value);
+        formatNumberOnInput(e.target);
+        const cost = parseFloat(e.target.value.replace(/,/g, ''));
         if (!isNaN(cost) && cost >= 0) {
             const salvageValue = (cost * 0.05).toFixed(2);
             salvageValueInput.value = salvageValue;
+            formatNumberOnInput(salvageValueInput);
         } else {
             salvageValueInput.value = '';
         }
     });
+
+    // Add listeners for direct input on other currency fields
+    salvageValueInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
+    impairmentLossesInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
 
     generatePropertyNumberBtn.addEventListener('click', handleGeneratePropertyNumber);
 
