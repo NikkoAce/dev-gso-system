@@ -13,7 +13,7 @@
     <script type="module" src="/js/auth.js" defer></script>
 </head>
 <body>
-    <div class="flex min-h-screen">
+    <div class="flex h-screen">
         <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
             <!-- Sidebar Skeleton Loader -->
             <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
@@ -35,12 +35,12 @@
                 </div>
             </div>
         </aside>
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col overflow-hidden">
             <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
                 <h1 class="text-xl font-bold">LGU GSO System</h1>
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
-            <main class="p-6 md:p-10">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
                     <div class="card bg-base-100 border non-printable">
                         <div id="filter-container" class="card-body p-4 space-y-4">
@@ -157,26 +157,24 @@
                     </div>
 
                     <div class="bg-base-100 border rounded-box">
-                        <div>
-                            <div class="overflow-x-auto">
-                                <table class="table table-zebra w-full">
-                                    <thead>
-                                        <tr>
-                                            <th class="non-printable"><input type="checkbox" id="select-all-assets" class="checkbox checkbox-sm"></th>
-                                            <th class="cursor-pointer" data-sort-key="propertyNumber">Property No.</th>
-                                            <th class="cursor-pointer" data-sort-key="description">Description</th>
-                                            <th class="cursor-pointer" data-sort-key="category">Category</th>
-                                            <th class="cursor-pointer" data-sort-key="custodian.name">Custodian</th>
-                                            <th class="cursor-pointer" data-sort-key="status">Status</th>
-                                            <th class="cursor-pointer" data-sort-key="createdAt">Date Created</th>
-                                            <th class="text-center non-printable">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="asset-table-body">
-                                        <tr><td colspan="8" class="text-center p-8">Loading assets...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="non-printable"><input type="checkbox" id="select-all-assets" class="checkbox checkbox-sm"></th>
+                                        <th class="cursor-pointer" data-sort-key="propertyNumber">Property No.</th>
+                                        <th class="cursor-pointer" data-sort-key="description">Description</th>
+                                        <th class="cursor-pointer" data-sort-key="category">Category</th>
+                                        <th class="cursor-pointer" data-sort-key="custodian.name">Custodian</th>
+                                        <th class="cursor-pointer" data-sort-key="status">Status</th>
+                                        <th class="cursor-pointer" data-sort-key="createdAt">Date Created</th>
+                                        <th class="text-center non-printable">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-table-body">
+                                    <tr><td colspan="8" class="text-center p-8">Loading assets...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                         <div class="p-4 flex justify-between items-center non-printable border-t">
                             <div id="total-value-container" class="text-sm">
