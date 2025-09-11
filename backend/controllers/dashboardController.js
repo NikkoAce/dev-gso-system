@@ -187,7 +187,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // NEW: Pipeline for Total Depreciation (Year-to-Date)
     const totalDepreciationPipeline = Asset.aggregate([
         ...matchStage,
-        { $match: { acquisitionDate: { $lte: end } } },
+        { $match: { acquisitionDate: { $lte: end }, status: { $ne: 'Disposed' } } },
         {
             $addFields: {
                 depreciableCost: { $subtract: ["$acquisitionCost", { $ifNull: ["$salvageValue", 0] }] },
@@ -205,7 +205,13 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 _id: null,
                 totalDepreciationYTD: {
                     $sum: {
-                        $min: ["$depreciableCost", { $multiply: ["$annualDepreciation", { $divide: [{ $subtract: [end, { $max: ["$acquisitionDate", startOfYear] }] }, 1000 * 60 * 60 * 24 * 365.25] }] }]
+                        $max: [ // Ensure depreciation doesn't go below zero
+                            0,
+                            { $min: [
+                                "$depreciableCost", 
+                                { $multiply: ["$annualDepreciation", { $divide: [{ $subtract: [end, { $max: ["$acquisitionDate", startOfYear] }] }, 1000 * 60 * 60 * 24 * 365.25] }] }
+                            ]}
+                        ]
                     }
                 }
             }
@@ -220,7 +226,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         ...matchStage,
         {
             $match: {
-                acquisitionDate: { $lte: end }, // Asset must exist as of the report date
+                acquisitionDate: { $lte: end },
                 status: { $in: ['In Use', 'In Storage'] },
                 usefulLife: { $gt: 0 }
             }
@@ -244,6 +250,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     const topSuppliesPipeline = Requisition.aggregate([
         {
+            // This filter is for requisitions fulfilled within the period, not just requested
             $match: {
                 status: 'Issued',
                 // Using dateRequested as the filter date. A dedicated `dateIssued` would be more accurate if available.
