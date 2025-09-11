@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { migrateAssetConditions } = require('../controllers/adminController');
-const { protect, checkPermission } = require('../middleware/authMiddleware');
+const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const PERMISSIONS = require('../config/permissions');
 
 // @desc    Trigger a data migration for asset conditions
