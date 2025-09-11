@@ -199,7 +199,7 @@ function initializeForm(user) {
                         // Format number fields with commas on load
                         if (['acquisitionCost', 'salvageValue', 'impairmentLosses'].includes(key) && typeof asset[key] === 'number') {
                             field.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(asset[key]);
-                            continue; // Skip the default assignment below
+                            return; // Skip the default assignment below
                         }
                         field.value = asset[key];
                     }
