@@ -60,10 +60,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // --- 2. Define Combined Aggregation Pipelines for Performance ---
     const movableAssetPipeline = Asset.aggregate([
-        ...matchStage, // Apply interactive filters at the very beginning for max efficiency
         {
             $facet: {
                 currentPeriodStats: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $lte: end }, status: { $ne: 'Disposed' } } },
                     {
                         $group: {
@@ -76,6 +76,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 previousPeriodStats: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $lte: start }, status: { $ne: 'Disposed' } } },
                     {
                         $group: {
@@ -88,19 +89,23 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 monthlyAcquisitions: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $gte: start, $lte: end } } },
                     { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$acquisitionDate" } }, totalValue: { $sum: '$acquisitionCost' } } },
                     { $sort: { _id: 1 } }
                 ],
                 assetsByStatus: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $lte: end } } },
                     { $group: { _id: '$status', count: { $sum: 1 } } }
                 ],
                 assetsByOffice: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $lte: end } } },
                     { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
                 ],
                 assetsByCondition: [
+                    ...matchStage,
                     {
                         $match: { acquisitionDate: { $lte: end } }
                     },
@@ -115,12 +120,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 recentAssets: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $lte: end } } },
                     { $sort: { acquisitionDate: -1, createdAt: -1 } },
                     { $limit: 5 },
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
                 ],
                 unassignedAssetsCount: [
+                    ...matchStage,
                     { $match: { acquisitionDate: { $lte: end }, assignedPAR: { $in: [null, ""] }, assignedICS: { $in: [null, ""] } } },
                     { $count: "count" }
                 ]
