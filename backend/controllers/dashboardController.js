@@ -325,6 +325,35 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
+    // NEW: Pipeline for Immovable Asset Sparkline Data (last 30 days)
+    const immovableSparklineDataPipeline = ImmovableAsset.aggregate([
+        ...immovableMatchStage,
+        { $match: { dateAcquired: { $lte: end } } },
+        {
+            $facet: {
+                initialTotals: [
+                    { $match: { dateAcquired: { $lt: thirtyDaysAgo } } },
+                    {
+                        $group: {
+                            _id: null,
+                            portfolioValue: { $sum: '$assessedValue' }
+                        }
+                    }
+                ],
+                dailyChanges: [
+                    { $match: { dateAcquired: { $gte: thirtyDaysAgo, $lte: end } } },
+                    {
+                        $group: {
+                            _id: { $dateToString: { format: "%Y-%m-%d", date: "$dateAcquired" } },
+                            portfolioValue: { $sum: '$assessedValue' }
+                        }
+                    },
+                    { $sort: { _id: 1 } }
+                ]
+            }
+        }
+    ]);
+
     // --- 3. Execute all queries concurrently ---
     const [
         movableAssetResults,
@@ -337,7 +366,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         recentImmovableAssetsResult, // NEW
         topSuppliesResult,
         avgFulfillmentTimeResult, // NEW
-        sparklineDataResult // NEW
+        sparklineDataResult, // NEW
+        immovableSparklineDataResult // NEW: for immovable assets
     ] = await Promise.all([
         movableAssetPipeline,
         immovableAssetPipeline,
@@ -349,7 +379,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         recentImmovableAssetsPipeline, // NEW
         topSuppliesPipeline,
         avgFulfillmentTimePipeline, // NEW
-        sparklineDataPipeline // NEW
+        sparklineDataPipeline, // NEW
+        immovableSparklineDataPipeline // NEW
     ]);
 
     // Unpack results from the combined pipelines
@@ -385,11 +416,23 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const avgTimeInMs = avgFulfillmentTimeResult[0]?.avgTime || 0;
     const avgFulfillmentTimeInDays = avgTimeInMs > 0 ? (avgTimeInMs / (1000 * 60 * 60 * 24)) : 0;
 
-    // NEW: Process sparkline data
-    const sparklineResults = sparklineDataResult[0] || {};
-    const initialTotals = sparklineResults.initialTotals?.[0] || { assetCount: 0, portfolioValue: 0 };
-    const dailyChangesMap = new Map(
-        (sparklineResults.dailyChanges || []).map(d => [d._id, { assetCount: d.assetCount, portfolioValue: d.portfolioValue }])
+    // NEW: Process sparkline data by combining movable and immovable results
+    const movableSparklineResults = sparklineDataResult[0] || {};
+    const immovableSparklineResults = immovableSparklineDataResult[0] || {};
+
+    const movableInitialTotals = movableSparklineResults.initialTotals?.[0] || { assetCount: 0, portfolioValue: 0 };
+    const immovableInitialTotals = immovableSparklineResults.initialTotals?.[0] || { portfolioValue: 0 };
+
+    const initialTotals = {
+        assetCount: movableInitialTotals.assetCount, // Asset count is only for movable
+        portfolioValue: movableInitialTotals.portfolioValue + immovableInitialTotals.portfolioValue
+    };
+
+    const movableDailyChangesMap = new Map(
+        (movableSparklineResults.dailyChanges || []).map(d => [d._id, { assetCount: d.assetCount, portfolioValue: d.portfolioValue }])
+    );
+    const immovableDailyChangesMap = new Map(
+        (immovableSparklineResults.dailyChanges || []).map(d => [d._id, { portfolioValue: d.portfolioValue }])
     );
 
     let currentAssetTotal = initialTotals.assetCount;
@@ -401,11 +444,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         const date = new Date(end);
         date.setDate(end.getDate() - (29 - i));
         const dateString = date.toISOString().split('T')[0];
-        const dailyChange = dailyChangesMap.get(dateString);
-        if (dailyChange) {
-            currentAssetTotal += dailyChange.assetCount;
-            currentPortfolioValue += dailyChange.portfolioValue;
-        }
+        const movableDailyChange = movableDailyChangesMap.get(dateString);
+        const immovableDailyChange = immovableDailyChangesMap.get(dateString);
+        if (movableDailyChange) { currentAssetTotal += movableDailyChange.assetCount; currentPortfolioValue += movableDailyChange.portfolioValue; }
+        if (immovableDailyChange) { currentPortfolioValue += immovableDailyChange.portfolioValue; }
         assetSparkline.push(currentAssetTotal);
         portfolioSparkline.push(currentPortfolioValue);
     }
