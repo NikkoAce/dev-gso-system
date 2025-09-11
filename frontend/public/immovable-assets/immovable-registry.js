@@ -34,6 +34,9 @@ function initializeRegistryPage(user) {
     const searchInput = document.getElementById('search-input');
     const typeFilter = document.getElementById('type-filter');
     const statusFilter = document.getElementById('status-filter');
+    const conditionFilter = document.getElementById('condition-filter');
+    const startDateFilter = document.getElementById('start-date-filter');
+    const endDateFilter = document.getElementById('end-date-filter');
     const paginationControls = document.getElementById('pagination-controls');
     const exportCsvBtn = document.getElementById('export-csv-btn');
     const addAssetBtn = document.getElementById('add-asset-btn');
@@ -122,7 +125,10 @@ function initializeRegistryPage(user) {
             order: currentSort.order,
             search: searchInput.value,
             type: typeFilter.value,
-            status: statusFilter.value
+            status: statusFilter.value,
+            condition: conditionFilter.value,
+            startDate: startDateFilter.value,
+            endDate: endDateFilter.value
         });
 
         try {
@@ -242,8 +248,36 @@ function initializeRegistryPage(user) {
         }
     }
 
+    /**
+     * Reads filters from the URL query string, populates the filter inputs,
+     * and then triggers a data fetch to apply them.
+     */
+    function applyUrlFiltersAndFetch() {
+        const params = new URLSearchParams(window.location.search);
+        let hasUrlFilters = false;
+
+        const filterMap = {
+            startDate: startDateFilter,
+            endDate: endDateFilter,
+            status: statusFilter,
+            condition: conditionFilter
+        };
+
+        for (const [param, element] of Object.entries(filterMap)) {
+            if (params.has(param) && element) {
+                element.value = params.get(param);
+                hasUrlFilters = true;
+            }
+        }
+
+        // Clean the URL to avoid confusion on subsequent manual filtering
+        if (hasUrlFilters) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     // --- EVENT LISTENERS ---
-    [typeFilter, statusFilter].forEach(el => {
+    [typeFilter, statusFilter, conditionFilter, startDateFilter, endDateFilter].forEach(el => {
         el.addEventListener('change', () => fetchAndRenderAssets(1));
     });
 
@@ -283,5 +317,6 @@ function initializeRegistryPage(user) {
         addAssetBtn.classList.add('hidden');
     }
 
+    applyUrlFiltersAndFetch();
     fetchAndRenderAssets();
 }

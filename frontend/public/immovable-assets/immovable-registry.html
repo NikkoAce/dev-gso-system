@@ -38,8 +38,8 @@
 
                     <!-- Filters -->
                     <div class="card bg-base-100 border non-printable">
-                        <div class="card-body p-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="card-body p-4 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                                 <div class="form-control md:col-span-1">
                                     <label for="search-input" class="label sr-only"><span class="label-text">Search</span></label>
                                     <div class="relative">
@@ -70,6 +70,25 @@
                                         <option value="For Disposal">For Disposal</option>
                                         <option value="Disposed">Disposed</option>
                                     </select>
+                                </div>
+                                <div class="form-control">
+                                    <label for="condition-filter" class="label sr-only"><span class="label-text">Filter by Condition</span></label>
+                                    <select id="condition-filter" class="select select-bordered font-normal">
+                                        <option value="">All Conditions</option>
+                                        <option>Good</option>
+                                        <option>Fair</option>
+                                        <option>Poor</option>
+                                        <option>Needs Repair</option>
+                                        <option value="Not Set">Not Set</option>
+                                    </select>
+                                </div>
+                                <div class="lg:col-span-2">
+                                    <label for="start-date-filter" class="label py-0"><span class="label-text text-xs">Acquired Between</span></label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="date" id="start-date-filter" class="input input-bordered w-full text-sm">
+                                        <span class="text-gray-500">-</span>
+                                        <input type="date" id="end-date-filter" class="input input-bordered w-full text-sm">
+                                    </div>
                                 </div>
                             </div>
                         </div>

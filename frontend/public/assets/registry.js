@@ -42,6 +42,7 @@ function initializeRegistryPage(user) {
         searchInput: document.getElementById('search-input'),
         categoryFilter: document.getElementById('category-filter'),
         statusFilter: document.getElementById('status-filter'),
+        conditionFilter: document.getElementById('condition-filter'), // NEW
         officeFilter: document.getElementById('office-filter'),
         fundSourceFilter: document.getElementById('fund-source-filter'),
         resetFiltersBtn: document.getElementById('reset-filters-btn'),
@@ -592,6 +593,7 @@ function initializeRegistryPage(user) {
                 search: DOM.searchInput?.value,
                 category: DOM.categoryFilter?.value,
                 status: DOM.statusFilter?.value,
+                condition: DOM.conditionFilter?.value, // NEW
                 office: DOM.officeFilter?.value,
                 fundSource: DOM.fundSourceFilter?.value,
                 assignment: DOM.assignmentFilter?.value,
@@ -655,22 +657,24 @@ function initializeRegistryPage(user) {
      */
     function applyUrlFilters() {
         const urlParams = new URLSearchParams(window.location.search);
-        let hasFilters = false;
+        let hasUrlFilters = false;
 
-        const status = urlParams.get('status');
-        if (status) {
-            DOM.statusFilter.value = status;
-            hasFilters = true;
+        const filterMap = {
+            startDate: DOM.startDateFilter,
+            endDate: DOM.endDateFilter,
+            office: DOM.officeFilter,
+            status: DOM.statusFilter,
+            condition: DOM.conditionFilter
+        };
+
+        for (const [param, element] of Object.entries(filterMap)) {
+            if (urlParams.has(param) && element) {
+                element.value = urlParams.get(param);
+                hasUrlFilters = true;
+            }
         }
-
-        const office = urlParams.get('office');
-        if (office) {
-            DOM.officeFilter.value = office;
-            hasFilters = true;
-        }
-
         // Clean the URL to avoid confusion on subsequent manual filtering
-        if (hasFilters) {
+        if (hasUrlFilters) {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
