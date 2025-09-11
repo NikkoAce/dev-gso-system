@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         if (!user) return;
 
-        if (!user.permissions || !user.permissions.includes('settings:manage')) {
+        if (!user.permissions || !user.permissions.includes('admin:data:migrate')) {
             window.location.href = '../dashboard/dashboard.html';
             return;
         }
