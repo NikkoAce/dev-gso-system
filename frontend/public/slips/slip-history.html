@@ -14,7 +14,7 @@
     <script type="module" src="/js/auth.js" defer></script>
 </head>
 <body>
-    <div class="flex h-screen">
+    <div class="flex min-h-screen">
         <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
             <!-- Sidebar Skeleton Loader -->
             <div class="flex flex-col h-full p-4 space-y-4 animate-pulse">
@@ -36,12 +36,12 @@
                 </div>
             </div>
         </aside>
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col">
             <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
                 <h1 class="text-xl font-bold">LGU GSO System</h1>
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
-            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+            <main class="p-6 md:p-10">
                 <div class="space-y-6">
                     <h1 class="text-3xl font-bold text-gray-800">Slip History (PAR & ICS)</h1>
                     <div class="card bg-base-100 border non-printable">
