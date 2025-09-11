@@ -464,9 +464,9 @@ function initializeForm(user) {
             if (field) {
                 if (field.type === 'date' && value) {
                     field.value = new Date(value).toISOString().split('T')[0];
-                } else if (['assessedValue', 'impairmentLosses', 'buildingAndStructureDetails.salvageValue'].includes(name) && typeof value === 'number') {
+                } else if (['assessedValue', 'impairmentLosses', 'buildingAndStructureDetails.salvageValue'].includes(name) && value != null && !isNaN(parseFloat(value))) {
                     // Format currency fields on load
-                    field.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+                    field.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(value));
                 } else {
                     // Use empty string for null/undefined to clear the field
                     field.value = value || '';
