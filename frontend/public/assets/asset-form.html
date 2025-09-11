@@ -139,7 +139,16 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Condition & Remarks</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control"><label for="condition" class="label"><span class="label-text">Condition</span></label><input type="text" id="condition" name="condition" class="input input-bordered"></div>
+                                        <div class="form-control">
+                                            <label for="condition" class="label"><span class="label-text">Condition</span></label>
+                                            <select id="condition" name="condition" class="select select-bordered">
+                                                <option>Very Good (VG)</option>
+                                                <option selected>Good Condition (G)</option>
+                                                <option>Fair Condition (F)</option>
+                                                <option>Poor Condition (P)</option>
+                                                <option>Scrap Condition (S)</option>
+                                            </select>
+                                        </div>
                                         <div class="form-control md:col-span-2"><label for="remarks" class="label"><span class="label-text">Remarks</span></label><textarea id="remarks" name="remarks" class="textarea textarea-bordered"></textarea></div>
                                     </div>
                                 </div>

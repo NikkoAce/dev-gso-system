@@ -43,6 +43,7 @@ const GSO_NAV_CONFIG = [
       { href: '../settings/employees.html', icon: 'users', text: 'Employees', permission: 'settings:manage' },
       { href: '../settings/users.html', icon: 'user-cog', text: 'User Management', permission: 'user:read' },
       { href: '../settings/roles.html', icon: 'shield-check', text: 'Role Management', permission: 'user:manage' },
+      { href: '../settings/data-management.html', icon: 'database', text: 'Data Management', permission: 'settings:manage' },
     ]
   }
 ];

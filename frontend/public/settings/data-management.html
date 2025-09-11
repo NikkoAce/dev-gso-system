@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Management - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <script type="module" src="/js/auth.js" defer></script>
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable">
+            <!-- Sidebar is dynamically loaded -->
+        </aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable">
+                <h1 class="text-xl font-bold">LGU GSO System</h1>
+                <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Data Management</h1>
+
+                    <div class="card bg-base-100 border">
+                        <div class="card-body">
+                            <h2 class="card-title">Data Migration Scripts</h2>
+                            <p class="text-sm text-base-content/70">Run one-time scripts to update and standardize data across the system. This action is irreversible. Please back up your database before proceeding.</p>
+                            
+                            <div class="divider"></div>
+
+                            <div class="flex flex-col md:flex-row justify-between items-center p-4 border rounded-lg">
+                                <div>
+                                    <h3 class="font-semibold">Standardize Asset Conditions</h3>
+                                    <p class="text-sm text-base-content/70">Updates old condition values (e.g., "Good", "Fair") to the new standardized format (e.g., "Good Condition (G)").</p>
+                                </div>
+                                <button id="migrate-conditions-btn" class="btn btn-warning mt-4 md:mt-0">
+                                    <i data-lucide="database"></i> Run Migration
+                                </button>
+                            </div>
+
+                            <div id="migration-results" class="mt-4 p-4 bg-base-200 rounded-lg hidden">
+                                <h3 class="font-bold">Migration Results:</h3>
+                                <pre id="results-pre" class="text-xs whitespace-pre-wrap"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast toast-top toast-end"></div>
+
+    <!-- Reusable Confirmation Modal -->
+    <dialog id="confirmation-modal" class="modal">
+        <div class="modal-box">
+            <h3 id="modal-title-text" class="font-bold text-lg">Are you sure?</h3>
+            <p id="modal-body-text" class="py-4">This action cannot be undone.</p>
+            <div class="modal-action">
+                <button id="modal-cancel-btn" class="btn">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-error">Confirm</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./data-management.js"></script>
+</body>
+</html>
