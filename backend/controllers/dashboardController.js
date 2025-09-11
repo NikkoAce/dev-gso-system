@@ -25,15 +25,23 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const end = endDate ? new Date(endDate) : new Date();
     end.setUTCHours(23, 59, 59, 999);
 
-    // The 'start' date is now the primary start for all filters. Default to a 30-day window if not provided.
-    const start = startDate ? new Date(startDate) : new Date(new Date(end).setDate(end.getDate() - 30));
+    // If a start date is provided, use it. Otherwise, default to a very early date to include all history.
+    const start = startDate ? new Date(startDate) : new Date('1970-01-01');
     start.setUTCHours(0, 0, 0, 0);
 
     // Define the previous period for trend calculations, which will compare the selected range to the equivalent range immediately prior.
+    // This is only meaningful if a specific start date was provided by the user.
     const startOfYear = new Date(end.getFullYear(), 0, 1);
-    const periodDuration = end.getTime() - start.getTime();
-    const previousPeriodEnd = new Date(start);
-    const previousPeriodStart = new Date(start.getTime() - periodDuration);
+    let previousPeriodStart, previousPeriodEnd;
+    if (startDate) {
+        const periodDuration = end.getTime() - start.getTime();
+        previousPeriodEnd = new Date(start);
+        previousPeriodStart = new Date(start.getTime() - periodDuration);
+    } else {
+        // If no start date, there's no previous period to compare to. Set dates to a range that will yield zero results.
+        previousPeriodStart = new Date(end);
+        previousPeriodEnd = new Date(end);
+    }
 
     // --- NEW: Build the interactive filter match stage ---
     // This will be applied to the main asset pipeline to filter all stats and charts.
@@ -316,15 +324,19 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
-    // NEW: Pipeline for Sparkline Data over the selected date range
+    // NEW: Pipeline for Sparkline Data.
+    // If a date range is selected, the sparkline covers that range.
+    // If no start date is selected (initial load), the sparkline shows the last 30 days.
+    const sparklineStartDate = startDate ? start : new Date(new Date(end).setDate(end.getDate() - 30));
+
     const sparklineDataPipeline = Asset.aggregate([
         ...matchStage,
-        { $match: { acquisitionDate: { $gte: start, $lte: end } } },
+        // The data for the sparkline is fetched based on its own date range.
         {
             $facet: {
                 initialTotals: [
-                    // This is now used to get a zero-value starting point
-                    { $match: { _id: null } }, // Will return empty array
+                    // Get the cumulative totals *before* the sparkline's start date.
+                    { $match: { acquisitionDate: { $lt: sparklineStartDate } } },
                     {
                         $group: {
                             _id: null,
@@ -334,6 +346,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 dailyChanges: [
+                    { $match: { acquisitionDate: { $gte: sparklineStartDate, $lte: end } } },
                     {
                         $group: {
                             _id: { $dateToString: { format: "%Y-%m-%d", date: "$acquisitionDate" } },
@@ -347,14 +360,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         }
     ]);
 
-    // NEW: Pipeline for Immovable Asset Sparkline Data over the selected date range
+    // NEW: Pipeline for Immovable Asset Sparkline Data. Same logic as movable assets.
     const immovableSparklineDataPipeline = ImmovableAsset.aggregate([
         ...immovableMatchStage,
-        { $match: { dateAcquired: { $gte: start, $lte: end } } },
+        // The data for the sparkline is fetched based on its own date range.
         {
             $facet: {
                 initialTotals: [
-                    { $match: { _id: null } },
+                    { $match: { dateAcquired: { $lt: sparklineStartDate } } },
                     {
                         $group: {
                             _id: null,
@@ -363,6 +376,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 dailyChanges: [
+                    { $match: { dateAcquired: { $gte: sparklineStartDate, $lte: end } } },
                     {
                         $group: {
                             _id: { $dateToString: { format: "%Y-%m-%d", date: "$dateAcquired" } },
@@ -437,9 +451,17 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const avgTimeInMs = avgFulfillmentTimeResult[0]?.avgTime || 0;
     const avgFulfillmentTimeInDays = avgTimeInMs > 0 ? (avgTimeInMs / (1000 * 60 * 60 * 24)) : 0;
 
-    // NEW: Process sparkline data to show cumulative growth WITHIN the selected period
+    // NEW: Process sparkline data to show cumulative growth over the sparkline's date range.
     const movableSparklineResults = sparklineDataResult[0] || {};
     const immovableSparklineResults = immovableSparklineDataResult[0] || {};
+
+    const movableInitialTotals = movableSparklineResults.initialTotals?.[0] || { assetCount: 0, portfolioValue: 0 };
+    const immovableInitialTotals = immovableSparklineResults.initialTotals?.[0] || { portfolioValue: 0 };
+
+    const initialTotals = {
+        assetCount: movableInitialTotals.assetCount,
+        portfolioValue: movableInitialTotals.portfolioValue + immovableInitialTotals.portfolioValue
+    };
 
     const movableDailyChangesMap = new Map(
         (movableSparklineResults.dailyChanges || []).map(d => [d._id, { assetCount: d.assetCount, portfolioValue: d.portfolioValue }])
@@ -448,29 +470,23 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         (immovableSparklineResults.dailyChanges || []).map(d => [d._id, { portfolioValue: d.portfolioValue }])
     );
     
-    let currentPeriodAssetTotal = 0;
-    let currentPeriodPortfolioValue = 0;
+    let currentAssetTotal = initialTotals.assetCount;
+    let currentPortfolioValue = initialTotals.portfolioValue;
     const assetSparkline = [];
     const portfolioSparkline = [];
-    const durationInDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+    const durationInDays = Math.max(1, Math.ceil((end - sparklineStartDate) / (1000 * 60 * 60 * 24)));
     
     for (let i = 0; i < durationInDays; i++) {
-        const date = new Date(start);
-        date.setUTCDate(start.getUTCDate() + i);
+        const date = new Date(sparklineStartDate);
+        date.setUTCDate(sparklineStartDate.getUTCDate() + i);
         const dateString = date.toISOString().split('T')[0];
         
-        const movableChange = movableDailyChangesMap.get(dateString);
-        const immovableChange = immovableDailyChangesMap.get(dateString);
-
-        if (movableChange) {
-            currentPeriodAssetTotal += movableChange.assetCount;
-            currentPeriodPortfolioValue += movableChange.portfolioValue;
-        }
-        if (immovableChange) {
-            currentPeriodPortfolioValue += immovableChange.portfolioValue;
-        }
-        assetSparkline.push(currentPeriodAssetTotal);
-        portfolioSparkline.push(currentPeriodPortfolioValue);
+        const movableDailyChange = movableDailyChangesMap.get(dateString);
+        const immovableDailyChange = immovableDailyChangesMap.get(dateString);
+        if (movableDailyChange) { currentAssetTotal += movableDailyChange.assetCount; currentPortfolioValue += movableDailyChange.portfolioValue; }
+        if (immovableDailyChange) { currentPortfolioValue += immovableDailyChange.portfolioValue; }
+        assetSparkline.push(currentAssetTotal);
+        portfolioSparkline.push(currentPortfolioValue);
     }
 
     const currentImmovable = currentImmovableStats[0] || { totalValue: 0 };
