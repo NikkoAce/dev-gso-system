@@ -484,7 +484,7 @@ function initializeDashboard(user) {
             },
             assetConditionChart: {
                 type: 'bar',
-                data: chartData.assetCondition,
+                data: chartData.assetCondition, // The backend now provides a clean "Not Set" label.
                 options: {
                     indexAxis: 'y',
                 },
@@ -496,6 +496,8 @@ function initializeDashboard(user) {
             const ctx = document.getElementById(id).getContext('2d');
             if (charts[id]) {
                 charts[id].data = config.data;
+                // The labels are now directly from the backend, so we update them.
+                charts[id].data.labels = config.data.labels;
                 charts[id].update();
             } else {
                 charts[id] = new Chart(ctx, {

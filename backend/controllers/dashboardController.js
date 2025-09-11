@@ -45,7 +45,11 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         interactiveFilter['status'] = status;
     }
     if (condition) {
-        interactiveFilter['condition'] = condition;
+        if (condition === 'Not Set') {
+            interactiveFilter['condition'] = { $in: [null, ""] };
+        } else {
+            interactiveFilter['condition'] = condition;
+        }
     }
 
     // Helper to build a match stage, ensuring it's always an array with a $match operator
@@ -117,13 +121,24 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     },
                     {
                         $group: {
-                            _id: {
-                                // Coalesce null and empty strings into a single "Not Set" category
-                                $cond: { if: { $in: ["$condition", [null, ""]] }, then: "Not Set", else: "$condition" }
-                            },
+                            // First pass: group by condition, treating null/undefined as "Not Set"
+                            _id: { $ifNull: ["$condition", "Not Set"] },
                             count: { $sum: 1 }
                         }
-                    }
+                    },
+                    {
+                        // Second pass: merge the "" group into the "Not Set" group
+                        $group: {
+                            _id: {
+                                $cond: {
+                                    if: { $eq: ["$_id", ""] },
+                                    then: "Not Set",
+                                    else: "$_id"
+                                }
+                            },
+                            count: { $sum: "$count" }
+                        }
+                    },
                 ],
                 recentAssets: [
                     { $sort: { acquisitionDate: -1, createdAt: -1 } }, // No filters, always show latest
