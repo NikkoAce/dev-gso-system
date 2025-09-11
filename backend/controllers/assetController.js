@@ -23,44 +23,51 @@ const getAssets = async (req, res) => {
       fundSource,
       startDate,
       endDate,
+      ids,
     } = req.query;
 
     // 1. Build the filter query
     const query = {};
 
-    if (search) {
-      const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
-      query.$or = [
-        { propertyNumber: searchRegex },
-        { description: searchRegex },
-        { 'custodian.name': searchRegex },
-      ];
-    }
-
-    if (category) query.category = category;
-    if (status) query.status = status;
-    if (office) query.office = office;
-    if (fundSource) query.fundSource = fundSource;
-
-    if (assignment) {
-        if (assignment === 'unassigned') {
-            query.assignedPAR = { $in: [null, ''] };
-            query.assignedICS = { $in: [null, ''] };
-        } else if (assignment === 'par') {
-            query.assignedPAR = { $ne: null, $ne: '' };
-        } else if (assignment === 'ics') {
-            query.assignedICS = { $ne: null, $ne: '' };
+    // If a list of IDs is provided, it should be the primary filter.
+    if (ids) {
+        query._id = { $in: ids.split(',') };
+    } else {
+        // Only apply other filters if not fetching by specific IDs
+        if (search) {
+          const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
+          query.$or = [
+            { propertyNumber: searchRegex },
+            { description: searchRegex },
+            { 'custodian.name': searchRegex },
+          ];
         }
-    }
 
-    if (startDate || endDate) {
-      query.acquisitionDate = {};
-      if (startDate) query.acquisitionDate.$gte = new Date(startDate);
-      if (endDate) {
-        const endOfDay = new Date(endDate);
-        endOfDay.setUTCHours(23, 59, 59, 999); // Ensure the entire day is included
-        query.acquisitionDate.$lte = endOfDay;
-      }
+        if (category) query.category = category;
+        if (status) query.status = status;
+        if (office) query.office = office;
+        if (fundSource) query.fundSource = fundSource;
+
+        if (assignment) {
+            if (assignment === 'unassigned') {
+                query.assignedPAR = { $in: [null, ''] };
+                query.assignedICS = { $in: [null, ''] };
+            } else if (assignment === 'par') {
+                query.assignedPAR = { $ne: null, $ne: '' };
+            } else if (assignment === 'ics') {
+                query.assignedICS = { $ne: null, $ne: '' };
+            }
+        }
+
+        if (startDate || endDate) {
+          query.acquisitionDate = {};
+          if (startDate) query.acquisitionDate.$gte = new Date(startDate);
+          if (endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setUTCHours(23, 59, 59, 999); // Ensure the entire day is included
+            query.acquisitionDate.$lte = endOfDay;
+          }
+        }
     }
 
     // 2. Build the sort options

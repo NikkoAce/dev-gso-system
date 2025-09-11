@@ -29,6 +29,7 @@ function initializeQrLabelsPage(user) {
     const officeFilter = document.getElementById('office-filter');
     const categoryFilter = document.getElementById('category-filter');
     const printBtn = document.getElementById('print-labels-btn');
+    const paginationControls = document.getElementById('pagination-controls');
     const selectAllCheckbox = document.getElementById('select-all-assets');
 
      // Early exit if essential elements are missing to prevent runtime errors
@@ -40,8 +41,11 @@ function initializeQrLabelsPage(user) {
     // --- STATE ---
     const API_ENDPOINT = 'assets';
     let allAssets = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    const assetsPerPage = 20;
     let selectedAssetIds = new Set();
-    const { populateFilters, setLoading } = createUIManager();
+    const { populateFilters, setLoading, renderPagination } = createUIManager();
 
     // --- UTILITY FUNCTIONS ---
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
@@ -66,17 +70,24 @@ function initializeQrLabelsPage(user) {
     }
 
     async function loadAssets() {
+        selectAllCheckbox.checked = false;
         setLoading(true, assetTableBody, { colSpan: 4 });
         try {
              const params = new URLSearchParams({
+                page: currentPage,
+                limit: assetsPerPage,
                 search: searchInput.value,
                 office: officeFilter.value,
-                category: categoryFilter.value,
-                limit: 1000 // Consider adding pagination for very large datasets
-            });          
+            });
+            const assignmentType = categoryFilter.value;
+            if (assignmentType && assignmentType !== 'all') {
+                params.set('assignment', assignmentType.toLowerCase());
+            }
             const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
             allAssets = data.docs || (Array.isArray(data) ? data : []);
+            totalPages = data.totalPages || 1;
             renderAssetSelectionTable();
+            renderPagination(paginationControls, data);
         } catch (error) {
             console.error('Failed to fetch assets:', error);
             assetTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error loading assets: ${error.message}</td></tr>`;
@@ -114,17 +125,39 @@ function initializeQrLabelsPage(user) {
         });
     }
 
-   function handlePrint() {
+   async function handlePrint() {
         if (selectedAssetIds.size === 0) {
             alert('Please select at least one asset to print.');
+            return;
+        }
+
+        let assetsToPrint = [];
+        const originalButtonContent = printBtn.innerHTML;
+        try {
+            printBtn.disabled = true;
+            printBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Preparing...`;
+            lucide.createIcons();
+
+            const ids = Array.from(selectedAssetIds).join(',');
+            const params = new URLSearchParams({ ids: ids, limit: selectedAssetIds.size });
+            const data = await fetchWithAuth(`${API_ENDPOINT}?${params}`);
+            assetsToPrint = data.docs || [];
+
+            if (assetsToPrint.length !== selectedAssetIds.size) {
+                console.warn("Mismatch between selected IDs and fetched assets. Some assets might not exist anymore.");
+            }
+
+        } catch (error) {
+            alert(`Error fetching asset details for printing: ${error.message}`);
+            printBtn.disabled = false;
+            printBtn.innerHTML = originalButtonContent;
+            lucide.createIcons();
             return;
         }
 
         const printContainer = document.getElementById('print-container');
         const labelGrid = document.createElement('div');
         labelGrid.className = 'label-grid-print';
-
-        const assetsToPrint = allAssets.filter(asset => selectedAssetIds.has(asset._id));
 
         assetsToPrint.forEach(asset => {
             const labelDiv = document.createElement('div');
@@ -177,6 +210,10 @@ function initializeQrLabelsPage(user) {
 
         printContainer.innerHTML = '';
         printContainer.appendChild(labelGrid);
+
+        printBtn.disabled = false;
+        printBtn.innerHTML = originalButtonContent;
+        lucide.createIcons();
 
         // Wait for all images to load before printing
         const images = printContainer.querySelectorAll('img');
@@ -240,10 +277,26 @@ function initializeQrLabelsPage(user) {
         if (el) {
             // Use 'change' for select and 'input' for search for better UX
             const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
-            el.addEventListener(eventType, loadAssets);
+            el.addEventListener(eventType, () => {
+                currentPage = 1;
+                loadAssets();
+            });
         }
     });
     
+    paginationControls.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) {
+            currentPage--;
+        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
+            currentPage++;
+        } else if (target.classList.contains('page-btn')) {
+            currentPage = parseInt(target.dataset.page, 10);
+        }
+        loadAssets();
+    });
 
     // --- INITIALIZATION ---
     initializePage();
