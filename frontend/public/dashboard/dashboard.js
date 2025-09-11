@@ -773,4 +773,5 @@ function initializeDashboard(user) {
     fetchDashboardData(); // Initial load
     setupEventListeners();
     setupDashboardInteractivity();
+    setupFilterInteractivity(); // Re-add the call to attach filter clear event listeners
 }
