@@ -42,12 +42,20 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         interactiveFilter['condition'] = condition;
     }
 
-    const matchStage = Object.keys(interactiveFilter).length > 0 ? [{ $match: interactiveFilter }] : [];
+    // Helper to build a match stage, ensuring it's always an array with a $match operator
+    const buildMatchStage = (filterObj) => {
+        if (Object.keys(filterObj).length === 0) {
+            return [{ $match: {} }]; // Match all documents if no specific filters
+        }
+        return [{ $match: filterObj }];
+    };
+
+    const matchStage = buildMatchStage(interactiveFilter);
 
     // Create a separate filter for immovable assets that excludes the 'custodian.office' filter,
     // as that field does not exist on the ImmovableAsset model.
     const { 'custodian.office': officeToExclude, ...immovableFilter } = interactiveFilter;
-    const immovableMatchStage = Object.keys(immovableFilter).length > 0 ? [{ $match: immovableFilter }] : [];
+    const immovableMatchStage = buildMatchStage(immovableFilter);
 
 
     // --- 2. Define Combined Aggregation Pipelines for Performance ---
