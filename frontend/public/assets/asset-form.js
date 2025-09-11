@@ -88,13 +88,31 @@ function initializeForm(user) {
      */
     function formatNumberOnInput(inputElement) {
         if (!inputElement) return;
-        let value = inputElement.value.replace(/[^0-9.]/g, '');
+
+        // Store original cursor position and value
+        const originalValue = inputElement.value;
+        const originalCursorPos = inputElement.selectionStart;
+        const numCommasBefore = (originalValue.match(/,/g) || []).length;
+
+        // Format the number
+        let value = originalValue.replace(/[^0-9.]/g, '');
         const parts = value.split('.');
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         if (parts.length > 2) {
             parts.splice(2); // Keep only the first decimal point
         }
-        inputElement.value = parts.join('.');
+        const formattedValue = parts.join('.');
+        const numCommasAfter = (formattedValue.match(/,/g) || []).length;
+
+        // Set the new value
+        inputElement.value = formattedValue;
+
+        // Calculate and set the new cursor position
+        const cursorOffset = numCommasAfter - numCommasBefore;
+        const newCursorPos = originalCursorPos + cursorOffset;
+        if (newCursorPos >= 0) {
+            inputElement.setSelectionRange(newCursorPos, newCursorPos);
+        }
     }
 
     function renderSpecification(spec = { key: '', value: '' }) {
