@@ -17,7 +17,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         endDate,
         // New interactive filters from chart clicks
         office,
-        status
+        status,
+        condition
     } = req.query;
 
     // --- 1. Define Date Filters ---
@@ -36,6 +37,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     }
     if (status) {
         interactiveFilter['status'] = status;
+    }
+    if (condition) {
+        interactiveFilter['condition'] = condition;
     }
 
     const matchStage = Object.keys(interactiveFilter).length > 0 ? [{ $match: interactiveFilter }] : [];
