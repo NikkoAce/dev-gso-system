@@ -145,69 +145,6 @@ function populateCustomizeModal() {
     }
 }
 
-function renderActiveFilters() {
-    const bar = document.getElementById('active-filters-bar');
-    const container = document.getElementById('active-filters-container');
-
-    if (!bar || !container) {
-        console.error("Active filters bar or container not found.");
-        return;
-    }
-
-    // Always clear the container first
-    container.innerHTML = '';
-    const hasFilters = Object.keys(dashboardFilters).length > 0;
-
-    bar.classList.remove('hidden');
-    container.innerHTML = '';
-
-    for (const [key, value] of Object.entries(dashboardFilters)) {
-        const filterPill = `
-            <div class="badge badge-info gap-2">
-                <span class="font-normal capitalize">${key}:</span>
-                <span>${value}</span>
-                <button class="clear-filter-btn" data-filter-key="${key}"><i data-lucide="x" class="h-3 w-3"></i></button>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', filterPill);
-    }
-
-    // Hide the entire bar if there are no filters
-    bar.classList.toggle('hidden', !hasFilters);
-
-    lucide.createIcons();
-}
-
-function setupFilterInteractivity() {
-    const bar = document.getElementById('active-filters-bar');
-    const clearAllBtn = document.getElementById('clear-filters-btn');
-
-    if (!bar || !clearAllBtn) {
-        console.error("Could not set up filter interactivity: buttons not found.");
-        return;
-    }
-
-    // Use a single delegated event listener for all clear actions
-    bar.addEventListener('click', (e) => {
-        // Handle individual filter clear
-        const clearButton = e.target.closest('.clear-filter-btn');
-        if (clearButton) {
-            const keyToRemove = clearButton.dataset.filterKey;
-            if (dashboardFilters[keyToRemove]) {
-                delete dashboardFilters[keyToRemove];
-                renderActiveFilters();
-                fetchDashboardData();
-            }
-        }
-        // Handle "Clear All" button
-        if (e.target.closest('#clear-filters-btn')) {
-            dashboardFilters = {};
-            renderActiveFilters();
-            fetchDashboardData();
-        }
-    });
-}
-
 function initializeDashboard(user) {
     const charts = {}; // To hold chart instances for updates
 
@@ -258,6 +195,69 @@ function initializeDashboard(user) {
                         beginAtZero: false // Allows chart to zoom into the data's range
                     }
                 }
+            }
+        });
+    }
+
+    function renderActiveFilters() {
+        const bar = document.getElementById('active-filters-bar');
+        const container = document.getElementById('active-filters-container');
+
+        if (!bar || !container) {
+            console.error("Active filters bar or container not found.");
+            return;
+        }
+
+        // Always clear the container first
+        container.innerHTML = '';
+        const hasFilters = Object.keys(dashboardFilters).length > 0;
+
+        bar.classList.remove('hidden');
+        container.innerHTML = '';
+
+        for (const [key, value] of Object.entries(dashboardFilters)) {
+            const filterPill = `
+                <div class="badge badge-info gap-2">
+                    <span class="font-normal capitalize">${key}:</span>
+                    <span>${value}</span>
+                    <button class="clear-filter-btn" data-filter-key="${key}"><i data-lucide="x" class="h-3 w-3"></i></button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', filterPill);
+        }
+
+        // Hide the entire bar if there are no filters
+        bar.classList.toggle('hidden', !hasFilters);
+
+        lucide.createIcons();
+    }
+
+    function setupFilterInteractivity() {
+        const bar = document.getElementById('active-filters-bar');
+        const clearAllBtn = document.getElementById('clear-filters-btn');
+
+        if (!bar || !clearAllBtn) {
+            console.error("Could not set up filter interactivity: buttons not found.");
+            return;
+        }
+
+        // Use a single delegated event listener for all clear actions
+        bar.addEventListener('click', (e) => {
+            // Handle individual filter clear
+            const clearButton = e.target.closest('.clear-filter-btn');
+            if (clearButton) {
+                const keyToRemove = clearButton.dataset.filterKey;
+                if (dashboardFilters[keyToRemove]) {
+                    delete dashboardFilters[keyToRemove];
+                    renderActiveFilters();
+                    fetchDashboardData();
+                }
+            }
+            // Handle "Clear All" button
+            if (e.target.closest('#clear-filters-btn')) {
+                dashboardFilters = {};
+                renderActiveFilters();
+                fetchDashboardData();
             }
         });
     }
