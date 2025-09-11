@@ -136,13 +136,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     ]);
 
     const immovableAssetPipeline = ImmovableAsset.aggregate([
-        ...immovableMatchStage, // Apply filters for status and condition
         {
             $facet: {
-                currentImmovableStats: [ { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                previousImmovableStats: [ { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                currentImmovableCount: [ { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ],
-                previousImmovableCount: [ { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ]
+                currentImmovableStats: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                previousImmovableStats: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                currentImmovableCount: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ],
+                previousImmovableCount: [ ...immovableMatchStage, { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ]
             }
         }
     ]);
@@ -176,6 +175,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     // NEW: Pipeline for Recent Immovable Assets
     const recentImmovableAssetsPipeline = ImmovableAsset.aggregate([
+        ...immovableMatchStage,
         { $match: { dateAcquired: { $lte: end } } }, // Filter by end date
         { $sort: { dateAcquired: -1, createdAt: -1 } }, // Sort by acquisition date, then creation date
         { $limit: 5 }, // Get the top 5 recent immovable assets
