@@ -18,7 +18,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         // New interactive filters from chart clicks
         office,
         status,
-        condition
+        condition,
+        groupByOffice // 'count' or 'value'
     } = req.query;
 
     // --- 1. Define Date Filters ---
@@ -75,6 +76,11 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const { 'custodian.office': officeToExclude, ...immovableFilter } = interactiveFilter;
     const immovableMatchStage = buildMatchStage(immovableFilter);
 
+    // --- NEW: Define the group stage for the 'Assets by Office' chart ---
+    const groupStageByOffice = groupByOffice === 'value'
+        ? { $group: { _id: '$custodian.office', value: { $sum: '$acquisitionCost' } } }
+        : { $group: { _id: '$custodian.office', value: { $sum: 1 } } };
+
 
     // --- 2. Define Combined Aggregation Pipelines for Performance ---
     const movableAssetPipeline = Asset.aggregate([
@@ -120,7 +126,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 assetsByOffice: [
                     ...matchStage,
                     { $match: { acquisitionDate: { $gte: start, $lte: end } } },
-                    { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
+                    groupStageByOffice,
+                    { $sort: { value: -1 } }
                 ],
                 assetsByCondition: [
                     ...matchStage,
@@ -572,8 +579,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         assetsByOffice: {
             labels: assetsByOffice.map(o => o._id || 'Unassigned'),
             datasets: [{
-                label: 'Assets by Office',
-                data: assetsByOffice.map(o => o.count)
+                label: groupByOffice === 'value' ? 'Total Value by Office' : 'Asset Count by Office',
+                data: assetsByOffice.map(o => o.value)
             }]
         },
         assetStatus: {

@@ -2,6 +2,7 @@
 import { fetchWithAuth } from '../js/api.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
+let viewOptions = {}; // NEW: To hold view-specific options like grouping
 const sparklines = {}; // To hold sparkline chart instances
 let dashboardFilters = {};
 let userPreferences = {};
@@ -368,7 +369,7 @@ function initializeDashboard(user) {
             const startDate = document.getElementById('filter-start-date').value;
             const endDate = document.getElementById('filter-end-date').value;
             const dateFilters = { startDate, endDate };
-            const allFilters = { ...dateFilters, ...dashboardFilters };
+            const allFilters = { ...dateFilters, ...dashboardFilters, ...viewOptions };
 
             // Build query params, excluding empty values to ensure clean requests
             const params = new URLSearchParams();
@@ -472,6 +473,28 @@ function initializeDashboard(user) {
                 type: 'bar',
                 data: chartData.assetsByOffice,
                 options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        // Check if we are in 'value' mode from the toggle's state
+                                        const isValueMode = document.getElementById('office-group-by-toggle')?.checked;
+                                        if (isValueMode) {
+                                            label += formatCurrency(context.parsed.x);
+                                        } else {
+                                            label += context.parsed.x;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
                     indexAxis: 'y',
                 },
                 filterKey: 'office'
@@ -637,7 +660,7 @@ function initializeDashboard(user) {
 
         // Delegated event listener for all clickable stat cards
         statsContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.dashboard-component[data-url], .dashboard-component[data-details-id]');
+            const card = e.target.closest('.dashboard-component[data-url], .dashboard-component[data-details-id], .sub-stat-link[data-url]');
             if (!card) return;
 
             const url = card.dataset.url;
@@ -669,6 +692,17 @@ function initializeDashboard(user) {
 
         startDateInput.addEventListener('blur', applyDateFilters);
         endDateInput.addEventListener('blur', applyDateFilters);
+
+        // NEW: Event listener for the office chart group-by toggle
+        const officeGroupByToggle = document.getElementById('office-group-by-toggle');
+        if (officeGroupByToggle) {
+            // Set initial state for viewOptions
+            viewOptions.groupByOffice = officeGroupByToggle.checked ? 'value' : 'count';
+            officeGroupByToggle.addEventListener('change', (e) => {
+                viewOptions.groupByOffice = e.target.checked ? 'value' : 'count';
+                fetchDashboardData();
+            });
+        }
 
         // Set default end date to today
         endDateInput.value = new Date().toISOString().split('T')[0];
