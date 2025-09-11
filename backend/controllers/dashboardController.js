@@ -64,7 +64,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         {
             $facet: {
                 currentPeriodStats: [
-                    { $match: { acquisitionDate: { $lte: end } } },
+                    { $match: { acquisitionDate: { $lte: end }, status: { $ne: 'Disposed' } } },
                     {
                         $group: {
                             _id: null,
@@ -76,7 +76,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     }
                 ],
                 previousPeriodStats: [
-                    { $match: { acquisitionDate: { $lte: start } } },
+                    { $match: { acquisitionDate: { $lte: start }, status: { $ne: 'Disposed' } } },
                     {
                         $group: {
                             _id: null,
@@ -132,10 +132,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         ...immovableMatchStage, // Apply filters for status and condition
         {
             $facet: {
-                currentImmovableStats: [ { $match: { dateAcquired: { $lte: end } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                previousImmovableStats: [ { $match: { dateAcquired: { $lte: start } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
-                currentImmovableCount: [ { $match: { dateAcquired: { $lte: end } } }, { $count: 'count' } ],
-                previousImmovableCount: [ { $match: { dateAcquired: { $lte: start } } }, { $count: 'count' } ]
+                currentImmovableStats: [ { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                previousImmovableStats: [ { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
+                currentImmovableCount: [ { $match: { dateAcquired: { $lte: end }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ],
+                previousImmovableCount: [ { $match: { dateAcquired: { $lte: start }, status: { $ne: 'Disposed' } } }, { $count: 'count' } ]
             }
         }
     ]);
@@ -210,6 +210,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         ...matchStage,
         {
             $match: {
+                acquisitionDate: { $lte: end }, // Asset must exist as of the report date
                 status: { $in: ['In Use', 'In Storage'] },
                 usefulLife: { $gt: 0 }
             }
