@@ -668,38 +668,36 @@ function initializeForm(user) {
             });
         }
 
-        // 2. Stringify nested objects and append to FormData
-        Object.keys(assetData).forEach(key => {
-            const value = assetData[key];
-            if (typeof value === 'object' && value !== null) {
-                formData.append(key, JSON.stringify(value));
-            } else if (value !== undefined) { // Allow null to be processed
-                // If the value is null, append an empty string. The backend will interpret this as clearing the field.
-                formData.append(key, value === null ? '' : value);
-            }
-        });
-
         // Manually gather components, as they are dynamic
-        assetData.components = [];
+        assetData.components = []; // Initialize/reset components
         const componentRows = componentsContainer.querySelectorAll('.component-row');
         componentRows.forEach(row => {
             const name = row.querySelector('.component-name').value.trim();
             const description = row.querySelector('.component-description').value.trim();
             if (name) { // Only add if name is not empty
-                assetData.components.push({ name, description });
+                assetData.components.push({ name, description }); // Push to the correct array
             }
         });
-        formData.append('components', JSON.stringify(assetData.components));
 
-        // Append new files and their titles
-        // NEW: Add geometry data if it exists
+        // Add geometry data to the main assetData object if it exists
         if (assetGeometry) {
-            formData.append('geometry', JSON.stringify(assetGeometry));
+            assetData.geometry = assetGeometry;
         }
 
+        // 2. (REVISED) Append all structured data to FormData
+        Object.keys(assetData).forEach(key => {
+            const value = assetData[key];
+            if (typeof value === 'object' && value !== null) {
+                formData.append(key, JSON.stringify(value));
+            } else if (value !== null && value !== undefined) {
+                // Only append non-null, non-undefined primitive values
+                formData.append(key, value);
+            }
+        });
+
+        // 3. Append new files and their titles
         const attachmentTitles = [];
         const newAttachmentRows = newAttachmentsContainer.querySelectorAll('.new-attachment-row');
-        
         newAttachmentRows.forEach(row => {
             const fileInput = row.querySelector('.new-attachment-file');
             const titleInput = row.querySelector('.new-attachment-title');
@@ -756,6 +754,12 @@ function initializeForm(user) {
         toggleTypeSpecificFields(typeSelect.value); // Show default section
         loadPotentialParents(typeSelect.value); // Load parents for the default type
     }
+
+    // Add listeners for currency formatting as the user types
+    assessedValueInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
+    buildingSalvageValueInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
+    impairmentLossesInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
+    newRepairAmountInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
 
     addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
     typeSelect.addEventListener('change', (e) => {
