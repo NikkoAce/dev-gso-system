@@ -398,6 +398,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             trend: calculateTrend(totalPortfolioValueCurrent, totalPortfolioValuePrevious),
             sparkline: portfolioSparkline // NEW
         },
+        movableAssetsValue: {
+            current: currentMovableValue,
+            trend: calculateTrend(currentMovableValue, previousMovableValue)
+        },
+        immovableAssetsValue: {
+            current: currentImmovableValue,
+            trend: calculateTrend(currentImmovableValue, previousImmovableValue)
+        },
         lowStockItems: {
             current: lowStockCount,
             trend: 0
