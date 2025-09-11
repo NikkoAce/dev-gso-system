@@ -672,7 +672,27 @@ function initializeDashboard(user) {
                 const title = card.querySelector('.stat-title')?.textContent || 'Details';
                 showDetailsModal(detailsId, title);
             } else if (url) {
-                if (filterKey && filterValue) {
+                if (card.classList.contains('sub-stat-link')) {
+                    // This is a sub-stat link, we need to pass all active dashboard filters to the registry page.
+                    const params = new URLSearchParams();
+                    
+                    const startDate = document.getElementById('filter-start-date').value;
+                    const endDate = document.getElementById('filter-end-date').value;
+
+                    if (startDate) params.append('startDate', startDate);
+                    if (endDate) params.append('endDate', endDate);
+
+                    // Add interactive filters (office, status, condition)
+                    const isImmovable = url.includes('immovable-registry.html');
+                    for (const [key, value] of Object.entries(dashboardFilters)) {
+                        // The immovable registry doesn't have an 'office' filter, so don't pass it.
+                        if (isImmovable && key === 'office') continue;
+                        params.append(key, value);
+                    }
+                    
+                    const queryString = params.toString();
+                    window.location.href = `${url}${queryString ? `?${queryString}` : ''}`;
+                } else if (filterKey && filterValue) {
                     window.location.href = `${url}?${filterKey}=${encodeURIComponent(filterValue)}`;
                 } else {
                     window.location.href = url;
