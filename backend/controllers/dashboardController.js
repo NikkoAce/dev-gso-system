@@ -93,12 +93,17 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     { $sort: { _id: 1 } }
                 ],
                 assetsByStatus: [
+                    { $match: { acquisitionDate: { $lte: end } } },
                     { $group: { _id: '$status', count: { $sum: 1 } } }
                 ],
                 assetsByOffice: [
+                    { $match: { acquisitionDate: { $lte: end } } },
                     { $group: { _id: '$custodian.office', count: { $sum: 1 } } }
                 ],
                 assetsByCondition: [
+                    {
+                        $match: { acquisitionDate: { $lte: end } }
+                    },
                     {
                         $group: {
                             _id: {
@@ -116,7 +121,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                     { $project: { propertyNumber: 1, description: 1, 'custodian.office': 1, acquisitionDate: 1, name: 1, createdAt: 1 } }
                 ],
                 unassignedAssetsCount: [
-                    { $match: { assignedPAR: { $in: [null, ""] }, assignedICS: { $in: [null, ""] } } },
+                    { $match: { acquisitionDate: { $lte: end }, assignedPAR: { $in: [null, ""] }, assignedICS: { $in: [null, ""] } } },
                     { $count: "count" }
                 ]
             }
