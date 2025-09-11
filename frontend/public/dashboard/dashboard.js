@@ -665,8 +665,8 @@ function initializeDashboard(user) {
             fetchDashboardData();
         };
 
-        startDateInput.addEventListener('change', applyDateFilters);
-        endDateInput.addEventListener('change', applyDateFilters);
+        startDateInput.addEventListener('blur', applyDateFilters);
+        endDateInput.addEventListener('blur', applyDateFilters);
 
         // Set default end date to today
         endDateInput.value = new Date().toISOString().split('T')[0];
