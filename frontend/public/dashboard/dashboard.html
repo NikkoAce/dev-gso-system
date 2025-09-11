@@ -69,15 +69,26 @@
                     <!-- Stat Cards Grid -->
                     <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 dashboard-grid">
                         <!-- Total Portfolio Value -->
-                        <div class="stat card bg-base-100 border dashboard-component" data-id="totalPortfolioValue">
+                        <div class="stat card bg-base-100 border dashboard-component lg:col-span-2" data-id="totalPortfolioValue">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-primary">
                                 <i data-lucide="coins" class="h-6 w-6 md:h-8 md:w-8"></i>
                             </div>
                             <div class="stat-title">Total Assets Value</div>
                             <div id="stat-portfolio-value" class="stat-value text-3xl md:text-3xl lg:text-2xl xl:text-3xl break-words">Loading...</div>
-                            <div id="stat-portfolio-value-trend" class="stat-desc z-10"></div>
-                            <!-- NEW Sparkline Canvas -->
+                            <!-- Sub-values for movable and immovable assets -->
+                            <div class="grid grid-cols-2 gap-2 mt-2 text-center">
+                                <div>
+                                    <div class="text-xs text-base-content/70">Movable</div>
+                                    <div id="stat-movable-value" class="font-semibold text-lg">...</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-base-content/70">Immovable</div>
+                                    <div id="stat-immovable-value" class="font-semibold text-lg">...</div>
+                                </div>
+                            </div>
+                            <div id="stat-portfolio-value-trend" class="stat-desc z-10 mt-1"></div>
+                            <!-- Sparkline Canvas -->
                             <div class="absolute bottom-0 left-0 right-0 h-16 opacity-50 pointer-events-none">
                                 <canvas id="sparkline-portfolio-value"></canvas>
                             </div>

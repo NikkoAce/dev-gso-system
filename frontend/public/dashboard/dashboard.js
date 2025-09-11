@@ -369,6 +369,10 @@ function initializeDashboard(user) {
 
     function renderStatCards(stats) {
         document.getElementById('stat-portfolio-value').textContent = formatCurrency(stats.totalPortfolioValue?.current || 0);
+        // NEW: Populate sub-values for movable and immovable assets
+        document.getElementById('stat-movable-value').textContent = formatCurrency(stats.movableAssetsValue?.current || 0);
+        document.getElementById('stat-immovable-value').textContent = formatCurrency(stats.immovableAssetsValue?.current || 0);
+
         document.getElementById('stat-total-assets').textContent = stats.totalAssets?.current || 0;
         document.getElementById('stat-pending-reqs').textContent = stats.pendingRequisitions?.current || 0;
         document.getElementById('stat-immovable-assets').textContent = stats.immovableAssets?.current || 0;
