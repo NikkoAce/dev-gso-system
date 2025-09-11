@@ -18,8 +18,10 @@ const {
     getMyOfficeAssets,
     addRepairRecord,
     deleteRepairRecord,
-    generateMovableLedgerCard
-} = require('../controllers/assetController'); // Assuming a controller file
+    generateMovableLedgerCard,
+    importAssetsFromCsv,
+    downloadCsvTemplate
+} = require('../controllers/assetController');
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
 
@@ -31,6 +33,10 @@ router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), export
 
 // Route for bulk asset creation
 router.post('/bulk', protect, checkPermission(PERMISSIONS.ASSET_CREATE), createBulkAssets);
+
+// Routes for CSV Import
+router.get('/import/template', protect, checkPermission(PERMISSIONS.ASSET_CREATE), downloadCsvTemplate);
+router.post('/import', protect, checkPermission(PERMISSIONS.ASSET_CREATE), upload.single('csvfile'), importAssetsFromCsv);
 
 // Route for creating a PTR and transferring assets
 router.post('/ptr', protect, checkPermission(PERMISSIONS.ASSET_TRANSFER), createPtrAndTransferAssets);

@@ -74,6 +74,16 @@ function initializeRegistryPage(user) {
         confirmAppendix68Btn: document.getElementById('confirm-appendix68-modal-btn'),
         cancelAppendix68Btn: document.getElementById('cancel-appendix68-modal-btn'),
         totalValueContainer: document.getElementById('total-value-container'),
+        // Import Modal elements
+        importModal: document.getElementById('import-modal'),
+        importCsvBtn: document.getElementById('import-csv-btn'),
+        cancelImportBtn: document.getElementById('cancel-import-btn'),
+        confirmImportBtn: document.getElementById('confirm-import-btn'),
+        csvFileInput: document.getElementById('csv-file-input'),
+        importResultsContainer: document.getElementById('import-results-container'),
+        importSummaryMessage: document.getElementById('import-summary-message'),
+        importErrorList: document.getElementById('import-error-list'),
+        downloadTemplateBtn: document.getElementById('download-template-btn'),
     };
 
     // --- MODULE: UI MANAGER ---
@@ -424,6 +434,51 @@ function initializeRegistryPage(user) {
             } finally {
                 DOM.confirmAppendix68Btn.disabled = false;
                 DOM.confirmAppendix68Btn.textContent = 'Confirm & Generate';
+            }
+        },
+
+        async handleImportCsv() {
+            const file = DOM.csvFileInput.files[0];
+            if (!file) {
+                uiManager.showToast('Please select a CSV file to import.', 'warning');
+                return;
+            }
+        
+            DOM.confirmImportBtn.disabled = true;
+            DOM.confirmImportBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Importing...`;
+            DOM.importResultsContainer.classList.add('hidden');
+        
+            const formData = new FormData();
+            formData.append('csvfile', file);
+        
+            try {
+                const result = await fetchWithAuth('assets/import', {
+                    method: 'POST',
+                    body: formData,
+                });
+        
+                DOM.importResultsContainer.classList.remove('hidden');
+                DOM.importSummaryMessage.textContent = result.message;
+                DOM.importErrorList.innerHTML = ''; // Clear previous errors
+        
+                if (result.errors && result.errors.length > 0) {
+                    DOM.importSummaryMessage.classList.add('text-error');
+                    const errorHtml = result.errors.map(err => `<li>Row ${err.row}: ${err.message}</li>`).join('');
+                    DOM.importErrorList.innerHTML = errorHtml;
+                } else {
+                    DOM.importSummaryMessage.classList.remove('text-error');
+                    DOM.importSummaryMessage.classList.add('text-success');
+                    setTimeout(() => {
+                        DOM.importModal.close();
+                        loadAssets(); // Reload the asset list
+                    }, 2000);
+                }
+        
+            } catch (error) {
+                uiManager.showToast(`Import failed: ${error.message}`, 'error');
+            } finally {
+                DOM.confirmImportBtn.disabled = false;
+                DOM.confirmImportBtn.innerHTML = 'Upload & Import';
             }
         },
 

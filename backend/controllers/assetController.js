@@ -5,6 +5,7 @@ const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
 const PTR = require('../models/PTR'); // Import the new PTR model
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
+const csv = require('csv-parser');
 const { Readable } = require('stream');
 
 // Replaces the original getAssets to support server-side pagination, sorting, and filtering.
@@ -783,11 +784,110 @@ const generateMovableLedgerCard = asyncHandler(async (req, res) => {
     res.status(200).json({ asset, ledgerRows });
 });
 
+/**
+ * @desc    Handles the import of assets from a CSV file.
+ * @route   POST /api/assets/import
+ * @access  Private (Requires 'asset:create' permission)
+ */
+const importAssetsFromCsv = asyncHandler(async (req, res) => {
+    if (!req.file) {
+        res.status(400);
+        throw new Error('No CSV file uploaded.');
+    }
+
+    const results = [];
+    const errors = [];
+    let rowCounter = 1; // Start at 1 for header row
+
+    const stream = Readable.from(req.file.buffer);
+
+    stream.pipe(csv())
+        .on('data', (data) => {
+            rowCounter++;
+            // Basic validation for required fields
+            if (!data['Property Number'] || !data['Description'] || !data['Category'] || !data['Acquisition Cost']) {
+                errors.push({ row: rowCounter, message: 'Missing required fields: Property Number, Description, Category, Acquisition Cost.' });
+                return;
+            }
+            results.push({ ...data, row: rowCounter });
+        })
+        .on('end', async () => {
+            if (errors.length > 0) {
+                return res.status(400).json({
+                    message: `CSV has ${errors.length} error(s). Please fix them and re-upload.`,
+                    errors: errors
+                });
+            }
+
+            try {
+                const assetsToCreate = results.map(row => ({
+                    propertyNumber: row['Property Number'],
+                    description: row['Description'],
+                    category: row['Category'],
+                    acquisitionDate: row['Acquisition Date'] ? new Date(row['Acquisition Date']) : new Date(),
+                    acquisitionCost: parseFloat(row['Acquisition Cost']) || 0,
+                    fundSource: row['Fund Source'] || 'General Fund',
+                    status: row['Status'] || 'In Use',
+                    usefulLife: parseInt(row['Useful Life'], 10) || 5,
+                    custodian: {
+                        name: row['Custodian Name'] || 'Unassigned',
+                        office: row['Custodian Office'] || 'GSO',
+                        designation: row['Custodian Designation'] || ''
+                    },
+                    history: [{
+                        event: 'Created',
+                        details: `Asset imported via CSV upload.`,
+                        user: req.user.name
+                    }]
+                }));
+
+                const propertyNumbers = assetsToCreate.map(a => a.propertyNumber);
+                if (new Set(propertyNumbers).size !== propertyNumbers.length) {
+                    throw new Error('CSV file contains duplicate Property Numbers.');
+                }
+
+                const existingAssets = await Asset.find({ propertyNumber: { $in: propertyNumbers } }).select('propertyNumber').lean();
+                if (existingAssets.length > 0) {
+                    const existingNumbers = existingAssets.map(a => a.propertyNumber).join(', ');
+                    throw new Error(`The following Property Numbers already exist in the database: ${existingNumbers}`);
+                }
+
+                const createdAssets = await Asset.insertMany(assetsToCreate);
+
+                res.status(201).json({
+                    message: `Successfully imported ${createdAssets.length} assets.`,
+                    importedCount: createdAssets.length,
+                    errors: []
+                });
+
+            } catch (error) {
+                res.status(400).json({
+                    message: 'An error occurred during the import process.',
+                    errors: [{ row: 'N/A', message: error.message }]
+                });
+            }
+        });
+});
+
+/**
+ * @desc    Provides a downloadable CSV template for asset import.
+ * @route   GET /api/assets/import/template
+ * @access  Private
+ */
+const downloadCsvTemplate = (req, res) => {
+    const headers = ['Property Number', 'Description', 'Category', 'Acquisition Date', 'Acquisition Cost', 'Fund Source', 'Status', 'Useful Life', 'Custodian Name', 'Custodian Office', 'Custodian Designation'];
+    const csvContent = headers.join(',');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="asset_import_template.csv"');
+    res.status(200).send(csvContent);
+};
+
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
     deleteAssetAttachment, getNextPropertyNumber, updatePhysicalCount, exportAssetsToCsv,
     createPtrAndTransferAssets,
     getMyOfficeAssets, addRepairRecord,
-    deleteRepairRecord, generateMovableLedgerCard
+    deleteRepairRecord, generateMovableLedgerCard,
+    importAssetsFromCsv, downloadCsvTemplate
 };
