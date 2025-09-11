@@ -825,6 +825,7 @@ const importAssetsFromCsv = asyncHandler(async (req, res) => {
                     description: row['Description'],
                     category: row['Category'],
                     acquisitionDate: row['Acquisition Date'] ? new Date(row['Acquisition Date']) : new Date(),
+                    office: row['Custodian Office'] || 'GSO', // Set the top-level office field
                     acquisitionCost: parseFloat(row['Acquisition Cost']) || 0,
                     fundSource: row['Fund Source'] || 'General Fund',
                     status: row['Status'] || 'In Use',

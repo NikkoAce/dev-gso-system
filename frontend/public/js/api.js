@@ -55,15 +55,20 @@ export async function fetchWithAuth(endpoint, options = {}) {
         const response = await fetch(`${BASE_URL}/${endpoint}`, config);
 
         if (!response.ok) {
-            let errorData = { message: `Request failed with status ${response.status} (${response.statusText})` };
+            let errorToThrow;
             // Try to parse a JSON error response from the server, but don't fail if it's not JSON.
             try {
                 const serverError = await response.json();
-                errorData.message = serverError.message || errorData.message;
+                const message = serverError.message || `Request failed with status ${response.status} (${response.statusText})`;
+                errorToThrow = new Error(message);
+                if (serverError.errors) {
+                    errorToThrow.details = serverError.errors; // Attach detailed errors if they exist
+                }
             } catch (e) {
                 // The server did not return JSON, the statusText is the best we have.
+                errorToThrow = new Error(`Request failed with status ${response.status} (${response.statusText})`);
             }
-            throw new Error(errorData.message);
+            throw errorToThrow;
         }
 
         return response.status === 204 ? null : response.json();

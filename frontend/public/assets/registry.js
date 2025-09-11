@@ -511,7 +511,17 @@ function initializeRegistryPage(user) {
                 }
         
             } catch (error) {
-                uiManager.showToast(`Import failed: ${error.message}`, 'error');
+                // Display detailed errors in the modal if available
+                DOM.importResultsContainer.classList.remove('hidden');
+                DOM.importSummaryMessage.textContent = error.message;
+                DOM.importSummaryMessage.classList.remove('text-success');
+                DOM.importSummaryMessage.classList.add('text-error');
+                DOM.importErrorList.innerHTML = '';
+
+                if (error.details && error.details.length > 0) {
+                    const errorHtml = error.details.map(err => `<li>Row ${err.row}: ${err.message}</li>`).join('');
+                    DOM.importErrorList.innerHTML = errorHtml;
+                }
             } finally {
                 DOM.confirmImportBtn.disabled = false;
                 DOM.confirmImportBtn.innerHTML = 'Upload & Import';
