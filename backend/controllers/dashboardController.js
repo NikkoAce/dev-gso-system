@@ -44,6 +44,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
     const matchStage = Object.keys(interactiveFilter).length > 0 ? [{ $match: interactiveFilter }] : [];
 
+    // Create a separate filter for immovable assets that excludes the 'custodian.office' filter,
+    // as that field does not exist on the ImmovableAsset model.
+    const { 'custodian.office': officeToExclude, ...immovableFilter } = interactiveFilter;
+    const immovableMatchStage = Object.keys(immovableFilter).length > 0 ? [{ $match: immovableFilter }] : [];
+
+
     // --- 2. Define Combined Aggregation Pipelines for Performance ---
     const movableAssetPipeline = Asset.aggregate([
         ...matchStage, // Apply interactive filters at the very beginning for max efficiency
@@ -102,6 +108,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     ]);
 
     const immovableAssetPipeline = ImmovableAsset.aggregate([
+        ...immovableMatchStage, // Apply filters for status and condition
         {
             $facet: {
                 currentImmovableStats: [ { $match: { dateAcquired: { $lte: end } } }, { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } } ],
