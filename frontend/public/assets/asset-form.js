@@ -69,6 +69,7 @@ function initializeForm(user) {
     const bulkCreateToggle = document.getElementById('bulk-create-toggle');
     const bulkCreateFields = document.getElementById('bulk-create-fields');
     const bulkQuantityInput = document.getElementById('bulk-quantity');
+    const newRepairAmountInput = document.getElementById('new-repair-amount');
     const repairsContainer = document.getElementById('repairs-container');
     const repairForm = document.getElementById('repair-form');
 
@@ -479,6 +480,7 @@ function initializeForm(user) {
     // Add listeners for direct input on other currency fields
     salvageValueInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
     impairmentLossesInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
+    newRepairAmountInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
 
     generatePropertyNumberBtn.addEventListener('click', handleGeneratePropertyNumber);
 
@@ -533,7 +535,7 @@ function initializeForm(user) {
         const repairData = {
             date: document.getElementById('new-repair-date').value,
             natureOfRepair: document.getElementById('new-repair-nature').value,
-            amount: document.getElementById('new-repair-amount').value,
+            amount: document.getElementById('new-repair-amount').value.replace(/,/g, ''),
         };
 
         if (!repairData.date || !repairData.natureOfRepair || !repairData.amount) {

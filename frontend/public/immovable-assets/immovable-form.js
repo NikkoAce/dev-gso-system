@@ -483,10 +483,8 @@ function initializeForm(user) {
                 if (field.type === 'date' && value) {
                     field.value = new Date(value).toISOString().split('T')[0];
                 } else if (['assessedValue', 'impairmentLosses', 'buildingAndStructureDetails.salvageValue'].includes(name) && value != null && !isNaN(parseFloat(value))) {
-                    // Format currency fields on load
-                    // Set the value with decimals, then immediately format it to add commas.
-                    field.value = parseFloat(value).toFixed(2);
-                    formatNumberOnInput(field);
+                    // Format currency fields on load using Intl.NumberFormat for robustness.
+                    field.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(value));
                 } else {
                     // Use empty string for null/undefined to clear the field
                     field.value = value || '';
