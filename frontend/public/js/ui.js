@@ -199,6 +199,7 @@ export function createUIManager() {
             'In Use': 'badge-success',
             'In Storage': 'badge-ghost', // Changed from blue to gray as an example
             'For Repair': 'badge-warning',
+            'Missing': 'badge-error',
             'Waste': 'badge-warning', // Added missing 'Waste' status
             'Disposed': 'badge-error',
         };
