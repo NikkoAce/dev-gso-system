@@ -1,0 +1,35 @@
+# Render Blueprint for the GSO Management System Backend
+# This file defines the services, environment, and settings for your application.
+# See https://render.com/docs/blueprint-spec for a full reference.
+
+services:
+  # Service for the GSO Backend
+  - name: gso-backend
+    type: web
+    env: docker # This is the crucial line that tells Render to use your Dockerfile.
+    repo: https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME # IMPORTANT: Replace with your actual repository URL.
+    plan: free # Or 'starter' for more resources.
+    autoDeploy: true # Automatically deploy when you push to your main branch.
+    
+    # Health check to ensure your service is running before it goes live.
+    # Your server.js already has this route.
+    healthCheck:
+      path: /api/healthcheck
+
+    # Environment variables for your application.
+    # Secrets marked with 'sync: false' must be set in the Render dashboard.
+    envVars:
+      - key: MONGO_URI
+        sync: false # 'sync: false' marks this as a secret to be set only in the Render dashboard.
+      - key: JWT_SECRET
+        generateValue: true # Let Render generate a secure random string for this on first deploy.
+      - key: PORTAL_API_URL
+        value: https://lgu-helpdesk-copy.onrender.com/api
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_BUCKET_NAME
+        sync: false
+      - key: AWS_REGION
+        value: ap-southeast-1

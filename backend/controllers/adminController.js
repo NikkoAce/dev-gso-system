@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Asset = require('../models/Asset');
 const ImmovableAsset = require('../models/immovableAsset');
 const mongoose = require('mongoose');
+const { spawn } = require('child_process');
 
 /**
  * @desc    Migrate old asset condition values to the new standardized format.
@@ -71,47 +72,37 @@ const migrateAssetConditions = asyncHandler(async (req, res) => {
  * @route   POST /api/admin/export-database
  * @access  Private/Admin
  */
-const exportDatabase = asyncHandler(async (req, res) => {
-    const db = mongoose.connection.db;
-    const collections = await db.listCollections().toArray();
-    const collectionNames = collections.map(c => c.name).filter(name => !name.startsWith('system.'));
-
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `gso-database-backup-${timestamp}.json`;
-
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-
-    // Start the JSON object
-    res.write('{\n');
-
-    for (let i = 0; i < collectionNames.length; i++) {
-        const collectionName = collectionNames[i];
-        res.write(`  "${collectionName}": [\n`);
-
-        const cursor = db.collection(collectionName).find();
-        let firstDoc = true;
-
-        // Stream documents from the collection
-        for await (const doc of cursor) {
-            if (!firstDoc) {
-                res.write(',\n');
-            }
-            res.write('    ' + JSON.stringify(doc));
-            firstDoc = false;
-        }
-
-        res.write('\n  ]');
-        if (i < collectionNames.length - 1) {
-            res.write(',\n');
-        } else {
-            res.write('\n');
-        }
+const exportDatabase = (req, res) => {
+    const mongoUri = process.env.MONGO_URI;
+    if (!mongoUri) {
+        // Since this isn't in asyncHandler, we manually send the response.
+        return res.status(500).json({ message: 'Database connection string (MONGO_URI) is not configured.' });
     }
 
-    // End the JSON object and the response
-    res.write('}\n');
-    res.end();
-});
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `gso-database-backup-${timestamp}.gz`;
+
+    res.setHeader('Content-Type', 'application/gzip');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    const mongodump = spawn('mongodump', [
+        `--uri=${mongoUri}`,
+        '--archive',
+        '--gzip'
+    ]);
+
+    // Pipe the standard output of mongodump directly to the response stream
+    mongodump.stdout.pipe(res);
+
+    // Handle errors from the mongodump process
+    mongodump.stderr.on('data', (data) => {
+        console.error(`mongodump stderr: ${data}`);
+    });
+
+    // If the client closes the connection (e.g., cancels download), kill the mongodump process
+    req.on('close', () => {
+        mongodump.kill();
+    });
+};
 
 module.exports = { migrateAssetConditions, exportDatabase };
