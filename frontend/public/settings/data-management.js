@@ -1,5 +1,5 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
-import { fetchWithAuth, getGsoToken, BASE_URL } from '../js/api.js';
+import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
+import { fetchWithAuth, BASE_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
