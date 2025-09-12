@@ -5,8 +5,6 @@ const path = require('path');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middlewares/errorMiddleware');
 
-connectDB();
-
 const app = express();
 
 // --- CONFIGURATION & MIDDLEWARE---
@@ -66,15 +64,20 @@ app.use('/api/*', (req, res, next) => {
     res.status(404).json({ message: `API route not found: ${req.method} ${req.originalUrl}` });
 });
 
-const frontendPath = path.join(__dirname, '..', 'frontend', 'public');
-app.use(express.static(frontendPath));
-
-app.get('*', (req, res) => {
-    res.sendFile(path.resolve(frontendPath, 'index.html'));
-});
-
 // This must be the last middleware to catch all errors
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Wrap server startup in an async function to handle DB connection first
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error("Server failed to start:", error);
+    process.exit(1); // Exit if the DB connection fails on startup
+  }
+};
+
+startServer();
