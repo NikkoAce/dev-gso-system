@@ -9,7 +9,6 @@ services:
     env: docker # This is the crucial line that tells Render to use your Dockerfile.
     repo: https://github.com/NikkoAce/dev-gso-system.git # IMPORTANT: Replace with your actual repository URL.
     rootDir: backend # This tells Render that the service's code is in the 'backend' directory.
-    region: singapore # This sets the server region to match your S3 bucket.
     plan: free # Or 'starter' for more resources.
     autoDeploy: true # Automatically deploy when you push to your main branch.
     
