@@ -49,7 +49,7 @@ function initializePhysicalCountPage(user) {
     function renderTable(assets, pagination) {
         tableBody.innerHTML = '';
         if (assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
             renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
             return;
         }
@@ -79,10 +79,20 @@ function initializePhysicalCountPage(user) {
                 'Poor Condition (P)', 'Scrap Condition (S)'
             ];
 
-            const selectHTML = `
+            const statusOptions = [
+                'In Use', 'In Storage', 'For Repair', 'Missing', 'Waste', 'Disposed'
+            ];
+
+            const conditionSelectHTML = `
                 <select class="condition-input select select-bordered select-sm w-full font-normal">
                     <option value="">Select...</option>
                     ${conditionOptions.map(opt => `<option value="${opt}" ${asset.condition === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+            `;
+
+            const statusSelectHTML = `
+                <select class="status-input select select-bordered select-sm w-full font-normal">
+                    ${statusOptions.map(opt => `<option value="${opt}" ${asset.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
             `;
 
@@ -90,7 +100,8 @@ function initializePhysicalCountPage(user) {
                 <td class="font-medium">${asset.propertyNumber}</td>
                 <td>${fullDescription}</td>
                 <td>${custodianDisplay}</td>
-                <td>${selectHTML}</td>
+                <td>${statusSelectHTML}</td>
+                <td>${conditionSelectHTML}</td>
                 <td>
                     <input type="text" class="remarks-input input input-bordered input-sm w-full" value="${asset.remarks || ''}">
                 </td>
@@ -101,7 +112,7 @@ function initializePhysicalCountPage(user) {
     }
 
     async function loadAssets() {
-        setLoading(true, tableBody, { colSpan: 5 });
+        setLoading(true, tableBody, { colSpan: 6 });
         try {
             const params = new URLSearchParams({
                 page: currentPage,
@@ -125,7 +136,7 @@ function initializePhysicalCountPage(user) {
             renderTable(assets, pagination);
         } catch (error) {
             console.error('Failed to load assets:', error);
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
         }
     }
 
@@ -163,9 +174,10 @@ function initializePhysicalCountPage(user) {
         rows.forEach(row => {
             if(row.dataset.assetId) {
                 const id = row.dataset.assetId;
+                const status = row.querySelector('.status-input').value;
                 const condition = row.querySelector('.condition-input').value;
                 const remarks = row.querySelector('.remarks-input').value;
-                updates.push({ id, condition, remarks });
+                updates.push({ id, status, condition, remarks });
             }
         });
 

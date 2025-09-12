@@ -510,17 +510,28 @@ const updatePhysicalCount = async (req, res) => {
 
             const oldCondition = asset.condition;
             const oldRemarks = asset.remarks;
+            const oldStatus = asset.status;
+
+            let details = [];
+            if (oldStatus !== update.status) {
+                details.push(`Status changed from "${oldStatus || 'N/A'}" to "${update.status}".`);
+            }
+            if (oldCondition !== update.condition) {
+                details.push(`Condition changed from "${oldCondition || 'N/A'}" to "${update.condition}".`);
+            }
+            if (oldRemarks !== update.remarks && update.remarks) {
+                details.push(`Remarks updated: "${update.remarks}".`);
+            }
 
             // Only add to history if condition or remarks have changed.
-            if (oldCondition !== update.condition || oldRemarks !== update.remarks) {
+            if (details.length > 0) {
                 asset.history.push({
                     event: 'Physical Count',
-                    details: `Condition changed from "${oldCondition || 'N/A'}" to "${update.condition}". Remarks: ${update.remarks || 'None'}`,
-                    from: oldCondition,
-                    to: update.condition,
+                    details: details.join(' '),
                     user: req.user.name, // Use authenticated user
                 });
             }
+            asset.status = update.status;
             asset.condition = update.condition;
             asset.remarks = update.remarks;
             return asset.save();

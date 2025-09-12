@@ -517,6 +517,23 @@ function initializeDashboard(user) {
 
         for (const [id, config] of Object.entries(chartConfigs)) {
             const ctx = document.getElementById(id).getContext('2d');
+
+            // Special color handling for assetStatusChart
+            if (id === 'assetStatusChart' && config.data.datasets[0]) {
+                const colorMap = {
+                    'In Use': '#22c55e',        // green-500
+                    'In Storage': '#a8a29e',    // stone-400
+                    'For Repair': '#f59e0b',    // amber-500
+                    'Missing': '#ef4444',       // red-500
+                    'Waste': '#f97316',         // orange-500
+                    'Disposed': '#71717a',      // zinc-500
+                };
+                // Assign colors based on the labels provided by the backend
+                config.data.datasets[0].backgroundColor = config.data.labels.map(
+                    label => colorMap[label] || '#6b7280' // default gray-500
+                );
+            }
+
             if (charts[id]) {
                 charts[id].data = config.data;
                 // The labels are now directly from the backend, so we update them.
