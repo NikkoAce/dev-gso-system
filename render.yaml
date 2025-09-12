@@ -13,6 +13,12 @@ services:
     plan: free # Or 'starter' for more resources.
     autoDeploy: true # Automatically deploy when you push to your main branch.
     
+    # Build filter to save resources. This tells Render to only rebuild this
+    # service if files inside the 'backend' directory are changed.
+    buildFilter:
+      paths:
+        - "backend/**"
+
     # Health check to ensure your service is running before it goes live.
     # This feature is available on paid plans.
     # //healthCheck:
