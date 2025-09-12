@@ -6,7 +6,7 @@ const isProduction = window.location.hostname === 'lgudaet-gso-system.netlify.ap
 
 // IMPORTANT: This must be the correct URL of your DEPLOYED PRODUCTION GSO backend.
 const PROD_API_ROOT_URL = 'https://lgu-gso-system.onrender.com';
-const DEV_API_ROOT_URL = 'https://dev-gso-system.onrender.com';
+const DEV_API_ROOT_URL = 'https://gso-backend-mns8.onrender.com';
 
 // Centralized root URL for the API backend
 export const API_ROOT_URL = isProduction ? PROD_API_ROOT_URL : DEV_API_ROOT_URL;
