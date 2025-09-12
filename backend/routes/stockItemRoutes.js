@@ -13,12 +13,12 @@ const PERMISSIONS = require('../config/permissions');
 
 // @route   GET & POST /api/stock-items
 router.route('/')
-    .get(protect, getAllStockItems) // Any authenticated user can view the list of items
+    .get(protect, checkPermission(PERMISSIONS.STOCK_READ), getAllStockItems)
     .post(protect, checkPermission(PERMISSIONS.STOCK_MANAGE), createStockItem);
 
 // @route   GET, PUT, DELETE /api/stock-items/:id
 router.route('/:id')
-    .get(protect, getStockItemById) // Any authenticated user can view a single item
+    .get(protect, checkPermission(PERMISSIONS.STOCK_READ), getStockItemById)
     .put(protect, checkPermission(PERMISSIONS.STOCK_MANAGE), updateStockItem)
     .delete(protect, checkPermission(PERMISSIONS.STOCK_MANAGE), deleteStockItem);
 

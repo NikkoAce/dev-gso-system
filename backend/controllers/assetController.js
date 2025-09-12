@@ -439,30 +439,33 @@ const getNextPropertyNumber = asyncHandler(async (req, res) => {
 });
 
 // NEW: Controller for server-side CSV generation
-const exportAssetsToCsv = asyncHandler(async (req, res) => {
+const exportAssetsToCsv = (req, res) => {
     const { sort = 'propertyNumber', order = 'asc' } = req.query;
 
     // Build the filter query using the helper
     const query = buildAssetQuery(req.query);
-
     const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
 
-    // Fetch all matching documents without pagination
-    const assets = await Asset.find(query).sort(sortOptions).lean();
-
-    // Generate CSV
-    const headers = ['Property Number', 'Description', 'Category', 'Custodian', 'Office', 'Status', 'Acquisition Date', 'Acquisition Cost'];
-    const csvRows = [headers.join(',')];
-
-    for (const asset of assets) {
-        const values = [asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.category, asset.custodian.name, asset.custodian.office, asset.status, asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A', asset.acquisitionCost];
-        csvRows.push(values.join(','));
-    }
-
+    // Set headers for streaming the CSV file
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="assets.csv"');
-    res.status(200).send(csvRows.join('\n'));
-});
+
+    // Write headers
+    const headers = ['Property Number', 'Description', 'Category', 'Custodian', 'Office', 'Status', 'Acquisition Date', 'Acquisition Cost'];
+    res.write(headers.join(',') + '\n');
+
+    // Use a cursor to stream documents one by one instead of loading all into memory
+    const cursor = Asset.find(query).sort(sortOptions).lean().cursor();
+
+    cursor.on('data', (asset) => {
+        const values = [asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.category, asset.custodian?.name || '', asset.custodian?.office || '', asset.status, asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A', asset.acquisitionCost || 0];
+        res.write(values.join(',') + '\n');
+    });
+
+    cursor.on('end', () => {
+        res.end();
+    });
+};
 
 const updatePhysicalCount = asyncHandler(async (req, res) => {
     const { updates } = req.body; // Expecting an object with updates array

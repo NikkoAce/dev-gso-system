@@ -1,1 +1,0 @@
-# lgu-gso-system
