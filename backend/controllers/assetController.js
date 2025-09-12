@@ -287,11 +287,13 @@ const updateAsset = async (req, res) => {
     const numericFields = ['acquisitionCost', 'usefulLife', 'salvageValue', 'impairmentLosses'];
     for (const field of numericFields) {
         if (updateData[field] !== undefined && updateData[field] !== null) {
-            // An empty string should be treated as null or be ignored
-            if (updateData[field] === '') {
+            const valueAsString = String(updateData[field]).replace(/,/g, '');
+            // If the string is empty after cleaning, it should be null in the database.
+            if (valueAsString === '') {
                 updateData[field] = null;
             } else {
-                const parsedValue = parseFloat(String(updateData[field]).replace(/,/g, ''));
+                const parsedValue = parseFloat(valueAsString);
+                // Only update if it's a valid number. Otherwise, Mongoose validation will catch it.
                 if (!isNaN(parsedValue)) {
                     updateData[field] = parsedValue;
                 }
