@@ -281,6 +281,21 @@ const updateAsset = async (req, res) => {
             }
         }
     }
+    const numericFields = ['acquisitionCost', 'usefulLife', 'salvageValue', 'impairmentLosses'];
+    for (const field of numericFields) {
+        if (updateData[field] !== undefined && updateData[field] !== null) {
+            // An empty string should be treated as null or be ignored
+            if (updateData[field] === '') {
+                updateData[field] = null;
+            } else {
+                const parsedValue = parseFloat(String(updateData[field]).replace(/,/g, ''));
+                if (!isNaN(parsedValue)) {
+                    updateData[field] = parsedValue;
+                }
+            }
+        }
+    }
+
     const user = req.user; // The user performing the action
 
     const asset = await Asset.findById(assetId);

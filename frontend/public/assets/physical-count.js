@@ -42,7 +42,7 @@ function initializePhysicalCountPage(user) {
         } catch (error)
         {
             console.error('Failed to initialize page:', error);
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
         }
     }
     
@@ -133,7 +133,7 @@ function initializePhysicalCountPage(user) {
                 limit: itemsPerPage
             };
             totalPages = pagination.totalPages; // Update total pages from the response
-            renderTable(assets, pagination);
+            renderTable(assets, pagination); // This line was missing
         } catch (error) {
             console.error('Failed to load assets:', error);
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
