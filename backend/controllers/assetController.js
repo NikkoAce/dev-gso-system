@@ -1,7 +1,5 @@
 const Asset = require('../models/Asset');
 const asyncHandler = require('express-async-handler');
-const Employee = require('../models/Employee');
-const Requisition = require('../models/Requisition');
 const mongoose = require('mongoose');
 const PTR = require('../models/PTR'); // Import the new PTR model
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
@@ -9,122 +7,111 @@ const csv = require('csv-parser');
 const { Readable } = require('stream');
 
 // Replaces the original getAssets to support server-side pagination, sorting, and filtering.
-const getAssets = async (req, res) => {
-  try {
-    const { // No defaults for page and limit, so we can check if they exist
-      page,
-      limit,
-      sort = 'propertyNumber',
-      order = 'asc',
-      search,
-      category,
-      status,
-      office,
-      assignment,
-      fundSource,
-      startDate,
-      endDate,
-      ids,
-    } = req.query;
 
-    // 1. Build the filter query
+// Helper function to build the filter query for assets
+const buildAssetQuery = (queryParams) => {
+    const {
+        search, category, status, office, assignment, fundSource, startDate, endDate, ids
+    } = queryParams;
+
     const query = {};
 
-    // If a list of IDs is provided, it should be the primary filter.
     if (ids) {
         query._id = { $in: ids.split(',') };
-    } else {
-        // Only apply other filters if not fetching by specific IDs
-        if (search) {
-          const searchRegex = new RegExp(search, 'i'); // 'i' for case-insensitive
-          query.$or = [
+        return query; // If fetching by IDs, ignore other filters
+    }
+
+    if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        query.$or = [
             { propertyNumber: searchRegex },
             { description: searchRegex },
             { 'custodian.name': searchRegex },
-          ];
-        }
+        ];
+    }
 
-        if (category) query.category = category;
-        if (status) query.status = status;
-        if (office) query.office = office;
-        if (fundSource) query.fundSource = fundSource;
+    if (category) query.category = category;
+    if (status) query.status = status;
+    if (office) query.office = office;
+    if (fundSource) query.fundSource = fundSource;
 
-        if (assignment) {
-            if (assignment === 'unassigned') {
-                query.assignedPAR = { $in: [null, ''] };
-                query.assignedICS = { $in: [null, ''] };
-            } else if (assignment === 'par') {
-                query.assignedPAR = { $ne: null, $ne: '' };
-            } else if (assignment === 'ics') {
-                query.assignedICS = { $ne: null, $ne: '' };
-            }
-        }
-
-        if (startDate || endDate) {
-          query.acquisitionDate = {};
-          if (startDate) query.acquisitionDate.$gte = new Date(startDate);
-          if (endDate) {
-            const endOfDay = new Date(endDate);
-            endOfDay.setUTCHours(23, 59, 59, 999); // Ensure the entire day is included
-            query.acquisitionDate.$lte = endOfDay;
-          }
+    if (assignment) {
+        if (assignment === 'unassigned') {
+            query.assignedPAR = { $in: [null, ''] };
+            query.assignedICS = { $in: [null, ''] };
+        } else if (assignment === 'par') {
+            query.assignedPAR = { $ne: null, $ne: '' };
+        } else if (assignment === 'ics') {
+            query.assignedICS = { $ne: null, $ne: '' };
         }
     }
+
+    if (startDate || endDate) {
+        query.acquisitionDate = {};
+        if (startDate) query.acquisitionDate.$gte = new Date(startDate);
+        if (endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+            query.acquisitionDate.$lte = endOfDay;
+        }
+    }
+    return query;
+};
+
+const getAssets = asyncHandler(async (req, res) => {
+    const { page, limit, sort = 'propertyNumber', order = 'asc' } = req.query;
+
+    // 1. Build the filter query using the helper
+    const query = buildAssetQuery(req.query);
 
     // 2. Build the sort options
     const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
 
     // 3. Check if pagination is requested
     if (page && limit) {
-      // Pagination logic
-      const pageNum = parseInt(page, 10) || 1;
-      const limitNum = parseInt(limit, 10) || 20;
-      const skip = (pageNum - 1) * limitNum;
+        // Pagination logic
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 20;
+        const skip = (pageNum - 1) * limitNum;
 
-      // Using Promise.all to run queries concurrently for better performance.
-      // This now includes the total value calculation.
-      const [assets, totalDocs, summaryResult] = await Promise.all([
-        Asset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
-        Asset.countDocuments(query),
-        Asset.aggregate([
-            { $match: query },
-            { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
-        ])
-      ]);
+        // Using Promise.all to run queries concurrently for better performance.
+        const [assets, totalDocs, summaryResult] = await Promise.all([
+            Asset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
+            Asset.countDocuments(query),
+            Asset.aggregate([
+                { $match: query },
+                { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
+            ])
+        ]);
 
-      const totalValue = summaryResult[0]?.totalValue || 0;
+        const totalValue = summaryResult[0]?.totalValue || 0;
 
-      // Send the structured paginated response
-      res.json({
-        docs: assets,
-        totalDocs,
-        totalValue,
-        limit: limitNum,
-        totalPages: Math.ceil(totalDocs / limitNum),
-        page: pageNum,
-      });
+        // Send the structured paginated response
+        res.json({
+            docs: assets,
+            totalDocs,
+            totalValue,
+            limit: limitNum,
+            totalPages: Math.ceil(totalDocs / limitNum),
+            page: pageNum,
+        });
     } else {
-      // No pagination, return all matching assets but in a consistent format.
-      const [assets, summaryResult] = await Promise.all([
-          Asset.find(query).sort(sortOptions).lean(),
-          Asset.aggregate([
-              { $match: query },
-              { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
-          ])
-      ]);
-      const totalValue = summaryResult[0]?.totalValue || 0;
+        // No pagination, return all matching assets but in a consistent format.
+        const [assets, summaryResult] = await Promise.all([
+            Asset.find(query).sort(sortOptions).lean(),
+            Asset.aggregate([
+                { $match: query },
+                { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
+            ])
+        ]);
+        const totalValue = summaryResult[0]?.totalValue || 0;
 
-      // Return a response object consistent with the paginated one.
-      res.json({ docs: assets, totalDocs: assets.length, totalValue, limit: assets.length, totalPages: 1, page: 1 });
+        // Return a response object consistent with the paginated one.
+        res.json({ docs: assets, totalDocs: assets.length, totalValue, limit: assets.length, totalPages: 1, page: 1 });
     }
-  } catch (error) {
-    console.error('Error in getAssets:', error);
-    res.status(500).json({ message: 'Server Error', error: error.message });
-  }
-};
+});
 
-const getAssetById = async (req, res) => {
-  try {
+const getAssetById = asyncHandler(async (req, res) => {
     const asset = await Asset.findById(req.params.id).lean();
     if (asset) {
         // Generate pre-signed URLs for attachments before sending
@@ -140,28 +127,48 @@ const getAssetById = async (req, res) => {
     } else {
         res.status(404).json({ message: 'Asset not found' });
     }
-  } catch (error) { res.status(500).json({ message: 'Server Error' }); }
-};
+});
 
-const createAsset = async (req, res) => {
-  try {
-    // Since we are using multipart/form-data, nested objects might be stringified.
-    const assetData = { ...req.body };
+// Helper function to parse FormData fields
+const parseFormData = (body) => {
+    const data = { ...body };
 
-    // Safely parse fields that are expected to be JSON strings from FormData
-    const fieldsToParse = ['custodian', 'specifications'];
-    for (const field of fieldsToParse) {
-        if (assetData[field] && typeof assetData[field] === 'string') {
+    // Safely parse fields that are expected to be JSON strings
+    const fieldsToParseJson = ['custodian', 'specifications', 'attachmentTitles'];
+    for (const field of fieldsToParseJson) {
+        if (data[field] && typeof data[field] === 'string') {
             try {
-                assetData[field] = JSON.parse(assetData[field]);
+                data[field] = JSON.parse(data[field]);
             } catch (e) {
-                // This indicates a malformed request from the client.
-                console.error(`Error parsing JSON for field '${field}':`, assetData[field]);
-                res.status(400);
-                throw new Error(`Invalid data format for ${field}.`);
+                console.error(`Error parsing JSON for field '${field}':`, data[field]);
+                const err = new Error(`Invalid data format for ${field}.`);
+                err.statusCode = 400;
+                throw err;
             }
         }
     }
+
+    // Manually parse numeric fields that might come in as strings
+    const numericFields = ['acquisitionCost', 'usefulLife', 'salvageValue', 'impairmentLosses'];
+    for (const field of numericFields) {
+        if (data[field] !== undefined && data[field] !== null) {
+            const valueAsString = String(data[field]).replace(/,/g, '');
+            if (valueAsString === '') {
+                data[field] = null;
+            } else {
+                const parsedValue = parseFloat(valueAsString);
+                if (!isNaN(parsedValue)) {
+                    data[field] = parsedValue;
+                }
+            }
+        }
+    }
+    return data;
+};
+
+const createAsset = asyncHandler(async (req, res) => {
+    // Use the helper to parse all incoming form data
+    const assetData = parseFormData(req.body);
 
     // Add the initial history entry
     const assetToCreate = {
@@ -177,7 +184,7 @@ const createAsset = async (req, res) => {
 
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
-        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
+        const attachmentTitles = assetData.attachmentTitles || [];
         const uploadPromises = req.files.map((file, index) =>
             uploadToS3(file, createdAsset._id, attachmentTitles[index] || file.originalname, 'movable-assets')
         );
@@ -188,14 +195,7 @@ const createAsset = async (req, res) => {
     }
 
     res.status(201).json(createdAsset);
-  } catch (error) {
-    if (error.code === 11000 && error.keyPattern && error.keyPattern.propertyNumber) {
-        return res.status(400).json({ message: `Property Number '${error.keyValue.propertyNumber}' already exists.` });
-    }
-    console.error("Error in createAsset:", error); // Log the full error for better debugging
-    res.status(400).json({ message: 'Invalid asset data', error: error.message });
-  }
-};
+});
 
 /**
  * Helper function to compare fields and generate history logs for movable assets.
@@ -260,46 +260,11 @@ const generateMovableAssetUpdateHistory = (original, updates, user) => {
     return historyEntries;
 };
 
-const updateAsset = async (req, res) => {
-  try {
+const updateAsset = asyncHandler(async (req, res) => {
     const assetId = req.params.id;
 
-    // Since we are using multipart/form-data, nested objects might be stringified.
-    const updateData = { ...req.body };
-
-    // Safely parse fields that are expected to be JSON strings from FormData
-    const fieldsToParse = ['custodian', 'specifications'];
-    for (const field of fieldsToParse) {
-        if (updateData[field] && typeof updateData[field] === 'string') {
-            try {
-                updateData[field] = JSON.parse(updateData[field]);
-            } catch (e) {
-                // This indicates a malformed request from the client.
-                console.error(`Error parsing JSON for field '${field}':`, updateData[field]);
-                res.status(400);
-                throw new Error(`Invalid data format for ${field}.`);
-            }
-        }
-    }
-    
-
-    // Manually parse numeric fields that might come in as strings from FormData
-    const numericFields = ['acquisitionCost', 'usefulLife', 'salvageValue', 'impairmentLosses'];
-    for (const field of numericFields) {
-        if (updateData[field] !== undefined && updateData[field] !== null) {
-            const valueAsString = String(updateData[field]).replace(/,/g, '');
-            // If the string is empty after cleaning, it should be null in the database.
-            if (valueAsString === '') {
-                updateData[field] = null;
-            } else {
-                const parsedValue = parseFloat(valueAsString);
-                // Only update if it's a valid number. Otherwise, Mongoose validation will catch it.
-                if (!isNaN(parsedValue)) {
-                    updateData[field] = parsedValue;
-                }
-            }
-        }
-    }
+    // Use the helper to parse all incoming form data
+    const updateData = parseFormData(req.body);
 
     const user = req.user; // The user performing the action
 
@@ -318,7 +283,7 @@ const updateAsset = async (req, res) => {
 
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
-        const attachmentTitles = req.body.attachmentTitles ? JSON.parse(req.body.attachmentTitles) : [];
+        const attachmentTitles = updateData.attachmentTitles || [];
         const uploadPromises = req.files.map((file, index) =>
             uploadToS3(file, asset._id, attachmentTitles[index] || file.originalname, 'movable-assets')
         );
@@ -346,14 +311,9 @@ const updateAsset = async (req, res) => {
 
     const updatedAsset = await asset.save({ runValidators: true });
     res.json(updatedAsset);
-  } catch (error) {
-    console.error("Error in updateAsset:", error); // Log the full error for better debugging
-    res.status(400).json({ message: 'Invalid asset data', error: error.message });
-  }
-};
+});
 
-const deleteAsset = async (req, res) => {
-  try {
+const deleteAsset = asyncHandler(async (req, res) => {
     const asset = await Asset.findById(req.params.id);
     if (asset) {
       // Perform a "soft delete" by changing the status, which is better for auditing.
@@ -365,11 +325,12 @@ const deleteAsset = async (req, res) => {
       });
       await asset.save();
       res.json({ message: 'Asset marked as disposed' });
-    } else { res.status(404).json({ message: 'Asset not found' }); }
-  } catch (error) { res.status(500).json({ message: 'Server Error' }); }
-};
+    } else {
+        res.status(404).json({ message: 'Asset not found' });
+    }
+});
 
-const deleteAssetAttachment = async (req, res) => {
+const deleteAssetAttachment = asyncHandler(async (req, res) => {
     const { id, attachmentKey } = req.params;
     const asset = await Asset.findById(id);
 
@@ -397,11 +358,11 @@ const deleteAssetAttachment = async (req, res) => {
     await asset.save();
 
     res.status(200).json({ message: 'Attachment deleted successfully' });
-};
+});
 
 
 // NEW: Controller for bulk asset creation
-const createBulkAssets = async (req, res) => {
+const createBulkAssets = asyncHandler(async (req, res) => {
     const { assetData, quantity, startNumber } = req.body;
 
     if (!assetData || !quantity || !startNumber) {
@@ -437,159 +398,121 @@ const createBulkAssets = async (req, res) => {
         });
     }
 
-    try {
-        await Asset.insertMany(assetsToCreate);
-        res.status(201).json({ message: `${quantity} assets created successfully.` });
-    } catch (error) {
-        res.status(400).json({ message: 'Error during bulk creation. Check for duplicate Property Numbers.', error: error.message });
-    }
-};
+    await Asset.insertMany(assetsToCreate);
+    res.status(201).json({ message: `${quantity} assets created successfully.` });
+});
 
 // NEW: Controller for getting the next available asset number
-const getNextPropertyNumber = async (req, res) => {
+const getNextPropertyNumber = asyncHandler(async (req, res) => {
     const { year, subMajorGroup, glAccount, officeCode } = req.query;
 
     if (!year || !subMajorGroup || !glAccount || !officeCode) {
         return res.status(400).json({ message: 'Year, category codes, and office code are required.' });
     }
 
-    try {
-        const prefix = `${year}-${subMajorGroup}-${glAccount}-${officeCode}-`;
-        
-        // Find assets with the same prefix, sort them by property number descending, and get the first one.
-        const lastAsset = await Asset.findOne({ propertyNumber: { $regex: `^${prefix}` } })
-                                     .sort({ propertyNumber: -1 });
+    const prefix = `${year}-${subMajorGroup}-${glAccount}-${officeCode}-`;
 
-        let nextSerial = 1;
-        if (lastAsset) {
-            const lastNumber = lastAsset.propertyNumber;
-            const lastSerialStr = lastNumber.split('-').pop();
-            const lastSerial = parseInt(lastSerialStr, 10);
-            if (!isNaN(lastSerial)) {
-                nextSerial = lastSerial + 1;
-            }
+    // Find assets with the same prefix, sort them by property number descending, and get the first one.
+    const lastAsset = await Asset.findOne({ propertyNumber: { $regex: `^${prefix}` } })
+        .sort({ propertyNumber: -1 });
+
+    let nextSerial = 1;
+    if (lastAsset) {
+        const lastNumber = lastAsset.propertyNumber;
+        const lastSerialStr = lastNumber.split('-').pop();
+        const lastSerial = parseInt(lastSerialStr, 10);
+        if (!isNaN(lastSerial)) {
+            nextSerial = lastSerial + 1;
         }
-
-        const nextPropertyNumber = `${prefix}${String(nextSerial).padStart(4, '0')}`;
-        res.json({ nextPropertyNumber });
-
-    } catch (error) {
-        res.status(500).json({ message: 'Server error while generating next property number.', error: error.message });
     }
-};
+
+    const nextPropertyNumber = `${prefix}${String(nextSerial).padStart(4, '0')}`;
+    res.json({ nextPropertyNumber });
+});
 
 // NEW: Controller for server-side CSV generation
-const exportAssetsToCsv = async (req, res) => {
-    try {
-        const { sort = 'propertyNumber', order = 'asc', search, category, status, office, fundSource, startDate, endDate } = req.query;
+const exportAssetsToCsv = asyncHandler(async (req, res) => {
+    const { sort = 'propertyNumber', order = 'asc' } = req.query;
 
-        // Build the filter query (same logic as getAssets)
-        const query = {};
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
-            query.$or = [
-                { propertyNumber: searchRegex },
-                { description: searchRegex },
-                { 'custodian.name': searchRegex }
-            ];
-        }
-        if (category) query.category = category;
-        if (status) query.status = status;
-        if (office) query.office = office;
-        if (fundSource) query.fundSource = fundSource;
-        if (startDate || endDate) {
-            query.acquisitionDate = {};
-            if (startDate) query.acquisitionDate.$gte = new Date(startDate);
-            if (endDate) {
-                query.acquisitionDate.$lte = new Date(endDate);
-            }
-        }
+    // Build the filter query using the helper
+    const query = buildAssetQuery(req.query);
 
-        const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
 
-        // Fetch all matching documents without pagination
-        const assets = await Asset.find(query).sort(sortOptions).lean();
+    // Fetch all matching documents without pagination
+    const assets = await Asset.find(query).sort(sortOptions).lean();
 
-        // Generate CSV
-        const headers = ['Property Number', 'Description', 'Category', 'Custodian', 'Office', 'Status', 'Acquisition Date', 'Acquisition Cost'];
-        const csvRows = [headers.join(',')];
+    // Generate CSV
+    const headers = ['Property Number', 'Description', 'Category', 'Custodian', 'Office', 'Status', 'Acquisition Date', 'Acquisition Cost'];
+    const csvRows = [headers.join(',')];
 
-        for (const asset of assets) {
-            const values = [asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.category, asset.custodian.name, asset.custodian.office, asset.status, asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A', asset.acquisitionCost];
-            csvRows.push(values.join(','));
-        }
-
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename="assets.csv"');
-        res.status(200).send(csvRows.join('\n'));
-    } catch (error) {
-        console.error('Error exporting assets:', error);
-        res.status(500).json({ message: 'Failed to export data' });
+    for (const asset of assets) {
+        const values = [asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.category, asset.custodian.name, asset.custodian.office, asset.status, asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A', asset.acquisitionCost];
+        csvRows.push(values.join(','));
     }
-};
 
-const updatePhysicalCount = async (req, res) => {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="assets.csv"');
+    res.status(200).send(csvRows.join('\n'));
+});
+
+const updatePhysicalCount = asyncHandler(async (req, res) => {
     const { updates } = req.body; // Expecting an object with updates array
 
     if (!Array.isArray(updates)) {
         return res.status(400).json({ message: 'Invalid data format. Expected an array of updates.' });
     }
 
-    try {
-        const updatePromises = updates.map(async (update) => {
-            const asset = await Asset.findById(update.id);
-            if (!asset) {
-                console.warn(`Asset with ID ${update.id} not found during physical count. Skipping.`);
-                return; // or handle as an error
-            }
+    const updatePromises = updates.map(async (update) => {
+        const asset = await Asset.findById(update.id);
+        if (!asset) {
+            console.warn(`Asset with ID ${update.id} not found during physical count. Skipping.`);
+            return; // or handle as an error
+        }
 
-            const oldCondition = asset.condition;
-            const oldRemarks = asset.remarks;
-            const oldStatus = asset.status;
+        const oldCondition = asset.condition;
+        const oldRemarks = asset.remarks;
+        const oldStatus = asset.status;
 
-            let details = [];
-            if (oldStatus !== update.status) {
-                details.push(`Status changed from "${oldStatus || 'N/A'}" to "${update.status}".`);
-            }
-            if (oldCondition !== update.condition) {
-                details.push(`Condition changed from "${oldCondition || 'N/A'}" to "${update.condition}".`);
-            }
-            if (oldRemarks !== update.remarks && update.remarks) {
-                details.push(`Remarks updated: "${update.remarks}".`);
-            }
+        let details = [];
+        if (oldStatus !== update.status) {
+            details.push(`Status changed from "${oldStatus || 'N/A'}" to "${update.status}".`);
+        }
+        if (oldCondition !== update.condition) {
+            details.push(`Condition changed from "${oldCondition || 'N/A'}" to "${update.condition}".`);
+        }
+        if (oldRemarks !== update.remarks && update.remarks) {
+            details.push(`Remarks updated: "${update.remarks}".`);
+        }
 
-            // Apply the updates to the asset document first
-            asset.status = update.status;
-            asset.condition = update.condition;
-            asset.remarks = update.remarks;
+        // Apply the updates to the asset document first
+        asset.status = update.status;
+        asset.condition = update.condition;
+        asset.remarks = update.remarks;
 
-            // If status is set to Missing, clear any active slip assignments but keep the custodian for accountability.
-            if (update.status === 'Missing' && oldStatus !== 'Missing') {
-                asset.assignedPAR = null;
-                asset.assignedICS = null;
-                details.push('Slip assignment cleared due to Missing status. Custodian retained for accountability.');
-            }
+        // If status is set to Missing, clear any active slip assignments but keep the custodian for accountability.
+        if (update.status === 'Missing' && oldStatus !== 'Missing') {
+            asset.assignedPAR = null;
+            asset.assignedICS = null;
+            details.push('Slip assignment cleared due to Missing status. Custodian retained for accountability.');
+        }
 
-            // Only add to history if there were any changes.
-            if (details.length > 0) {
-                asset.history.push({
-                    event: 'Physical Count',
-                    details: details.join(' '),
-                    user: req.user.name, // Use authenticated user
-                });
-            }
-            return asset.save();
-        });
+        // Only add to history if there were any changes.
+        if (details.length > 0) {
+            asset.history.push({
+                event: 'Physical Count',
+                details: details.join(' '),
+                user: req.user.name, // Use authenticated user
+            });
+        }
+        return asset.save();
+    });
 
-        await Promise.all(updatePromises);
-        res.json({ message: 'Physical count updated successfully.' });
-    } catch (error) {
-        console.error("Error during physical count update:", error);
-        res.status(500).json({ message: 'Server error during physical count update.', error: error.message });
-    }
-};
+    await Promise.all(updatePromises);
+    res.json({ message: 'Physical count updated successfully.' });
+});
 
-const createPtrAndTransferAssets = async (req, res) => {
+const createPtrAndTransferAssets = asyncHandler(async (req, res) => {
     const { assetIds, newOffice, newCustodian, transferDate } = req.body;
 
     if (!assetIds || !Array.isArray(assetIds) || assetIds.length === 0) {
@@ -604,8 +527,6 @@ const createPtrAndTransferAssets = async (req, res) => {
 
     const session = await mongoose.startSession();
 
-    try {
-        console.log("Starting bulk transfer transaction...");
         session.startTransaction();
 
         // Step 1: Fetch assets and validate the transfer request
@@ -613,7 +534,6 @@ const createPtrAndTransferAssets = async (req, res) => {
         if (assetsToTransfer.length !== assetIds.length) {
             throw new Error('One or more assets not found.');
         }
-        console.log(`Found ${assetsToTransfer.length} assets to transfer.`);
 
         // All assets must have the same "from" custodian for a single PTR
         const fromCustodian = assetsToTransfer[0].custodian;
@@ -652,7 +572,6 @@ const createPtrAndTransferAssets = async (req, res) => {
             return `PTR-${year}-${String(sequence).padStart(4, '0')}`;
         }
 
-        console.log("Updating assets...");
         // Step 2: Update all assets in a single operation
         const historyEntry = {
             event: 'Transfer',
@@ -673,12 +592,9 @@ const createPtrAndTransferAssets = async (req, res) => {
         if (assetUpdateResult.modifiedCount !== assetIds.length) {
             throw new Error(`Failed to update all assets. Expected ${assetIds.length} updates, but got ${assetUpdateResult.modifiedCount}.`);
         }
-        console.log(`Successfully updated ${assetUpdateResult.modifiedCount} assets.`);
 
         // Step 3: Create and save the PTR document
         const ptrNumber = await getNextPtrNumber(session);
-        console.log(`Generated new PTR number: ${ptrNumber}`);
-
         const newPTR = new PTR({
             ptrNumber: ptrNumber,
             from: transferDetails.from,
@@ -691,43 +607,26 @@ const createPtrAndTransferAssets = async (req, res) => {
         assetsToTransfer.forEach(asset => {
             newPTR.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
         });
-        console.log(`Creating PTR with ${newPTR.assets.length} assets.`);
         const savedPTR = await newPTR.save({ session });
-        console.log(`Successfully saved PTR with ID: ${savedPTR._id}`);
 
         // Step 4: If all operations were successful, commit the transaction
         await session.commitTransaction();
-        console.log("Transaction committed successfully.");
         
         res.status(200).json({ message: 'Assets transferred successfully.', transferDetails: { ...transferDetails, assets: newPTR.assets, ptrNumber: savedPTR.ptrNumber } });
-    } catch (error) {
-        console.log("An error occurred. Aborting transaction.");
-        await session.abortTransaction();
-        console.error('Bulk transfer error:', error);
-        res.status(500).json({ message: 'Server error during bulk transfer.', error: error.message });
-    } finally {
-        console.log("Transaction session ended.");
-        session.endSession();
+});
+
+const getMyOfficeAssets = asyncHandler(async (req, res) => {
+    // The user's office is attached to the request by the 'protect' middleware
+    if (!req.user || !req.user.office) {
+        return res.status(400).json({ message: 'User office information not found.' });
     }
-};
 
-const getMyOfficeAssets = async (req, res) => {
-    try {
-        // The user's office is attached to the request by the 'protect' middleware
-        if (!req.user || !req.user.office) {
-            return res.status(400).json({ message: 'User office information not found.' });
-        }
+    const assets = await Asset.find({ 'custodian.office': req.user.office })
+        .sort({ propertyNumber: 1 })
+        .lean();
 
-        const assets = await Asset.find({ 'custodian.office': req.user.office })
-            .sort({ propertyNumber: 1 })
-            .lean();
-
-        res.json(assets);
-    } catch (error) {
-        console.error('Error in getMyOfficeAssets:', error);
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
-};
+    res.json(assets);
+});
 
 /**
  * @desc    Add a repair record to a movable asset
@@ -844,7 +743,7 @@ const generateMovableLedgerCard = asyncHandler(async (req, res) => {
  * @route   POST /api/assets/import
  * @access  Private (Requires 'asset:create' permission)
  */
-const importAssetsFromCsv = asyncHandler(async (req, res) => {
+const importAssetsFromCsv = (req, res) => {
     if (!req.file) {
         res.status(400);
         throw new Error('No CSV file uploaded.');
@@ -923,7 +822,7 @@ const importAssetsFromCsv = asyncHandler(async (req, res) => {
                 });
             }
         });
-});
+};
 
 /**
  * @desc    Provides a downloadable CSV template for asset import.
