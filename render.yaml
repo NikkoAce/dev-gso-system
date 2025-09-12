@@ -12,11 +12,6 @@ services:
     plan: free # Or 'starter' for more resources.
     autoDeploy: true # Automatically deploy when you push to your main branch.
     
-    # Health check to ensure your service is running before it goes live.
-    # Your server.js already has this route.
-    healthCheck:
-      path: /api/healthcheck
-
     # Environment variables for your application.
     # Secrets marked with 'sync: false' must be set in the Render dashboard.
     envVars:
