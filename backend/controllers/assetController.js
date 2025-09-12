@@ -11,7 +11,7 @@ const { Readable } = require('stream');
 // Helper function to build the filter query for assets
 const buildAssetQuery = (queryParams) => {
     const {
-        search, category, status, office, assignment, fundSource, startDate, endDate, ids
+        search, category, status, office, assignment, fundSource, startDate, endDate, ids, condition
     } = queryParams;
 
     const query = {};
@@ -34,6 +34,14 @@ const buildAssetQuery = (queryParams) => {
     if (status) query.status = status;
     if (office) query.office = office;
     if (fundSource) query.fundSource = fundSource;
+    if (condition) {
+        if (condition === 'Not Set') {
+            // Find documents where 'condition' is null, undefined, or an empty string.
+            query.condition = { $in: [null, ''] };
+        } else {
+            query.condition = condition;
+        }
+    }
 
     if (assignment) {
         if (assignment === 'unassigned') {
