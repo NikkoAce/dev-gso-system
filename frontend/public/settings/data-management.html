@@ -27,18 +27,30 @@
 
                     <div class="card bg-base-100 border">
                         <div class="card-body">
-                            <h2 class="card-title">Data Migration Scripts</h2>
-                            <p class="text-sm text-base-content/70">Run one-time scripts to update and standardize data across the system. This action is irreversible. Please back up your database before proceeding.</p>
+                            <h2 class="card-title">System Maintenance</h2>
+                            <p class="text-sm text-base-content/70">Perform administrative tasks like data migration and database backups. These actions can be resource-intensive and may be irreversible.</p>
                             
                             <div class="divider"></div>
 
-                            <div class="flex flex-col md:flex-row justify-between items-center p-4 border rounded-lg">
+                            <!-- Data Migration -->
+                            <div id="migration-container" class="hidden flex-col md:flex-row justify-between items-center p-4 border rounded-lg">
                                 <div>
                                     <h3 class="font-semibold">Standardize Asset Conditions</h3>
                                     <p class="text-sm text-base-content/70">Updates old condition values (e.g., "Good", "Fair") to the new standardized format (e.g., "Good Condition (G)").</p>
                                 </div>
-                                <button id="migrate-conditions-btn" class="btn btn-warning mt-4 md:mt-0">
+                                <button id="migrate-conditions-btn" class="btn btn-warning mt-4 md:mt-0 w-full md:w-auto">
                                     <i data-lucide="database"></i> Run Migration
+                                </button>
+                            </div>
+
+                            <!-- Database Backup -->
+                            <div id="backup-container" class="hidden flex-col md:flex-row justify-between items-center p-4 border rounded-lg mt-4">
+                                <div>
+                                    <h3 class="font-semibold">Database Backup</h3>
+                                    <p class="text-sm text-base-content/70">Generates a complete, compressed backup of the entire database. The download may take several minutes depending on database size.</p>
+                                </div>
+                                <button id="export-db-btn" class="btn btn-accent mt-4 md:mt-0 w-full md:w-auto">
+                                    <i data-lucide="download-cloud"></i> Download Backup
                                 </button>
                             </div>
 

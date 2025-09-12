@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Asset = require('../models/Asset');
 const ImmovableAsset = require('../models/immovableAsset');
+const { spawn } = require('child_process');
 
 /**
  * @desc    Migrate old asset condition values to the new standardized format.
@@ -65,4 +66,46 @@ const migrateAssetConditions = asyncHandler(async (req, res) => {
     });
 });
 
-module.exports = { migrateAssetConditions };
+/**
+ * @desc    Export the entire database to a compressed archive
+ * @route   POST /api/admin/export-database
+ * @access  Private/Admin
+ */
+const exportDatabase = asyncHandler(async (req, res) => {
+    const mongoUri = process.env.MONGO_URI;
+    if (!mongoUri) {
+        res.status(500);
+        throw new Error('Database connection string (MONGO_URI) is not configured.');
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `gso-backup-${today}.gz`;
+
+    res.setHeader('Content-Type', 'application/gzip');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+
+    const mongodump = spawn('mongodump', [
+        `--uri=${mongoUri}`,
+        '--archive',
+        '--gzip'
+    ]);
+
+    // Pipe the standard output of mongodump directly to the response stream
+    mongodump.stdout.pipe(res);
+
+    // Handle errors
+    let errorOutput = '';
+    mongodump.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+        console.error(`mongodump stderr: ${data}`);
+    });
+
+    // Handle process exit
+    mongodump.on('close', (code) => {
+        if (code !== 0) {
+            console.error(`mongodump process exited with code ${code}`);
+        }
+    });
+});
+
+module.exports = { migrateAssetConditions, exportDatabase };

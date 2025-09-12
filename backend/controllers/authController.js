@@ -63,67 +63,60 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
         throw new Error(errorMessage);
     }
 
-    // Step 2: Determine the user's GSO role and permissions based on portal data.
-    // This makes the logic consistent for both new and existing users.
-    let targetGsoRoleName;
-    // The logic is now simplified to prevent automatic admin assignment.
-    // New users are either 'Department Head' or 'Employee'.
-    // Admin roles must be granted manually within the GSO system for security.
-    if (lguUser.role === 'Department Head') {
-        targetGsoRoleName = 'Department Head';
-    } else {
-        targetGsoRoleName = 'Employee';
-    }
-
-    // --- Ensure Role Exists and Get Permissions ---
-    // This makes the system resilient by creating default non-admin roles if they don't exist.
-    const defaultEmployeePermissions = [
-        PERMISSIONS.ASSET_READ_OWN_OFFICE,
-        PERMISSIONS.REQUISITION_CREATE,
-        PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
-    ];
-
-    // Find the role, or create it if it doesn't exist (upsert).
-    const roleData = await Role.findOneAndUpdate(
-        { name: targetGsoRoleName },
-        { $setOnInsert: { 
-            name: targetGsoRoleName, 
-            // GSO Admins should have permissions set manually. For others, provide safe defaults.
-            permissions: targetGsoRoleName === 'GSO Admin' ? [] : defaultEmployeePermissions 
-        } },
-        { new: true, upsert: true, lean: true }
-    );
-
-    if (!roleData) {
-        // This should theoretically never happen with upsert: true, but it's a good safeguard.
-        console.error(`CRITICAL: Failed to find or create the role "${targetGsoRoleName}".`);
-        res.status(500);
-        throw new Error('User role configuration error. Please contact the administrator.');
-    }
-    const targetPermissions = roleData.permissions;
-
-    // Step 3: Find or Create the user in the GSO system.
+    // Step 2: Find or Create the user in the GSO system.
     let gsoUserRecord = await User.findOne({ externalId: lguUser._id });
 
     if (gsoUserRecord) {
         // --- USER EXISTS ---
-        // Only update basic details to keep them in sync with the portal. Do NOT overwrite the role and permissions, as they are managed within the GSO system.
+        // Sync basic details from the portal.
         gsoUserRecord.name = lguUser.name;
         gsoUserRecord.office = lguUser.office;
+
+        // IMPORTANT FIX: Re-sync permissions from the user's assigned role.
+        // This ensures that any changes made in Role Management are applied on the next login.
+        const userRole = await Role.findOne({ name: gsoUserRecord.role });
+        if (userRole) {
+            // If the user's role is "GSO Admin", grant them ALL available permissions.
+            if (userRole.name === 'GSO Admin') {
+                gsoUserRecord.permissions = Object.values(PERMISSIONS);
+            } else {
+                // For other roles, use the permissions defined in the database for that role.
+                gsoUserRecord.permissions = userRole.permissions;
+            }
+        }
+
         await gsoUserRecord.save();
     } else {
         // --- NEW USER ---
-        // Create a new user record with the determined role and permissions.
+        // Determine the role for a new user based on their portal role.
+        let targetGsoRoleName = (lguUser.role === 'Department Head') ? 'Department Head' : 'Employee';
+        
+        // Find the role, or create it if it doesn't exist (upsert).
+        const roleData = await Role.findOneAndUpdate(
+            { name: targetGsoRoleName },
+            { $setOnInsert: { 
+                name: targetGsoRoleName, 
+                permissions: [
+                    PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                    PERMISSIONS.REQUISITION_CREATE,
+                    PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+                ]
+            } },
+            { new: true, upsert: true, lean: true }
+        );
+
+        // Create the new user with the role's permissions.
         gsoUserRecord = await User.create({
             externalId: lguUser._id,
             name: lguUser.name,
             office: lguUser.office,
-            role: targetGsoRoleName,
-            permissions: targetPermissions,
+            role: roleData.name,
+            permissions: roleData.permissions,
         });
     }
 
-    // Step 4: Generate and send back the GSO-specific token
+    // Step 3: Generate and send back the GSO-specific token
+    // The gsoUserRecord now has the most up-to-date permissions.
     const gsoToken = generateGsoToken(gsoUserRecord);
     res.status(200).json({ token: gsoToken });
 });

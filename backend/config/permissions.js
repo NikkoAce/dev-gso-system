@@ -31,7 +31,9 @@ const PERMISSIONS = Object.freeze({
     SETTINGS_MANAGE: 'settings:manage',
     USER_READ: 'user:read',
     USER_MANAGE: 'user:manage',
+    ADMIN_DATA_READ: 'admin:data:read',
     ADMIN_DATA_MIGRATE: 'admin:data:migrate',
+    ADMIN_DATABASE_EXPORT: 'admin:database:export',
 });
 
 module.exports = PERMISSIONS;
