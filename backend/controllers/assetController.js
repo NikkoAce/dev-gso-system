@@ -308,6 +308,8 @@ const updateAsset = async (req, res) => {
       return res.status(404).json({ message: 'Asset not found' });
     }
 
+    const oldStatus = asset.status; // Capture old status before updates
+
     // Generate detailed history entries
     const historyEntries = generateMovableAssetUpdateHistory(asset.toObject(), updateData, user);
     if (historyEntries.length > 0) {
@@ -328,6 +330,19 @@ const updateAsset = async (req, res) => {
 
     // Apply updates
     asset.set(updateData);
+
+    // If status is set to Missing, clear any active slip assignments but keep the custodian for accountability.
+    if (updateData.status === 'Missing' && oldStatus !== 'Missing') {
+        asset.assignedPAR = null;
+        asset.assignedICS = null;
+        // Add a specific history entry for this action
+        asset.history.push({
+            event: 'Updated',
+            details: 'Active slip assignment (PAR/ICS) cleared due to asset being marked as Missing. Last custodian remains for accountability.',
+            user: user.name
+        });
+    }
+
 
     const updatedAsset = await asset.save({ runValidators: true });
     res.json(updatedAsset);
@@ -543,7 +558,19 @@ const updatePhysicalCount = async (req, res) => {
                 details.push(`Remarks updated: "${update.remarks}".`);
             }
 
-            // Only add to history if condition or remarks have changed.
+            // Apply the updates to the asset document first
+            asset.status = update.status;
+            asset.condition = update.condition;
+            asset.remarks = update.remarks;
+
+            // If status is set to Missing, clear any active slip assignments but keep the custodian for accountability.
+            if (update.status === 'Missing' && oldStatus !== 'Missing') {
+                asset.assignedPAR = null;
+                asset.assignedICS = null;
+                details.push('Slip assignment cleared due to Missing status. Custodian retained for accountability.');
+            }
+
+            // Only add to history if there were any changes.
             if (details.length > 0) {
                 asset.history.push({
                     event: 'Physical Count',
@@ -551,9 +578,6 @@ const updatePhysicalCount = async (req, res) => {
                     user: req.user.name, // Use authenticated user
                 });
             }
-            asset.status = update.status;
-            asset.condition = update.condition;
-            asset.remarks = update.remarks;
             return asset.save();
         });
 
