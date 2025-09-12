@@ -281,6 +281,9 @@ const updateAsset = async (req, res) => {
             }
         }
     }
+    
+
+    // Manually parse numeric fields that might come in as strings from FormData
     const numericFields = ['acquisitionCost', 'usefulLife', 'salvageValue', 'impairmentLosses'];
     for (const field of numericFields) {
         if (updateData[field] !== undefined && updateData[field] !== null) {
