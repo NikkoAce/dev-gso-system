@@ -32,7 +32,11 @@ const buildAssetQuery = (queryParams) => {
 
     if (category) query.category = category;
     if (status) query.status = status;
-    if (office) query.office = office;
+    if (office) {
+        // This is the fix. The 'office' filter from the UI should search
+        // against the custodian's office, not the asset's fund office.
+        query['custodian.office'] = office;
+    }
     if (fundSource) query.fundSource = fundSource;
     if (condition) {
         if (condition === 'Not Set') {
