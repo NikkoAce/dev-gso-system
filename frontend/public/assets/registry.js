@@ -531,7 +531,7 @@ function initializeRegistryPage(user) {
 
         setupEventListeners() {
             // Standard input/select filters that trigger on 'input'
-            const standardFilters = [DOM.searchInput, DOM.categoryFilter, DOM.statusFilter, DOM.officeFilter, DOM.fundSourceFilter, DOM.assignmentFilter];
+            const standardFilters = [DOM.searchInput, DOM.categoryFilter, DOM.statusFilter, DOM.conditionFilter, DOM.officeFilter, DOM.fundSourceFilter, DOM.assignmentFilter];
             standardFilters.forEach(el => el?.addEventListener('input', () => this.handleFilterChange()));
 
             // The standard 'change' event is more reliable for date pickers that
