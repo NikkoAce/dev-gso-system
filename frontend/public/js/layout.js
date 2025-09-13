@@ -113,21 +113,22 @@ function getSidebarHTML(user) {
 
   return `
     <!-- Header -->
-    <div class="p-4 border-b border-base-300 flex flex-col items-center gap-1">
-      <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20 mb-1">
-      <div class="text-center">
+    <div class="p-4 border-b border-base-300 flex flex-col items-center justify-center gap-1 min-h-[140px]">
+      <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20 mb-1 sidebar-expanded-logo">
+      <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-10 w-10 hidden sidebar-collapsed-logo">
+      <div class="text-center sidebar-expanded-logo">
         <h1 class="text-lg font-bold leading-tight">LGU DAET</h1>
         <p class="text-xs text-gray-500">GSO Management System</p>
       </div>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-grow overflow-y-auto">
+    <nav class="flex-grow overflow-y-auto" id="sidebar-nav">
       <ul class="menu menu-lg p-4">${navLinks}</ul>
     </nav>
 
     <!-- Footer / User Info -->
-    <div class="p-4 border-t border-base-300 space-y-4">
+    <div class="p-4 mt-auto border-t border-base-300 space-y-4">
       <div class="flex items-center gap-3">
         <div class="avatar placeholder">
           <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
@@ -140,18 +141,19 @@ function getSidebarHTML(user) {
           ${logoutButton}
         </div>
       </div>
-      <!-- NEW: Theme Switcher -->
       <div class="form-control">
         <label for="theme-switcher" class="label py-0"><span class="label-text text-xs">Theme</span></label>
         <select id="theme-switcher" class="select select-bordered select-xs font-normal">
           <!-- Options will be populated by JS -->
         </select>
       </div>
-      <!-- NEW: Sidebar Collapse Button -->
-      <button id="sidebar-toggle-btn" class="btn btn-ghost btn-sm w-full justify-start mt-2 hidden md:flex">
-          <i data-lucide="chevrons-left"></i>
-          <span class="sidebar-text ml-4">Collapse</span>
-      </button>
+    </div>
+    <!-- Collapse Button Area -->
+    <div class="p-2 border-t border-base-300 hidden md:block">
+        <button id="sidebar-toggle-btn" class="btn btn-ghost btn-sm w-full justify-start text-base-content/70 hover:bg-base-300 hover:text-base-content">
+            <i data-lucide="chevrons-left"></i>
+            <span class="sidebar-text ml-4">Collapse</span>
+        </button>
     </div>
   `;
 }

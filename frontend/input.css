@@ -8,14 +8,20 @@
         @apply w-20 transition-all duration-300;
     }
 
+    /* NEW: Hide expanded logo/text, show collapsed logo */
+    .sidebar-collapsed .sidebar-expanded-logo {
+        @apply hidden;
+    }
+    .sidebar-collapsed .sidebar-collapsed-logo {
+        @apply block;
+    }
+
     /* Hide text elements, show only icons */
     .sidebar-collapsed .nav-text,
     .sidebar-collapsed #user-name,
     .sidebar-collapsed #user-office,
     .sidebar-collapsed #logout-button,
     .sidebar-collapsed .sidebar-text,
-    .sidebar-collapsed #sidebar-container .text-center > h1,
-    .sidebar-collapsed #sidebar-container .text-center > p,
     .sidebar-collapsed #sidebar-container .form-control {
         @apply hidden;
     }
