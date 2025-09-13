@@ -5,7 +5,7 @@
 @layer components {
     /* Styles for when the sidebar is collapsed on desktop */
     .sidebar-collapsed #sidebar-container {
-        @apply w-20 transition-all duration-300;
+        @apply w-20 overflow-x-hidden transition-all duration-300;
     }
 
     /* NEW: Hide expanded logo/text, show collapsed logo */
@@ -42,11 +42,17 @@
         @apply hidden;
     }
 
-    /* Prevent details from opening via click and hide the submenu */
-    .sidebar-collapsed #sidebar-container .menu details {
-        pointer-events: none; /* Disable click on the whole details element */
+    /* Reduce padding on the main menu UL to prevent overflow */
+    .sidebar-collapsed #sidebar-nav > .menu {
+        @apply p-2;
     }
-    .sidebar-collapsed #sidebar-container .menu details > * {
-        pointer-events: auto; /* Re-enable pointer events on the summary so tooltips (if any) can work */
+
+    /* Prevent details summary from being clickable */
+    .sidebar-collapsed #sidebar-container .menu details > summary {
+        pointer-events: none;
+    }
+    /* Explicitly hide the submenu UL */
+    .sidebar-collapsed #sidebar-container .menu details > ul {
+        @apply hidden;
     }
 }

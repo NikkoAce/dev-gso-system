@@ -232,6 +232,15 @@ function initializeLayout(user, logoutFunction) {
     if (sidebarToggleBtn) {
         const applySidebarState = (isCollapsed) => {
             body.classList.toggle('sidebar-collapsed', isCollapsed);
+
+            // When collapsing, close any open submenus
+            if (isCollapsed) {
+                const allDetails = sidebarContainer.querySelectorAll('.menu details[open]');
+                allDetails.forEach(details => {
+                    details.removeAttribute('open');
+                });
+            }
+
             const icon = sidebarToggleBtn.querySelector('i');
             const text = sidebarToggleBtn.querySelector('.sidebar-text');
             if (isCollapsed) {
