@@ -26,7 +26,7 @@
 
     /* --- NEW: Add base styles for smooth text transitions --- */
     .nav-text, #user-name, #user-office, #logout-button, #sidebar-container .form-control {
-        @apply transition-all duration-200 ease-in-out whitespace-nowrap overflow-hidden;
+        @apply transition-all duration-200 ease-in-out overflow-hidden;
     }
 
     /* --- MODIFIED: Hide text elements by animating them away --- */
@@ -35,7 +35,8 @@
     .sidebar-collapsed #user-office,
     .sidebar-collapsed #logout-button,
     .sidebar-collapsed #sidebar-container .form-control {
-        @apply opacity-0 w-0 pointer-events-none;
+        /* Add whitespace-nowrap here to keep the collapse animation smooth */
+        @apply opacity-0 w-0 pointer-events-none whitespace-nowrap;
     }
 
     /* Center the icons and user avatar */
