@@ -33,8 +33,8 @@
         @apply justify-center;
     }
     
-    .sidebar-collapsed #sidebar-container .flex.items-center.gap-3 {
-        @apply justify-center;
+    .sidebar-collapsed #sidebar-container #sidebar-user-info {
+        @apply justify-center; /* Use the ID to prevent circular dependency */
     }
 
     /* Hide the dropdown arrow for details/summary */
@@ -65,7 +65,7 @@
 
     /* When collapsed, style the submenu as a fly-out panel. It's shown when its parent <details> has the `open` attribute (handled by JS). */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply absolute left-16 top-0 z-20 w-52 rounded-box bg-base-200 p-2 shadow-lg;
+        @apply absolute left-full top-0 z-20 w-52 rounded-box bg-base-200 py-2 shadow-lg;
         /* Add transition for fade effect and remove the gap */
         @apply opacity-0 invisible transition-all duration-200;
     }
@@ -73,5 +73,20 @@
     /* Make the fly-out visible when the details element is open */
     .sidebar-collapsed #sidebar-container .menu details[open] > ul {
         @apply opacity-100 visible;
+    }
+
+    /* --- NEW: Style links inside the fly-out menu to give them padding and a hover effect --- */
+    .sidebar-collapsed #sidebar-container .menu details > ul a {
+        @apply w-full px-4 py-2 rounded-md text-sm flex items-center; /* Remove 'block' to prevent circular dependency */
+    }
+    .sidebar-collapsed #sidebar-container .menu details > ul a:hover {
+        @apply bg-base-300;
+    }
+
+    /* --- NEW: Tooltip visibility logic --- */
+    /* By default (expanded sidebar), hide the tooltips completely to prevent them from showing on hover. */
+    body:not(.sidebar-collapsed) #sidebar-container .tooltip:before,
+    body:not(.sidebar-collapsed) #sidebar-container .tooltip:after {
+        @apply hidden;
     }
 }
