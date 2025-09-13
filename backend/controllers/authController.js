@@ -98,6 +98,7 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
                 name: targetGsoRoleName, 
                 permissions: [
                     PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                    PERMISSIONS.STOCK_READ, // Allow users to see stock items for requisitions
                     PERMISSIONS.REQUISITION_CREATE,
                     PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
                 ]
