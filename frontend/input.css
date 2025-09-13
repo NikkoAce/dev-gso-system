@@ -59,8 +59,8 @@
 
     /* Style the submenu as a fly-out panel, hidden by default */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply absolute left-full top-0 z-20 ml-2 hidden w-52;
-        @apply menu bg-base-200 rounded-box p-2 shadow-lg;
+        @apply absolute left-full top-0 z-20 ml-2 hidden w-52 rounded-box bg-base-200 p-2 shadow-lg;
+        /* Do not @apply 'menu' here as it creates a circular dependency. */
     }
 
     /* Show the fly-out on hover of the parent <li> */
