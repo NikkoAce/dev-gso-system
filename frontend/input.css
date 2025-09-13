@@ -44,7 +44,7 @@
 
     /* Reduce padding on the main menu UL to prevent overflow */
     .sidebar-collapsed #sidebar-nav > .menu {
-        @apply p-2;
+        @apply py-2 px-0;
     }
 
     /* NEW: Allow fly-out menus to overflow the nav container when collapsed */
