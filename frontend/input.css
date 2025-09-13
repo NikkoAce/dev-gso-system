@@ -5,7 +5,7 @@
 @layer components {
     /* Styles for when the sidebar is collapsed on desktop */
     .sidebar-collapsed #sidebar-container {
-        @apply w-20 overflow-x-hidden transition-all duration-300;
+        @apply w-20 transition-all duration-300;
     }
 
     /* NEW: Hide expanded logo/text, show collapsed logo */
