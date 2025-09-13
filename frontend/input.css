@@ -103,6 +103,23 @@
         @apply flex items-center;
     }
 
+    /* --- NEW: Sidebar item ordering for collapsed state --- */
+    /* When collapsed, re-order the flex items in the sidebar to move the toggle button to the top */
+    .sidebar-collapsed #sidebar-container #sidebar-header { @apply order-1; }
+    .sidebar-collapsed #sidebar-container #sidebar-toggle-container { @apply order-2; }
+    .sidebar-collapsed #sidebar-container #sidebar-nav { @apply order-3; }
+    .sidebar-collapsed #sidebar-container #sidebar-footer { @apply order-4; }
+
+    /* Adjust styles for the toggle button when it moves to the top */
+    .sidebar-collapsed #sidebar-toggle-container {
+        @apply border-t-0 border-b;
+    }
+
+    /* Remove the margin-top from the footer when collapsed, as it's no longer at the bottom */
+    .sidebar-collapsed #sidebar-footer {
+        @apply mt-0;
+    }
+
     /* --- NEW: Tooltip visibility logic --- */
     /* By default (expanded sidebar), hide the tooltips completely to prevent them from showing on hover. */
     body:not(.sidebar-collapsed) #sidebar-container .tooltip:before,

@@ -149,8 +149,8 @@ function getSidebarHTML(user) {
       </div>
     </div>
     <!-- Collapse Button Area -->
-    <div class="p-2 border-t border-base-300 hidden md:block">
-        <button id="sidebar-toggle-btn" class="btn btn-ghost btn-sm w-full justify-start text-base-content/70 hover:bg-base-300 hover:text-base-content">
+    <div id="sidebar-toggle-container" class="p-2 border-t border-base-300 hidden md:block">
+        <button id="sidebar-toggle-btn" class="btn btn-ghost btn-sm w-full justify-start text-base-content/70 hover:bg-base-300 hover:text-base-content" title="Collapse/Expand Sidebar">
             <i data-lucide="chevrons-left"></i>
             <span class="sidebar-text ml-4">Collapse</span>
         </button>
