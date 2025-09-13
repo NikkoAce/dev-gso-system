@@ -113,13 +113,17 @@ function getSidebarHTML(user) {
 
   return `
     <!-- Header -->
-    <div class="p-4 border-b border-base-300 flex flex-col items-center justify-center gap-1 min-h-[140px]">
+    <div id="sidebar-header" class="relative p-4 border-b border-base-300 flex flex-col items-center justify-center gap-1 min-h-[140px]">
       <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20 mb-1 sidebar-expanded-logo">
       <img src="../LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-10 w-10 hidden sidebar-collapsed-logo">
       <div class="text-center sidebar-expanded-logo">
         <h1 class="text-lg font-bold leading-tight">LGU DAET</h1>
         <p class="text-xs text-gray-500">GSO Management System</p>
       </div>
+      <!-- NEW: Moved and restyled toggle button -->
+      <button id="sidebar-toggle-btn" class="btn btn-circle btn-sm absolute top-4 -right-4 bg-base-100 border border-base-300 hover:bg-base-200 hidden md:flex z-10" title="Collapse/Expand Sidebar">
+            <i data-lucide="chevrons-left"></i>
+      </button>
     </div>
 
     <!-- Navigation -->
@@ -236,13 +240,10 @@ function initializeLayout(user, logoutFunction) {
             }
 
             const icon = sidebarToggleBtn.querySelector('i');
-            const text = sidebarToggleBtn.querySelector('.sidebar-text');
             if (isCollapsed) {
                 icon.setAttribute('data-lucide', 'chevrons-right');
-                if (text) text.textContent = 'Expand';
             } else {
                 icon.setAttribute('data-lucide', 'chevrons-left');
-                if (text) text.textContent = 'Collapse';
             }
             lucide.createIcons(); // Re-render icons after changing attribute
         };

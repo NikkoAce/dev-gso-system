@@ -27,7 +27,8 @@
 
     /* Center the icons and user avatar */
     .sidebar-collapsed #sidebar-container .menu li > a,
-    .sidebar-collapsed #sidebar-container .menu li > details > summary {
+    .sidebar-collapsed #sidebar-container .menu li > details > summary,
+    .sidebar-collapsed #sidebar-container #sidebar-toggle-btn {
         @apply justify-center;
     }
     
