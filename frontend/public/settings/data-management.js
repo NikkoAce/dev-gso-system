@@ -29,6 +29,10 @@ function initializePage(user) {
     const resultsPre = document.getElementById('results-pre');
     const exportDbBtn = document.getElementById('export-db-btn');
     const backupContainer = document.getElementById('backup-container');
+    const healthCheckContainer = document.getElementById('health-check-container');
+    const runHealthCheckBtn = document.getElementById('run-health-check-btn');
+    const healthCheckResultsContainer = document.getElementById('health-check-results-container');
+    const healthCheckResultsContent = document.getElementById('health-check-results-content');
 
     // --- Permission-based UI visibility ---
     if (userPermissions.includes('admin:data:migrate') && migrationContainer) {
@@ -38,6 +42,10 @@ function initializePage(user) {
     if (userPermissions.includes('admin:database:export') && backupContainer) {
         backupContainer.classList.remove('hidden');
         backupContainer.classList.add('flex');
+    }
+    if (userPermissions.includes('admin:data:read') && healthCheckContainer) {
+        healthCheckContainer.classList.remove('hidden');
+        healthCheckContainer.classList.add('flex');
     }
 
     // --- Event Listeners ---
@@ -117,4 +125,97 @@ function initializePage(user) {
             );
         });
     }
+
+    if (runHealthCheckBtn) {
+        runHealthCheckBtn.addEventListener('click', () => {
+            showConfirmationModal(
+                'Confirm Data Health Check',
+                'This will scan the database for inconsistencies. This is a read-only operation and will not change any data. Do you want to continue?',
+                async () => {
+                    runHealthCheckBtn.disabled = true;
+                    runHealthCheckBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Checking...`;
+                    healthCheckResultsContainer.classList.add('hidden');
+
+                    try {
+                        const result = await fetchWithAuth('admin/health-check');
+                        renderHealthCheckReport(result.report, healthCheckResultsContent);
+                        healthCheckResultsContainer.classList.remove('hidden');
+                        showToast('Health check completed.', 'success');
+                    } catch (error) {
+                        healthCheckResultsContent.textContent = `Error: ${error.message}\n\n${error.stack || ''}`;
+                        healthCheckResultsContainer.classList.remove('hidden');
+                        showToast(`Health check failed: ${error.message}`, 'error');
+                    } finally {
+                        runHealthCheckBtn.disabled = false;
+                        runHealthCheckBtn.innerHTML = `<i data-lucide="shield-check"></i> Run Check`;
+                        lucide.createIcons();
+                    }
+                },
+                'btn-info' // Use a different color for non-destructive actions
+            );
+        });
+    }
+}
+
+function renderHealthCheckReport(report, container) {
+    let html = '';
+    const renderSection = (title, items, fields) => {
+        html += `<h4 class="font-bold text-sm mt-4 mb-2 text-base-content/80">${title} (${items.length})</h4>`;
+        if (items.length === 0) {
+            html += `<p class="text-success text-xs">No issues found in this category.</p>`;
+        } else {
+            html += `<div class="bg-base-100 p-2 rounded-md max-h-40 overflow-y-auto">`;
+            html += `<ul class="space-y-2">`;
+            items.forEach(item => {
+                const details = fields.map(fieldInfo => {
+                    const value = fieldInfo.path.split('.').reduce((o, i) => o ? o[i] : 'N/A', item);
+                    return `<li><span class="font-semibold">${fieldInfo.label}:</span> ${value}</li>`;
+                }).join('');
+                html += `<li class="border-b border-base-300 pb-1 last:border-b-0"><ul>${details}</ul></li>`;
+            });
+            html += `</ul></div>`;
+        }
+    };
+
+    renderSection(
+        'Movable Assets with Missing Custodians',
+        report.orphanedMovableAssetsByCustodian,
+        [
+            { label: 'Property No.', path: 'propertyNumber' },
+            { label: 'Description', path: 'description' },
+            { label: 'Orphaned Custodian', path: 'custodian.name' }
+        ]
+    );
+
+    renderSection(
+        'Movable Assets with Missing Categories',
+        report.orphanedMovableAssetsByCategory,
+        [
+            { label: 'Property No.', path: 'propertyNumber' },
+            { label: 'Description', path: 'description' },
+            { label: 'Orphaned Category', path: 'category' }
+        ]
+    );
+
+    renderSection(
+        'Requisitions with Missing Stock Items',
+        report.orphanedRequisitionItems,
+        [
+            { label: 'RIS No.', path: 'risNumber' },
+            { label: 'Item Description', path: 'items.description' },
+            { label: 'Missing Item ID', path: 'items.stockItem' }
+        ]
+    );
+
+    renderSection(
+        'Immovable Assets with Missing Parent Assets',
+        report.orphanedImmovableChildren,
+        [
+            { label: 'PIN', path: 'propertyIndexNumber' },
+            { label: 'Asset Name', path: 'name' },
+            { label: 'Missing Parent ID', path: 'parentAsset' }
+        ]
+    );
+
+    container.innerHTML = html;
 }

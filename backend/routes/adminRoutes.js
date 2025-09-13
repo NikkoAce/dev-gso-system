@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { migrateAssetConditions, exportDatabase } = require('../controllers/adminController');
+const { migrateAssetConditions, exportDatabase, runHealthCheck } = require('../controllers/adminController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const PERMISSIONS = require('../config/permissions');
 
@@ -13,5 +13,10 @@ router.post('/migrate-conditions', protect, checkPermission(PERMISSIONS.ADMIN_DA
 // @route   POST /api/admin/export-database
 // @access  Private/Admin
 router.post('/export-database', protect, checkPermission(PERMISSIONS.ADMIN_DATABASE_EXPORT), exportDatabase);
+
+// @desc    Run a data integrity health check
+// @route   GET /api/admin/health-check
+// @access  Private/Admin
+router.get('/health-check', protect, checkPermission('admin:data:read'), runHealthCheck);
 
 module.exports = router;
