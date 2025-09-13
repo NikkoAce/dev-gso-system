@@ -21,15 +21,13 @@
     .sidebar-collapsed #user-name,
     .sidebar-collapsed #user-office,
     .sidebar-collapsed #logout-button,
-    .sidebar-collapsed .sidebar-text,
     .sidebar-collapsed #sidebar-container .form-control {
         @apply hidden;
     }
 
     /* Center the icons and user avatar */
     .sidebar-collapsed #sidebar-container .menu li > a,
-    .sidebar-collapsed #sidebar-container .menu li > details > summary,
-    .sidebar-collapsed #sidebar-container #sidebar-toggle-btn {
+    .sidebar-collapsed #sidebar-container .menu li > details > summary {
         @apply justify-center;
     }
     
@@ -101,23 +99,6 @@
     /* Also ensure the link content (icon + text) is aligned horizontally. */
     body:not(.sidebar-collapsed) #sidebar-container .menu details > ul a {
         @apply flex items-center;
-    }
-
-    /* --- NEW: Sidebar item ordering for collapsed state --- */
-    /* When collapsed, re-order the flex items in the sidebar to move the toggle button to the top */
-    .sidebar-collapsed #sidebar-container #sidebar-header { @apply order-1; }
-    .sidebar-collapsed #sidebar-container #sidebar-toggle-container { @apply order-2; }
-    .sidebar-collapsed #sidebar-container #sidebar-nav { @apply order-3; }
-    .sidebar-collapsed #sidebar-container #sidebar-footer { @apply order-4; }
-
-    /* Adjust styles for the toggle button when it moves to the top */
-    .sidebar-collapsed #sidebar-toggle-container {
-        @apply border-t-0 border-b;
-    }
-
-    /* Remove the margin-top from the footer when collapsed, as it's no longer at the bottom */
-    .sidebar-collapsed #sidebar-footer {
-        @apply mt-0;
     }
 
     /* --- NEW: Tooltip visibility logic --- */
