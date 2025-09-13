@@ -238,14 +238,6 @@ function initializeLayout(user, logoutFunction) {
                     details.removeAttribute('open');
                 });
             }
-
-            const icon = sidebarToggleBtn.querySelector('i');
-            if (isCollapsed) {
-                icon.setAttribute('data-lucide', 'chevrons-right');
-            } else {
-                icon.setAttribute('data-lucide', 'chevrons-left');
-            }
-            lucide.createIcons(); // Re-render icons after changing attribute
         };
 
         // Check localStorage on load and apply state

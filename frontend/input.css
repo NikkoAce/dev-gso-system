@@ -27,8 +27,7 @@
 
     /* Center the icons and user avatar */
     .sidebar-collapsed #sidebar-container .menu li > a,
-    .sidebar-collapsed #sidebar-container .menu li > details > summary,
-    .sidebar-collapsed #sidebar-container #sidebar-toggle-btn {
+    .sidebar-collapsed #sidebar-container .menu li > details > summary {
         @apply justify-center;
     }
     
@@ -100,6 +99,15 @@
     /* Also ensure the link content (icon + text) is aligned horizontally. */
     body:not(.sidebar-collapsed) #sidebar-container .menu details > ul a {
         @apply flex items-center;
+    }
+
+    /* --- NEW: Animate the toggle button icon rotation --- */
+    #sidebar-toggle-btn > svg {
+        @apply transition-transform duration-300;
+    }
+
+    .sidebar-collapsed #sidebar-toggle-btn > svg {
+        @apply rotate-180;
     }
 
     /* --- NEW: Tooltip visibility logic --- */
