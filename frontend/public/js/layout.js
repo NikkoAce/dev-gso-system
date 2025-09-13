@@ -79,7 +79,7 @@ function buildNav(navConfig, userPermissions) {
         navHtml += `
           <li class="tooltip tooltip-right" data-tip="${item.text}">
             <details class="nav-details">
-              <summary><i data-lucide="${item.icon}"></i><span class="nav-text ml-4">${item.text}</span></summary>
+              <summary><i data-lucide="${item.icon}"></i><span class="nav-text">${item.text}</span></summary>
               <ul class="text-sm">${childrenHtml}</ul>
             </details>
           </li>
@@ -87,7 +87,7 @@ function buildNav(navConfig, userPermissions) {
       }
     } else {
       // Build a single link
-      navHtml += `<li class="tooltip tooltip-right" data-tip="${item.text}"><a href="${item.href}" class="nav-link"><i data-lucide="${item.icon}"></i><span class="nav-text ml-4">${item.text}</span></a></li>`;
+      navHtml += `<li class="tooltip tooltip-right" data-tip="${item.text}"><a href="${item.href}" class="nav-link"><i data-lucide="${item.icon}"></i><span class="nav-text">${item.text}</span></a></li>`;
     }
   });
   return navHtml;

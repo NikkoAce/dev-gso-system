@@ -1,11 +1,19 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
-
 @layer components {
+    /* --- NEW: Add base transition to sidebar for smooth expand/collapse --- */
+    #sidebar-container {
+        @apply transition-all duration-300 ease-in-out;
+    }
+    /* --- NEW: Add gap between icon and text in menu items --- */
+    .menu :where(li > a), .menu :where(li > details > summary) {
+        @apply gap-4;
+    }
+
     /* Styles for when the sidebar is collapsed on desktop */
     .sidebar-collapsed #sidebar-container {
-        @apply w-20 transition-all duration-300;
+        @apply w-20;
     }
 
     /* NEW: Hide expanded logo/text, show collapsed logo */
@@ -16,13 +24,18 @@
         @apply block;
     }
 
-    /* Hide text elements, show only icons */
+    /* --- NEW: Add base styles for smooth text transitions --- */
+    .nav-text, #user-name, #user-office, #logout-button, #sidebar-container .form-control {
+        @apply transition-all duration-200 ease-in-out whitespace-nowrap overflow-hidden;
+    }
+
+    /* --- MODIFIED: Hide text elements by animating them away --- */
     .sidebar-collapsed .nav-text,
     .sidebar-collapsed #user-name,
     .sidebar-collapsed #user-office,
     .sidebar-collapsed #logout-button,
     .sidebar-collapsed #sidebar-container .form-control {
-        @apply hidden;
+        @apply opacity-0 w-0 pointer-events-none;
     }
 
     /* Center the icons and user avatar */
