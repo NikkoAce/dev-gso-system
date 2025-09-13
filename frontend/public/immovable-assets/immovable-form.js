@@ -38,9 +38,11 @@ function initializeForm(user) {
     const addComponentBtn = document.getElementById('add-component-btn');
     const formTabs = document.getElementById('form-tabs');
     const detailsTab = document.getElementById('details-tab');
+    const improvementsTab = document.getElementById('improvements-tab');
     const repairsTab = document.getElementById('repairs-tab');
     const historyTab = document.getElementById('history-tab');
     const detailsPanel = document.getElementById('details-panel');
+    const improvementsPanel = document.getElementById('improvements-panel');
     const repairsPanel = document.getElementById('repairs-panel');
     const historyPanel = document.getElementById('history-panel');
     const historyContainer = document.getElementById('history-container');
@@ -50,8 +52,11 @@ function initializeForm(user) {
     const existingAttachmentsList = document.getElementById('existing-attachments-list');
     const repairsContainer = document.getElementById('repairs-container');
     const repairForm = document.getElementById('repair-form');
+    const improvementsContainer = document.getElementById('improvements-container');
+    const improvementForm = document.getElementById('improvement-form');
     // --- NEW: GIS Elements ---
     const assessedValueInput = document.getElementById('assessedValue');
+    const totalBookValueInput = document.getElementById('totalBookValue');
     const buildingSalvageValueInput = document.getElementById('salvageValue');
     const impairmentLossesInput = document.getElementById('impairmentLosses');
     const newRepairAmountInput = document.getElementById('new-repair-amount');
@@ -65,6 +70,7 @@ function initializeForm(user) {
     const measurementDisplay = document.getElementById('measurement-display');
     const measurementValue = document.getElementById('measurement-value');
     const measurementUnit = document.getElementById('measurement-unit');
+    const newImprovementCostInput = document.getElementById('new-improvement-cost');
 
     const detailSections = {
         'Land': document.getElementById('land-details-section'),
@@ -395,6 +401,21 @@ function initializeForm(user) {
         lucide.createIcons();
     }
 
+    function renderImprovementRow(improvement) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-[1fr_2fr_1fr_1fr_auto] gap-4 items-center improvement-row p-2 border-b text-sm';
+        const improvementDate = improvement.date ? new Date(improvement.date).toISOString().split('T')[0] : '';
+        div.innerHTML = `
+            <span>${improvementDate}</span>
+            <span>${improvement.description}</span>
+            <span class="text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(improvement.cost)}</span>
+            <span>${improvement.fundSource || 'N/A'}</span>
+            <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-improvement-btn" data-improvement-id="${improvement._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
+        `;
+        improvementsContainer.appendChild(div);
+        lucide.createIcons();
+    }
+
     function renderRepairRow(repair) {
         const div = document.createElement('div');
         div.className = 'grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center repair-row p-2 border-b';
@@ -585,6 +606,20 @@ function initializeForm(user) {
             renderChildAssets(asset.childAssets);
         }
 
+        // Calculate and display Total Book Value
+        const assessedValue = parseFloat(String(asset.assessedValue || '0').replace(/,/g, ''));
+        const totalImprovementsCost = (asset.capitalImprovements || []).reduce((sum, imp) => sum + (imp.cost || 0), 0);
+        const totalBookValue = assessedValue + totalImprovementsCost;
+        totalBookValueInput.value = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalBookValue);
+
+        // Populate improvements tab
+        if (asset.capitalImprovements && asset.capitalImprovements.length > 0) {
+            improvementsContainer.innerHTML = ''; // Clear
+            asset.capitalImprovements.forEach(imp => renderImprovementRow(imp));
+        } else {
+            improvementsContainer.innerHTML = '<p class="text-sm text-center text-base-content/70 p-4">No capital improvements recorded.</p>';
+        }
+
         // Populate components
         if (asset.components && asset.components.length > 0) {
             componentsContainer.innerHTML = ''; // Clear any empty rows
@@ -759,6 +794,7 @@ function initializeForm(user) {
     assessedValueInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
     buildingSalvageValueInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
     impairmentLossesInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
+    newImprovementCostInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
     newRepairAmountInput.addEventListener('input', (e) => formatNumberOnInput(e.target));
 
     addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
@@ -787,8 +823,8 @@ function initializeForm(user) {
     existingAttachmentsList.addEventListener('click', handleAttachmentDelete);
 
     // --- Tab Switching Logic ---
-    const tabs = [detailsTab, repairsTab, historyTab];
-    const panels = [detailsPanel, repairsPanel, historyPanel];
+    const tabs = [detailsTab, improvementsTab, repairsTab, historyTab];
+    const panels = [detailsPanel, improvementsPanel, repairsPanel, historyPanel];
 
     function switchTab(activeIndex) {
         tabs.forEach((tab, index) => {
@@ -813,15 +849,66 @@ function initializeForm(user) {
         switchTab(0);
     });
 
-    repairsTab.addEventListener('click', () => {
+    improvementsTab.addEventListener('click', () => {
         switchTab(1);
     });
 
-    historyTab.addEventListener('click', () => {
+    repairsTab.addEventListener('click', () => {
         switchTab(2);
     });
 
+    historyTab.addEventListener('click', () => {
+        switchTab(3);
+    });
+
     form.addEventListener('submit', handleFormSubmit);
+
+    // --- Improvement Form Logic ---
+    improvementForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const improvementData = {
+            date: document.getElementById('new-improvement-date').value,
+            description: document.getElementById('new-improvement-description').value,
+            cost: document.getElementById('new-improvement-cost').value.replace(/,/g, ''),
+            fundSource: document.getElementById('new-improvement-fund').value,
+            remarks: document.getElementById('new-improvement-remarks').value,
+        };
+
+        if (!improvementData.date || !improvementData.description || !improvementData.cost) {
+            showToast('Please fill out Date, Description, and Cost for the improvement.', 'error');
+            return;
+        }
+
+        try {
+            await fetchWithAuth(`${API_ENDPOINT}/${assetId}/improvements`, {
+                method: 'POST',
+                body: JSON.stringify(improvementData)
+            });
+            showToast('Improvement record added successfully.', 'success');
+            improvementForm.reset();
+            loadAssetForEditing(); // Reload to refresh all tabs and total value
+        } catch (error) {
+            showToast(`Error adding improvement: ${error.message}`, 'error');
+        }
+    });
+
+    improvementsContainer.addEventListener('click', async (e) => {
+        const removeBtn = e.target.closest('.remove-improvement-btn');
+        if (removeBtn) {
+            const improvementId = removeBtn.dataset.improvementId;
+            if (confirm('Are you sure you want to delete this improvement record?')) {
+                try {
+                    await fetchWithAuth(`${API_ENDPOINT}/${assetId}/improvements/${improvementId}`, {
+                        method: 'DELETE'
+                    });
+                    showToast('Improvement record deleted.', 'success');
+                    loadAssetForEditing(); // Reload to refresh
+                } catch (error) {
+                    showToast(`Error deleting improvement: ${error.message}`, 'error');
+                }
+            }
+        }
+    });
 
     // --- Repair Form Logic ---
     repairForm.addEventListener('submit', async (e) => {

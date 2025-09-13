@@ -40,6 +40,7 @@
                     <!-- Tabs (hidden by default, shown in edit mode) -->
                     <div id="form-tabs" role="tablist" class="tabs tabs-boxed bg-base-200 hidden mb-6">
                         <a role="tab" id="details-tab" class="tab tab-active">Details</a>
+                        <a role="tab" id="improvements-tab" class="tab">Improvements</a>
                         <a role="tab" id="repairs-tab" class="tab">Repairs</a>
                         <a role="tab" id="history-tab" class="tab">History</a>
                     </div>
@@ -81,6 +82,11 @@
                                         <div class="form-control">
                                             <label for="assessedValue" class="label"><span class="label-text">Assessed Value (PHP)</span></label>
                                             <input type="text" inputmode="decimal" id="assessedValue" name="assessedValue" class="input input-bordered" required>
+                                        </div>
+                                        <div class="form-control">
+                                            <label class="label"><span class="label-text">Total Book Value (PHP)</span></label>
+                                            <p class="text-sm text-base-content/70 -mt-2">Assessed value plus all improvements.</p>
+                                            <input type="text" id="totalBookValue" class="input input-bordered mt-1 font-bold" readonly>
                                         </div>
                                         <div class="form-control">
                                             <label for="fundSource" class="label"><span class="label-text">Fund Source</span></label>
@@ -278,6 +284,31 @@
                                 </div>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- Improvements Panel (hidden by default) -->
+                    <div id="improvements-panel" class="hidden">
+                        <div class="card bg-base-100 border">
+                            <div class="card-body">
+                                <h2 class="card-title">Capital Improvements</h2>
+                                <p class="text-sm text-base-content/70 -mt-2">Log major additions or phases that increase the asset's value.</p>
+                                <!-- Form to add a new improvement -->
+                                <form id="improvement-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end p-4 border rounded-lg bg-base-200 mb-4">
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Date</span></label><input type="date" id="new-improvement-date" class="input input-bordered input-sm w-full" required></div>
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Cost (PHP)</span></label><input type="text" inputmode="decimal" id="new-improvement-cost" placeholder="0.00" class="input input-bordered input-sm w-full" required></div>
+                                    <div class="form-control md:col-span-2"><label class="label py-1"><span class="label-text text-xs">Description</span></label><input type="text" id="new-improvement-description" placeholder="e.g., Phase 1 Construction" class="input input-bordered input-sm w-full" required></div>
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Fund Source</span></label><select id="new-improvement-fund" class="select select-bordered select-sm w-full font-normal"><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div>
+                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Remarks</span></label><input type="text" id="new-improvement-remarks" placeholder="Optional notes" class="input input-bordered input-sm w-full"></div>
+                                    <div class="md:col-span-2 text-right">
+                                        <button type="submit" class="btn btn-sm btn-primary">Add Improvement</button>
+                                    </div>
+                                </form>
+                                <!-- Container for existing improvement records -->
+                                <div id="improvements-container" class="space-y-2">
+                                    <!-- Improvement rows will be dynamically inserted here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Repairs Panel (hidden by default) -->
