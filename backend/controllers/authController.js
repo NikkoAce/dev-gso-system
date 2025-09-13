@@ -87,23 +87,42 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
 
         await gsoUserRecord.save();
     } else {
-        // --- NEW USER ---
-        // Determine the role for a new user based on their portal role.
-        let targetGsoRoleName = (lguUser.role === 'Department Head') ? 'Department Head' : 'Employee';
-        
-        // Find the role, or create it if it doesn't exist (upsert).
-        const roleData = await Role.findOneAndUpdate(
+        // --- NEW USER LOGIC ---
+        // Determine the role and permissions for a new user based on their portal role.
+        let targetGsoRoleName;
+        let permissionsForNewUser;
+
+        // Check if the user is an admin from the portal.
+        if (lguUser.role === 'Admin' || lguUser.role === 'GSO Admin') {
+            targetGsoRoleName = 'GSO Admin';
+            // GSO Admins get all available permissions.
+            permissionsForNewUser = Object.values(PERMISSIONS);
+        } else if (lguUser.role === 'Department Head') {
+            targetGsoRoleName = 'Department Head';
+            // Department Heads get a specific set of permissions.
+            permissionsForNewUser = [
+                PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                PERMISSIONS.STOCK_READ,
+                PERMISSIONS.REQUISITION_CREATE,
+                PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+            ];
+        } else {
+            targetGsoRoleName = 'Employee';
+            // Employees get a default, limited set of permissions.
+            permissionsForNewUser = [
+                PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                PERMISSIONS.STOCK_READ,
+                PERMISSIONS.REQUISITION_CREATE,
+                PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+            ];
+        }
+
+        // Ensure the role exists in the database before assigning it to the user.
+        // If it doesn't exist, create it with the correct set of permissions.
+        await Role.findOneAndUpdate(
             { name: targetGsoRoleName },
-            { $setOnInsert: { 
-                name: targetGsoRoleName, 
-                permissions: [
-                    PERMISSIONS.ASSET_READ_OWN_OFFICE,
-                    PERMISSIONS.STOCK_READ, // Allow users to see stock items for requisitions
-                    PERMISSIONS.REQUISITION_CREATE,
-                    PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
-                ]
-            } },
-            { new: true, upsert: true, lean: true }
+            { $setOnInsert: { name: targetGsoRoleName, permissions: permissionsForNewUser } },
+            { upsert: true }
         );
 
         // Create the new user with the role's permissions.
@@ -111,8 +130,8 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
             externalId: lguUser._id,
             name: lguUser.name,
             office: lguUser.office,
-            role: roleData.name,
-            permissions: roleData.permissions,
+            role: targetGsoRoleName,
+            permissions: permissionsForNewUser,
         });
     }
 
