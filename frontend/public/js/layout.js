@@ -223,6 +223,23 @@ function initializeLayout(user, logoutFunction) {
   // --- Mobile Menu Logic ---
   if (mobileMenuButton && sidebarContainer) {
     // Create a backdrop overlay for mobile
+    const header = mobileMenuButton.parentElement;
+    const h1 = header.querySelector('h1');
+
+    // Add logo to mobile header if it doesn't exist to avoid duplication
+    if (h1 && !header.querySelector('img')) {
+        // Create a new container for the logo and title
+        const logoTitleContainer = document.createElement('div');
+        logoTitleContainer.className = 'flex items-center gap-3';
+        logoTitleContainer.innerHTML = `
+            <img src="../LGU-DAET-LOGO.png" alt="LGU Logo" class="h-8 w-8">
+        `;
+        // Move the original h1 into our new container
+        logoTitleContainer.appendChild(h1);
+        // Insert the new container before the menu button
+        header.insertBefore(logoTitleContainer, mobileMenuButton);
+    }
+
     const backdrop = document.createElement('div');
     backdrop.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden';
     document.body.appendChild(backdrop);
