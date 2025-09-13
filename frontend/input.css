@@ -47,24 +47,19 @@
         @apply p-2;
     }
 
-    /* --- Fly-out Submenu Logic for Collapsed Sidebar --- */
+    /* --- NEW: Fly-out Submenu Logic for Collapsed Sidebar --- */
     .sidebar-collapsed #sidebar-container .menu li {
         @apply relative;
     }
 
-    /* Prevent the default click-to-open behavior of <details> when collapsed */
-    .sidebar-collapsed #sidebar-container .menu details > summary {
-        pointer-events: none;
+    /* When collapsed, reduce horizontal padding on menu items to prevent overflow */
+    .sidebar-collapsed .menu-lg :where(li > a),
+    .sidebar-collapsed .menu-lg :where(li > details > summary) {
+        @apply px-4;
     }
 
-    /* Style the submenu as a fly-out panel, hidden by default */
+    /* When collapsed, style the submenu as a fly-out panel. It's shown when its parent <details> has the `open` attribute (handled by JS). */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply absolute left-full top-0 z-20 ml-2 hidden w-52 rounded-box bg-base-200 p-2 shadow-lg;
-        /* Do not @apply 'menu' here as it creates a circular dependency. */
-    }
-
-    /* Show the fly-out on hover of the parent <li> */
-    .sidebar-collapsed #sidebar-container .menu li:hover > details > ul {
-        @apply block;
+        @apply absolute left-full top-0 z-20 ml-2 w-52 rounded-box bg-base-200 p-2 shadow-lg;
     }
 }

@@ -262,6 +262,24 @@ function initializeLayout(user, logoutFunction) {
             localStorage.setItem('sidebar-collapsed', shouldCollapse);
             applySidebarState(shouldCollapse);
         });
+
+        // --- NEW: Fly-out menu logic for collapsed sidebar ---
+        const navDetails = sidebarContainer.querySelectorAll('.nav-details');
+        navDetails.forEach(details => {
+            const parentLi = details.parentElement;
+            if (!parentLi) return;
+
+            parentLi.addEventListener('mouseenter', () => {
+                if (body.classList.contains('sidebar-collapsed')) {
+                    details.setAttribute('open', '');
+                }
+            });
+            parentLi.addEventListener('mouseleave', () => {
+                if (body.classList.contains('sidebar-collapsed')) {
+                    details.removeAttribute('open');
+                }
+            });
+        });
     }
 
     lucide.createIcons();
