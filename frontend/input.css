@@ -75,6 +75,17 @@
         @apply opacity-100 visible;
     }
 
+    /* --- NEW: Fix fly-out menu item display --- */
+    /* The 'li' has a .tooltip class which makes it inline-block. Override this for the fly-out. */
+    .sidebar-collapsed #sidebar-container .menu details > ul li {
+        @apply block;
+    }
+
+    /* The .nav-text is hidden globally when collapsed. Un-hide it for the fly-out menu. */
+    .sidebar-collapsed #sidebar-container .menu details > ul .nav-text {
+        @apply inline ml-4;
+    }
+
     /* --- NEW: Style links inside the fly-out menu to give them padding and a hover effect --- */
     .sidebar-collapsed #sidebar-container .menu details > ul a {
         @apply w-full px-4 py-2 rounded-md text-sm flex items-center; /* Remove 'block' to prevent circular dependency */
