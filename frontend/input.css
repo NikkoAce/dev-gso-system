@@ -47,6 +47,11 @@
         @apply p-2;
     }
 
+    /* NEW: Allow fly-out menus to overflow the nav container when collapsed */
+    .sidebar-collapsed #sidebar-nav {
+        @apply overflow-visible;
+    }
+
     /* --- NEW: Fly-out Submenu Logic for Collapsed Sidebar --- */
     .sidebar-collapsed #sidebar-container .menu li {
         @apply relative;
