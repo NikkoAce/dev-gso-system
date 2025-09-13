@@ -5194,7 +5194,6 @@ input.tab:checked + .tab-content,
 /* The .nav-text is hidden globally when collapsed. Un-hide it for the fly-out menu. */
 
 .sidebar-collapsed #sidebar-container .menu details > ul .nav-text {
-  margin-left: 1rem;
   display: inline;
 }
 
@@ -5204,6 +5203,7 @@ input.tab:checked + .tab-content,
   display: flex;
   width: 100%;
   align-items: center;
+  gap: 1rem;
   border-radius: 0.375rem;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -5211,7 +5211,7 @@ input.tab:checked + .tab-content,
   padding-bottom: 0.5rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  /* Remove 'block' to prevent circular dependency */
+  /* Use gap for spacing */
 }
 
 /* --- NEW: Uniformly align icons in the fly-out menu --- */
@@ -5219,12 +5219,21 @@ input.tab:checked + .tab-content,
 .sidebar-collapsed #sidebar-container .menu details > ul a i {
   display: flex;
   width: 1.5rem;
-  justify-content: center;
+  /* Left-align icon by removing justify-center */
 }
 
 .sidebar-collapsed #sidebar-container .menu details > ul a:hover {
   --tw-bg-opacity: 1;
   background-color: var(--fallback-b3,oklch(var(--b3)/var(--tw-bg-opacity, 1)));
+}
+
+/* --- NEW: Fix sub-menu alignment in UNCOLLAPSED sidebar --- */
+
+/* Apply flex alignment to sub-menu links to ensure icon and text are horizontal. */
+
+body:not(.sidebar-collapsed) #sidebar-container .menu details > ul a {
+  display: flex;
+  align-items: center;
 }
 
 /* --- NEW: Tooltip visibility logic --- */
