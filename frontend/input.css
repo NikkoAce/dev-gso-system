@@ -65,7 +65,7 @@
 
     /* When collapsed, style the submenu as a fly-out panel. It's shown when its parent <details> has the `open` attribute (handled by JS). */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply absolute left-16 top-0 z-20 w-52 rounded-box bg-base-200 py-2 shadow-lg;
+        @apply absolute left-16 top-0 z-20 w-auto rounded-box bg-base-200 p-1 shadow-lg;
         /* Add transition for fade effect and remove the gap */
         @apply opacity-0 invisible transition-all duration-200;
     }
@@ -80,27 +80,25 @@
     .sidebar-collapsed #sidebar-container .menu details > ul li {
         @apply block;
     }
-
     /* The .nav-text is hidden globally when collapsed. Un-hide it for the fly-out menu. */
-    .sidebar-collapsed #sidebar-container .menu details > ul .nav-text {
-        @apply inline;
-    }
+    /* Text in fly-out is now hidden by the global .sidebar-collapsed .nav-text rule. */
 
     /* --- NEW: Style links inside the fly-out menu to give them padding and a hover effect --- */
     .sidebar-collapsed #sidebar-container .menu details > ul a {
-        @apply w-full px-4 py-2 rounded-md text-sm flex items-center gap-4; /* Use gap for spacing */
+        @apply w-full p-3 rounded-md flex justify-center items-center; /* Center the icon */
     }
 
-    /* --- NEW: Uniformly align icons in the fly-out menu --- */
-    .sidebar-collapsed #sidebar-container .menu details > ul a i {
-        @apply flex w-6; /* Left-align icon by removing justify-center */
-    }
+    /* Icon alignment is handled by the parent 'a' tag now. */
     .sidebar-collapsed #sidebar-container .menu details > ul a:hover {
         @apply bg-base-300;
     }
 
     /* --- NEW: Fix sub-menu alignment in UNCOLLAPSED sidebar --- */
-    /* Apply flex alignment to sub-menu links to ensure icon and text are horizontal. */
+    /* The .tooltip class on sub-menu LIs can make them inline-block. Force them to be block elements to stack vertically. */
+    body:not(.sidebar-collapsed) #sidebar-container .menu details > ul li {
+        @apply block;
+    }
+    /* Also ensure the link content (icon + text) is aligned horizontally. */
     body:not(.sidebar-collapsed) #sidebar-container .menu details > ul a {
         @apply flex items-center;
     }
