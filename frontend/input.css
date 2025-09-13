@@ -65,7 +65,7 @@
 
     /* When collapsed, style the submenu as a fly-out panel. It's shown when its parent <details> has the `open` attribute (handled by JS). */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply absolute left-full top-0 z-20 w-52 rounded-box bg-base-200 py-2 shadow-lg;
+        @apply absolute left-16 top-0 z-20 w-52 rounded-box bg-base-200 py-2 shadow-lg;
         /* Add transition for fade effect and remove the gap */
         @apply opacity-0 invisible transition-all duration-200;
     }
@@ -89,6 +89,11 @@
     /* --- NEW: Style links inside the fly-out menu to give them padding and a hover effect --- */
     .sidebar-collapsed #sidebar-container .menu details > ul a {
         @apply w-full px-4 py-2 rounded-md text-sm flex items-center; /* Remove 'block' to prevent circular dependency */
+    }
+
+    /* --- NEW: Uniformly align icons in the fly-out menu --- */
+    .sidebar-collapsed #sidebar-container .menu details > ul a i {
+        @apply flex w-6 justify-center;
     }
     .sidebar-collapsed #sidebar-container .menu details > ul a:hover {
         @apply bg-base-300;
