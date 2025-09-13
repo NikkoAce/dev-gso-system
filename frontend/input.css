@@ -1,3 +1,46 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+@layer components {
+    /* Styles for when the sidebar is collapsed on desktop */
+    .sidebar-collapsed #sidebar-container {
+        @apply w-20 transition-all duration-300;
+    }
+
+    /* Hide text elements, show only icons */
+    .sidebar-collapsed .nav-text,
+    .sidebar-collapsed #user-name,
+    .sidebar-collapsed #user-office,
+    .sidebar-collapsed #logout-button,
+    .sidebar-collapsed .sidebar-text,
+    .sidebar-collapsed #sidebar-container .text-center > h1,
+    .sidebar-collapsed #sidebar-container .text-center > p,
+    .sidebar-collapsed #sidebar-container .form-control {
+        @apply hidden;
+    }
+
+    /* Center the icons and user avatar */
+    .sidebar-collapsed #sidebar-container .menu li > a,
+    .sidebar-collapsed #sidebar-container .menu li > details > summary,
+    .sidebar-collapsed #sidebar-container #sidebar-toggle-btn {
+        @apply justify-center;
+    }
+    
+    .sidebar-collapsed #sidebar-container .flex.items-center.gap-3 {
+        @apply justify-center;
+    }
+
+    /* Hide the dropdown arrow for details/summary */
+    .sidebar-collapsed #sidebar-container .menu details > summary::after {
+        @apply hidden;
+    }
+
+    /* Prevent details from opening via click and hide the submenu */
+    .sidebar-collapsed #sidebar-container .menu details {
+        pointer-events: none; /* Disable click on the whole details element */
+    }
+    .sidebar-collapsed #sidebar-container .menu details > * {
+        pointer-events: auto; /* Re-enable pointer events on the summary so tooltips (if any) can work */
+    }
+}

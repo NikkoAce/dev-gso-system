@@ -78,8 +78,8 @@ function buildNav(navConfig, userPermissions) {
       if (childrenHtml) {
         navHtml += `
           <li>
-            <details>
-              <summary><i data-lucide="${item.icon}"></i> ${item.text}</summary>
+            <details class="nav-details">
+              <summary><i data-lucide="${item.icon}"></i><span class="nav-text ml-4">${item.text}</span></summary>
               <ul class="text-sm">${childrenHtml}</ul>
             </details>
           </li>
@@ -87,7 +87,7 @@ function buildNav(navConfig, userPermissions) {
       }
     } else {
       // Build a single link
-      navHtml += `<li><a href="${item.href}" class="nav-link"><i data-lucide="${item.icon}"></i> ${item.text}</a></li>`;
+      navHtml += `<li><a href="${item.href}" class="nav-link"><i data-lucide="${item.icon}"></i><span class="nav-text ml-4">${item.text}</span></a></li>`;
     }
   });
   return navHtml;
@@ -147,6 +147,11 @@ function getSidebarHTML(user) {
           <!-- Options will be populated by JS -->
         </select>
       </div>
+      <!-- NEW: Sidebar Collapse Button -->
+      <button id="sidebar-toggle-btn" class="btn btn-ghost btn-sm w-full justify-start mt-2 hidden md:flex">
+          <i data-lucide="chevrons-left"></i>
+          <span class="sidebar-text ml-4">Collapse</span>
+      </button>
     </div>
   `;
 }
@@ -217,6 +222,37 @@ function initializeLayout(user, logoutFunction) {
     });
 
     setupThemeSwitcher();
+
+    // --- NEW: Desktop Sidebar Collapse Logic ---
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const body = document.body;
+
+    if (sidebarToggleBtn) {
+        const applySidebarState = (isCollapsed) => {
+            body.classList.toggle('sidebar-collapsed', isCollapsed);
+            const icon = sidebarToggleBtn.querySelector('i');
+            const text = sidebarToggleBtn.querySelector('.sidebar-text');
+            if (isCollapsed) {
+                icon.setAttribute('data-lucide', 'chevrons-right');
+                if (text) text.textContent = 'Expand';
+            } else {
+                icon.setAttribute('data-lucide', 'chevrons-left');
+                if (text) text.textContent = 'Collapse';
+            }
+            lucide.createIcons(); // Re-render icons after changing attribute
+        };
+
+        // Check localStorage on load and apply state
+        const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+        applySidebarState(isCollapsed);
+
+        sidebarToggleBtn.addEventListener('click', () => {
+            const shouldCollapse = !body.classList.contains('sidebar-collapsed');
+            localStorage.setItem('sidebar-collapsed', shouldCollapse);
+            applySidebarState(shouldCollapse);
+        });
+    }
+
     lucide.createIcons();
   }
 
