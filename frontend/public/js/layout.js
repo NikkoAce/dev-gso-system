@@ -129,7 +129,7 @@ function getSidebarHTML(user) {
 
     <!-- Footer / User Info -->
     <div class="p-4 mt-auto border-t border-base-300 space-y-4">
-      <div class="flex items-center gap-3">
+      <div id="sidebar-user-info" class="flex items-center gap-3">
         <div class="avatar placeholder">
           <div class="bg-neutral-focus text-neutral-content rounded-full w-10">
             <span>${userInitial}</span>

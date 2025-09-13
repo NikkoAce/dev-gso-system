@@ -33,7 +33,7 @@
         @apply justify-center;
     }
     
-    .sidebar-collapsed #sidebar-container .flex.items-center.gap-3 {
+    .sidebar-collapsed #sidebar-container #sidebar-user-info {
         @apply justify-center;
     }
 
