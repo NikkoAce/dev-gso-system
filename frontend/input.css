@@ -47,12 +47,24 @@
         @apply p-2;
     }
 
-    /* Prevent details summary from being clickable */
+    /* --- Fly-out Submenu Logic for Collapsed Sidebar --- */
+    .sidebar-collapsed #sidebar-container .menu li {
+        @apply relative;
+    }
+
+    /* Prevent the default click-to-open behavior of <details> when collapsed */
     .sidebar-collapsed #sidebar-container .menu details > summary {
         pointer-events: none;
     }
-    /* Explicitly hide the submenu UL */
+
+    /* Style the submenu as a fly-out panel, hidden by default */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply hidden;
+        @apply absolute left-full top-0 z-20 ml-2 hidden w-52;
+        @apply menu bg-base-200 rounded-box p-2 shadow-lg;
+    }
+
+    /* Show the fly-out on hover of the parent <li> */
+    .sidebar-collapsed #sidebar-container .menu li:hover > details > ul {
+        @apply block;
     }
 }
