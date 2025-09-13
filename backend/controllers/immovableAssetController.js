@@ -18,50 +18,101 @@ const parseJSON = (string) => {
  * @access  Private
  */
 const getImmovableAssets = asyncHandler(async (req, res) => {
-    const { page, limit, sort = 'propertyIndexNumber', order = 'asc', search, type, status } = req.query;
+    const { page, limit, sort = 'propertyIndexNumber', order = 'asc', search, type, status, condition, startDate, endDate } = req.query;
 
     const query = {};
     if (search) {
         const searchRegex = new RegExp(search, 'i');
-        query.$or = [
-            { name: searchRegex },
-            { propertyIndexNumber: searchRegex },
-            { location: searchRegex }
-        ];
+        query.$or = [{ name: searchRegex }, { propertyIndexNumber: searchRegex }, { location: searchRegex }];
     }
     if (type) query.type = type;
     if (status) query.status = status;
+    if (condition) query.condition = condition;
+    if (startDate || endDate) {
+        query.dateAcquired = {};
+        if (startDate) query.dateAcquired.$gte = new Date(startDate);
+        if (endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+            query.dateAcquired.$lt = endOfDay;
+        }
+    }
 
     const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+
+    // The base pipeline for calculating values and matching
+    const basePipeline = [
+        { $match: query },
+        { $addFields: { totalImprovementsCost: { $ifNull: [{ $sum: '$capitalImprovements.cost' }, 0] } } },
+        { $addFields: { totalBookValue: { $add: ['$assessedValue', '$totalImprovementsCost'] } } }
+    ];
 
     if (page && limit) {
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
         const skip = (pageNum - 1) * limitNum;
 
-        // Aggregation pipeline for summary stats (total value of all filtered assets)
-        const summaryPipeline = [
-            { $match: query },
-            { $group: { _id: null, totalValue: { $sum: '$assessedValue' } } }
+        const facetPipeline = [
+            ...basePipeline,
+            {
+                $facet: {
+                    paginatedDocs: [
+                        { $sort: sortOptions },
+                        { $skip: skip },
+                        { $limit: limitNum },
+                        { $lookup: { from: 'immovableassets', localField: 'parentAsset', foreignField: '_id', as: 'parentAsset' } },
+                        { $unwind: { path: '$parentAsset', preserveNullAndEmptyArrays: true } },
+                        {
+                            $project: {
+                                name: 1, propertyIndexNumber: 1, type: 1, location: 1, assessedValue: 1, totalBookValue: 1, status: 1,
+                                'parentAsset._id': 1, 'parentAsset.name': 1
+                            }
+                        }
+                    ],
+                    summary: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalDocs: { $sum: 1 },
+                                totalAssessedValue: { $sum: '$assessedValue' },
+                                totalBookValue: { $sum: '$totalBookValue' }
+                            }
+                        }
+                    ]
+                }
+            }
         ];
 
-        const [assets, totalDocs, summaryResult] = await Promise.all([
-            ImmovableAsset.find(query).sort(sortOptions).skip(skip).limit(limitNum).populate('parentAsset', 'name propertyIndexNumber').lean(),
-            ImmovableAsset.countDocuments(query),
-            ImmovableAsset.aggregate(summaryPipeline)
-        ]);
+        const results = await ImmovableAsset.aggregate(facetPipeline);
+        const assets = results[0].paginatedDocs;
+        const summary = results[0].summary[0] || { totalDocs: 0, totalAssessedValue: 0, totalBookValue: 0 };
 
         res.json({
             docs: assets,
-            totalDocs,
-            totalValue: summaryResult[0]?.totalValue || 0, // Add total value to the response
+            totalDocs: summary.totalDocs,
+            totalValue: summary.totalAssessedValue,
+            totalBookValue: summary.totalBookValue,
             limit: limitNum,
-            totalPages: Math.ceil(totalDocs / limitNum),
+            totalPages: Math.ceil(summary.totalDocs / limitNum),
             page: pageNum,
         });
     } else {
         // If no pagination params, return all matching assets (for map view, etc.)
-        const assets = await ImmovableAsset.find(query).sort(sortOptions).populate('parentAsset', 'name propertyIndexNumber').lean();
+        const assets = await ImmovableAsset.aggregate([
+            ...basePipeline,
+            { $sort: sortOptions },
+            { $lookup: { from: 'immovableassets', localField: 'parentAsset', foreignField: '_id', as: 'parentAsset' } },
+            { $unwind: { path: '$parentAsset', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    // Project all fields needed for map and CSV export
+                    name: 1, propertyIndexNumber: 1, type: 1, location: 1, assessedValue: 1, totalBookValue: 1, status: 1, dateAcquired: 1, condition: 1,
+                    geometry: 1, latitude: 1, longitude: 1, remarks: 1, fundSource: 1, accountCode: 1, acquisitionMethod: 1, impairmentLosses: 1,
+                    landDetails: 1, buildingAndStructureDetails: 1,
+                    'parentAsset._id': 1, 'parentAsset.name': 1
+                }
+            }
+        ]);
         // Make the response consistent with the paginated one
         res.json({
             docs: assets,

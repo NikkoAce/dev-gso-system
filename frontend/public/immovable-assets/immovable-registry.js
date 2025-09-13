@@ -48,7 +48,7 @@ function initializeRegistryPage(user) {
     function renderTable(assets) {
         tableBody.innerHTML = '';
         if (!assets || assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">No immovable assets found for the selected criteria.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-500">No immovable assets found for the selected criteria.</td></tr>`;
             return;
         }
         const statusMap = {
@@ -78,6 +78,7 @@ function initializeRegistryPage(user) {
                 <td>${asset.location}</td>
                 <td>${parentAssetInfo}</td>
                 <td class="text-right">${formatCurrency(asset.assessedValue)}</td>
+                <td class="text-right font-semibold">${formatCurrency(asset.totalBookValue)}</td>
                 <td class="text-center">${statusBadge}</td>
                 <td class="text-center non-printable">
                      <div class="dropdown dropdown-end">
@@ -97,12 +98,13 @@ function initializeRegistryPage(user) {
         lucide.createIcons();
     }
 
-    function renderSummary(totalValue) {
-        if (totalValue > 0) {
+    function renderSummary(totalAssessedValue, totalBookValue) {
+        if (totalAssessedValue > 0 || totalBookValue > 0) {
             tableFooter.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-right font-bold">Total Assessed Value (All Filtered Pages):</td>
-                    <td class="text-right font-bold">${formatCurrency(totalValue)}</td>
+                    <td colspan="5" class="text-right font-bold">Total (All Filtered Pages):</td>
+                    <td class="text-right font-bold">${formatCurrency(totalAssessedValue)}</td>
+                    <td class="text-right font-bold">${formatCurrency(totalBookValue)}</td>
                     <td colspan="2"></td>
                 </tr>
             `;
@@ -114,7 +116,7 @@ function initializeRegistryPage(user) {
     // --- CORE LOGIC ---
     async function fetchAndRenderAssets(page = 1) {
         currentPage = page;
-        tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="9" class="text-center p-8"><i data-lucide="loader-2" class="animate-spin h-8 w-8 mx-auto text-gray-500"></i></td></tr>`;
         tableFooter.innerHTML = ''; // Clear footer while loading
         lucide.createIcons();
 
@@ -134,7 +136,7 @@ function initializeRegistryPage(user) {
         try {
             const data = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
             renderTable(data.docs);
-            renderSummary(data.totalValue);
+            renderSummary(data.totalValue, data.totalBookValue);
             renderPagination(paginationControls, {
                 currentPage: data.page,
                 totalPages: data.totalPages,
@@ -143,7 +145,7 @@ function initializeRegistryPage(user) {
             });
         } catch (error) {
             console.error('Failed to fetch assets:', error);
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-8 text-red-500">Error loading assets. Please try again.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-red-500">Error loading assets. Please try again.</td></tr>`;
             tableFooter.innerHTML = ''; // Clear footer on error
         }
     }
@@ -152,7 +154,7 @@ function initializeRegistryPage(user) {
     function convertToCSV(assets) {
         const headers = [
             'Property Index Number', 'Name', 'Type', 'Location', 'Latitude', 'Longitude',
-            'Date Acquired', 'Assessed Value', 'Status', 'Condition', 'Remarks',
+            'Date Acquired', 'Assessed Value', 'Total Book Value', 'Status', 'Condition', 'Remarks',
             'Fund Source', 'Account Code', 'Acquisition Method', 'Impairment Losses',
             'Land Lot Number', 'Land Title Number', 'Land Area (sqm)',
             'Building Floors', 'Building Floor Area (sqm)', 'Building Construction Date', 'Building Useful Life (Yrs)', 'Building Salvage Value'
@@ -172,7 +174,8 @@ function initializeRegistryPage(user) {
                 asset.latitude || '',
                 asset.longitude || '',
                 asset.dateAcquired ? new Date(asset.dateAcquired).toISOString().split('T')[0] : '',
-                asset.assessedValue || 0,
+                asset.assessedValue || '0',
+                asset.totalBookValue || asset.assessedValue || '0',
                 escapeCSV(asset.status),
                 escapeCSV(asset.condition),
                 escapeCSV(asset.remarks),
@@ -187,7 +190,7 @@ function initializeRegistryPage(user) {
                 buildingDetails.floorArea || '',
                 buildingDetails.constructionDate ? new Date(buildingDetails.constructionDate).toISOString().split('T')[0] : '',
                 buildingDetails.estimatedUsefulLife || '',
-                buildingDetails.salvageValue || 0
+                buildingDetails.salvageValue || '0'
             ].join(',');
         });
 
@@ -214,7 +217,8 @@ function initializeRegistryPage(user) {
 
         const params = new URLSearchParams({
             sort: currentSort.field, order: currentSort.order,
-            search: searchInput.value, type: typeFilter.value, status: statusFilter.value
+            search: searchInput.value, type: typeFilter.value, status: statusFilter.value,
+            condition: conditionFilter.value, startDate: startDateFilter.value, endDate: endDateFilter.value
         });
 
         try {

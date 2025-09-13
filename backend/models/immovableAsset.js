@@ -25,6 +25,14 @@ const repairHistorySchema = new mongoose.Schema({
     amount: { type: Number, required: true }
 }, { _id: false });
 
+const capitalImprovementSchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    description: { type: String, required: true, trim: true },
+    cost: { type: Number, required: true, default: 0 },
+    fundSource: { type: String, trim: true },
+    remarks: { type: String, trim: true }
+});
+
 const landDetailsSchema = new mongoose.Schema({
     lotNumber: String,
     titleNumber: String,
@@ -76,6 +84,7 @@ const immovableAssetSchema = new mongoose.Schema({
     accountCode: { type: String },
     impairmentLosses: { type: Number, default: 0 },
     repairHistory: [repairHistorySchema],
+    capitalImprovements: [capitalImprovementSchema],
     // ------------------------------------
     latitude: { type: Number },
     longitude: { type: Number },
