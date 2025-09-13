@@ -12,7 +12,11 @@ const getOffices = async (req, res) => {
         }
 
         pipeline.push(
-            { $lookup: { from: 'assets', localField: 'name', foreignField: 'office', as: 'assets' } },
+            // This lookup now correctly counts assets based on the CUSTODIAN's office,
+            // which is more intuitive for the user and consistent with the asset registry filter.
+            { 
+                $lookup: { from: 'assets', localField: 'name', foreignField: 'custodian.office', as: 'assets' } 
+            },
             { $addFields: { assetCount: { $size: '$assets' } } },
             { $project: { assets: 0 } },
             { $sort: { [sort]: order === 'asc' ? 1 : -1 } }
