@@ -65,7 +65,7 @@
 
     /* When collapsed, style the submenu as a fly-out panel. It's shown when its parent <details> has the `open` attribute (handled by JS). */
     .sidebar-collapsed #sidebar-container .menu details > ul {
-        @apply absolute left-16 top-0 z-20 w-52 rounded-box bg-base-200 p-2 shadow-lg;
+        @apply absolute left-full top-0 z-20 w-52 rounded-box bg-base-200 p-2 shadow-lg;
         /* Add transition for fade effect and remove the gap */
         @apply opacity-0 invisible transition-all duration-200;
     }
@@ -73,5 +73,12 @@
     /* Make the fly-out visible when the details element is open */
     .sidebar-collapsed #sidebar-container .menu details[open] > ul {
         @apply opacity-100 visible;
+    }
+
+    /* --- NEW: Tooltip visibility logic --- */
+    /* By default (expanded sidebar), hide the tooltips completely to prevent them from showing on hover. */
+    body:not(.sidebar-collapsed) #sidebar-container .tooltip:before,
+    body:not(.sidebar-collapsed) #sidebar-container .tooltip:after {
+        @apply hidden;
     }
 }
