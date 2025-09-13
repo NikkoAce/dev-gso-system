@@ -445,12 +445,24 @@ function initializeForm(user) {
                 year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
             });
 
-            const iconMap = { 'Created': 'plus', 'Updated': 'edit-3', 'Disposed': 'trash-2', 'Asset Created': 'plus' };
+            const iconMap = {
+                'Created': 'plus-circle',
+                'Updated': 'edit-3',
+                'Disposed': 'trash-2',
+                'Improvement Added': 'trending-up',
+                'Improvement Removed': 'trending-down',
+                'Repair Added': 'wrench',
+                'Repair Removed': 'x-circle',
+            };
             const icon = iconMap[entry.event] || 'history';
+
+            // Alternate alignment for timeline items. On medium screens and up,
+            // the left-side items will have their text right-aligned for a cleaner look.
+            const alignmentClass = index % 2 === 0 ? 'timeline-start md:text-end' : 'timeline-end';
 
             li.innerHTML = `
                 <div class="timeline-middle"><i data-lucide="${icon}" class="h-5 w-5"></i></div>
-                <div class="timeline-end timeline-box">
+                <div class="${alignmentClass} timeline-box">
                     <time class="font-mono italic text-xs">${formattedDate}</time>
                     <div class="text-lg font-black">${entry.event}</div>
                     <p class="text-sm">${entry.details}</p>
