@@ -130,13 +130,18 @@ function initializeForm(user) {
 
     function renderRepairRow(repair) {
         const div = document.createElement('div');
-        div.className = 'grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center repair-row p-2 border-b';
+        // Use flexbox for a responsive layout.
+        div.className = 'repair-row p-2 border-b text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2';
         const repairDate = repair.date ? new Date(repair.date).toISOString().split('T')[0] : '';
         div.innerHTML = `
-            <span class="text-sm">${repairDate}</span>
-            <span class="text-sm">${repair.natureOfRepair}</span>
-            <span class="text-sm text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(repair.amount)}</span>
-            <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-repair-btn" data-repair-id="${repair._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
+            <div class="flex-grow">
+                <p class="font-semibold">${repair.natureOfRepair}</p>
+                <p class="text-xs text-base-content/70">${repairDate}</p>
+            </div>
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <p class="text-right flex-grow sm:flex-grow-0 font-semibold">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(repair.amount)}</p>
+                <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-repair-btn" data-repair-id="${repair._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
+            </div>
         `;
         repairsContainer.appendChild(div);
         lucide.createIcons();
@@ -186,11 +191,24 @@ function initializeForm(user) {
         sortedHistory.forEach((entry, index) => {
             const li = document.createElement('li');
             const formattedDate = new Date(entry.date).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const iconMap = { 'Created': 'plus', 'Updated': 'edit-3', 'Transfer': 'arrow-right-left', 'Physical Count': 'clipboard-check', 'Assignment': 'user-plus', 'Disposed': 'trash-2' };
+            const iconMap = {
+                'Created': 'plus-circle',
+                'Updated': 'edit-3',
+                'Transfer': 'arrow-right-left',
+                'Physical Count': 'clipboard-check',
+                'Assignment': 'user-plus',
+                'Disposed': 'trash-2',
+                'Certified as Waste': 'shield-alert'
+            };
             const icon = iconMap[entry.event] || 'history';
+
+            // Alternate alignment for timeline items. On medium screens and up,
+            // the left-side items will have their text right-aligned for a cleaner look.
+            const alignmentClass = index % 2 === 0 ? 'timeline-start md:text-end' : 'timeline-end';
+
             li.innerHTML = `
                 <div class="timeline-middle"><i data-lucide="${icon}" class="h-5 w-5"></i></div>
-                <div class="timeline-end timeline-box">
+                <div class="${alignmentClass} timeline-box">
                     <time class="font-mono italic text-xs">${formattedDate}</time>
                     <div class="text-lg font-black">${entry.event}</div>
                     <p class="text-sm">${entry.details}</p>

@@ -418,13 +418,18 @@ function initializeForm(user) {
 
     function renderRepairRow(repair) {
         const div = document.createElement('div');
-        div.className = 'grid grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center repair-row p-2 border-b';
+        // Use flexbox for a responsive layout.
+        div.className = 'repair-row p-2 border-b text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2';
         const repairDate = repair.date ? new Date(repair.date).toISOString().split('T')[0] : '';
         div.innerHTML = `
-            <span class="text-sm">${repairDate}</span>
-            <span class="text-sm">${repair.natureOfRepair}</span>
-            <span class="text-sm text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(repair.amount)}</span>
-            <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-repair-btn" data-repair-id="${repair._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
+            <div class="flex-grow">
+                <p class="font-semibold">${repair.natureOfRepair}</p>
+                <p class="text-xs text-base-content/70">${repairDate}</p>
+            </div>
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <p class="text-right flex-grow sm:flex-grow-0 font-semibold">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(repair.amount)}</p>
+                <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-repair-btn" data-repair-id="${repair._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
+            </div>
         `;
         repairsContainer.appendChild(div);
         lucide.createIcons();
