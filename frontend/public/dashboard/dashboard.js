@@ -757,6 +757,18 @@ function initializeDashboard(user) {
             }
         });
 
+        // NEW: Event listener for activity tabs
+        const activityTabsContainer = document.getElementById('activity-tabs-container');
+        if (activityTabsContainer) {
+            // Use 'click' which is more reliable for radio inputs styled as buttons.
+            activityTabsContainer.addEventListener('click', (e) => {
+                // Ensure the clicked element is one of our tabs
+                if (e.target.name === 'activity_tabs') {
+                    renderActiveActivityTable();
+                }
+            });
+        }
+
         // NEW: Event listener for the office chart group-by toggle
         const officeGroupByToggle = document.getElementById('office-group-by-toggle');
         if (officeGroupByToggle) {
