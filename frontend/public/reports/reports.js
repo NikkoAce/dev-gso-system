@@ -51,7 +51,7 @@ function initializeReportsPage(user) {
     // --- DATA FETCHING ---
     async function initializePage() {
         try {
-            const categories = await Promise.all([
+            const [categories] = await Promise.all([
                 fetchWithAuth('categories')
             ]);
             
