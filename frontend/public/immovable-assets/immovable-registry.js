@@ -307,8 +307,6 @@ function initializeRegistryPage(user) {
 
     toggleFiltersBtn.addEventListener('click', () => {
         filtersGrid.classList.toggle('hidden');
-        const chevron = toggleFiltersBtn.querySelector('i[data-lucide="chevron-down"]');
-        chevron?.classList.toggle('rotate-180');
     });
 
     paginationControls.addEventListener('click', (e) => {

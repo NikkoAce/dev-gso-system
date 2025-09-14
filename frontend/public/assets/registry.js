@@ -561,8 +561,6 @@ function initializeRegistryPage(user) {
             // NEW: Collapsible filter panel
             DOM.toggleFiltersBtn?.addEventListener('click', () => {
                 DOM.filtersGrid.classList.toggle('hidden');
-                const chevron = DOM.toggleFiltersBtn.querySelector('i[data-lucide="chevron-down"]');
-                chevron?.classList.toggle('rotate-180');
             });
             DOM.paginationControls?.addEventListener('click', e => this.handlePaginationClick(e));
             DOM.resetFiltersBtn?.addEventListener('click', () => this.resetAllFilters());            
