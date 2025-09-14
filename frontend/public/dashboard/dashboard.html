@@ -9,8 +9,6 @@
     <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
     <script type="module" src="/js/auth.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="../css/output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -54,10 +52,6 @@
                     <div class="flex justify-between items-center">
                         <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
                         <div class="flex items-center gap-2">
-                            <!-- NEW: Date Range Picker -->
-                            <div class="form-control">
-                                <input id="date-range-picker" class="input input-bordered input-sm w-64 text-center cursor-pointer" placeholder="Select Date Range">
-                            </div>
                             <button id="edit-layout-btn" class="btn btn-ghost btn-sm"><i data-lucide="layout"></i> Edit Layout</button>
                             <button id="visibility-settings-btn" class="btn btn-ghost btn-sm"><i data-lucide="eye"></i> Manage Widgets</button>
                             <button id="save-layout-btn" class="btn btn-primary btn-sm hidden"><i data-lucide="check"></i> Save Layout</button>
@@ -71,40 +65,6 @@
                             <!-- Active filter badges will be populated here by JS -->
                         </div>
                         <button id="clear-filters-btn" class="btn btn-ghost btn-xs ml-auto">Clear All</button>
-                    </div>
-                    <!-- Filter Controls -->
-                    <div class="card bg-base-100 border non-printable dashboard-component" data-id="filters" data-type="card">
-                        <div class="card-body p-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
-                                <!-- Asset Type Filter -->
-                                <div class="form-control w-full">
-                                    <label for="asset-type-filter" class="label py-0"><span class="label-text">Asset Type</span></label>
-                                    <select id="asset-type-filter" class="select select-bordered select-sm font-normal">
-                                        <option value="">All Types</option>
-                                        <option value="Movable">Movable</option>
-                                        <option value="Immovable">Immovable</option>
-                                    </select>
-                                </div>
-                                <!-- Fund Source Filter -->
-                                <div class="form-control w-full">
-                                    <label for="fund-source-filter" class="label py-0"><span class="label-text">Fund Source</span></label>
-                                    <select id="fund-source-filter" class="select select-bordered select-sm font-normal">
-                                        <option value="">All Funds</option>
-                                        <option>General Fund</option>
-                                        <option>Special Education Fund</option>
-                                        <option>Trust Fund</option>
-                                    </select>
-                                </div>
-                                <!-- Category Filter -->
-                                <div class="form-control w-full">
-                                    <label for="category-filter" class="label py-0"><span class="label-text">Category</span></label>
-                                    <select id="category-filter" class="select select-bordered select-sm font-normal">
-                                        <option value="">All Categories</option>
-                                        <!-- JS will populate this -->
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <!-- Stat Cards Grid -->
                     <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 dashboard-grid">
@@ -216,6 +176,23 @@
                             <div class="stat-title">Nearing End of Life</div>
                             <div id="stat-nearing-end-of-life" class="stat-value text-3xl md:text-3xl lg:text-2xl xl:text-3xl break-words">Loading...</div>
                             <div class="stat-desc">Within the next year</div>
+                        </div>
+                        <!-- Filter Card -->
+                        <div class="card bg-base-100 border lg:col-span-2 dashboard-component" data-id="filters" data-type="card">
+                            <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
+                            <div class="card-body p-4">
+                                <h2 class="card-title text-base">Filters</h2>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs">Start Date</span></label>
+                                        <input type="date" id="filter-start-date" class="input input-bordered input-sm" max="9999-12-31">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label py-1"><span class="label-text text-xs">End Date</span></label>
+                                        <input type="date" id="filter-end-date" class="input input-bordered input-sm" max="9999-12-31">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

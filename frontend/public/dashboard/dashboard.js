@@ -3,18 +3,17 @@ import { fetchWithAuth } from '../js/api.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 let viewOptions = {}; // NEW: To hold view-specific options like grouping
-let dateRange = { start: null, end: null }; // NEW: To hold date range
 const sparklines = {}; // To hold sparkline chart instances
 let dashboardFilters = {};
 let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
-        'filters', 'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'assetCondition', // Cards
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Cards
         'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Charts
         'recentActivity' // Tables
     ],
-    cardOrder: ['filters', 'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife'],
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
     tableOrder: ['recentActivity']
 };
@@ -151,24 +150,6 @@ function initializeDashboard(user) {
     const charts = {}; // To hold chart instances for updates
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
-
-    async function loadFilterData() {
-        try {
-            const categories = await fetchWithAuth('categories');
-            const categoryFilterEl = document.getElementById('category-filter');
-            if (categoryFilterEl) {
-                categoryFilterEl.innerHTML = '<option value="">All Categories</option>';
-                categories.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat.name;
-                    option.textContent = cat.name;
-                    categoryFilterEl.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Could not load filter data:', error);
-        }
-    }
 
     function renderSparkline(canvasId, data, color) {
         const ctx = document.getElementById(canvasId);
@@ -385,11 +366,9 @@ function initializeDashboard(user) {
 
     async function fetchDashboardData() {
         try {
-            // NEW: Use the dateRange state object for filters
-            const dateFilters = {
-                startDate: dateRange.start ? dateRange.start.toISOString().split('T')[0] : '',
-                endDate: dateRange.end ? dateRange.end.toISOString().split('T')[0] : ''
-            };
+            const startDate = document.getElementById('filter-start-date').value;
+            const endDate = document.getElementById('filter-end-date').value;
+            const dateFilters = { startDate, endDate };
             const allFilters = { ...dateFilters, ...dashboardFilters, ...viewOptions };
 
             // Build query params, excluding empty values to ensure clean requests
@@ -766,29 +745,21 @@ function initializeDashboard(user) {
             }
         });
 
-        // Filter Listeners
-        const assetTypeFilter = document.getElementById('asset-type-filter');
-        const fundSourceFilter = document.getElementById('fund-source-filter');
-        const categoryFilter = document.getElementById('category-filter');
-        const officeGroupByToggle = document.getElementById('office-group-by-toggle');
+        // Date Filter Handlers
+        const startDateInput = document.getElementById('filter-start-date');
+        const endDateInput = document.getElementById('filter-end-date');
 
-        const addFilterListener = (element, filterKey) => {
-            if (element) {
-                element.addEventListener('change', () => {
-                    if (element.value) {
-                        dashboardFilters[filterKey] = element.value;
-                    } else {
-                        delete dashboardFilters[filterKey];
-                    }
-                    fetchDashboardData();
-                    renderActiveFilters();
-                });
-            }
+        const applyDateFilters = () => {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            fetchDashboardData();
         };
 
-        addFilterListener(assetTypeFilter, 'assetType');
-        addFilterListener(fundSourceFilter, 'fundSource');
-        addFilterListener(categoryFilter, 'category');
+        startDateInput.addEventListener('blur', applyDateFilters);
+        endDateInput.addEventListener('blur', applyDateFilters);
+
+        // NEW: Event listener for the office chart group-by toggle
+        const officeGroupByToggle = document.getElementById('office-group-by-toggle');
 
         if (officeGroupByToggle) {
             // Set initial state for viewOptions
@@ -895,38 +866,10 @@ function initializeDashboard(user) {
         saveBtn.addEventListener('click', saveVisibility);
     }
 
-    function initializeDateRangePicker() {
-        const pickerInput = document.getElementById('date-range-picker');
-        if (!pickerInput) return;
-
-        const picker = new Litepicker({
-            element: pickerInput,
-            singleMode: false,
-            format: 'MMM DD, YYYY',
-            tooltipText: {
-                one: 'day',
-                other: 'days'
-            },
-            setup: (picker) => {
-                picker.on('selected', (date1, date2) => {
-                    // Update state and fetch data
-                    dateRange.start = date1.dateInstance;
-                    dateRange.end = date2.dateInstance;
-                    fetchDashboardData();
-                });
-            }
-        });
-
-        // Set initial date range (last 30 days) and trigger initial load
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(endDate.getDate() - 29);
-        picker.setDateRange(startDate, endDate);
-    }
-
     // --- INITIALIZATION ---
-    loadFilterData(); // Load data for filters
-    initializeDateRangePicker(); // This will trigger the initial data load after setting dates
+    const endDate = new Date().toISOString().split('T')[0];
+    document.getElementById('filter-end-date').value = endDate;
+    fetchDashboardData(); // Initial load
     setupEventListeners();
     setupDashboardInteractivity();
     setupFilterInteractivity(); // Re-add the call to attach filter clear event listeners
