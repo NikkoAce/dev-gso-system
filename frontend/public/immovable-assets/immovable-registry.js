@@ -103,7 +103,7 @@ function initializeRegistryPage(user) {
                 <td data-label="Book Value" class="text-right font-semibold">${formatCurrency(asset.totalBookValue)}</td>
                 <td data-label="Status" class="text-center">${statusBadge}</td>
                 <td data-label="Actions" class="text-center non-printable">
-                     <div class="dropdown md:dropdown-end">
+                     <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                             ${editLink}
