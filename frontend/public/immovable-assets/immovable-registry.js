@@ -25,11 +25,13 @@ function initializeRegistryPage(user) {
 
     // --- STATE ---
     let currentPage = 1;
+    let totalPages = 1;
     let currentSort = { field: 'propertyIndexNumber', order: 'asc' };
     let searchTimeout;
 
     // --- DOM ELEMENTS ---
     const tableBody = document.getElementById('asset-table-body');
+    const tableHeader = tableBody.parentElement.querySelector('thead');
     const tableFooter = document.getElementById('asset-table-footer');
     const searchInput = document.getElementById('search-input');
     const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
@@ -155,6 +157,7 @@ function initializeRegistryPage(user) {
 
         try {
             const data = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
+            totalPages = data.totalPages;
             renderTable(data.docs);
             renderSummary(data.totalValue, data.totalBookValue);
             renderPagination(paginationControls, {
@@ -312,16 +315,32 @@ function initializeRegistryPage(user) {
         }, 300); // Debounce search input
     });
 
+    tableHeader.addEventListener('click', (e) => {
+        const th = e.target.closest('th[data-sort-key]');
+        if (!th) return;
+
+        const key = th.dataset.sortKey;
+        // If it's a new key, default to 'asc'. If same key, toggle direction.
+        const order = (currentSort.field === key && currentSort.order === 'asc') ? 'desc' : 'asc';
+        currentSort = { field: key, order };
+        fetchAndRenderAssets(1);
+    });
+
     toggleFiltersBtn.addEventListener('click', () => {
         filtersGrid.classList.toggle('hidden');
     });
 
     paginationControls.addEventListener('click', (e) => {
-        if (e.target && e.target.id === 'prev-page-btn') {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) {
             fetchAndRenderAssets(currentPage - 1);
-        }
-        if (e.target && e.target.id === 'next-page-btn') {
+        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
             fetchAndRenderAssets(currentPage + 1);
+        } else if (target.classList.contains('page-btn')) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page !== currentPage) fetchAndRenderAssets(page);
         }
     });
 
