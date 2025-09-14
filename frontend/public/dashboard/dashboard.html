@@ -240,12 +240,14 @@
                             <div class="card-body">
                                 <h2 class="card-title">Recent Activity</h2>
                                 <!-- Tabs -->
-                                <div id="activity-tabs-container" role="tablist" class="tabs tabs-bordered">
-                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Assets" data-table="assets" checked />
-                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Transfers" data-table="transfers" />
-                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Reqs" data-table="requisitions" />
-                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Supplies" data-table="supplies" />
-                                    <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Immovable" data-table="immovable" />
+                                <div class="overflow-x-auto">
+                                    <div id="activity-tabs-container" role="tablist" class="tabs tabs-bordered">
+                                        <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Movable Assets" data-table="assets" checked />
+                                        <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Transfers" data-table="transfers" />
+                                        <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Requisitions" data-table="requisitions" />
+                                        <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Top Supplies" data-table="supplies" />
+                                        <input type="radio" name="activity_tabs" role="tab" class="tab" aria-label="Immovable" data-table="immovable" />
+                                    </div>
                                 </div>
                                 <!-- Single Table Container -->
                                 <div class="overflow-x-auto md:h-48 mt-4">

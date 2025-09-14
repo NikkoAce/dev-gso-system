@@ -734,12 +734,10 @@ function initializeDashboard(user) {
                 if (card.classList.contains('sub-stat-link')) {
                     // This is a sub-stat link, we need to pass all active dashboard filters to the registry page.
                     const params = new URLSearchParams();
-                    
-                    const startDate = document.getElementById('filter-start-date').value;
-                    const endDate = document.getElementById('filter-end-date').value;
 
-                    if (startDate) params.append('startDate', startDate);
-                    if (endDate) params.append('endDate', endDate);
+                    // FIX: Use the dateRange state object instead of non-existent elements
+                    if (dateRange.start) params.append('startDate', dateRange.start.toISOString().split('T')[0]);
+                    if (dateRange.end) params.append('endDate', dateRange.end.toISOString().split('T')[0]);
 
                     // Add interactive filters (office, status, condition)
                     const isImmovable = url.includes('immovable-registry.html');
