@@ -391,7 +391,6 @@ function initializeDashboard(user) {
 
     function renderStatCards(stats) {
         document.getElementById('stat-portfolio-value').textContent = formatCurrency(stats.totalPortfolioValue?.current || 0);
-        // NEW: Populate sub-values for movable and immovable assets
         document.getElementById('stat-movable-value').textContent = formatCurrency(stats.movableAssetsValue?.current || 0);
         document.getElementById('stat-immovable-value').textContent = formatCurrency(stats.immovableAssetsValue?.current || 0);
 
@@ -407,11 +406,11 @@ function initializeDashboard(user) {
 
         const renderTrend = (el, trend) => {
             if (trend > 0) {
-                el.innerHTML = `<i data-lucide="trending-up" class="text-success"></i> +${trend}%`;
+                el.innerHTML = `<i data-lucide="trending-up" class="text-success"></i> +${trend}% from last month`;
             } else if (trend < 0) {
-                el.innerHTML = `<i data-lucide="trending-down" class="text-error"></i> ${trend}%`;
+                el.innerHTML = `<i data-lucide="trending-down" class="text-error"></i> ${trend}% from last month`;
             } else {
-                el.innerHTML = `No change`;
+                el.innerHTML = `No change from last month`;
             }
         };
 
@@ -419,7 +418,6 @@ function initializeDashboard(user) {
         renderTrend(document.getElementById('stat-total-assets-trend'), stats.totalAssets?.trend || 0);
         renderTrend(document.getElementById('stat-pending-reqs-trend'), stats.pendingRequisitions?.trend || 0);
         renderTrend(document.getElementById('stat-immovable-assets-trend'), stats.immovableAssets?.trend || 0);
-        // No trend for unassignedAssets yet, as per backend.
 
         // NEW: Render sparklines
         const computedStyle = getComputedStyle(document.documentElement);
@@ -500,15 +498,45 @@ function initializeDashboard(user) {
                 filterKey: 'office'
             },
             assetStatusChart: {
-                type: 'pie',
+                type: 'doughnut',
                 data: chartData.assetStatus,
-                options: {},
+                options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.parsed;
+                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                    label += `${value} (${percentage})`;
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                },
                 filterKey: 'status'
             },
             assetConditionChart: {
                 type: 'bar',
                 data: chartData.assetCondition, // The backend now provides a clean "Not Set" label.
                 options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.x !== null) { label += context.parsed.x + ' assets'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
                     indexAxis: 'y',
                 },
                 filterKey: 'condition'
