@@ -48,26 +48,26 @@
                         <div class="card-body">
                             <h2 id="group-reports-heading" class="card-title">Generate Group Reports</h2>
                             <div class="flex flex-wrap items-end gap-4">
-                                <div class="form-control w-full max-w-xs">
-                                    <label for="fund-source-filter" class="label"><span class="label-text">Fund Source</span></label>
+                                <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">Fund Source</span></div>
                                     <select id="fund-source-filter" class="select select-bordered font-normal">
                                         <option value="">Select a Fund Source</option>
                                         <option>General Fund</option>
                                         <option>Special Education Fund</option>
                                         <option>Trust Fund</option>
                                     </select>
-                                </div>
-                                <div class="form-control w-full max-w-xs">
-                                    <label for="category-filter" class="label"><span class="label-text">Category</span></label>
+                                </label>
+                                <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">Category</span></div>
                                     <select id="category-filter" class="select select-bordered font-normal">
                                         <option value="">All Categories</option>
                                         <!-- JS will populate this -->
                                     </select>
-                                </div>
-                                <div class="form-control w-full max-w-xs">
-                                    <label for="as-at-date" class="label"><span class="label-text">As at Date</span></label>
+                                </label>
+                                <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">As at Date</span></div>
                                     <input type="date" id="as-at-date" class="input input-bordered">
-                                </div>
+                                </label>
                                 <button id="generate-rpcppe" class="btn btn-primary">
                                     <i data-lucide="file-text"></i> Generate RPCPPE
                                 </button>

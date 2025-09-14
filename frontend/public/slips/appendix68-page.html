@@ -43,11 +43,17 @@
                     <div class="text-center mb-4">
                         <h3 class="font-bold text-lg">WASTE MATERIALS REPORT</h3>
                     </div>
-                    <div class="grid grid-cols-2 gap-x-4 text-sm mb-4">
+                    <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
                         <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
                         <span>Fund: <span class="font-semibold underline">General Fund</span></span>
-                        <span>Place of Storage: <input type="text" id="place-of-storage" class="input input-bordered input-xs w-full" value="GSO Warehouse"></span>
-                        <span>Date: <input type="date" id="issued-date" class="input input-bordered input-xs w-full"></span>
+                        <label class="form-control">
+                            <div class="label py-0"><span class="label-text">Place of Storage</span></div>
+                            <input type="text" id="place-of-storage" class="input input-bordered input-sm w-full" value="GSO Warehouse">
+                        </label>
+                        <label class="form-control">
+                            <div class="label py-0"><span class="label-text">Date</span></div>
+                            <input type="date" id="issued-date" class="input input-bordered input-sm w-full">
+                        </label>
                     </div>
 
                     <table class="w-full text-xs border-collapse border border-black mt-4">

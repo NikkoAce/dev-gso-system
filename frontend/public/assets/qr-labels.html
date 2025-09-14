@@ -94,28 +94,31 @@
                     <!-- Filter section -->
                     <div class="card bg-base-100 border non-printable">
                         <div class="card-body p-4">
-                            <div class="flex flex-col md:flex-row gap-4">
-                                <div class="form-control flex-grow">
+                            <div class="flex flex-col md:flex-row gap-4 items-end">
+                                <label class="form-control flex-grow">
+                                    <div class="label sr-only"><span class="label-text">Search</span></div>
                                     <div class="relative">
+                                        <input type="text" id="search-input" placeholder="Search by Property No, Description..." class="input input-bordered w-full pl-10">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
                                         </div>
-                                        <input type="text" id="search-input" placeholder="Search by Property No, Description..." class="input input-bordered w-full pl-10">
                                     </div>
-                                </div>
-                                <div class="form-control w-full md:w-64">
+                                </label>
+                                <label class="form-control w-full md:w-64">
+                                    <div class="label sr-only"><span class="label-text">Office</span></div>
                                     <select id="office-filter" class="select select-bordered font-normal">
                                         <option value="">All Offices</option>
                                         <!-- JS will populate this -->
                                     </select>
-                                </div>
-                                <div class="form-control w-full md:w-64">
+                                </label>
+                                <label class="form-control w-full md:w-64">
+                                    <div class="label sr-only"><span class="label-text">Slip Type</span></div>
                                     <select id="category-filter" class="select select-bordered font-normal w-full">
                                         <option value="all" selected>All Slip Types</option>
                                         <option value="PAR">PAR (Property Acknowledgment)</option>
                                         <option value="ICS">ICS (Inventory Custodian)</option>
                                     </select>
-                                </div>
+                                </label>
                             </div>
                         </div>
                     </div>

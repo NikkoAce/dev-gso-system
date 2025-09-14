@@ -48,8 +48,8 @@
                         <div class="card-body">
                             <h2 id="immovable-reports-heading" class="card-title">Generate Immovable Asset Report</h2>
                             <div class="flex flex-wrap items-end gap-4">
-                                <div class="form-control w-full max-w-xs">
-                                    <label for="type-filter" class="label"><span class="label-text">Type</span></label>
+                                <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">Type</span></div>
                                     <select id="type-filter" class="select select-bordered font-normal">
                                         <option value="">All Types</option>
                                         <option value="Land">Land</option>
@@ -58,9 +58,9 @@
                                         <option value="Road Network">Road Network</option>
                                         <option value="Other Public Infrastructure">Other Public Infrastructure</option>
                                     </select>
-                                </div>
-                                <div class="form-control w-full max-w-xs">
-                                    <label for="status-filter" class="label"><span class="label-text">Status</span></label>
+                                </label>
+                                <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">Status</span></div>
                                     <select id="status-filter" class="select select-bordered font-normal">
                                         <option value="">All Statuses</option>
                                         <option value="In Use">In Use</option>
@@ -69,15 +69,15 @@
                                         <option value="For Disposal">For Disposal</option>
                                         <option value="Disposed">Disposed</option>
                                     </select>
-                                </div>
-                                 <div class="form-control w-full max-w-xs">
-                                    <label for="start-date" class="label"><span class="label-text">Start Date</span></label>
+                                </label>
+                                 <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">Start Date</span></div>
                                     <input type="date" id="start-date" class="input input-bordered">
-                                </div>
-                                <div class="form-control w-full max-w-xs">
-                                    <label for="end-date" class="label"><span class="label-text">End Date</span></label>
+                                </label>
+                                <label class="form-control w-full max-w-xs">
+                                    <div class="label"><span class="label-text">End Date</span></div>
                                     <input type="date" id="end-date" class="input input-bordered">
-                                </div>
+                                </label>
                                 <button id="generate-report-btn" class="btn btn-primary">
                                     <i data-lucide="file-text"></i> Generate Report
                                 </button>

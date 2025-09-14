@@ -49,29 +49,29 @@
                         <form id="add-category-form" class="card-body">
                             <h2 id="category-form-title" class="card-title mb-4">Add New Category</h2>
                             <input type="hidden" id="category-id">
-                            <div class="form-control">
-                                <label for="new-category-name" class="label"><span class="label-text">Category Name *</span></label>
+                            <label class="form-control">
+                                <div class="label"><span class="label-text">Category Name *</span></div>
                                 <input type="text" id="new-category-name" placeholder="e.g., IT Equipment" class="input input-bordered w-full" required>
-                            </div>
+                            </label>
                             <div class="grid grid-cols-2 gap-4">
-                                <div class="form-control">
-                                    <label for="new-account-group" class="label"><span class="label-text">Account Group</span></label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Account Group</span></div>
                                     <input type="text" id="new-account-group" placeholder="e.g., 1" class="input input-bordered w-full">
-                                </div>
-                                <div class="form-control">
-                                    <label for="new-major-account-group" class="label"><span class="label-text">Major Account Group</span></label>
+                                </label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Major Account Group</span></div>
                                     <input type="text" id="new-major-account-group" placeholder="e.g., 06" class="input input-bordered w-full">
-                                </div>
+                                </label>
                             </div>
                              <div class="grid grid-cols-2 gap-4">
-                                <div class="form-control">
-                                    <label for="new-sub-major-group" class="label"><span class="label-text">Sub-Major Group Code *</span></label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Sub-Major Group Code *</span></div>
                                     <input type="text" id="new-sub-major-group" placeholder="e.g., 05" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="new-gl-account" class="label"><span class="label-text">GL Account Code *</span></label>
+                                </label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">GL Account Code *</span></div>
                                     <input type="text" id="new-gl-account" placeholder="e.g., 010" class="input input-bordered w-full" required>
-                                </div>
+                                </label>
                             </div>
                             <div class="card-actions justify-end">
                                 <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
@@ -82,9 +82,9 @@
 
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <h2 class="text-2xl font-bold text-gray-800">Existing Categories</h2>
-                        <div class="form-control w-full sm:w-auto">
+                        <label class="form-control w-full sm:w-auto">
                             <input type="text" id="search-input" placeholder="Search categories..." class="input input-bordered input-sm w-full sm:max-w-xs">
-                        </div>
+                        </label>
                     </div>
 
                     <div class="card bg-base-100 border">

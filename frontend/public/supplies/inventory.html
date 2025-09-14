@@ -50,32 +50,32 @@
                             <h2 id="stock-item-form-title" class="card-title mb-4">Add New Stock Item</h2>
                             <input type="hidden" id="stock-item-id">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="form-control">
-                                    <label for="stock-number" class="label"><span class="label-text">Stock Number *</span></label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Stock Number *</span></div>
                                     <input type="text" id="stock-number" placeholder="e.g., BP-A4" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="md:col-span-2 form-control">
-                                    <label for="description" class="label"><span class="label-text">Description *</span></label>
+                                </label>
+                                <label class="md:col-span-2 form-control">
+                                    <div class="label"><span class="label-text">Description *</span></div>
                                     <input type="text" id="description" placeholder="e.g., Bond Paper, A4, 70gsm" class="input input-bordered w-full" required>
-                                </div>
+                                </label>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div class="form-control">
-                                    <label for="unit-of-measure" class="label"><span class="label-text">Unit of Measure *</span></label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Unit of Measure *</span></div>
                                     <input type="text" id="unit-of-measure" placeholder="e.g., ream, box, piece" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="quantity" class="label"><span class="label-text">Quantity on Hand *</span></label>
+                                </label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Quantity on Hand *</span></div>
                                     <input type="number" id="quantity" value="0" min="0" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="reorder-point" class="label"><span class="label-text">Re-order Point</span></label>
+                                </label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Re-order Point</span></div>
                                     <input type="number" id="reorder-point" value="0" min="0" class="input input-bordered w-full">
-                                </div>
-                                <div class="form-control">
-                                    <label for="category" class="label"><span class="label-text">Category</span></label>
+                                </label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Category</span></div>
                                     <input type="text" id="category" placeholder="e.g., Office Supplies" class="input input-bordered w-full">
-                                </div>
+                                </label>
                             </div>
                             <div class="card-actions justify-end">
                                 <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>

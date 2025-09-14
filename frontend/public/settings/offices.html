@@ -50,14 +50,14 @@
                             <h2 id="office-form-title" class="card-title mb-4">Add New Office</h2>
                             <input type="hidden" id="office-id">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="md:col-span-2 form-control">
-                                    <label for="new-office-name" class="label"><span class="label-text">Office Name</span></label>
+                                <label class="md:col-span-2 form-control">
+                                    <div class="label"><span class="label-text">Office Name</span></div>
                                     <input type="text" id="new-office-name" placeholder="e.g., Mayor's Office" class="input input-bordered w-full" required>
-                                </div>
-                                <div class="form-control">
-                                    <label for="new-office-code" class="label"><span class="label-text">2-Digit Code</span></label>
+                                </label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">2-Digit Code</span></div>
                                     <input type="text" id="new-office-code" placeholder="e.g., 01" maxlength="2" class="input input-bordered w-full" required>
-                                </div>
+                                </label>
                             </div>
                             <div class="card-actions justify-end">
                                 <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
@@ -68,9 +68,9 @@
 
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <h2 class="text-2xl font-bold text-gray-800">Existing Offices</h2>
-                        <div class="form-control w-full sm:w-auto">
+                        <label class="form-control w-full sm:w-auto">
                             <input type="text" id="search-input" placeholder="Search offices..." class="input input-bordered input-sm w-full sm:max-w-xs">
-                        </div>
+                        </label>
                     </div>
 
                     <div class="card bg-base-100 border">

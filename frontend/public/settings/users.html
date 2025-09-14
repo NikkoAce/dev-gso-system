@@ -34,9 +34,9 @@
 
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <h2 class="text-2xl font-bold text-gray-800">System Users</h2>
-                        <div class="form-control w-full sm:w-auto">
+                        <label class="form-control w-full sm:w-auto">
                             <input type="text" id="search-input" placeholder="Search by name or email..." class="input input-bordered input-sm w-full sm:max-w-xs">
-                        </div>
+                        </label>
                     </div>
 
                     <div class="card bg-base-100 border">
@@ -76,19 +76,19 @@
                 <input type="hidden" id="edit-user-id">
 
                 <div class="space-y-4">
-                    <div class="form-control">
-                        <label class="label" for="edit-role"><span class="label-text">Role</span></label>
+                    <label class="form-control">
+                        <div class="label"><span class="label-text">Role</span></div>
                         <select id="edit-role" class="select select-bordered">
                             <!-- Roles will be populated by JS -->
                         </select>
-                    </div>
+                    </label>
 
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">Permissions</span></label>
+                    <label class="form-control">
+                        <div class="label"><span class="label-text">Permissions</span></div>
                         <div id="edit-permissions-container" class="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-lg bg-base-200 max-h-60 overflow-y-auto">
                             <!-- Permissions checkboxes will be populated by JS -->
                         </div>
-                    </div>
+                    </label>
                 </div>
 
                 <div class="modal-action">

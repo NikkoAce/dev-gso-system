@@ -53,16 +53,16 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Core Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control md:col-span-2">
-                                            <label for="name" class="label"><span class="label-text">Asset Name</span></label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Asset Name</span></div>
                                             <input type="text" id="name" name="name" class="input input-bordered" required>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="propertyIndexNumber" class="label"><span class="label-text">Property Index Number (PIN)</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Property Index Number (PIN)</span></div>
                                             <input type="text" id="propertyIndexNumber" name="propertyIndexNumber" class="input input-bordered" required>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="type" class="label"><span class="label-text">Asset Type</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Asset Type</span></div>
                                             <select id="type" name="type" class="select select-bordered" required>
                                                 <option value="Land">Land</option>
                                                 <option value="Building">Building</option>
@@ -70,39 +70,39 @@
                                                 <option value="Road Network">Road Network</option>
                                                 <option value="Other Public Infrastructure">Other Public Infrastructure</option>
                                             </select>
-                                        </div>
-                                        <div class="form-control md:col-span-2">
-                                            <label for="location" class="label"><span class="label-text">Location / Address</span></label>
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Location / Address</span></div>
                                             <input type="text" id="location" name="location" class="input input-bordered" required>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="dateAcquired" class="label"><span class="label-text">Date Acquired</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Date Acquired</span></div>
                                             <input type="date" id="dateAcquired" name="dateAcquired" class="input input-bordered" required>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="assessedValue" class="label"><span class="label-text">Assessed Value (PHP)</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Assessed Value (PHP)</span></div>
                                             <input type="text" inputmode="decimal" id="assessedValue" name="assessedValue" class="input input-bordered" required>
-                                        </div>
-                                        <div class="form-control">
-                                            <label class="label"><span class="label-text">Total Book Value (PHP)</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Total Book Value (PHP)</span></div>
                                             <p class="text-sm text-base-content/70 -mt-2">Assessed value plus all improvements.</p>
                                             <input type="text" id="totalBookValue" class="input input-bordered mt-1 font-bold" readonly>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="fundSource" class="label"><span class="label-text">Fund Source</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Fund Source</span></div>
                                             <select id="fundSource" name="fundSource" class="select select-bordered">
                                                 <option value="">Select Fund</option>
                                                 <option>General Fund</option>
                                                 <option>Special Education Fund</option>
                                                 <option>Trust Fund</option>
                                             </select>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="accountCode" class="label"><span class="label-text">Account Code</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Account Code</span></div>
                                             <input type="text" id="accountCode" name="accountCode" class="input input-bordered">
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="status" class="label"><span class="label-text">Status</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Status</span></div>
                                             <select id="status" name="status" class="select select-bordered" required>
                                                 <option value="In Use">In Use</option>
                                                 <option value="Under Construction">Under Construction</option>
@@ -110,9 +110,9 @@
                                                 <option value="For Disposal">For Disposal</option>
                                                 <option value="Disposed">Disposed</option>
                                             </select>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="acquisitionMethod" class="label"><span class="label-text">Acquisition Method</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Acquisition Method</span></div>
                                             <select id="acquisitionMethod" name="acquisitionMethod" class="select select-bordered">
                                                 <option value="Purchase">Purchase</option>
                                                 <option value="Donation">Donation</option>
@@ -120,25 +120,25 @@
                                                 <option value="Expropriation">Expropriation</option>
                                                 <option value="Other">Other</option>
                                             </select>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="condition" class="label"><span class="label-text">Condition</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Condition</span></div>
                                             <select id="condition" name="condition" class="select select-bordered">
                                                 <option value="Good">Good</option>
                                                 <option value="Fair">Fair</option>
                                                 <option value="Needs Major Repair">Needs Major Repair</option>
                                                 <option value="Condemned">Condemned</option>
                                             </select>
-                                        </div>
-                                        <div class="form-control md:col-span-2">
-                                            <label for="remarks" class="label"><span class="label-text">Remarks</span></label>
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Remarks</span></div>
                                             <textarea id="remarks" name="remarks" class="textarea textarea-bordered"></textarea>
-                                        </div>
-                                        <div class="form-control md:col-span-2">
-                                            <label for="parentAsset" class="label"><span class="label-text">Parent Asset (e.g., Land for a Building)</span></label>
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Parent Asset (e.g., Land for a Building)</span></div>
                                             <select id="parentAsset" name="parentAsset" class="select select-bordered">
                                             </select>
-                                        </div>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -177,14 +177,14 @@
                                         <span class="text-sm text-base-content/70" id="measurement-unit"></span>
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                        <div class="form-control">
-                                            <label for="latitude" class="label"><span class="label-text">Latitude</span></label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Latitude</span></div>
                                             <input type="number" id="latitude" name="latitude" class="input input-bordered" step="any" readonly>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="longitude" class="label"><span class="label-text">Longitude</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Longitude</span></div>
                                             <input type="number" id="longitude" name="longitude" class="input input-bordered" step="any" readonly>
-                                        </div>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -210,16 +210,34 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Land Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control"><label for="lotNumber" class="label"><span class="label-text">Lot Number</span></label><input type="text" id="lotNumber" name="landDetails.lotNumber" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="titleNumber" class="label"><span class="label-text">Title Number (TCT/OCT)</span></label><input type="text" id="titleNumber" name="landDetails.titleNumber" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="taxDeclarationNumber" class="label"><span class="label-text">Tax Declaration Number</span></label><input type="text" id="taxDeclarationNumber" name="landDetails.taxDeclarationNumber" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="areaSqm" class="label"><span class="label-text">Area (sqm)</span></label><input type="number" id="areaSqm" name="landDetails.areaSqm" class="input input-bordered" step="0.01"></div>
-                                        <div class="form-control"><label for="classification" class="label"><span class="label-text">Classification</span></label><select id="classification" name="landDetails.classification" class="select select-bordered"><option>Residential</option><option>Commercial</option><option>Agricultural</option><option>Industrial</option><option>Institutional</option><option>Park/Open Space</option><option>Other</option></select></div>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Lot Number</span></div><input type="text" id="lotNumber" name="landDetails.lotNumber" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Title Number (TCT/OCT)</span></div><input type="text" id="titleNumber" name="landDetails.titleNumber" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Tax Declaration Number</span></div><input type="text" id="taxDeclarationNumber" name="landDetails.taxDeclarationNumber" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Area (sqm)</span></div><input type="number" id="areaSqm" name="landDetails.areaSqm" class="input input-bordered" step="0.01">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Classification</span></div><select id="classification" name="landDetails.classification" class="select select-bordered"><option>Residential</option><option>Commercial</option><option>Agricultural</option><option>Industrial</option><option>Institutional</option><option>Park/Open Space</option><option>Other</option></select>
+                                        </label>
                                         <div class="md:col-span-2"><p class="font-medium mt-2">Boundaries</p></div>
-                                        <div class="form-control"><label for="boundaryNorth" class="label"><span class="label-text">North</span></label><input type="text" id="boundaryNorth" name="landDetails.boundaries.north" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="boundarySouth" class="label"><span class="label-text">South</span></label><input type="text" id="boundarySouth" name="landDetails.boundaries.south" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="boundaryEast" class="label"><span class="label-text">East</span></label><input type="text" id="boundaryEast" name="landDetails.boundaries.east" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="boundaryWest" class="label"><span class="label-text">West</span></label><input type="text" id="boundaryWest" name="landDetails.boundaries.west" class="input input-bordered"></div>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">North</span></div><input type="text" id="boundaryNorth" name="landDetails.boundaries.north" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">South</span></div><input type="text" id="boundarySouth" name="landDetails.boundaries.south" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">East</span></div><input type="text" id="boundaryEast" name="landDetails.boundaries.east" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">West</span></div><input type="text" id="boundaryWest" name="landDetails.boundaries.west" class="input input-bordered">
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -229,13 +247,27 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Building &amp; Structure Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control"><label for="numberOfFloors" class="label"><span class="label-text">Number of Floors</span></label><input type="number" id="numberOfFloors" name="buildingAndStructureDetails.numberOfFloors" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="floorArea" class="label"><span class="label-text">Total Floor Area (sqm)</span></label><input type="number" id="floorArea" name="buildingAndStructureDetails.floorArea" class="input input-bordered" step="0.01"></div>
-                                        <div class="form-control"><label for="constructionDate" class="label"><span class="label-text">Construction Date</span></label><input type="date" id="constructionDate" name="buildingAndStructureDetails.constructionDate" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="constructionMaterials" class="label"><span class="label-text">Construction Materials</span></label><input type="text" id="constructionMaterials" name="buildingAndStructureDetails.constructionMaterials" placeholder="e.g., Concrete, Steel, Wood" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="estimatedUsefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="estimatedUsefulLife" name="buildingAndStructureDetails.estimatedUsefulLife" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="text" inputmode="decimal" id="salvageValue" name="buildingAndStructureDetails.salvageValue" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="text" inputmode="decimal" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" value="0.00"></div>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Number of Floors</span></div><input type="number" id="numberOfFloors" name="buildingAndStructureDetails.numberOfFloors" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Total Floor Area (sqm)</span></div><input type="number" id="floorArea" name="buildingAndStructureDetails.floorArea" class="input input-bordered" step="0.01">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Construction Date</span></div><input type="date" id="constructionDate" name="buildingAndStructureDetails.constructionDate" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Construction Materials</span></div><input type="text" id="constructionMaterials" name="buildingAndStructureDetails.constructionMaterials" placeholder="e.g., Concrete, Steel, Wood" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Estimated Useful Life (Years)</span></div><input type="number" id="estimatedUsefulLife" name="buildingAndStructureDetails.estimatedUsefulLife" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Salvage Value (PHP)</span></div><input type="text" inputmode="decimal" id="salvageValue" name="buildingAndStructureDetails.salvageValue" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Impairment Losses (PHP)</span></div><input type="text" inputmode="decimal" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" value="0.00">
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -245,9 +277,15 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Road Network Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div class="form-control"><label for="lengthKm" class="label"><span class="label-text">Length (km)</span></label><input type="number" id="lengthKm" name="roadNetworkDetails.lengthKm" class="input input-bordered" step="0.01"></div>
-                                        <div class="form-control"><label for="widthMeters" class="label"><span class="label-text">Width (meters)</span></label><input type="number" id="widthMeters" name="roadNetworkDetails.widthMeters" class="input input-bordered" step="0.01"></div>
-                                        <div class="form-control"><label for="pavementType" class="label"><span class="label-text">Pavement Type</span></label><select id="pavementType" name="roadNetworkDetails.pavementType" class="select select-bordered"><option>Concrete</option><option>Asphalt</option><option>Gravel</option><option>Earth</option></select></div>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Length (km)</span></div><input type="number" id="lengthKm" name="roadNetworkDetails.lengthKm" class="input input-bordered" step="0.01">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Width (meters)</span></div><input type="number" id="widthMeters" name="roadNetworkDetails.widthMeters" class="input input-bordered" step="0.01">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Pavement Type</span></div><select id="pavementType" name="roadNetworkDetails.pavementType" class="select select-bordered"><option>Concrete</option><option>Asphalt</option><option>Gravel</option><option>Earth</option></select>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -278,8 +316,12 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Other Public Infrastructure Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control"><label for="structureType" class="label"><span class="label-text">Structure Type</span></label><input type="text" id="structureType" name="otherInfrastructureDetails.structureType" placeholder="e.g., Bridge, Water System" class="input input-bordered"></div>
-                                        <div class="form-control md:col-span-2"><label for="technicalSpecifications" class="label"><span class="label-text">Technical Specifications</span></label><textarea id="technicalSpecifications" name="otherInfrastructureDetails.technicalSpecifications" class="textarea textarea-bordered"></textarea></div>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Structure Type</span></div><input type="text" id="structureType" name="otherInfrastructureDetails.structureType" placeholder="e.g., Bridge, Water System" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Technical Specifications</span></div><textarea id="technicalSpecifications" name="otherInfrastructureDetails.technicalSpecifications" class="textarea textarea-bordered"></textarea>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -294,11 +336,21 @@
                                 <p class="text-sm text-base-content/70 -mt-2">Log major additions or phases that increase the asset's value.</p>
                                 <!-- Form to add a new improvement -->
                                 <form id="improvement-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end p-4 border rounded-lg bg-base-200 mb-4">
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Date</span></label><input type="date" id="new-improvement-date" class="input input-bordered input-sm w-full" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Cost (PHP)</span></label><input type="text" inputmode="decimal" id="new-improvement-cost" placeholder="0.00" class="input input-bordered input-sm w-full" required></div>
-                                    <div class="form-control md:col-span-2"><label class="label py-1"><span class="label-text text-xs">Description</span></label><input type="text" id="new-improvement-description" placeholder="e.g., Phase 1 Construction" class="input input-bordered input-sm w-full" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Fund Source</span></label><select id="new-improvement-fund" class="select select-bordered select-sm w-full font-normal"><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Remarks</span></label><input type="text" id="new-improvement-remarks" placeholder="Optional notes" class="input input-bordered input-sm w-full"></div>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Date</span></div><input type="date" id="new-improvement-date" class="input input-bordered input-sm w-full" required>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Cost (PHP)</span></div><input type="text" inputmode="decimal" id="new-improvement-cost" placeholder="0.00" class="input input-bordered input-sm w-full" required>
+                                    </label>
+                                    <label class="form-control md:col-span-2">
+                                        <div class="label py-1"><span class="label-text text-xs">Description</span></div><input type="text" id="new-improvement-description" placeholder="e.g., Phase 1 Construction" class="input input-bordered input-sm w-full" required>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Fund Source</span></div><select id="new-improvement-fund" class="select select-bordered select-sm w-full font-normal"><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Remarks</span></div><input type="text" id="new-improvement-remarks" placeholder="Optional notes" class="input input-bordered input-sm w-full">
+                                    </label>
                                     <div class="md:col-span-2 text-right">
                                         <button type="submit" class="btn btn-sm btn-primary">Add Improvement</button>
                                     </div>
@@ -319,9 +371,15 @@
                                 <p class="text-sm text-base-content/70 -mt-2">Log repair and maintenance activities for this asset.</p>
                                 <!-- Form to add a new repair -->
                                 <form id="repair-form" class="grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr_auto] gap-4 md:gap-2 items-end p-4 border rounded-lg bg-base-200 mb-4">
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Date</span></label><input type="date" id="new-repair-date" class="input input-bordered input-sm" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Nature of Repair</span></label><input type="text" id="new-repair-nature" placeholder="e.g., Roof resealing" class="input input-bordered input-sm" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Amount</span></label><input type="text" inputmode="decimal" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" required></div>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Date</span></div><input type="date" id="new-repair-date" class="input input-bordered input-sm" required>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Nature of Repair</span></div><input type="text" id="new-repair-nature" placeholder="e.g., Roof resealing" class="input input-bordered input-sm" required>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Amount</span></div><input type="text" inputmode="decimal" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" required>
+                                    </label>
                                     <button type="submit" class="btn btn-sm btn-primary w-full md:w-auto">Add</button>
                                 </form>
                                 <!-- Container for existing repair records -->

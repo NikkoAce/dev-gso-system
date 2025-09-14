@@ -78,24 +78,26 @@
                             <!-- Combined Filters -->
                             <div id="filters-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end pt-4 border-t">
                                 <!-- Search Input -->
-                                <div class="relative md:col-span-2">
-                                    <label for="search-input" class="label py-0"><span class="label-text">Search</span></label>
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                                <label class="form-control md:col-span-2">
+                                    <div class="label py-0"><span class="label-text">Search</span></div>
+                                    <div class="relative">
+                                        <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="input input-bordered w-full pl-10">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                                        </div>
                                     </div>
-                                    <input type="text" id="search-input" placeholder="Search by Property No, Description, Custodian..." class="input input-bordered w-full pl-10">
-                                </div>
+                                </label>
                                 <!-- Category Filter -->
-                                <div class="w-full">
-                                    <label for="category-filter" class="label py-0"><span class="label-text">Category</span></label>
+                                <label class="form-control w-full">
+                                    <div class="label py-0"><span class="label-text">Category</span></div>
                                     <select id="category-filter" class="select select-bordered w-full">
                                         <option value="">All Categories</option>
                                         <!-- JS will populate this -->
                                     </select>
-                                </div>
+                                </label>
                                 <!-- Status Filter -->
-                                <div class="w-full">
-                                    <label for="status-filter" class="label py-0"><span class="label-text">Status</span></label>
+                                <label class="form-control w-full">
+                                    <div class="label py-0"><span class="label-text">Status</span></div>
                                     <select id="status-filter" class="select select-bordered w-full">
                                         <option value="">All Statuses</option>
                                         <option>In Use</option>
@@ -105,10 +107,10 @@
                                         <option>Waste</option>
                                         <option>Disposed</option>
                                     </select>
-                                </div>
+                                </label>
                                 <!-- Condition Filter -->
-                                <div class="w-full">
-                                    <label for="condition-filter" class="label py-0"><span class="label-text">Condition</span></label>
+                                <label class="form-control w-full">
+                                    <div class="label py-0"><span class="label-text">Condition</span></div>
                                     <select id="condition-filter" class="select select-bordered w-full font-normal">
                                         <option value="">All Conditions</option>
                                         <option>Very Good (VG)</option>
@@ -118,44 +120,44 @@
                                         <option>Scrap Condition (S)</option>
                                         <option value="Not Set">Not Set</option>
                                     </select>
-                                </div>
+                                </label>
                                 <!-- Office Filter -->
-                                <div class="w-full">
-                                    <label for="office-filter" class="label py-0"><span class="label-text">Custodian's Office</span></label>
+                                <label class="form-control w-full">
+                                    <div class="label py-0"><span class="label-text">Custodian's Office</span></div>
                                     <select id="office-filter" class="select select-bordered w-full font-normal">
                                         <option value="">All Offices</option>
                                         <!-- JS will populate this -->
                                     </select>
-                                </div>
+                                </label>
                                 <!-- Date Range Filter -->
-                                <div class="md:col-span-2">
-                                    <label for="start-date-filter" class="label py-0"><span class="label-text">Acquired Between</span></label>
+                                <label class="form-control md:col-span-2">
+                                    <div class="label py-0"><span class="label-text">Acquired Between</span></div>
                                     <div class="flex items-center gap-2">
                                         <input type="date" id="start-date-filter" class="input input-bordered w-full text-sm">
                                         <span class="text-gray-500">-</span>
                                         <input type="date" id="end-date-filter" class="input input-bordered w-full text-sm">
                                     </div>
-                                </div>
+                                </label>
                                 <!-- Fund Source Filter -->
-                                <div class="w-full">
-                                    <label for="fund-source-filter" class="label py-0"><span class="label-text">Fund Source</span></label>
+                                <label class="form-control w-full">
+                                    <div class="label py-0"><span class="label-text">Fund Source</span></div>
                                     <select id="fund-source-filter" class="select select-bordered w-full font-normal">
                                         <option value="">All Fund Sources</option>
                                         <option>General Fund</option>
                                         <option>Special Education Fund</option>
                                         <option>Trust Fund</option>
                                     </select>
-                                </div>
+                                </label>
                                 <!-- Assignment Filter -->
-                                <div class="w-full">
-                                    <label for="assignment-filter" class="label py-0"><span class="label-text">Assignment</span></label>
+                                <label class="form-control w-full">
+                                    <div class="label py-0"><span class="label-text">Assignment</span></div>
                                     <select id="assignment-filter" class="select select-bordered w-full font-normal">
                                         <option value="">All Assignments</option>
                                         <option value="unassigned">Unassigned</option>
                                         <option value="par">Assigned to PAR</option>
                                         <option value="ics">Assigned to ICS</option>
                                     </select>
-                                </div>
+                                </label>
                             </div>
                             <!-- Action Buttons Bar -->
                             <div class="flex flex-wrap justify-start md:justify-end gap-2 mt-4 pt-4 border-t">

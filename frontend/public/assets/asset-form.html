@@ -49,42 +49,52 @@
                                             <span class="label-text font-semibold">Create Multiple Assets</span>
                                         </label>
                                         <div id="bulk-create-fields" class="hidden form-control">
-                                            <label for="bulk-quantity" class="label"><span class="label-text">Quantity</span></label>
-                                            <input type="number" id="bulk-quantity" min="1" value="1" class="input input-bordered">
+                                            <label class="form-control">
+                                                <div class="label"><span class="label-text">Quantity</span></div>
+                                                <input type="number" id="bulk-quantity" min="1" value="1" class="input input-bordered">
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                           
                            
                             <!-- Core Details Card -->
                             <div class="card bg-base-100 border">
                                 <div class="card-body">
                                     <h2 class="card-title">Core Details</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control md:col-span-2"><label for="description" class="label"><span class="label-text">Description</span></label><textarea id="description" name="description" class="textarea textarea-bordered" required></textarea></div><div id="property-number-container" class="form-control">
-                                            <label for="propertyNumber" class="label"><span class="label-text">Property Number</span></label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Description</span></div>
+                                            <textarea id="description" name="description" class="textarea textarea-bordered" required></textarea>
+                                        </label>
+                                        <label id="property-number-container" class="form-control">
+                                            <div class="label"><span class="label-text">Property Number</span></div>
                                             <div class="join w-full">
                                                 <input type="text" id="propertyNumber" name="propertyNumber" class="input input-bordered join-item w-full" required>
                                                 <button type="button" id="generate-property-number-btn" class="btn join-item btn-ghost">Generate</button>
                                             </div>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="category" class="label"><span class="label-text">Category</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Category</span></div>
                                             <input type="text" id="category" name="category" list="category-list" class="input input-bordered w-full" placeholder="Type to search..." required>
                                             <datalist id="category-list"></datalist>
-                                        </div>
-                                        <div class="form-control">
-                                            <label for="office" class="label"><span class="label-text">Fund Office</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Fund Office</span></div>
                                             <input type="text" id="office" name="office" list="office-list" class="input input-bordered w-full" placeholder="Type to search..." required>
                                             <datalist id="office-list"></datalist>
-                                        </div>
-                                        <div class="form-control"><label for="fundSource" class="label"><span class="label-text">Fund Source</span></label><select id="fundSource" name="fundSource" class="select select-bordered" required><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select></div><div class="form-control md:col-span-2"><label for="status" class="label"><span class="label-text">Status</span></label><select id="status" name="status" class="select select-bordered" required><option>In Use</option><option>In Storage</option><option>For Repair</option><option>Missing</option><option>Waste</option><option>Disposed</option></select></div>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Fund Source</span></div>
+                                            <select id="fundSource" name="fundSource" class="select select-bordered" required><option>General Fund</option><option>Special Education Fund</option><option>Trust Fund</option></select>
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Status</span></div>
+                                            <select id="status" name="status" class="select select-bordered" required><option>In Use</option><option>In Storage</option><option>For Repair</option><option>Missing</option><option>Waste</option><option>Disposed</option></select>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
-
-                            
 
                             <!-- Specifications Card -->
                             <div class="card bg-base-100 border">
@@ -104,11 +114,21 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Acquisition & Value</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control"><label for="acquisitionDate" class="label"><span class="label-text">Acquisition Date</span></label><input type="date" id="acquisitionDate" name="acquisitionDate" class="input input-bordered" required></div>
-                                        <div class="form-control"><label for="acquisitionCost" class="label"><span class="label-text">Acquisition Cost (PHP)</span></label><input type="text" inputmode="decimal" id="acquisitionCost" name="acquisitionCost" class="input input-bordered" required></div>
-                                        <div class="form-control"><label for="usefulLife" class="label"><span class="label-text">Estimated Useful Life (Years)</span></label><input type="number" id="usefulLife" name="usefulLife" class="input input-bordered" required></div>
-                                        <div class="form-control"><label for="salvageValue" class="label"><span class="label-text">Salvage Value (PHP)</span></label><input type="text" inputmode="decimal" id="salvageValue" name="salvageValue" class="input input-bordered"></div>
-                                        <div class="form-control"><label for="impairmentLosses" class="label"><span class="label-text">Impairment Losses (PHP)</span></label><input type="text" inputmode="decimal" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" value="0.00"></div>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Acquisition Date</span></div><input type="date" id="acquisitionDate" name="acquisitionDate" class="input input-bordered" required>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Acquisition Cost (PHP)</span></div><input type="text" inputmode="decimal" id="acquisitionCost" name="acquisitionCost" class="input input-bordered" required>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Estimated Useful Life (Years)</span></div><input type="number" id="usefulLife" name="usefulLife" class="input input-bordered" required>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Salvage Value (PHP)</span></div><input type="text" inputmode="decimal" id="salvageValue" name="salvageValue" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Impairment Losses (PHP)</span></div><input type="text" inputmode="decimal" id="impairmentLosses" name="impairmentLosses" class="input input-bordered" value="0.00">
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -118,17 +138,19 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Custodian Information</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control">
-                                            <label for="custodianName" class="label"><span class="label-text">Custodian Name</span></label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Custodian Name</span></div>
                                             <input type="text" id="custodianName" name="custodian.name" list="custodianName-list" class="input input-bordered w-full" placeholder="Type to search..." required>
                                             <datalist id="custodianName-list"></datalist>
-                                        </div>
-                                        <div class="form-control"><label for="custodianDesignation" class="label"><span class="label-text">Designation</span></label><input type="text" id="custodianDesignation" name="custodian.designation" class="input input-bordered" readonly></div>
-                                        <div class="form-control md:col-span-2">
-                                            <label for="custodianOffice" class="label"><span class="label-text">Custodian's Office</span></label>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Designation</span></div><input type="text" id="custodianDesignation" name="custodian.designation" class="input input-bordered" readonly>
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Custodian's Office</span></div>
                                             <input type="text" id="custodianOffice" name="custodian.office" list="custodianOffice-list" class="input input-bordered w-full" placeholder="Type to search..." required>
                                             <datalist id="custodianOffice-list"></datalist>
-                                        </div>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -138,8 +160,8 @@
                                 <div class="card-body">
                                     <h2 class="card-title">Condition & Remarks</h2>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="form-control">
-                                            <label for="condition" class="label"><span class="label-text">Condition</span></label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Condition</span></div>
                                             <select id="condition" name="condition" class="select select-bordered">
                                                 <option>Very Good (VG)</option>
                                                 <option selected>Good Condition (G)</option>
@@ -147,8 +169,10 @@
                                                 <option>Poor Condition (P)</option>
                                                 <option>Scrap Condition (S)</option>
                                             </select>
-                                        </div>
-                                        <div class="form-control md:col-span-2"><label for="remarks" class="label"><span class="label-text">Remarks</span></label><textarea id="remarks" name="remarks" class="textarea textarea-bordered"></textarea></div>
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Remarks</span></div><textarea id="remarks" name="remarks" class="textarea textarea-bordered"></textarea>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -181,9 +205,15 @@
                                 <p class="text-sm text-base-content/70 -mt-2">Log repair and maintenance activities for this asset.</p>
                                 <!-- Form to add a new repair -->
                                 <form id="repair-form" class="grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr_auto] gap-4 md:gap-2 items-end p-4 border rounded-lg bg-base-200 mb-4">
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Date</span></label><input type="date" id="new-repair-date" class="input input-bordered input-sm" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Nature of Repair</span></label><input type="text" id="new-repair-nature" placeholder="e.g., Engine overhaul" class="input input-bordered input-sm" required></div>
-                                    <div class="form-control"><label class="label py-1"><span class="label-text text-xs">Amount</span></label><input type="text" inputmode="decimal" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" required></div>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Date</span></div><input type="date" id="new-repair-date" class="input input-bordered input-sm" required>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Nature of Repair</span></div><input type="text" id="new-repair-nature" placeholder="e.g., Engine overhaul" class="input input-bordered input-sm" required>
+                                    </label>
+                                    <label class="form-control">
+                                        <div class="label py-1"><span class="label-text text-xs">Amount</span></div><input type="text" inputmode="decimal" id="new-repair-amount" placeholder="0.00" class="input input-bordered input-sm" required>
+                                    </label>
                                     <button type="submit" class="btn btn-sm btn-primary w-full md:w-auto">Add</button>
                                 </form>
                                 <!-- Container for existing repair records -->

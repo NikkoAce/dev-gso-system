@@ -35,10 +35,10 @@
                             <div class="card-body">
                                 <h2 id="role-form-title" class="card-title mb-4">Add New Role</h2>
                                 <input type="hidden" id="role-id">
-                                <div class="form-control">
-                                    <label for="role-name" class="label"><span class="label-text">Role Name</span></label>
+                                <label class="form-control">
+                                    <div class="label"><span class="label-text">Role Name</span></div>
                                     <input type="text" id="role-name" placeholder="e.g., Auditor" class="input input-bordered w-full" required>
-                                </div>
+                                </label>
                                 <div class="form-control mt-4">
                                     <label class="label"><span class="label-text">Permissions</span></label>
                                     <div id="permissions-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg bg-base-200 max-h-96 overflow-y-auto">
@@ -57,9 +57,9 @@
                     <div class="lg:col-span-2">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                             <h2 class="text-2xl font-bold text-gray-800">Existing Roles</h2>
-                            <div class="form-control w-full sm:w-auto">
+                            <label class="form-control w-full sm:w-auto">
                                 <input type="text" id="search-input" placeholder="Search roles..." class="input input-bordered input-sm w-full sm:max-w-xs">
-                            </div>
+                            </label>
                         </div>
                     <div class="card bg-base-100 border">
                         <div class="overflow-x-auto md:h-auto">

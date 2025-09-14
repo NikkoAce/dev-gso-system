@@ -46,18 +46,18 @@
                     <h1 class="text-3xl font-bold text-gray-800">Slip History (PAR & ICS)</h1>
                     <div class="card bg-base-100 border non-printable">
                         <div class="card-body p-4">
-                            <div class="flex flex-col md:flex-row gap-4">
-                                <div class="form-control flex-grow">
-                                    <label for="slip-search-input" class="label sr-only"><span class="label-text">Search</span></label>
+                            <div class="flex flex-col md:flex-row gap-4 items-end">
+                                <label class="form-control flex-grow">
+                                    <div class="label sr-only"><span class="label-text">Search</span></div>
                                     <div class="relative">
+                                        <input type="text" id="slip-search-input" placeholder="Search by Slip No. or Custodian..." class="input input-bordered w-full pl-10">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i data-lucide="search" class="h-5 w-5 text-base-content opacity-40"></i>
                                         </div>
-                                        <input type="text" id="slip-search-input" placeholder="Search by Slip No. or Custodian..." class="input input-bordered w-full pl-10">
                                     </div>
-                                </div>
-                                <div class="form-control w-full md:w-48">
-                                    <label for="slip-type-filter" class="label sr-only"><span class="label-text">Slip Type</span></label>
+                                </label>
+                                <label class="form-control w-full md:w-48">
+                                    <div class="label sr-only"><span class="label-text">Slip Type</span></div>
                                     <select id="slip-type-filter" class="select select-bordered font-normal">
                                         <option value="">All Slip Types</option>
                                         <option value="PAR">PAR</option>
@@ -66,7 +66,7 @@
                                         <option value="IIRUP">IIRUP</option>
                                         <option value="A68">Appendix 68</option>
                                     </select>
-                                </div>
+                                </label>
                             </div>
                         </div>
                     </div>
