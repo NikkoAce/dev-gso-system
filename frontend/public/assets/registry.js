@@ -59,6 +59,7 @@ function initializeRegistryPage(user) {
         generateIcsBtn: document.getElementById('generate-ics-selected'),
         transferSelectedBtn: document.getElementById('transfer-selected-btn'),
         transferTooltipWrapper: document.getElementById('transfer-tooltip-wrapper'),
+        addAssetBtn: document.getElementById('add-asset-btn'), // NEW
         exportCsvBtn: document.getElementById('export-csv-btn'),
         // Modal elements
         transferModal: document.getElementById('transfer-modal'),
@@ -717,6 +718,12 @@ function initializeRegistryPage(user) {
             uiManager.populateFilters({ categories, offices }, { categoryFilter: DOM.categoryFilter, officeFilter: DOM.officeFilter });
             eventManager.setupEventListeners();
             applyUrlFilters(); // Apply filters from URL before loading
+
+            // NEW: Hide "Add" button if user doesn't have create permission
+            if (!user.permissions.includes('asset:create')) {
+                DOM.addAssetBtn.classList.add('hidden');
+            }
+
             await loadAssets();
         } catch (error) {
             console.error('Failed to initialize page:', error);
