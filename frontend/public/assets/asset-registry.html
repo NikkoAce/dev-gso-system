@@ -42,11 +42,16 @@
             </header>
             <main class="flex-1 overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <div class="card bg-base-100 border non-printable">
+                    <!-- Sticky Header Wrapper -->
+                    <div class="sticky top-0 z-20 bg-base-100/95 backdrop-blur-sm py-4 -my-4">
+                        <div class="card bg-base-100 border non-printable">
                         <div id="filter-container" class="card-body p-4 space-y-4">
                             <!-- Header and Slip Buttons -->
                             <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                                <h1 class="text-3xl font-bold text-gray-800">Asset Registry</h1>
+                                <div class="flex items-center gap-2">
+                                    <h1 class="text-3xl font-bold text-gray-800">Asset Registry</h1>
+                                    <button id="toggle-filters-btn" class="btn btn-ghost btn-sm" title="Toggle Filters"><i data-lucide="sliders-horizontal"></i><i data-lucide="chevron-down" class="ml-2 h-4 w-4 transition-transform"></i></button>
+                                </div>
                                 <div class="flex gap-2 flex-wrap justify-end">
                                     <button id="generate-par-selected" class="btn btn-success hidden">
                                         <i data-lucide="file-check-2"></i> PAR
@@ -69,7 +74,7 @@
                             </div>
 
                             <!-- Combined Filters -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end pt-4 border-t">
+                            <div id="filters-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end pt-4 border-t">
                                 <!-- Search Input -->
                                 <div class="relative md:col-span-2">
                                     <label for="search-input" class="label py-0"><span class="label-text">Search</span></label>
@@ -149,19 +154,20 @@
                                         <option value="ics">Assigned to ICS</option>
                                     </select>
                                 </div>
-                                <!-- Action Buttons -->
-                                <div class="flex items-center gap-2 w-full pt-4">
-                                    <button id="import-csv-btn" class="btn btn-ghost btn-info w-1/3"><i data-lucide="upload" class="h-5 w-5"></i> Import</button>
-                                    <button id="export-csv-btn" class="btn btn-ghost btn-success w-1/3"><i data-lucide="download" class="h-5 w-5"></i> Export</button>
-                                    <button id="reset-filters-btn" class="btn btn-ghost w-1/3"><i data-lucide="rotate-cw" class="h-5 w-5"></i> Reset</button>
-                                </div>
                             </div>
                         </div>
                     </div>
+                    <!-- Action Buttons Bar -->
+                    <div class="flex justify-end gap-2 mt-4 non-printable">
+                        <button id="import-csv-btn" class="btn btn-sm btn-outline btn-info"><i data-lucide="upload"></i> Import from CSV</button>
+                        <button id="export-csv-btn" class="btn btn-sm btn-outline btn-success"><i data-lucide="download"></i> Export to CSV</button>
+                        <button id="reset-filters-btn" class="btn btn-sm btn-ghost"><i data-lucide="rotate-cw"></i> Reset Filters</button>
+                    </div>
+                    </div>
 
                     <div class="card bg-base-100 border">
-                        <div class="overflow-x-auto">
-                            <table class="table table-zebra w-full">
+                        <div class="overflow-x-auto h-[65vh]">
+                            <table class="table table-zebra table-hover w-full table-pin-rows">
                                 <thead>
                                     <tr>
                                         <th class="non-printable"><input type="checkbox" id="select-all-assets" class="checkbox checkbox-sm"></th>

@@ -32,6 +32,8 @@ function initializeRegistryPage(user) {
     const tableBody = document.getElementById('asset-table-body');
     const tableFooter = document.getElementById('asset-table-footer');
     const searchInput = document.getElementById('search-input');
+    const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+    const filtersGrid = document.getElementById('filters-grid');
     const typeFilter = document.getElementById('type-filter');
     const statusFilter = document.getElementById('status-filter');
     const conditionFilter = document.getElementById('condition-filter');
@@ -56,7 +58,14 @@ function initializeRegistryPage(user) {
             'Under Construction': 'badge-info',
             'Idle': 'badge-warning',
             'For Disposal': 'badge-error',
-            'Disposed': 'badge-ghost'
+            'Disposed': 'badge-ghost',
+        };
+        const statusIconMap = {
+            'In Use': 'check-circle',
+            'Under Construction': 'construction',
+            'Idle': 'pause-circle',
+            'For Disposal': 'alert-triangle',
+            'Disposed': 'x-circle',
         };
 
         assets.forEach(asset => {
@@ -69,7 +78,11 @@ function initializeRegistryPage(user) {
                 ? `<a href="./immovable-form.html?id=${asset.parentAsset._id}" class="link link-hover text-xs">${asset.parentAsset.name}</a>`
                 : '<span class="text-xs text-gray-400">None</span>';
 
-            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm">${asset.status}</span>`;
+            const icon = statusIconMap[asset.status] || 'help-circle';
+            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm gap-2">
+                                    <i data-lucide="${icon}" class="h-3 w-3"></i>
+                                    ${asset.status}
+                                 </span>`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="font-mono">${asset.propertyIndexNumber}</td>
@@ -290,6 +303,12 @@ function initializeRegistryPage(user) {
         searchTimeout = setTimeout(() => {
             fetchAndRenderAssets(1);
         }, 300); // Debounce search input
+    });
+
+    toggleFiltersBtn.addEventListener('click', () => {
+        filtersGrid.classList.toggle('hidden');
+        const chevron = toggleFiltersBtn.querySelector('i[data-lucide="chevron-down"]');
+        chevron?.classList.toggle('rotate-180');
     });
 
     paginationControls.addEventListener('click', (e) => {

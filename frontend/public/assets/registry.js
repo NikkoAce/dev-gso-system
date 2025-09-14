@@ -40,6 +40,8 @@ function initializeRegistryPage(user) {
     // --- MODULE: DOM ELEMENT CACHE ---
     const DOM = {
         searchInput: document.getElementById('search-input'),
+        toggleFiltersBtn: document.getElementById('toggle-filters-btn'),
+        filtersGrid: document.getElementById('filters-grid'),
         categoryFilter: document.getElementById('category-filter'),
         statusFilter: document.getElementById('status-filter'),
         conditionFilter: document.getElementById('condition-filter'), // NEW
@@ -540,6 +542,12 @@ function initializeRegistryPage(user) {
             const dateFilters = [DOM.startDateFilter, DOM.endDateFilter];
             dateFilters.forEach(el => el?.addEventListener('change', () => this.handleFilterChange()));
 
+            // NEW: Collapsible filter panel
+            DOM.toggleFiltersBtn?.addEventListener('click', () => {
+                DOM.filtersGrid.classList.toggle('hidden');
+                const chevron = DOM.toggleFiltersBtn.querySelector('i[data-lucide="chevron-down"]');
+                chevron?.classList.toggle('rotate-180');
+            });
             DOM.paginationControls?.addEventListener('click', e => this.handlePaginationClick(e));
             DOM.resetFiltersBtn?.addEventListener('click', () => this.resetAllFilters());            
             DOM.tableBody?.parentElement.addEventListener('change', e => this.handleTableChange(e)); // Listen on table for tbody and thead changes
