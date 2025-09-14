@@ -317,11 +317,5 @@ export function createUIManager() {
         }
     }
 
-    function renderTotalValue(container, totalValue) {
-        if (!container) return;
-        const formattedValue = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalValue || 0);
-        container.innerHTML = `<strong>Total Value (Filtered):</strong> <span class="font-mono ml-2 p-1 bg-base-200 rounded">${formattedValue}</span>`;
-    }
-
-    return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination, renderAssetTable, updateSlipButtonVisibility, renderTotalValue };
+    return { showToast, populateFilters, setLoading, showConfirmationModal, renderPagination, renderAssetTable, updateSlipButtonVisibility };
 }

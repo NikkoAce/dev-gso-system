@@ -76,7 +76,7 @@ function initializeRegistryPage(user) {
         appendix68AssetListContainer: document.getElementById('appendix68-asset-list-container'),
         confirmAppendix68Btn: document.getElementById('confirm-appendix68-modal-btn'),
         cancelAppendix68Btn: document.getElementById('cancel-appendix68-modal-btn'),
-        totalValueContainer: document.getElementById('total-value-container'),
+        assetTableFooter: document.getElementById('asset-table-footer'),
         // Import Modal elements
         importModal: document.getElementById('import-modal'),
         importCsvBtn: document.getElementById('import-csv-btn'),
@@ -91,6 +91,21 @@ function initializeRegistryPage(user) {
 
     // --- MODULE: UI MANAGER ---
     const uiManager = createUIManager();
+
+    function renderSummary(totalValue) {
+        const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
+        if (totalValue > 0) {
+            DOM.assetTableFooter.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-right font-bold">Total Value (All Filtered Pages):</td>
+                    <td class="text-right font-bold">${formatCurrency(totalValue)}</td>
+                    <td colspan="2"></td>
+                </tr>
+            `;
+        } else {
+            DOM.assetTableFooter.innerHTML = '';
+        }
+    }
 
     // --- MODULE: MODAL LOGIC ---
     function openTransferModal(assetIds) {
@@ -633,7 +648,7 @@ function initializeRegistryPage(user) {
 
             uiManager.renderAssetTable(assets, domElements);
             uiManager.renderPagination(DOM.paginationControls, paginationInfo);
-            uiManager.renderTotalValue(DOM.totalValueContainer, totalValue);
+            renderSummary(totalValue);
             eventManager.updateSelectionState(); // Update buttons for the new view
 
             // --- FIX: Manage sort indicators correctly ---
