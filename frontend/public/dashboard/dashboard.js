@@ -645,13 +645,13 @@ function initializeDashboard(user) {
                 rowRenderer: (asset) => `
                     <tr>
                         <td data-label="Asset">
-                            <div class="flex-1 min-w-0 break-all text-right">
+                            <div class="flex-1 min-w-0 break-all text-right md:text-left">
                                 <div class="font-bold">${asset.name || asset.description}</div>
                                 <div class="text-sm opacity-50">${asset.propertyNumber}</div>
                             </div>
                         </td>
-                        <td data-label="Office"><div class="flex-1 min-w-0 break-all text-right">${asset.custodian?.office || 'N/A'}</div></td>
-                        <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right"><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></div></td>
+                        <td data-label="Office"><div class="flex-1 min-w-0 break-all text-right md:text-left">${asset.custodian?.office || 'N/A'}</div></td>
+                        <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right md:text-left"><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></div></td>
                     </tr>`
             },
             transfers: {
@@ -660,10 +660,10 @@ function initializeDashboard(user) {
                 noDataMessage: 'No recent transfers.',
                 rowRenderer: (transfer) => `
                     <tr>
-                        <td data-label="PTR No."><div class="flex-1 min-w-0 break-all text-right">${transfer.ptrNumber}</div></td>
-                        <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right">${new Date(transfer.date).toLocaleDateString()}</div></td>
-                        <td data-label="From"><div class="flex-1 min-w-0 break-all text-right">${transfer.from.name} (${transfer.from.office})</div></td>
-                        <td data-label="To"><div class="flex-1 min-w-0 break-all text-right">${transfer.to.name} (${transfer.to.office})</div></td>
+                        <td data-label="PTR No."><div class="flex-1 min-w-0 break-all text-right md:text-left">${transfer.ptrNumber}</div></td>
+                        <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right md:text-left">${new Date(transfer.date).toLocaleDateString()}</div></td>
+                        <td data-label="From"><div class="flex-1 min-w-0 break-all text-right md:text-left">${transfer.from.name} (${transfer.from.office})</div></td>
+                        <td data-label="To"><div class="flex-1 min-w-0 break-all text-right md:text-left">${transfer.to.name} (${transfer.to.office})</div></td>
                         <td data-label="Assets"><div class="flex-1 min-w-0 break-all text-right">${transfer.assets.length} asset(s)</div></td>
                     </tr>`
             },
@@ -674,12 +674,12 @@ function initializeDashboard(user) {
                 rowRenderer: (req) => `
                     <tr>
                         <td data-label="Requisition">
-                            <div class="flex-1 min-w-0 break-all text-right">
+                            <div class="flex-1 min-w-0 break-all text-right md:text-left">
                                 <div class="font-bold">${req.requestingOffice}</div>
                                 <div class="text-sm opacity-50">${req.risNumber}</div>
                             </div>
                         </td>
-                        <td data-label="Status"><div class="flex-1 min-w-0 break-all text-right"><span class="badge badge-ghost badge-sm">${req.status}</span></div></td>
+                        <td data-label="Status"><div class="flex-1 min-w-0 break-all text-right md:text-left"><span class="badge badge-ghost badge-sm">${req.status}</span></div></td>
                     </tr>`
             },
             supplies: {
@@ -689,7 +689,7 @@ function initializeDashboard(user) {
                 rowRenderer: (supply) => `
                     <tr>
                         <td data-label="Item">
-                            <div class="flex-1 min-w-0 break-all text-right">
+                            <div class="flex-1 min-w-0 break-all text-right md:text-left">
                                 <div class="font-bold">${supply.description}</div>
                                 <div class="text-sm opacity-50">${supply.stockNumber}</div>
                             </div>
@@ -703,11 +703,11 @@ function initializeDashboard(user) {
                 noDataMessage: 'No recent immovable properties.',
                 rowRenderer: (asset) => `
                     <tr>
-                        <td data-label="PIN"><div class="flex-1 min-w-0 break-all text-right">${asset.propertyIndexNumber}</div></td>
-                        <td data-label="Name"><div class="flex-1 min-w-0 break-all text-right">${asset.name}</div></td>
-                        <td data-label="Type"><div class="flex-1 min-w-0 break-all text-right">${asset.type}</div></td>
-                        <td data-label="Location"><div class="flex-1 min-w-0 break-all text-right">${asset.location}</div></td>
-                        <td data-label="Acq. Date"><div class="flex-1 min-w-0 break-all text-right">${new Date(asset.dateAcquired).toLocaleDateString()}</div></td>
+                        <td data-label="PIN"><div class="flex-1 min-w-0 break-all text-right md:text-left">${asset.propertyIndexNumber}</div></td>
+                        <td data-label="Name"><div class="flex-1 min-w-0 break-all text-right md:text-left">${asset.name}</div></td>
+                        <td data-label="Type"><div class="flex-1 min-w-0 break-all text-right md:text-left">${asset.type}</div></td>
+                        <td data-label="Location"><div class="flex-1 min-w-0 break-all text-right md:text-left">${asset.location}</div></td>
+                        <td data-label="Acq. Date"><div class="flex-1 min-w-0 break-all text-right md:text-left">${new Date(asset.dateAcquired).toLocaleDateString()}</div></td>
                     </tr>`
             }
         };
