@@ -9,11 +9,11 @@ let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
-        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters', 'assetCondition', // Cards
+        'filters', 'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'assetCondition', // Cards
         'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Charts
         'recentActivity' // Tables
     ],
-    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'filters'],
+    cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife'],
     chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
     tableOrder: ['recentActivity']
 };
