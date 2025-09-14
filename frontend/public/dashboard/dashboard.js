@@ -615,13 +615,13 @@ function initializeDashboard(user) {
                 const row = `
                     <tr>
                         <td data-label="Asset">
-                            <div>
+                            <div class="min-w-0 break-words">
                                 <div class="font-bold">${asset.name || asset.description}</div>
                                 <div class="text-sm opacity-50">${asset.propertyNumber}</div>
                             </div>
                         </td>
-                        <td data-label="Office"><div>${asset.custodian?.office || 'N/A'}</div></td>
-                        <td data-label="Date"><div><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></div></td>
+                        <td data-label="Office"><div class="min-w-0 break-words">${asset.custodian?.office || 'N/A'}</div></td>
+                        <td data-label="Date"><div class="min-w-0 break-words"><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></div></td>
                     </tr>`;
                 recentAssetsBody.insertAdjacentHTML('beforeend', row);
             });
@@ -636,12 +636,12 @@ function initializeDashboard(user) {
                 const row = `
                     <tr>
                         <td data-label="Requisition">
-                            <div>
+                            <div class="min-w-0 break-words">
                                 <div class="font-bold">${req.requestingOffice}</div>
                                 <div class="text-sm opacity-50">${req.risNumber}</div>
                             </div>
                         </td>
-                        <td data-label="Status"><div><span class="badge badge-ghost badge-sm">${req.status}</span></div></td>
+                        <td data-label="Status"><div class="min-w-0 break-words"><span class="badge badge-ghost badge-sm">${req.status}</span></div></td>
                     </tr>`;
                 recentReqsBody.insertAdjacentHTML('beforeend', row);
             });
@@ -656,11 +656,11 @@ function initializeDashboard(user) {
             data.recentTransfers.forEach(transfer => {
                 const row = `
                     <tr>
-                        <td data-label="PTR No."><div>${transfer.ptrNumber}</div></td>
-                        <td data-label="Date"><div>${new Date(transfer.date).toLocaleDateString()}</div></td>
-                        <td data-label="From"><div>${transfer.from.name} (${transfer.from.office})</div></td>
-                        <td data-label="To"><div>${transfer.to.name} (${transfer.to.office})</div></td>
-                        <td data-label="Assets"><div>${transfer.assets.length} asset(s)</div></td>
+                        <td data-label="PTR No."><div class="min-w-0 break-words">${transfer.ptrNumber}</div></td>
+                        <td data-label="Date"><div class="min-w-0 break-words">${new Date(transfer.date).toLocaleDateString()}</div></td>
+                        <td data-label="From"><div class="min-w-0 break-words">${transfer.from.name} (${transfer.from.office})</div></td>
+                        <td data-label="To"><div class="min-w-0 break-words">${transfer.to.name} (${transfer.to.office})</div></td>
+                        <td data-label="Assets"><div class="min-w-0 break-words">${transfer.assets.length} asset(s)</div></td>
                     </tr>`;
                 recentTransfersBody.insertAdjacentHTML('beforeend', row);
             });
@@ -676,12 +676,12 @@ function initializeDashboard(user) {
                 const row = `
                     <tr>
                         <td data-label="Item">
-                            <div>
+                            <div class="min-w-0 break-words">
                                 <div class="font-bold">${supply.description}</div>
                                 <div class="text-sm opacity-50">${supply.stockNumber}</div>
                             </div>
                         </td>
-                        <td data-label="Total Issued" class="text-right font-semibold"><div>${supply.totalIssued}</div></td>
+                        <td data-label="Total Issued" class="text-right font-semibold"><div class="min-w-0 break-words">${supply.totalIssued}</div></td>
                     </tr>`;
                 topSuppliesBody.insertAdjacentHTML('beforeend', row);
             });
@@ -696,11 +696,11 @@ function initializeDashboard(user) {
             data.recentImmovableAssets.forEach(asset => {
                 const row = `
                     <tr>
-                        <td data-label="PIN"><div>${asset.propertyIndexNumber}</div></td>
-                        <td data-label="Name"><div>${asset.name}</div></td>
-                        <td data-label="Type"><div>${asset.type}</div></td>
-                        <td data-label="Location"><div>${asset.location}</div></td>
-                        <td data-label="Acq. Date"><div>${new Date(asset.dateAcquired).toLocaleDateString()}</div></td>
+                        <td data-label="PIN"><div class="min-w-0 break-words">${asset.propertyIndexNumber}</div></td>
+                        <td data-label="Name"><div class="min-w-0 break-words">${asset.name}</div></td>
+                        <td data-label="Type"><div class="min-w-0 break-words">${asset.type}</div></td>
+                        <td data-label="Location"><div class="min-w-0 break-words">${asset.location}</div></td>
+                        <td data-label="Acq. Date"><div class="min-w-0 break-words">${new Date(asset.dateAcquired).toLocaleDateString()}</div></td>
                     </tr>`;
                 recentImmovableAssetsBody.insertAdjacentHTML('beforeend', row);
             });
