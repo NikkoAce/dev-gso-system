@@ -3,13 +3,14 @@ import { fetchWithAuth } from '../js/api.js';
 import { getCurrentUser, gsoLogout } from '../js/auth.js';
 
 let viewOptions = {}; // NEW: To hold view-specific options like grouping
+let dateRange = { start: null, end: null }; // NEW: To hold date range
 const sparklines = {}; // To hold sparkline chart instances
 let dashboardFilters = {};
 let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
-        'filters', 'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'assetCondition', // Cards
+        'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'assetCondition', // Cards
         'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Charts
         'recentActivity' // Tables
     ],
@@ -366,9 +367,11 @@ function initializeDashboard(user) {
 
     async function fetchDashboardData() {
         try {
-            const startDate = document.getElementById('filter-start-date').value;
-            const endDate = document.getElementById('filter-end-date').value;
-            const dateFilters = { startDate, endDate };
+            // NEW: Use the dateRange state object for filters
+            const dateFilters = {
+                startDate: dateRange.start ? dateRange.start.toISOString().split('T')[0] : '',
+                endDate: dateRange.end ? dateRange.end.toISOString().split('T')[0] : ''
+            };
             const allFilters = { ...dateFilters, ...dashboardFilters, ...viewOptions };
 
             // Build query params, excluding empty values to ensure clean requests
@@ -745,22 +748,8 @@ function initializeDashboard(user) {
             }
         });
 
-        // Date Filter Handlers
-        const startDateInput = document.getElementById('filter-start-date');
-        const endDateInput = document.getElementById('filter-end-date');
-
-        const applyDateFilters = () => {
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-            fetchDashboardData();
-        };
-
-        startDateInput.addEventListener('blur', applyDateFilters);
-        endDateInput.addEventListener('blur', applyDateFilters);
-
         // NEW: Event listener for the office chart group-by toggle
         const officeGroupByToggle = document.getElementById('office-group-by-toggle');
-
         if (officeGroupByToggle) {
             // Set initial state for viewOptions
             viewOptions.groupByOffice = officeGroupByToggle.checked ? 'value' : 'count';
@@ -866,10 +855,37 @@ function initializeDashboard(user) {
         saveBtn.addEventListener('click', saveVisibility);
     }
 
+    function initializeDateRangePicker() {
+        const pickerInput = document.getElementById('date-range-picker');
+        if (!pickerInput) return;
+
+        const picker = new Litepicker({
+            element: pickerInput,
+            singleMode: false,
+            format: 'MMM DD, YYYY',
+            tooltipText: {
+                one: 'day',
+                other: 'days'
+            },
+            setup: (picker) => {
+                picker.on('selected', (date1, date2) => {
+                    // Update state and fetch data
+                    dateRange.start = date1.dateInstance;
+                    dateRange.end = date2.dateInstance;
+                    fetchDashboardData();
+                });
+            }
+        });
+
+        // Set initial date range (last 30 days) and trigger initial load
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - 29);
+        picker.setDateRange(startDate, endDate);
+    }
+
     // --- INITIALIZATION ---
-    const endDate = new Date().toISOString().split('T')[0];
-    document.getElementById('filter-end-date').value = endDate;
-    fetchDashboardData(); // Initial load
+    initializeDateRangePicker(); // This will trigger the initial data load
     setupEventListeners();
     setupDashboardInteractivity();
     setupFilterInteractivity(); // Re-add the call to attach filter clear event listeners
