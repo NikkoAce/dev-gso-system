@@ -569,8 +569,6 @@ function initializeDashboard(user) {
 
             if (charts[id]) {
                 charts[id].data = config.data;
-                // The labels are now directly from the backend, so we update them.
-                charts[id].data.labels = config.data.labels;
                 charts[id].update();
             } else {
                 charts[id] = new Chart(ctx, {
@@ -629,11 +627,15 @@ function initializeDashboard(user) {
         }
     }
 
-    function renderActiveActivityTable() {
+    function renderActiveActivityTable(tableType) {
         if (!dashboardData) return; // Don't render if data isn't loaded
 
-        const activeTab = document.querySelector('input[name="activity_tabs"]:checked');
-        const tableType = activeTab ? activeTab.dataset.table : 'assets';
+        // If tableType is not provided (e.g., on initial load), 
+        // determine it from the currently checked tab.
+        if (!tableType) {
+            const activeTab = document.querySelector('input[name="activity_tabs"]:checked');
+            tableType = activeTab ? activeTab.dataset.table : 'assets';
+        }
 
         const tableConfigs = {
             assets: {
@@ -749,8 +751,6 @@ function initializeDashboard(user) {
                     
                     const queryString = params.toString();
                     window.location.href = `${url}${queryString ? `?${queryString}` : ''}`;
-                } else if (filterKey && filterValue) {
-                    window.location.href = `${url}?${filterKey}=${encodeURIComponent(filterValue)}`;
                 } else {
                     window.location.href = url;
                 }
@@ -764,7 +764,9 @@ function initializeDashboard(user) {
             activityTabsContainer.addEventListener('click', (e) => {
                 // Ensure the clicked element is one of our tabs
                 if (e.target.name === 'activity_tabs') {
-                    renderActiveActivityTable();
+                    // Get the table type directly from the clicked element's data attribute
+                    const tableType = e.target.dataset.table;
+                    renderActiveActivityTable(tableType);
                 }
             });
         }
