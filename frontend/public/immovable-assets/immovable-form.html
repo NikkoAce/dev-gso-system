@@ -143,68 +143,6 @@
                                 </div>
                             </div>
 
-                            <!-- Child Assets (hidden by default, shown in edit mode) -->
-                            <div id="child-assets-section" class="card bg-base-100 border hidden">
-                                <div class="card-body">
-                                    <h2 class="card-title">Child Assets</h2>
-                                    <p class="text-sm text-base-content/70 -mt-2">Properties linked to this asset (e.g., buildings on this land).</p>
-                                    <div class="overflow-x-auto mt-2">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>PIN</th>
-                                                    <th>Type</th>
-                                                    <th>Status</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="child-assets-list"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- GIS Location -->
-                            <div id="gis-location-card" class="card bg-base-100 border">
-                                <div class="card-body">
-                                    <h2 class="card-title">GIS Location</h2>
-                                    <p class="text-sm text-base-content/70 -mt-2">Use the tools on the left to draw the asset's shape or place a marker.</p>
-                                    <div id="map" class="h-64 w-full rounded-lg mt-2 z-0"></div>
-                                    <!-- NEW: Measurement Display -->
-                                    <div id="measurement-display" class="mt-4 p-3 bg-base-200 rounded-lg text-center hidden">
-                                        <span class="font-semibold text-lg" id="measurement-value"></span>
-                                        <span class="text-sm text-base-content/70" id="measurement-unit"></span>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                        <label class="form-control">
-                                            <div class="label"><span class="label-text">Latitude</span></div>
-                                            <input type="number" id="latitude" name="latitude" class="input input-bordered" step="any" readonly>
-                                        </label>
-                                        <label class="form-control">
-                                            <div class="label"><span class="label-text">Longitude</span></div>
-                                            <input type="number" id="longitude" name="longitude" class="input input-bordered" step="any" readonly>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <!-- Components -->
-                            <div class="card bg-base-100 border">
-                                <div class="card-body">
-                                    <div class="flex justify-between items-center">
-                                        <h2 class="card-title">Components</h2>
-                                        <button type="button" id="add-component-btn" class="btn btn-sm btn-ghost">
-                                            <i data-lucide="plus"></i> Add Component
-                                        </button>
-                                    </div>
-                                    <div id="components-container" class="space-y-2">
-                                        <!-- Component rows will be dynamically inserted here -->
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Land Details -->
                             <div id="land-details-section" class="card bg-base-100 border hidden">
                                 <div class="card-body">
@@ -290,6 +228,60 @@
                                 </div>
                             </div>
 
+                            <!-- Other Public Infrastructure Details -->
+                            <div id="infra-details-section" class="card bg-base-100 border hidden">
+                                <div class="card-body">
+                                    <h2 class="card-title">Other Public Infrastructure Details</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Structure Type</span></div><input type="text" id="structureType" name="otherInfrastructureDetails.structureType" placeholder="e.g., Bridge, Water System" class="input input-bordered">
+                                        </label>
+                                        <label class="form-control md:col-span-2">
+                                            <div class="label"><span class="label-text">Technical Specifications</span></div><textarea id="technicalSpecifications" name="otherInfrastructureDetails.technicalSpecifications" class="textarea textarea-bordered"></textarea>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Components -->
+                            <div class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-center">
+                                        <h2 class="card-title">Components</h2>
+                                        <button type="button" id="add-component-btn" class="btn btn-sm btn-ghost">
+                                            <i data-lucide="plus"></i> Add Component
+                                        </button>
+                                    </div>
+                                    <div id="components-container" class="space-y-2">
+                                        <!-- Component rows will be dynamically inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GIS Location -->
+                            <div id="gis-location-card" class="card bg-base-100 border">
+                                <div class="card-body">
+                                    <h2 class="card-title">GIS Location</h2>
+                                    <p class="text-sm text-base-content/70 -mt-2">Use the tools on the left to draw the asset's shape or place a marker.</p>
+                                    <div id="map" class="h-64 w-full rounded-lg mt-2 z-0"></div>
+                                    <!-- NEW: Measurement Display -->
+                                    <div id="measurement-display" class="mt-4 p-3 bg-base-200 rounded-lg text-center hidden">
+                                        <span class="font-semibold text-lg" id="measurement-value"></span>
+                                        <span class="text-sm text-base-content/70" id="measurement-unit"></span>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Latitude</span></div>
+                                            <input type="number" id="latitude" name="latitude" class="input input-bordered" step="any" readonly>
+                                        </label>
+                                        <label class="form-control">
+                                            <div class="label"><span class="label-text">Longitude</span></div>
+                                            <input type="number" id="longitude" name="longitude" class="input input-bordered" step="any" readonly>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Attachments -->
                             <div class="card bg-base-100 border">
                                 <div class="card-body">
@@ -311,17 +303,24 @@
                                 </div>
                             </div>
 
-                            <!-- Other Public Infrastructure Details -->
-                            <div id="infra-details-section" class="card bg-base-100 border hidden">
+                            <!-- Child Assets (hidden by default, shown in edit mode) -->
+                            <div id="child-assets-section" class="card bg-base-100 border hidden">
                                 <div class="card-body">
-                                    <h2 class="card-title">Other Public Infrastructure Details</h2>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <label class="form-control">
-                                            <div class="label"><span class="label-text">Structure Type</span></div><input type="text" id="structureType" name="otherInfrastructureDetails.structureType" placeholder="e.g., Bridge, Water System" class="input input-bordered">
-                                        </label>
-                                        <label class="form-control md:col-span-2">
-                                            <div class="label"><span class="label-text">Technical Specifications</span></div><textarea id="technicalSpecifications" name="otherInfrastructureDetails.technicalSpecifications" class="textarea textarea-bordered"></textarea>
-                                        </label>
+                                    <h2 class="card-title">Child Assets</h2>
+                                    <p class="text-sm text-base-content/70 -mt-2">Properties linked to this asset (e.g., buildings on this land).</p>
+                                    <div class="overflow-x-auto mt-2">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>PIN</th>
+                                                    <th>Type</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="child-assets-list"></tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
