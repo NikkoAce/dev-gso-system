@@ -649,24 +649,6 @@ function initializeRegistryPage(user) {
             uiManager.renderPagination(DOM.paginationControls, paginationInfo);
             renderSummary(totalValue);
             eventManager.updateSelectionState(); // Update buttons for the new view
-
-            // --- FIX: Manage sort indicators correctly ---
-            // This ensures only one sort arrow is visible and on the correct column.
-            const headers = DOM.tableHeader.querySelectorAll('th[data-sort-key]');
-            headers.forEach(th => {
-                // 1. Remove any existing sort indicator icons.
-                const existingIcon = th.querySelector('i[data-lucide]');
-                if (existingIcon) {
-                    existingIcon.remove();
-                }
-
-                // 2. Add the indicator to the currently sorted column.
-                if (th.dataset.sortKey === state.sortKey) {
-                    const iconHTML = `<i data-lucide="${state.sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`;
-                    th.insertAdjacentHTML('beforeend', iconHTML);
-                }
-            });
-            lucide.createIcons(); // Refresh all lucide icons on the page.
         } catch (error) {
             console.error('Failed to load assets:', error);
             DOM.tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
