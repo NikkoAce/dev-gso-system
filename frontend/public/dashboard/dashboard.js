@@ -6,6 +6,7 @@ let viewOptions = {}; // NEW: To hold view-specific options like grouping
 let dateRange = { start: null, end: null }; // NEW: To hold date range
 const sparklines = {}; // To hold sparkline chart instances
 let dashboardFilters = {};
+let dashboardData = {}; // NEW: To store the full stats object
 let userPreferences = {};
 const allComponents = {};
 const DEFAULT_PREFERENCES = {
@@ -381,11 +382,12 @@ function initializeDashboard(user) {
                     params.append(key, value);
                 }
             }
-            const data = await fetchWithAuth(`dashboard/stats?${params.toString()}`);
-            renderStatCards(data.stats);
+            dashboardData = await fetchWithAuth(`dashboard/stats?${params.toString()}`);
+
+            renderStatCards(dashboardData.stats);
             applyPreferences(); // Apply layout after data is fetched
-            createOrUpdateCharts(data.charts);
-            renderRecentTables(data); // Pass the whole data object to render tables
+            createOrUpdateCharts(dashboardData.charts);
+            renderActiveActivityTable(); // NEW: Call the new main render function
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             document.getElementById('stats-container').innerHTML = `<p class="text-red-500 col-span-full">Could not load dashboard data: ${error.message}</p>`;
@@ -607,12 +609,38 @@ function initializeDashboard(user) {
         }
     }
 
-    function renderRecentTables(data) {
-        const recentAssetsBody = document.getElementById('recent-assets-table');
-        recentAssetsBody.innerHTML = '';
-        if (data.recentAssets && data.recentAssets.length > 0) {
-            data.recentAssets.forEach(asset => {
-                const row = `
+    // --- NEW: REFACTORED RECENT ACTIVITY TABLE LOGIC ---
+
+    function renderActivityTable(config) {
+        const thead = document.getElementById('recent-activity-thead');
+        const tbody = document.getElementById('recent-activity-tbody');
+
+        if (!thead || !tbody) return;
+
+        // Set Headers
+        thead.innerHTML = config.headers ? `<tr>${config.headers.map(h => `<th>${h}</th>`).join('')}</tr>` : '';
+
+        // Set Body
+        const items = config.data;
+        if (items && items.length > 0) {
+            tbody.innerHTML = items.map(config.rowRenderer).join('');
+        } else {
+            tbody.innerHTML = `<tr><td colspan="${config.headers?.length || 1}" class="text-center text-gray-500 py-4">${config.noDataMessage}</td></tr>`;
+        }
+    }
+
+    function renderActiveActivityTable() {
+        if (!dashboardData) return; // Don't render if data isn't loaded
+
+        const activeTab = document.querySelector('input[name="activity_tabs"]:checked');
+        const tableType = activeTab ? activeTab.dataset.table : 'assets';
+
+        const tableConfigs = {
+            assets: {
+                headers: null, // No explicit header for this one
+                data: dashboardData.recentAssets,
+                noDataMessage: 'No recent assets.',
+                rowRenderer: (asset) => `
                     <tr>
                         <td data-label="Asset">
                             <div class="flex-1 min-w-0 break-all text-right">
@@ -622,18 +650,26 @@ function initializeDashboard(user) {
                         </td>
                         <td data-label="Office"><div class="flex-1 min-w-0 break-all text-right">${asset.custodian?.office || 'N/A'}</div></td>
                         <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right"><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></div></td>
-                    </tr>`;
-                recentAssetsBody.insertAdjacentHTML('beforeend', row);
-            });
-        } else {
-            recentAssetsBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">No recent assets.</td></tr>';
-        }
-
-        const recentReqsBody = document.getElementById('recent-requisitions-table');
-        recentReqsBody.innerHTML = '';
-        if (data.recentRequisitions && data.recentRequisitions.length > 0) {
-            data.recentRequisitions.forEach(req => {
-                const row = `
+                    </tr>`
+            },
+            transfers: {
+                headers: ['PTR No.', 'Date', 'From', 'To', 'Assets'],
+                data: dashboardData.recentTransfers,
+                noDataMessage: 'No recent transfers.',
+                rowRenderer: (transfer) => `
+                    <tr>
+                        <td data-label="PTR No."><div class="flex-1 min-w-0 break-all text-right">${transfer.ptrNumber}</div></td>
+                        <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right">${new Date(transfer.date).toLocaleDateString()}</div></td>
+                        <td data-label="From"><div class="flex-1 min-w-0 break-all text-right">${transfer.from.name} (${transfer.from.office})</div></td>
+                        <td data-label="To"><div class="flex-1 min-w-0 break-all text-right">${transfer.to.name} (${transfer.to.office})</div></td>
+                        <td data-label="Assets"><div class="flex-1 min-w-0 break-all text-right">${transfer.assets.length} asset(s)</div></td>
+                    </tr>`
+            },
+            requisitions: {
+                headers: null,
+                data: dashboardData.recentRequisitions,
+                noDataMessage: 'No recent requisitions.',
+                rowRenderer: (req) => `
                     <tr>
                         <td data-label="Requisition">
                             <div class="flex-1 min-w-0 break-all text-right">
@@ -642,38 +678,13 @@ function initializeDashboard(user) {
                             </div>
                         </td>
                         <td data-label="Status"><div class="flex-1 min-w-0 break-all text-right"><span class="badge badge-ghost badge-sm">${req.status}</span></div></td>
-                    </tr>`;
-                recentReqsBody.insertAdjacentHTML('beforeend', row);
-            });
-        } else {
-            recentReqsBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">No recent requisitions.</td></tr>';
-        }
-
-        // NEW: Render Recent Transfers Table
-        const recentTransfersBody = document.getElementById('recent-transfers-table');
-        recentTransfersBody.innerHTML = '';
-        if (data.recentTransfers && data.recentTransfers.length > 0) {
-            data.recentTransfers.forEach(transfer => {
-                const row = `
-                    <tr>
-                        <td data-label="PTR No."><div class="flex-1 min-w-0 break-all text-right">${transfer.ptrNumber}</div></td>
-                        <td data-label="Date"><div class="flex-1 min-w-0 break-all text-right">${new Date(transfer.date).toLocaleDateString()}</div></td>
-                        <td data-label="From"><div class="flex-1 min-w-0 break-all text-right">${transfer.from.name} (${transfer.from.office})</div></td>
-                        <td data-label="To"><div class="flex-1 min-w-0 break-all text-right">${transfer.to.name} (${transfer.to.office})</div></td>
-                        <td data-label="Assets"><div class="flex-1 min-w-0 break-all text-right">${transfer.assets.length} asset(s)</div></td>
-                    </tr>`;
-                recentTransfersBody.insertAdjacentHTML('beforeend', row);
-            });
-        } else {
-            recentTransfersBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No recent transfers.</td></tr>';
-        }
-
-        // NEW: Render Top 5 Requested Supplies Table
-        const topSuppliesBody = document.getElementById('top-supplies-table');
-        topSuppliesBody.innerHTML = '';
-        if (data.topSupplies && data.topSupplies.length > 0) {
-            data.topSupplies.forEach(supply => {
-                const row = `
+                    </tr>`
+            },
+            supplies: {
+                headers: ['Item', 'Total Issued'],
+                data: dashboardData.topSupplies,
+                noDataMessage: 'Not enough data for top supplies.',
+                rowRenderer: (supply) => `
                     <tr>
                         <td data-label="Item">
                             <div class="flex-1 min-w-0 break-all text-right">
@@ -682,36 +693,30 @@ function initializeDashboard(user) {
                             </div>
                         </td>
                         <td data-label="Total Issued" class="font-semibold"><div class="flex-1 min-w-0 break-all text-right">${supply.totalIssued}</div></td>
-                    </tr>`;
-                topSuppliesBody.insertAdjacentHTML('beforeend', row);
-            });
-        } else {
-            topSuppliesBody.innerHTML = '<tr><td colspan="2" class="text-center text-gray-500 py-4">Not enough data for top supplies.</td></tr>';
-        }
-
-        // NEW: Render Recent Immovable Assets Table
-        const recentImmovableAssetsBody = document.getElementById('recent-immovable-assets-table');
-        recentImmovableAssetsBody.innerHTML = '';
-        if (data.recentImmovableAssets && data.recentImmovableAssets.length > 0) {
-            data.recentImmovableAssets.forEach(asset => {
-                const row = `
+                    </tr>`
+            },
+            immovable: {
+                headers: ['PIN', 'Name', 'Type', 'Location', 'Acq. Date'],
+                data: dashboardData.recentImmovableAssets,
+                noDataMessage: 'No recent immovable properties.',
+                rowRenderer: (asset) => `
                     <tr>
                         <td data-label="PIN"><div class="flex-1 min-w-0 break-all text-right">${asset.propertyIndexNumber}</div></td>
                         <td data-label="Name"><div class="flex-1 min-w-0 break-all text-right">${asset.name}</div></td>
                         <td data-label="Type"><div class="flex-1 min-w-0 break-all text-right">${asset.type}</div></td>
                         <td data-label="Location"><div class="flex-1 min-w-0 break-all text-right">${asset.location}</div></td>
                         <td data-label="Acq. Date"><div class="flex-1 min-w-0 break-all text-right">${new Date(asset.dateAcquired).toLocaleDateString()}</div></td>
-                    </tr>`;
-                recentImmovableAssetsBody.insertAdjacentHTML('beforeend', row);
-            });
-        } else {
-            recentImmovableAssetsBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No recent immovable properties.</td></tr>';
+                    </tr>`
+            }
+        };
+
+        if (tableConfigs[tableType]) {
+            renderActivityTable(tableConfigs[tableType]);
         }
     }
 
     function setupEventListeners() {
         const statsContainer = document.getElementById('stats-container');
-
         // Delegated event listener for all clickable stat cards
         statsContainer.addEventListener('click', (e) => {
             const card = e.target.closest('.dashboard-component[data-url], .dashboard-component[data-details-id], .sub-stat-link[data-url]');
