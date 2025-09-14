@@ -72,11 +72,11 @@ function initializeRegistryPage(user) {
             const canUpdate = user.permissions.includes('immovable:update');
             const canDelete = user.permissions.includes('immovable:delete');
 
-            const editLink = canUpdate ? `<li><a href="./immovable-form.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="edit" class="h-4 w-4"></i> Edit</a></li>` : '';
-            const deleteButton = canDelete ? `<li><button class="delete-asset-btn text-red-500 flex items-center gap-2" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button></li>` : '';
+            const editLink = canUpdate ? `<li><a href="./immovable-form.html?id=${asset._id}"><i data-lucide="edit" class="h-4 w-4"></i> Edit</a></li>` : '';
+            const deleteButton = canDelete ? `<li><button class="delete-asset-btn text-red-500" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button></li>` : '';
             // Conditionally create the Ledger Card link for depreciable assets
             const ledgerCardLink = ['Building', 'Other Structures'].includes(asset.type)
-                ? `<li><a href="./ledger-card.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="book-down" class="h-4 w-4"></i> Ledger Card (Depreciation)</a></li>`
+                ? `<li><a href="./ledger-card.html?id=${asset._id}"><i data-lucide="book-down" class="h-4 w-4"></i> Ledger Card (Depreciation)</a></li>`
                 : '';
 
             const parentAssetInfo = asset.parentAsset
