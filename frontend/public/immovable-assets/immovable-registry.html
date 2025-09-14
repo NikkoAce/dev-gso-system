@@ -24,23 +24,21 @@
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <h1 class="text-3xl font-bold text-gray-800">Immovable Asset Registry</h1>
-                            <button id="toggle-filters-btn" class="btn btn-ghost btn-sm" title="Toggle Filters"><i data-lucide="sliders-horizontal"></i><i data-lucide="chevron-down" class="ml-2 h-4 w-4 transition-transform"></i></button>
-                        </div>
-                        <div class="flex items-center gap-2 non-printable self-end md:self-auto">
-                            <a id="add-asset-btn" href="./immovable-form.html" class="btn btn-primary">
-                                <i data-lucide="plus"></i> Add New Immovable Asset
-                            </a> 
-                        </div>
-                    </div>
-
-                    <!-- Sticky Header Wrapper -->
-                    <div class="sticky top-0 z-20 bg-base-100/95 backdrop-blur-sm py-4 -my-4">
-                        <div id="filters-grid" class="card bg-base-100 border non-printable">
+                    <!-- Header and Filters Card -->
+                    <div class="card bg-base-100 border non-printable">
                         <div class="card-body p-4 space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <h1 class="text-3xl font-bold text-gray-800">Immovable Asset Registry</h1>
+                                    <button id="toggle-filters-btn" class="btn btn-ghost btn-sm" title="Toggle Filters"><i data-lucide="sliders-horizontal"></i><i data-lucide="chevron-down" class="ml-2 h-4 w-4 transition-transform"></i></button>
+                                </div>
+                                <div class="flex items-center gap-2 non-printable self-end md:self-auto">
+                                    <a id="add-asset-btn" href="./immovable-form.html" class="btn btn-primary">
+                                        <i data-lucide="plus"></i> Add New Immovable Asset
+                                    </a> 
+                                </div>
+                            </div>
+                            <div id="filters-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end pt-4 border-t">
                                 <div class="form-control md:col-span-1">
                                     <label for="search-input" class="label sr-only"><span class="label-text">Search</span></label>
                                     <div class="relative">
@@ -93,11 +91,10 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="flex flex-wrap justify-start md:justify-end gap-2 mt-4 pt-4 border-t">
+                                <button id="export-csv-btn" class="btn btn-sm btn-outline btn-success"><i data-lucide="download"></i> Export to CSV</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex justify-end gap-2 mt-4 non-printable">
-                        <button id="export-csv-btn" class="btn btn-sm btn-outline btn-success"><i data-lucide="download"></i> Export to CSV</button>
-                    </div>
                     </div>
 
                     <!-- Asset Table -->
