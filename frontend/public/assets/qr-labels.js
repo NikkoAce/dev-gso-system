@@ -116,10 +116,10 @@ function initializeQrLabelsPage(user) {
             }
 
             tr.innerHTML = `
-                <td><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isChecked ? 'checked' : ''}></td>
-                <td class="font-mono">${asset.propertyNumber}</td>
-                <td>${asset.description}</td>
-                <td>${custodianDisplay}</td>
+                <td data-label="Select"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isChecked ? 'checked' : ''}></td>
+                <td data-label="Property No." class="font-mono">${asset.propertyNumber}</td>
+                <td data-label="Description">${asset.description}</td>
+                <td data-label="Custodian">${custodianDisplay}</td>
             `;
             assetTableBody.appendChild(tr);
         });

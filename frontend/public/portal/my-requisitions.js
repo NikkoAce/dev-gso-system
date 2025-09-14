@@ -49,10 +49,10 @@ function initializeMyRequisitionsPage(user) {
         requisitions.forEach(req => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="font-mono">${req.risNumber}</td>
-                <td>${formatDate(req.dateRequested)}</td>
-                <td class="truncate max-w-xs">${req.purpose}</td>
-                <td class="text-center">
+                <td data-label="RIS No." class="font-mono">${req.risNumber}</td>
+                <td data-label="Date">${formatDate(req.dateRequested)}</td>
+                <td data-label="Purpose" class="truncate max-w-xs">${req.purpose}</td>
+                <td data-label="Status" class="text-center">
                     <span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span>
                 </td>
             `;

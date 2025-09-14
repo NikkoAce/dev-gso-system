@@ -101,9 +101,9 @@ function renderRolesTable(roles) {
 
     roleList.innerHTML = roles.map(role => `
         <tr id="role-row-${role._id}">
-            <td><div class="font-bold">${role.name}</div></td>
-            <td class="text-center"><span class="badge badge-ghost">${role.permissionsCount}</span></td>
-            <td class="text-center">
+            <td data-label="Role Name"><div class="font-bold">${role.name}</div></td>
+            <td data-label="Permissions" class="text-center"><span class="badge badge-ghost">${role.permissionsCount}</span></td>
+            <td data-label="Actions" class="text-center">
                 <button class="btn btn-sm btn-ghost edit-btn" data-id="${role._id}"><i data-lucide="edit" class="h-4 w-4"></i></button>
                 <button class="btn btn-sm btn-ghost delete-btn text-error" data-id="${role._id}"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
             </td>

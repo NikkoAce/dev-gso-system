@@ -97,12 +97,12 @@ function initializePhysicalCountPage(user) {
             `;
 
             tr.innerHTML = `
-                <td class="font-medium">${asset.propertyNumber}</td>
-                <td>${fullDescription}</td>
-                <td>${custodianDisplay}</td>
-                <td>${statusSelectHTML}</td>
-                <td>${conditionSelectHTML}</td>
-                <td>
+                <td data-label="Property No." class="font-medium">${asset.propertyNumber}</td>
+                <td data-label="Description">${fullDescription}</td>
+                <td data-label="Custodian">${custodianDisplay}</td>
+                <td data-label="Status">${statusSelectHTML}</td>
+                <td data-label="Condition">${conditionSelectHTML}</td>
+                <td data-label="Remarks">
                     <input type="text" class="remarks-input input input-bordered input-sm w-full" value="${asset.remarks || ''}">
                 </td>
             `;

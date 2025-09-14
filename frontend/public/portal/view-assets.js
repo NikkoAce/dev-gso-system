@@ -40,11 +40,11 @@ function initializeViewPage(user) {
 
                 rowsHTML += `
                     <tr>
-                        <td class="font-medium">${asset.propertyNumber}</td>
-                        <td>${asset.description}</td>
-                        <td>${asset.category}</td>
-                        <td>${custodianDisplay}</td>
-                        <td>${statusBadge}</td>
+                        <td data-label="Property No." class="font-medium">${asset.propertyNumber}</td>
+                        <td data-label="Description">${asset.description}</td>
+                        <td data-label="Category">${asset.category}</td>
+                        <td data-label="Custodian">${custodianDisplay}</td>
+                        <td data-label="Status">${statusBadge}</td>
                     </tr>
                 `;
             });

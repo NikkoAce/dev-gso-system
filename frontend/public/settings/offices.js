@@ -85,9 +85,9 @@ function renderTable(items) {
                </div>`;
         const row = `
             <tr id="item-row-${item._id}">
-                <td>${item.name}</td>
-                <td>${item.code}</td>
-                <td class="text-center">
+                <td data-label="Office Name">${item.name}</td>
+                <td data-label="Code">${item.code}</td>
+                <td data-label="Actions" class="text-center">
                     <div class="flex justify-center items-center gap-1">
                         <button class="edit-btn btn btn-ghost btn-xs" data-id="${item._id}" title="Edit ${ENTITY_NAME}"><i data-lucide="edit" class="h-4 w-4"></i></button>
                         ${deleteButtonHTML}

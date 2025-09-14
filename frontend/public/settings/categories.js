@@ -85,12 +85,12 @@ function renderTable(items) {
                </div>`;
         const row = `
             <tr id="item-row-${item._id}">
-                <td>${item.name}</td>
-                <td>${item.accountGroup || 'N/A'}</td>
-                <td>${item.majorAccountGroup || 'N/A'}</td>
-                <td>${item.subMajorGroup}</td>
-                <td>${item.glAccount}</td>
-                <td class="text-center">
+                <td data-label="Category Name">${item.name}</td>
+                <td data-label="Account Group">${item.accountGroup || 'N/A'}</td>
+                <td data-label="Major Account">${item.majorAccountGroup || 'N/A'}</td>
+                <td data-label="Sub-Major Group">${item.subMajorGroup}</td>
+                <td data-label="GL Account">${item.glAccount}</td>
+                <td data-label="Actions" class="text-center">
                     <div class="flex justify-center items-center gap-1">
                         <button class="edit-btn btn btn-ghost btn-xs" data-id="${item._id}" title="Edit ${ENTITY_NAME}"><i data-lucide="edit" class="h-4 w-4"></i></button>
                         ${deleteButtonHTML}

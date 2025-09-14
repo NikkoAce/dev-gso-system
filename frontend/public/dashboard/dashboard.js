@@ -614,12 +614,12 @@ function initializeDashboard(user) {
             data.recentAssets.forEach(asset => {
                 const row = `
                     <tr>
-                        <td>
+                        <td data-label="Asset">
                             <div class="font-bold">${asset.name || asset.description}</div>
                             <div class="text-sm opacity-50">${asset.propertyNumber}</div>
                         </td>
-                        <td>${asset.custodian?.office || 'N/A'}</td>
-                        <td><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></td>
+                        <td data-label="Office">${asset.custodian?.office || 'N/A'}</td>
+                        <td data-label="Date"><span class="badge badge-ghost badge-sm">${new Date(asset.acquisitionDate).toLocaleDateString()}</span></td>
                     </tr>`;
                 recentAssetsBody.insertAdjacentHTML('beforeend', row);
             });
@@ -633,11 +633,11 @@ function initializeDashboard(user) {
             data.recentRequisitions.forEach(req => {
                 const row = `
                     <tr>
-                        <td>
+                        <td data-label="Requisition">
                             <div class="font-bold">${req.requestingOffice}</div>
                             <div class="text-sm opacity-50">${req.risNumber}</div>
                         </td>
-                        <td><span class="badge badge-ghost badge-sm">${req.status}</span></td>
+                        <td data-label="Status"><span class="badge badge-ghost badge-sm">${req.status}</span></td>
                     </tr>`;
                 recentReqsBody.insertAdjacentHTML('beforeend', row);
             });
@@ -652,11 +652,11 @@ function initializeDashboard(user) {
             data.recentTransfers.forEach(transfer => {
                 const row = `
                     <tr>
-                        <td>${transfer.ptrNumber}</td>
-                        <td>${new Date(transfer.date).toLocaleDateString()}</td>
-                        <td>${transfer.from.name} (${transfer.from.office})</td>
-                        <td>${transfer.to.name} (${transfer.to.office})</td>
-                        <td>${transfer.assets.length} asset(s)</td>
+                        <td data-label="PTR No.">${transfer.ptrNumber}</td>
+                        <td data-label="Date">${new Date(transfer.date).toLocaleDateString()}</td>
+                        <td data-label="From">${transfer.from.name} (${transfer.from.office})</td>
+                        <td data-label="To">${transfer.to.name} (${transfer.to.office})</td>
+                        <td data-label="Assets">${transfer.assets.length} asset(s)</td>
                     </tr>`;
                 recentTransfersBody.insertAdjacentHTML('beforeend', row);
             });
@@ -671,11 +671,11 @@ function initializeDashboard(user) {
             data.topSupplies.forEach(supply => {
                 const row = `
                     <tr>
-                        <td>
+                        <td data-label="Item">
                             <div class="font-bold">${supply.description}</div>
                             <div class="text-sm opacity-50">${supply.stockNumber}</div>
                         </td>
-                        <td class="text-right font-semibold">${supply.totalIssued}</td>
+                        <td data-label="Total Issued" class="text-right font-semibold">${supply.totalIssued}</td>
                     </tr>`;
                 topSuppliesBody.insertAdjacentHTML('beforeend', row);
             });
@@ -690,11 +690,11 @@ function initializeDashboard(user) {
             data.recentImmovableAssets.forEach(asset => {
                 const row = `
                     <tr>
-                        <td>${asset.propertyIndexNumber}</td>
-                        <td>${asset.name}</td>
-                        <td>${asset.type}</td>
-                        <td>${asset.location}</td>
-                        <td>${new Date(asset.dateAcquired).toLocaleDateString()}</td>
+                        <td data-label="PIN">${asset.propertyIndexNumber}</td>
+                        <td data-label="Name">${asset.name}</td>
+                        <td data-label="Type">${asset.type}</td>
+                        <td data-label="Location">${asset.location}</td>
+                        <td data-label="Acq. Date">${new Date(asset.dateAcquired).toLocaleDateString()}</td>
                     </tr>`;
                 recentImmovableAssetsBody.insertAdjacentHTML('beforeend', row);
             });

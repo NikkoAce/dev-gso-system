@@ -119,13 +119,13 @@ function renderUsersTable(users) {
 
     userList.innerHTML = users.map(user => `
         <tr id="user-row-${user._id}">
-            <td data-sort-key="name">
+            <td data-label="Name">
                 <div class="font-bold">${user.name}</div>
                 <div class="text-sm opacity-70">${user.email}</div>
             </td>
-            <td data-sort-key="office">${user.office}</td>
-            <td data-sort-key="role"><span class="badge badge-ghost">${user.role}</span></td>
-            <td class="text-center">
+            <td data-label="Office">${user.office}</td>
+            <td data-label="Role"><span class="badge badge-ghost">${user.role}</span></td>
+            <td data-label="Actions" class="text-center">
                 <button class="btn btn-sm btn-ghost edit-btn" data-user-id="${user._id}">
                     <i data-lucide="edit" class="h-4 w-4"></i> Edit
                 </button>

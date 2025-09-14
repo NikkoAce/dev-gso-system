@@ -82,12 +82,12 @@ function initializeSlipHistoryPage(user) {
 
             rowsHTML += `
                 <tr>
-                    <td class="font-medium">${slip.number}</td>
-                    <td><span class="badge ${typeBadgeClass} badge-sm">${slip.slipType}</span></td>
-                    <td>${custodianDisplay}</td>
-                    <td>${slip.assets.length}</td>
-                    <td>${formatDate(slip.issuedDate)}</td>
-                    <td class="text-center non-printable">
+                    <td data-label="Slip No." class="font-medium">${slip.number}</td>
+                    <td data-label="Type"><span class="badge ${typeBadgeClass} badge-sm">${slip.slipType}</span></td>
+                    <td data-label="Custodian">${custodianDisplay}</td>
+                    <td data-label="Items">${slip.assets.length}</td>
+                    <td data-label="Date">${formatDate(slip.issuedDate)}</td>
+                    <td data-label="Actions" class="text-center non-printable">
                         <div class="flex justify-center items-center gap-1">
                             <button class="view-slip-btn btn btn-ghost btn-xs" data-id="${slip._id}" title="View Details"><i data-lucide="eye" class="h-4 w-4"></i></button>
                             <button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>

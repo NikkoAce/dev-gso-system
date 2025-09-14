@@ -59,14 +59,14 @@ function initializeGsoRequisitionsPage(user) {
         allRequisitions.forEach(req => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="font-mono">${req.risNumber}</td>
-                <td>${req.requestingOffice}</td>
-                <td>${formatDate(req.dateRequested)}</td>
-                <td class="truncate max-w-xs">${req.purpose}</td>
-                <td class="text-center">
+                <td data-label="RIS No." class="font-mono">${req.risNumber}</td>
+                <td data-label="Office">${req.requestingOffice}</td>
+                <td data-label="Date">${formatDate(req.dateRequested)}</td>
+                <td data-label="Purpose" class="truncate max-w-xs">${req.purpose}</td>
+                <td data-label="Status" class="text-center">
                     <span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span>
                 </td>
-                <td class="text-center">
+                <td data-label="Actions" class="text-center">
                     <button class="view-req-btn btn btn-ghost btn-xs" data-id="${req._id}" title="View Details">
                         <i data-lucide="eye" class="h-4 w-4"></i>
                     </button>
