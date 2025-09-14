@@ -85,15 +85,15 @@ function initializeRegistryPage(user) {
                                  </span>`;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="font-mono">${asset.propertyIndexNumber}</td>
-                <td>${asset.name}</td>
-                <td>${asset.type}</td>
-                <td>${asset.location}</td>
-                <td>${parentAssetInfo}</td>
-                <td class="text-right">${formatCurrency(asset.assessedValue)}</td>
-                <td class="text-right font-semibold">${formatCurrency(asset.totalBookValue)}</td>
-                <td class="text-center">${statusBadge}</td>
-                <td class="text-center non-printable">
+                <td data-label="PIN" class="font-mono">${asset.propertyIndexNumber}</td>
+                <td data-label="Name">${asset.name}</td>
+                <td data-label="Type">${asset.type}</td>
+                <td data-label="Location">${asset.location}</td>
+                <td data-label="Parent Asset">${parentAssetInfo}</td>
+                <td data-label="Assessed Value" class="text-right">${formatCurrency(asset.assessedValue)}</td>
+                <td data-label="Book Value" class="text-right font-semibold">${formatCurrency(asset.totalBookValue)}</td>
+                <td data-label="Status" class="text-center">${statusBadge}</td>
+                <td data-label="Actions" class="text-center non-printable">
                      <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">

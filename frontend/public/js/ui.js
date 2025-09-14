@@ -225,17 +225,17 @@ export function createUIManager() {
                                  </span>`;
 
             tr.innerHTML = `
-                <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}"></td>
-                <td><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
-                <td>${asset.description}</td>
-                <td>${asset.category}</td>
-                <td>
+                <td data-label="Select" class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}"></td>
+                <td data-label="Property No."><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
+                <td data-label="Description">${asset.description}</td>
+                <td data-label="Category">${asset.category}</td>
+                <td data-label="Custodian">
                     <div>${asset.custodian.name}</div>
                     <div class="text-xs opacity-70">${asset.custodian.office}</div>
                 </td>
-                <td>${statusBadge}</td>
-                <td>${formatDate(asset.createdAt)}</td>
-                <td class="text-center non-printable">
+                <td data-label="Status">${statusBadge}</td>
+                <td data-label="Date Created">${formatDate(asset.createdAt)}</td>
+                <td data-label="Actions" class="text-center non-printable">
                     <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">

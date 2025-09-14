@@ -130,4 +130,30 @@
     body:not(.sidebar-collapsed) #sidebar-container .tooltip:after {
         @apply hidden;
     }
+
+    /* --- NEW: Responsive Table for Mobile --- */
+    @media screen and (max-width: 767px) {
+        .responsive-table {
+            @apply block;
+        }
+        .responsive-table thead {
+            @apply hidden;
+        }
+        .responsive-table tbody, .responsive-table tr {
+            @apply block w-full;
+        }
+        .responsive-table tr {
+            @apply mb-4 border border-base-300 rounded-lg block;
+        }
+        .responsive-table td {
+            @apply flex justify-between items-center text-right p-3 border-b border-base-300/50;
+        }
+        .responsive-table td:last-child {
+            @apply border-b-0;
+        }
+        .responsive-table td::before {
+            content: attr(data-label);
+            @apply font-semibold text-left mr-4 text-base-content/80;
+        }
+    }
 }
