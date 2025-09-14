@@ -186,7 +186,7 @@ export function createUIManager() {
      * @param {Array<object>} assets - The array of asset objects for the current page.
      * @param {object} domElements - The DOM elements to update { tableBody }.
      */
-    function renderAssetTable(assets, domElements) {
+    function renderAssetTable(assets, domElements, user) {
         const { tableBody } = domElements;
         tableBody.innerHTML = '';
 
@@ -194,6 +194,11 @@ export function createUIManager() {
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-base-content/70">No assets found for the selected criteria.</td></tr>`;
             return;
         }
+
+        const userPermissions = user?.permissions || [];
+        const canUpdate = userPermissions.includes('asset:update');
+        const canDelete = userPermissions.includes('asset:delete');
+        const canTransfer = userPermissions.includes('asset:transfer');
 
         const statusMap = {
             'In Use': 'badge-success', // green
@@ -224,6 +229,11 @@ export function createUIManager() {
                                     ${asset.status}
                                  </span>`;
 
+            const editButton = canUpdate ? `<li><button class="edit-btn" data-id="${asset._id}"><i data-lucide="edit"></i> Edit</button></li>` : '';
+            const transferButton = canTransfer ? `<li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i> Transfer</button></li>` : '';
+            const deleteButton = canDelete ? `<li><button class="delete-btn text-red-500" data-id="${asset._id}"><i data-lucide="trash-2"></i> Delete</button></li>` : '';
+            const divider = (editButton || transferButton) && deleteButton ? `<div class="divider my-1"></div>` : '';
+
             tr.innerHTML = `
                 <td data-label="Select" class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}"></td>
                 <td data-label="Property No."><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
@@ -239,18 +249,19 @@ export function createUIManager() {
                     <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><button class="edit-btn" data-id="${asset._id}"><i data-lucide="edit"></i> Edit</button></li>
+                            ${editButton}
                             <li><a href="../slips/movable-property-card.html?id=${asset._id}" class="property-card-btn flex items-center"><i data-lucide="book-user"></i> Property Card (History)</a></li>
                             <li><a href="../slips/movable-ledger-card.html?id=${asset._id}" class="ledger-card-btn flex items-center"><i data-lucide="book-down"></i> Ledger Card (Depreciation)</a></li>
-                            <li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i> Transfer</button></li>
-                            <div class="divider my-1"></div>
-                            <li><button class="delete-btn text-red-500" data-id="${asset._id}"><i data-lucide="trash-2"></i> Delete</button></li>
+                            ${transferButton}
+                            ${divider}
+                            ${deleteButton}
                         </ul>
                     </div>
                 </td>
             `;
             tableBody.appendChild(tr);
         });
+        lucide.createIcons();
     }
 
     /**

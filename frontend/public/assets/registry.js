@@ -645,7 +645,7 @@ function initializeRegistryPage(user) {
             };
             const domElements = { tableBody: DOM.tableBody, paginationControls: DOM.paginationControls };
 
-            uiManager.renderAssetTable(assets, domElements);
+            uiManager.renderAssetTable(assets, domElements, user);
             uiManager.renderPagination(DOM.paginationControls, paginationInfo);
             renderSummary(totalValue);
             eventManager.updateSelectionState(); // Update buttons for the new view

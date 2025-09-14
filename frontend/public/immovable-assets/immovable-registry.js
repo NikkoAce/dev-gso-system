@@ -69,6 +69,11 @@ function initializeRegistryPage(user) {
         };
 
         assets.forEach(asset => {
+            const canUpdate = user.permissions.includes('immovable:update');
+            const canDelete = user.permissions.includes('immovable:delete');
+
+            const editLink = canUpdate ? `<li><a href="./immovable-form.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="edit" class="h-4 w-4"></i> Edit</a></li>` : '';
+            const deleteButton = canDelete ? `<li><button class="delete-asset-btn text-red-500 flex items-center gap-2" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button></li>` : '';
             // Conditionally create the Ledger Card link for depreciable assets
             const ledgerCardLink = ['Building', 'Other Structures'].includes(asset.type)
                 ? `<li><a href="./ledger-card.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="book-down" class="h-4 w-4"></i> Ledger Card (Depreciation)</a></li>`
@@ -77,6 +82,8 @@ function initializeRegistryPage(user) {
             const parentAssetInfo = asset.parentAsset
                 ? `<a href="./immovable-form.html?id=${asset.parentAsset._id}" class="link link-hover text-xs">${asset.parentAsset.name}</a>`
                 : '<span class="text-xs text-gray-400">None</span>';
+
+            const divider = (editLink || ledgerCardLink) && deleteButton ? `<div class="divider my-1"></div>` : '';
 
             const icon = statusIconMap[asset.status] || 'help-circle';
             const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm gap-2">
@@ -97,11 +104,11 @@ function initializeRegistryPage(user) {
                      <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a href="./immovable-form.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="edit" class="h-4 w-4"></i> Edit</a></li>
+                            ${editLink}
                             <li><a href="./property-card.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="book-user" class="h-4 w-4"></i> Property Card (History)</a></li>
                             ${ledgerCardLink}
-                            <div class="divider my-1"></div>
-                            <li><button class="delete-asset-btn text-red-500 flex items-center gap-2" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button></li>
+                            ${divider}
+                            ${deleteButton}
                         </ul>
                     </div>
                 </td>
