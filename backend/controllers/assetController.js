@@ -98,39 +98,79 @@ const getAssets = asyncHandler(async (req, res) => {
         const skip = (pageNum - 1) * limitNum;
 
         // Using Promise.all to run queries concurrently for better performance.
-        const [assets, totalDocs, summaryResult] = await Promise.all([
+        const [assets, totalDocs, summaryResult, summaryStatsResult] = await Promise.all([
             Asset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
             Asset.countDocuments(query),
             Asset.aggregate([
                 { $match: query },
                 { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
+            ]),
+            // NEW: Aggregation for summary stats for the physical count dashboard
+            Asset.aggregate([
+                { $match: query },
+                {
+                    $group: {
+                        _id: null,
+                        verifiedCount: { $sum: { $cond: [{ $eq: ['$physicalCountDetails.verified', true] }, 1, 0] } },
+                        missingCount: { $sum: { $cond: [{ $eq: ['$status', 'Missing'] }, 1, 0] } },
+                        forRepairCount: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } }
+                    }
+                }
             ])
         ]);
 
         const totalValue = summaryResult[0]?.totalValue || 0;
+        const summaryStats = summaryStatsResult[0] || { verifiedCount: 0, missingCount: 0, forRepairCount: 0 };
 
         // Send the structured paginated response
         res.json({
             docs: assets,
             totalDocs,
             totalValue,
+            summaryStats: {
+                totalOfficeAssets: totalDocs,
+                verifiedCount: summaryStats.verifiedCount,
+                missingCount: summaryStats.missingCount,
+                forRepairCount: summaryStats.forRepairCount
+            },
             limit: limitNum,
             totalPages: Math.ceil(totalDocs / limitNum),
             page: pageNum,
         });
     } else {
         // No pagination, return all matching assets but in a consistent format.
-        const [assets, summaryResult] = await Promise.all([
+        const [assets, summaryResult, summaryStatsResult] = await Promise.all([
             Asset.find(query).sort(sortOptions).lean(),
             Asset.aggregate([
                 { $match: query },
                 { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
+            ]),
+            Asset.aggregate([
+                { $match: query },
+                {
+                    $group: {
+                        _id: null,
+                        verifiedCount: { $sum: { $cond: [{ $eq: ['$physicalCountDetails.verified', true] }, 1, 0] } },
+                        missingCount: { $sum: { $cond: [{ $eq: ['$status', 'Missing'] }, 1, 0] } },
+                        forRepairCount: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } }
+                    }
+                }
             ])
         ]);
         const totalValue = summaryResult[0]?.totalValue || 0;
+        const summaryStats = summaryStatsResult[0] || { verifiedCount: 0, missingCount: 0, forRepairCount: 0 };
 
         // Return a response object consistent with the paginated one.
-        res.json({ docs: assets, totalDocs: assets.length, totalValue, limit: assets.length, totalPages: 1, page: 1 });
+        res.json({
+            docs: assets, totalDocs: assets.length, totalValue,
+            summaryStats: {
+                totalOfficeAssets: assets.length,
+                verifiedCount: summaryStats.verifiedCount,
+                missingCount: summaryStats.missingCount,
+                forRepairCount: summaryStats.forRepairCount
+            },
+            limit: assets.length, totalPages: 1, page: 1
+        });
     }
 });
 

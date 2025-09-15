@@ -32,6 +32,7 @@ function initializePhysicalCountPage(user) {
     const officeFilter = document.getElementById('office-filter');
     const verificationFilter = document.getElementById('verification-filter');
     const paginationControls = document.getElementById('pagination-controls');
+    const summaryDashboard = document.getElementById('summary-dashboard');
     const tableBody = document.getElementById('physical-count-table-body');
     const verifyAllCheckbox = document.getElementById('verify-all-checkbox');
     const scanAssetBtn = document.getElementById('scan-asset-btn');
@@ -42,6 +43,7 @@ function initializePhysicalCountPage(user) {
     const closeScannerBtn = document.getElementById('close-scanner-btn');
 
     let videoStream = null;
+    let currentSummary = {};
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
@@ -56,6 +58,40 @@ function initializePhysicalCountPage(user) {
         }
     }
     
+    function renderSummaryDashboard(summary) {
+        if (!summaryDashboard || !summary) {
+            summaryDashboard.innerHTML = ''; // Clear if no data
+            return;
+        }
+    
+        const { totalOfficeAssets = 0, verifiedCount = 0, missingCount = 0, forRepairCount = 0 } = summary;
+        const unverifiedCount = totalOfficeAssets - verifiedCount;
+        const verificationPercentage = totalOfficeAssets > 0 ? (verifiedCount / totalOfficeAssets) * 100 : 0;
+    
+        summaryDashboard.innerHTML = `
+            <div class="card bg-base-100 border p-4">
+                <div class="text-sm text-base-content/70">Total Assets</div>
+                <div class="text-3xl font-bold">${totalOfficeAssets}</div>
+            </div>
+            <div class="card bg-base-100 border p-4">
+                <div class="text-sm text-base-content/70">Verification Progress</div>
+                <div class="text-3xl font-bold">${verifiedCount} <span class="text-lg font-normal">/ ${totalOfficeAssets}</span></div>
+                <progress class="progress progress-success w-full mt-2" value="${verificationPercentage}" max="100"></progress>
+            </div>
+            <div class="card bg-base-100 border p-4">
+                <div class="text-sm text-base-content/70">Unverified</div>
+                <div class="text-3xl font-bold text-warning">${unverifiedCount}</div>
+            </div>
+            <div class="card bg-base-100 border p-4">
+                <div class="text-sm text-base-content/70">Discrepancies Found</div>
+                <div class="text-lg font-bold">
+                    <span class="text-error">${missingCount}</span> Missing / 
+                    <span class="text-accent">${forRepairCount}</span> For Repair
+                </div>
+            </div>
+        `;
+    }
+
     function renderTable(assets, pagination) {
         tableBody.innerHTML = '';
         if (assets.length === 0) {
@@ -156,6 +192,13 @@ function initializePhysicalCountPage(user) {
 
     async function loadAssets() {
         setLoading(true, tableBody, { colSpan: 7 });
+        // Set loading state for dashboard
+        summaryDashboard.innerHTML = `
+            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+        `;
         try {
             const params = new URLSearchParams({
                 page: currentPage,
@@ -178,9 +221,12 @@ function initializePhysicalCountPage(user) {
             };
             totalPages = pagination.totalPages; // Update total pages from the response
             renderTable(assets, pagination); // This line was missing
+            currentSummary = data.summaryStats || {}; // Store the summary
+            renderSummaryDashboard(currentSummary);
         } catch (error) {
             console.error('Failed to load assets:', error);
             tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+            summaryDashboard.innerHTML = ''; // Clear dashboard on error
         }
     }
 
@@ -236,6 +282,14 @@ function initializePhysicalCountPage(user) {
             } else {
                 if (infoDiv) infoDiv.remove();
             }
+
+            // Update summary dashboard in real-time
+            if (isVerified) {
+                currentSummary.verifiedCount++;
+            } else {
+                currentSummary.verifiedCount--;
+            }
+            renderSummaryDashboard(currentSummary);
         } catch (error) {
             showToast(`Error updating verification: ${error.message}`, 'error');
             checkbox.checked = !isVerified; // Revert on error
