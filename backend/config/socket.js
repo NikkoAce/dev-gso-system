@@ -18,8 +18,12 @@ const initSocket = (socketIoInstance) => {
         }
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (!decoded.user || !decoded.user.id) {
+                return next(new Error('Authentication error: Invalid token payload'));
+            }
+
             // Attach user to the socket object for use in event handlers
-            socket.user = await User.findById(decoded.id).select('-password').lean();
+            socket.user = await User.findById(decoded.user.id).select('-password').lean();
             if (!socket.user) {
                 return next(new Error('Authentication error: User not found'));
             }
