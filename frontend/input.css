@@ -146,14 +146,14 @@
             @apply mb-4 border border-base-300 rounded-lg block;
         }
         .responsive-table td {
-            @apply flex items-center justify-between p-3 border-b border-base-300/50;
+            @apply block p-4 border-b border-base-300/50;
         }
         .responsive-table td:last-child {
             @apply border-b-0;
         }
         .responsive-table td::before {
             content: attr(data-label);
-            @apply font-semibold text-left mr-4 text-base-content/80;
+            @apply block font-semibold text-left mb-2 text-sm text-base-content/80;
         }
     }
 }
