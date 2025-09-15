@@ -51,9 +51,17 @@
             
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
                         <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
                         <div class="flex items-center gap-2 flex-wrap justify-start md:justify-end w-full md:w-auto">
+                            <!-- Quick Actions -->
+                            <a href="../assets/asset-form.html" class="btn btn-ghost btn-sm"><i data-lucide="plus-circle" class="text-primary"></i> Add Movable Asset</a>
+                            <a href="../immovable-assets/immovable-form.html" class="btn btn-ghost btn-sm"><i data-lucide="building" class="text-primary"></i> Add Immovable Asset</a>
+                            <a href="../reports/reports.html" class="btn btn-ghost btn-sm"><i data-lucide="file-text" class="text-secondary"></i> Generate Reports</a>
+                            <a href="../assets/physical-count.html" class="btn btn-ghost btn-sm"><i data-lucide="clipboard-check" class="text-secondary"></i> Start Physical Count</a>
+                            
+                            <div class="divider divider-horizontal mx-2 hidden md:flex"></div>
+
                             <!-- NEW: Date Range Picker -->
                             <label class="form-control w-full sm:w-auto">
                                 <input id="date-range-picker" class="input input-bordered input-sm w-full sm:w-64 text-center cursor-pointer" placeholder="Select Date Range">
@@ -63,13 +71,6 @@
                             <button id="save-layout-btn" class="btn btn-primary btn-sm hidden"><i data-lucide="check"></i> Save Layout</button>
                             <button id="cancel-layout-btn" class="btn btn-ghost btn-sm hidden"><i data-lucide="x"></i> Cancel</button>
                         </div>
-                    </div>
-                    <!-- NEW: Quick Actions -->
-                    <div class="flex flex-wrap gap-2 border-b pb-4">
-                        <a href="../assets/asset-form.html" class="btn btn-primary btn-sm"><i data-lucide="plus-circle"></i> Add Movable Asset</a>
-                        <a href="../immovable-assets/immovable-form.html" class="btn btn-primary btn-sm"><i data-lucide="building"></i> Add Immovable Asset</a>
-                        <a href="../reports/reports.html" class="btn btn-secondary btn-sm"><i data-lucide="file-text"></i> Generate Reports</a>
-                        <a href="../assets/physical-count.html" class="btn btn-secondary btn-sm"><i data-lucide="clipboard-check"></i> Start Physical Count</a>
                     </div>
                     <!-- Active Filters Bar -->
                     <div id="active-filters-bar" class="hidden flex items-center gap-2 p-2 mb-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
