@@ -2,11 +2,6 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @layer components {
-    /* --- NEW: Override DaisyUI's default button behavior to prevent wrapping --- */
-    .btn {
-        flex-wrap: nowrap;
-    }
-
     /* --- NEW: Add base transition to sidebar for smooth expand/collapse --- */
     #sidebar-container {
         @apply transition-all duration-300 ease-in-out;
