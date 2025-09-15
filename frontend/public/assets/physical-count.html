@@ -10,6 +10,14 @@
     <link href="../css/output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Custom style to ensure the highlight for unverified rows is visible over the zebra striping. */
+        #physical-count-table.table-zebra tbody tr.unverified-row,
+        #physical-count-table.table-zebra tbody tr.unverified-row:nth-child(2n) {
+            background-color: oklch(var(--wa) / 0.2); /* DaisyUI 'warning' color with 20% opacity */
+            --tw-bg-opacity: 1; /* Override any potential tailwind opacity */
+        }
+    </style>
     <script type="module" src="/js/auth.js" defer></script>
 </head>
 <body>
@@ -75,7 +83,7 @@
 
                     <div class="card bg-base-100 border">
                         <div class="md:overflow-x-auto md:h-auto">
-                            <table class="table table-zebra w-full responsive-table">
+                            <table id="physical-count-table" class="table table-zebra w-full responsive-table">
                                 <thead>
                                 <tr>
                                     <th>Property No.</th>

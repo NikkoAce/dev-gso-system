@@ -56,7 +56,7 @@ function initializePhysicalCountPage(user) {
 
         assets.forEach(asset => {
             const tr = document.createElement('tr');
-            tr.className = 'bg-warning/20'; // Highlight unverified rows by default
+            tr.classList.add('unverified-row'); // Highlight unverified rows by default
             tr.dataset.assetId = asset._id;
 
             let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
@@ -190,9 +190,9 @@ function initializePhysicalCountPage(user) {
         if (e.target.classList.contains('verify-checkbox')) {
             const row = e.target.closest('tr');
             if (e.target.checked) {
-                row.classList.remove('bg-warning/20');
+                row.classList.remove('unverified-row');
             } else {
-                row.classList.add('bg-warning/20');
+                row.classList.add('unverified-row');
             }
         }
     });
