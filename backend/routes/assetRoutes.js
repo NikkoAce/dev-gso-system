@@ -21,7 +21,8 @@ const {
     generateMovableLedgerCard,
     importAssetsFromCsv,
     downloadCsvTemplate,
-    verifyAssetForPhysicalCount
+    verifyAssetForPhysicalCount,
+    exportPhysicalCountResults
 } = require('../controllers/assetController');
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
@@ -44,6 +45,9 @@ router.post('/ptr', protect, checkPermission(PERMISSIONS.ASSET_TRANSFER), create
 
 // Route for updating physical count
 router.put('/physical-count', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updatePhysicalCount);
+
+// Route for exporting physical count results
+router.get('/physical-count/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportPhysicalCountResults);
 
 // Route for verifying an asset during physical count
 router.route('/:id/verify-physical-count').put(protect, checkPermission(PERMISSIONS.ASSET_UPDATE), verifyAssetForPhysicalCount);

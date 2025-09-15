@@ -958,6 +958,49 @@ const verifyAssetForPhysicalCount = asyncHandler(async (req, res) => {
     res.status(200).json(updatedAsset.physicalCountDetails);
 });
 
+/**
+ * @desc    Export physical count results for a specific office to CSV
+ * @route   GET /api/assets/physical-count/export
+ * @access  Private (Requires 'asset:export' permission)
+ */
+const exportPhysicalCountResults = asyncHandler(async (req, res) => {
+    const { office } = req.query;
+
+    if (!office) {
+        res.status(400);
+        throw new Error('Office parameter is required for export.');
+    }
+
+    const query = { 'custodian.office': office };
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="physical_count_${office.replace(/\s+/g, '_')}.csv"`);
+
+    const headers = [
+        'Property Number', 'Description', 'Custodian', 'Status', 'Condition',
+        'Remarks', 'Verification Status', 'Verified By', 'Verified At'
+    ];
+    res.write(headers.join(',') + '\n');
+
+    const cursor = Asset.find(query).sort({ propertyNumber: 1 }).lean().cursor();
+
+    cursor.on('data', (asset) => {
+        const verificationStatus = asset.physicalCountDetails?.verified ? 'Verified' : 'Unverified';
+        const verifiedBy = asset.physicalCountDetails?.verifiedBy || '';
+        const verifiedAt = asset.physicalCountDetails?.verifiedAt ? new Date(asset.physicalCountDetails.verifiedAt).toLocaleDateString('en-CA') : '';
+
+        const values = [
+            asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.custodian?.name || '',
+            asset.status || '', asset.condition || '', `"${(asset.remarks || '').replace(/"/g, '""')}"`,
+            verificationStatus, verifiedBy, verifiedAt
+        ];
+        res.write(values.join(',') + '\n');
+    });
+
+    cursor.on('end', () => res.end());
+    cursor.on('error', (error) => { console.error('Error streaming physical count export:', error); res.end(); });
+});
+
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
@@ -966,5 +1009,6 @@ module.exports = {
     getMyOfficeAssets, addRepairRecord,
     deleteRepairRecord, generateMovableLedgerCard,
     importAssetsFromCsv, downloadCsvTemplate,
-    verifyAssetForPhysicalCount
+    verifyAssetForPhysicalCount,
+    exportPhysicalCountResults
 };

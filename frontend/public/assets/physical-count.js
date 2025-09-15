@@ -36,6 +36,7 @@ function initializePhysicalCountPage(user) {
     const tableBody = document.getElementById('physical-count-table-body');
     const verifyAllCheckbox = document.getElementById('verify-all-checkbox');
     const scanAssetBtn = document.getElementById('scan-asset-btn');
+    const exportResultsBtn = document.getElementById('export-results-btn');
     const scannerModal = document.getElementById('scanner-modal');
     const scannerVideo = document.getElementById('scanner-video');
     const scannerCanvas = document.getElementById('scanner-canvas');
@@ -429,6 +430,52 @@ function initializePhysicalCountPage(user) {
         });
     }
 
+    // --- EXPORT LOGIC ---
+    async function exportResults() {
+        const office = officeFilter.value;
+        if (!office) {
+            showToast('Please select an office to export results.', 'warning');
+            return;
+        }
+
+        exportResultsBtn.disabled = true;
+        exportResultsBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Exporting...`;
+        lucide.createIcons();
+
+        try {
+            const params = new URLSearchParams({ office });
+            // We can add other filters if needed, but office is the primary one.
+            
+            // The endpoint will stream a CSV file, so we handle it as a blob.
+            const response = await fetch(`${API_ROOT_URL}/api/assets/physical-count/export?${params}`, {
+                headers: { 'Authorization': `Bearer ${getGsoToken()}` }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+                throw new Error(errorData.message || `Failed to export data. Status: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `physical_count_results_${office.replace(/\s+/g, '_')}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+
+        } catch (error) {
+            showToast(`Export failed: ${error.message}`, 'error');
+        } finally {
+            exportResultsBtn.disabled = false;
+            exportResultsBtn.innerHTML = `<i data-lucide="download"></i> Export Results`;
+            lucide.createIcons();
+        }
+    }
+
     // --- EVENT LISTENERS ---
     [searchInput, officeFilter, verificationFilter].forEach(el => {
         el.addEventListener('input', () => {
@@ -496,6 +543,7 @@ function initializePhysicalCountPage(user) {
 
     scanAssetBtn.addEventListener('click', startScanner);
     closeScannerBtn.addEventListener('click', stopScanner);
+    exportResultsBtn.addEventListener('click', exportResults);
 
     document.getElementById('save-count-btn').addEventListener('click', async () => {
         const updates = [];
