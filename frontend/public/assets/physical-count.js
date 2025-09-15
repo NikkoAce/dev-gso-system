@@ -42,21 +42,21 @@ function initializePhysicalCountPage(user) {
         } catch (error)
         {
             console.error('Failed to initialize page:', error);
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
         }
     }
     
     function renderTable(assets, pagination) {
         tableBody.innerHTML = '';
         if (assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
             renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
             return;
         }
 
         assets.forEach(asset => {
             const tr = document.createElement('tr');
-            // tr.className = 'bg-white border-b'; // This is handled by table-zebra
+            tr.className = 'bg-warning/20'; // Highlight unverified rows by default
             tr.dataset.assetId = asset._id;
 
             let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
@@ -98,6 +98,10 @@ function initializePhysicalCountPage(user) {
                 </select>
             `;
 
+            const verifiedCheckboxHTML = `
+                <input type="checkbox" class="verify-checkbox checkbox checkbox-success checkbox-sm">
+            `;
+
             tr.innerHTML = `
                 <td data-label="Property No." class="font-medium">${asset.propertyNumber}</td>
                 <td data-label="Description">${fullDescription}</td>
@@ -107,6 +111,7 @@ function initializePhysicalCountPage(user) {
                 <td data-label="Remarks">
                     <input type="text" class="remarks-input input input-bordered input-sm w-full" value="${asset.remarks || ''}">
                 </td>
+                <td data-label="Verified" class="text-center align-middle">${verifiedCheckboxHTML}</td>
             `;
             tableBody.appendChild(tr);
         });
@@ -114,7 +119,7 @@ function initializePhysicalCountPage(user) {
     }
 
     async function loadAssets() {
-        setLoading(true, tableBody, { colSpan: 6 });
+        setLoading(true, tableBody, { colSpan: 7 });
         try {
             const params = new URLSearchParams({
                 page: currentPage,
@@ -138,7 +143,7 @@ function initializePhysicalCountPage(user) {
             renderTable(assets, pagination); // This line was missing
         } catch (error) {
             console.error('Failed to load assets:', error);
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
         }
     }
 
@@ -165,6 +170,17 @@ function initializePhysicalCountPage(user) {
             if (page !== currentPage) {
                 currentPage = page;
                 loadAssets();
+            }
+        }
+    });
+
+    tableBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('verify-checkbox')) {
+            const row = e.target.closest('tr');
+            if (e.target.checked) {
+                row.classList.remove('bg-warning/20');
+            } else {
+                row.classList.add('bg-warning/20');
             }
         }
     });
