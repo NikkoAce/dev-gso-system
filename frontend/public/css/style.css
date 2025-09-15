@@ -9,8 +9,8 @@ body { font-family: 'Inter', sans-serif; }
 /* DaisyUI's .tooltip class sets 'display: inline-block', which conflicts with
    .btn's 'display: inline-flex'. This override ensures that when both classes
    are on the same element, it behaves as a flex container, correctly aligning
-   the icon and text. */
-.btn.tooltip {
+   the icon and text. We use :not(.hidden) to avoid overriding Tailwind's hidden utility. */
+.btn.tooltip:not(.hidden) {
     display: inline-flex;
 }
 
