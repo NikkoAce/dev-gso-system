@@ -451,7 +451,7 @@ const htmlLegendPlugin = {
         const { datasets } = chart.data;
         if (!datasets || datasets.length < 2) return;
 
-        const createLegendSection = (title, dataset, datasetIndex) => {
+        const createLegendList = (title, dataset, datasetIndex) => {
             const meta = chart.getDatasetMeta(datasetIndex);
             if (!meta) return '';
 
@@ -474,19 +474,19 @@ const htmlLegendPlugin = {
             }).join('');
 
             return `
-                <div class="flex-1">
-                    <h4 class="font-semibold mb-2 text-base-content/80">${title}</h4>
+                <div>
+                    <h4 class="font-semibold mb-1 text-base-content/80">${title}</h4>
                     <ul class="space-y-1">
                         ${itemsHTML}
                     </ul>
                 </div>
             `;
         };
-
+        // Generate two separate sections that will stack vertically
         legendContainer.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                ${createLegendSection('Status', datasets[0], 0)}
-                ${createLegendSection('Condition', datasets[1], 1)}
+            <div class="space-y-4">
+                ${createLegendList('Status', datasets[0], 0)}
+                ${createLegendList('Condition', datasets[1], 1)}
             </div>
         `;
 
