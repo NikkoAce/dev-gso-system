@@ -30,8 +30,10 @@ function initializePhysicalCountPage(user) {
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('search-input');
     const officeFilter = document.getElementById('office-filter');
+    const verificationFilter = document.getElementById('verification-filter');
     const paginationControls = document.getElementById('pagination-controls');
     const tableBody = document.getElementById('physical-count-table-body');
+    const verifyAllCheckbox = document.getElementById('verify-all-checkbox');
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
@@ -140,6 +142,7 @@ function initializePhysicalCountPage(user) {
             tableBody.appendChild(tr);
         });
         renderPagination(paginationControls, pagination);
+        updateVerifyAllCheckboxState();
     }
 
     async function loadAssets() {
@@ -150,6 +153,7 @@ function initializePhysicalCountPage(user) {
                 limit: itemsPerPage,
                 search: searchInput.value,
                 office: officeFilter.value,
+                verified: verificationFilter.value,
                 physicalCount: true, // Tell backend to only get relevant assets
             });
             const data = await fetchWithAuth(`assets?${params}`);
@@ -171,8 +175,69 @@ function initializePhysicalCountPage(user) {
         }
     }
 
+    function updateVerifyAllCheckboxState() {
+        const allRowCheckboxes = tableBody.querySelectorAll('.verify-checkbox');
+        const checkedCount = tableBody.querySelectorAll('.verify-checkbox:checked').length;
+
+        if (allRowCheckboxes.length === 0) {
+            verifyAllCheckbox.checked = false;
+            verifyAllCheckbox.indeterminate = false;
+            return;
+        }
+
+        if (checkedCount === 0) {
+            verifyAllCheckbox.checked = false;
+            verifyAllCheckbox.indeterminate = false;
+        } else if (checkedCount === allRowCheckboxes.length) {
+            verifyAllCheckbox.checked = true;
+            verifyAllCheckbox.indeterminate = false;
+        } else {
+            verifyAllCheckbox.checked = false;
+            verifyAllCheckbox.indeterminate = true;
+        }
+    }
+
+    async function handleVerificationChange(checkbox) {
+        const row = checkbox.closest('tr');
+        if (!row || !row.dataset.assetId) return;
+
+        const assetId = row.dataset.assetId;
+        const isVerified = checkbox.checked;
+
+        checkbox.disabled = true;
+        const verifiedCell = row.querySelector('[data-label="Verified"]');
+        let infoDiv = verifiedCell.querySelector('.verification-info');
+
+        try {
+            const updatedDetails = await fetchWithAuth(`assets/${assetId}/verify-physical-count`, {
+                method: 'PUT',
+                body: JSON.stringify({ verified: isVerified })
+            });
+
+            row.classList.toggle('unverified-row', !isVerified);
+
+            if (isVerified && updatedDetails.verifiedBy) {
+                if (!infoDiv) {
+                    infoDiv = document.createElement('div');
+                    infoDiv.className = 'text-xs text-success mt-1 verification-info';
+                    verifiedCell.appendChild(infoDiv);
+                }
+                const verifiedDate = new Date(updatedDetails.verifiedAt).toLocaleDateString();
+                infoDiv.textContent = `by ${updatedDetails.verifiedBy} on ${verifiedDate}`;
+            } else {
+                if (infoDiv) infoDiv.remove();
+            }
+        } catch (error) {
+            showToast(`Error updating verification: ${error.message}`, 'error');
+            checkbox.checked = !isVerified; // Revert on error
+            row.classList.toggle('unverified-row', !isVerified); // Revert highlight on error
+        } finally {
+            checkbox.disabled = false;
+        }
+    }
+
     // --- EVENT LISTENERS ---
-    [searchInput, officeFilter].forEach(el => {
+    [searchInput, officeFilter, verificationFilter].forEach(el => {
         el.addEventListener('input', () => {
             currentPage = 1;
             loadAssets();
@@ -198,44 +263,30 @@ function initializePhysicalCountPage(user) {
         }
     });
 
-    tableBody.addEventListener('change', async (e) => {
+    tableBody.addEventListener('change', async(e) => {
         if (e.target.classList.contains('verify-checkbox')) {
-            const checkbox = e.target;
-            const row = checkbox.closest('tr');
-            const assetId = row.dataset.assetId;
-            const isVerified = checkbox.checked;
-
-            checkbox.disabled = true;
-            const verifiedCell = row.querySelector('[data-label="Verified"]');
-            let infoDiv = verifiedCell.querySelector('.verification-info');
-
-            try {
-                const updatedDetails = await fetchWithAuth(`assets/${assetId}/verify-physical-count`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ verified: isVerified })
-                });
-
-                row.classList.toggle('unverified-row', !isVerified);
-
-                if (isVerified && updatedDetails.verifiedBy) {
-                    if (!infoDiv) {
-                        infoDiv = document.createElement('div');
-                        infoDiv.className = 'text-xs text-success mt-1 verification-info';
-                        verifiedCell.appendChild(infoDiv);
-                    }
-                    const verifiedDate = new Date(updatedDetails.verifiedAt).toLocaleDateString();
-                    infoDiv.textContent = `by ${updatedDetails.verifiedBy} on ${verifiedDate}`;
-                } else {
-                    if (infoDiv) infoDiv.remove();
-                }
-
-            } catch (error) {
-                showToast(`Error updating verification: ${error.message}`, 'error');
-                checkbox.checked = !isVerified; // Revert on error
-            } finally {
-                checkbox.disabled = false;
-            }
+            await handleVerificationChange(e.target);
+            updateVerifyAllCheckboxState();
         }
+    });
+
+    verifyAllCheckbox.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        const allRowCheckboxes = Array.from(tableBody.querySelectorAll('.verify-checkbox'));
+
+        verifyAllCheckbox.disabled = true;
+
+        const promises = allRowCheckboxes
+            .filter(checkbox => checkbox.checked !== isChecked)
+            .map(checkbox => {
+                checkbox.checked = isChecked;
+                return handleVerificationChange(checkbox);
+            });
+
+        await Promise.all(promises);
+
+        verifyAllCheckbox.disabled = false;
+        updateVerifyAllCheckboxState();
     });
 
     document.getElementById('save-count-btn').addEventListener('click', async () => {

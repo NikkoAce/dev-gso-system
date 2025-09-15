@@ -11,7 +11,7 @@ const { Readable } = require('stream');
 // Helper function to build the filter query for assets
 const buildAssetQuery = (queryParams) => {
     const {
-        search, category, status, office, assignment, fundSource, startDate, endDate, ids, condition
+        search, category, status, office, assignment, fundSource, startDate, endDate, ids, condition, verified
     } = queryParams;
 
     const query = {};
@@ -46,6 +46,15 @@ const buildAssetQuery = (queryParams) => {
             query.condition = { $in: [null, ''] };
         } else {
             query.condition = condition;
+        }
+    }
+
+    if (verified) {
+        if (verified === 'verified') {
+            query['physicalCountDetails.verified'] = true;
+        } else if (verified === 'unverified') {
+            // This will find documents where verified is false, null, or does not exist.
+            query['physicalCountDetails.verified'] = { $ne: true };
         }
     }
 

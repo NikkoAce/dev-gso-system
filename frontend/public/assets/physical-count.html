@@ -77,6 +77,14 @@
                                         <!-- JS will populate this -->
                                     </select>
                                 </label>
+                                <label class="form-control w-full md:w-64">
+                                    <div class="label sr-only"><span class="label-text">Verification Status</span></div>
+                                    <select id="verification-filter" class="select select-bordered font-normal">
+                                        <option value="">All Verification Statuses</option>
+                                        <option value="verified">Verified</option>
+                                        <option value="unverified">Unverified</option>
+                                    </select>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -92,7 +100,12 @@
                                     <th class="w-56">Status</th>
                                     <th class="w-56">Condition</th>
                                     <th class="w-56">Remarks</th>
-                                    <th class="w-48 text-center">Verified</th>
+                                    <th class="w-48 text-center">
+                                        <label class="flex flex-col items-center gap-1 cursor-pointer">
+                                            <input type="checkbox" id="verify-all-checkbox" class="checkbox checkbox-sm" />
+                                            <span class="text-xs font-normal">All</span>
+                                        </label>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="physical-count-table-body">
