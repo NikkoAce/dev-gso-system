@@ -43,6 +43,7 @@ function initializeRegistryPage(user) {
     const endDateFilter = document.getElementById('end-date-filter');
     const paginationControls = document.getElementById('pagination-controls');
     const exportCsvBtn = document.getElementById('export-csv-btn');
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
     const addAssetBtn = document.getElementById('add-asset-btn');
 
     // --- UTILITY ---
@@ -264,6 +265,17 @@ function initializeRegistryPage(user) {
         }
     }
 
+    function resetFilters() {
+        searchInput.value = '';
+        typeFilter.selectedIndex = 0;
+        statusFilter.selectedIndex = 0;
+        conditionFilter.selectedIndex = 0;
+        startDateFilter.value = '';
+        endDateFilter.value = '';
+        // After resetting, fetch the assets to update the view
+        fetchAndRenderAssets(1);
+    }
+
     async function handleDeleteAsset(assetId) {
         try {
             await fetchWithAuth(`${API_ENDPOINT}/${assetId}`, { method: 'DELETE' });
@@ -357,6 +369,8 @@ function initializeRegistryPage(user) {
     });
 
     exportCsvBtn.addEventListener('click', handleExportCSV);
+
+    resetFiltersBtn.addEventListener('click', resetFilters);
 
     // --- INITIALIZATION ---
     // Hide "Add" button if user doesn't have create permission
