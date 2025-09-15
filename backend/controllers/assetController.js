@@ -3,6 +3,7 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 const PTR = require('../models/PTR'); // Import the new PTR model
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
+const { getIo } = require('../config/socket');
 const csv = require('csv-parser');
 const { Readable } = require('stream');
 
@@ -574,7 +575,16 @@ const updatePhysicalCount = asyncHandler(async (req, res) => {
         return asset.save();
     });
 
-    await Promise.all(updatePromises);
+    const savedAssets = await Promise.all(updatePromises);
+    const io = getIo();
+
+    savedAssets.forEach(asset => {
+        if (asset && asset.custodian && asset.custodian.office) {
+            const room = `office:${asset.custodian.office}`;
+            io.to(room).emit('asset-updated', asset.toObject());
+        }
+    });
+
     res.json({ message: 'Physical count updated successfully.' });
 });
 
@@ -938,6 +948,13 @@ const verifyAssetForPhysicalCount = asyncHandler(async (req, res) => {
     }
 
     const updatedAsset = await asset.save();
+    const io = getIo();
+
+    if (updatedAsset.custodian && updatedAsset.custodian.office) {
+        const room = `office:${updatedAsset.custodian.office}`;
+        io.to(room).emit('asset-verified', updatedAsset.toObject());
+    }
+
     res.status(200).json(updatedAsset.physicalCountDetails);
 });
 

@@ -1,5 +1,5 @@
 // FILE: frontend/public/physical-count.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
@@ -44,6 +44,8 @@ function initializePhysicalCountPage(user) {
 
     let videoStream = null;
     let currentSummary = {};
+    let socket;
+    let currentOfficeRoom = '';
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
@@ -51,6 +53,13 @@ function initializePhysicalCountPage(user) {
             const offices = await fetchWithAuth('offices');
             populateFilters({ offices }, { officeFilter });
             await loadAssets();
+
+            // Initialize Socket.IO connection
+            socket = io({
+                auth: { token: getGsoToken() }
+            });
+            setupSocketListeners();
+
         } catch (error)
         {
             console.error('Failed to initialize page:', error);
@@ -264,36 +273,14 @@ function initializePhysicalCountPage(user) {
         let infoDiv = verifiedCell.querySelector('.verification-info');
 
         try {
-            const updatedDetails = await fetchWithAuth(`assets/${assetId}/verify-physical-count`, {
+            // The UI update is now handled by the socket listener to ensure real-time sync
+            await fetchWithAuth(`assets/${assetId}/verify-physical-count`, {
                 method: 'PUT',
                 body: JSON.stringify({ verified: isVerified })
             });
-
-            row.classList.toggle('unverified-row', !isVerified);
-
-            if (isVerified && updatedDetails.verifiedBy) {
-                if (!infoDiv) {
-                    infoDiv = document.createElement('div');
-                    infoDiv.className = 'text-xs text-success mt-1 verification-info';
-                    verifiedCell.appendChild(infoDiv);
-                }
-                const verifiedDate = new Date(updatedDetails.verifiedAt).toLocaleDateString();
-                infoDiv.textContent = `by ${updatedDetails.verifiedBy} on ${verifiedDate}`;
-            } else {
-                if (infoDiv) infoDiv.remove();
-            }
-
-            // Update summary dashboard in real-time
-            if (isVerified) {
-                currentSummary.verifiedCount++;
-            } else {
-                currentSummary.verifiedCount--;
-            }
-            renderSummaryDashboard(currentSummary);
         } catch (error) {
             showToast(`Error updating verification: ${error.message}`, 'error');
-            checkbox.checked = !isVerified; // Revert on error
-            row.classList.toggle('unverified-row', !isVerified); // Revert highlight on error
+            checkbox.checked = !isVerified; // Revert checkbox on API error
         } finally {
             checkbox.disabled = false;
         }
@@ -375,9 +362,88 @@ function initializePhysicalCountPage(user) {
         showToast(`Asset ${propertyNumber} located and verified.`, 'success');
     }
 
+    // --- SOCKET.IO LOGIC ---
+    function setupSocketListeners() {
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket server.');
+            // If an office is already selected on load, join its room
+            if (officeFilter.value) {
+                currentOfficeRoom = `office:${officeFilter.value}`;
+                socket.emit('join-room', currentOfficeRoom);
+            }
+        });
+
+        socket.on('asset-verified', (updatedAsset) => {
+            const row = tableBody.querySelector(`tr[data-asset-id="${updatedAsset._id}"]`);
+            if (!row) return; // Asset not on current page
+
+            const checkbox = row.querySelector('.verify-checkbox');
+            const wasVerified = checkbox.checked;
+            const isNowVerified = updatedAsset.physicalCountDetails.verified;
+
+            // Update summary dashboard based on the change
+            if (isNowVerified && !wasVerified) {
+                currentSummary.verifiedCount++;
+            } else if (!isNowVerified && wasVerified) {
+                currentSummary.verifiedCount--;
+            }
+            renderSummaryDashboard(currentSummary);
+
+            // Update the row's UI
+            checkbox.checked = isNowVerified;
+            row.classList.toggle('unverified-row', !isNowVerified);
+
+            const verifiedCell = row.querySelector('[data-label="Verified"]');
+            let infoDiv = verifiedCell.querySelector('.verification-info');
+
+            if (isNowVerified && updatedAsset.physicalCountDetails.verifiedBy) {
+                if (!infoDiv) {
+                    infoDiv = document.createElement('div');
+                    infoDiv.className = 'text-xs text-success mt-1 verification-info';
+                    verifiedCell.appendChild(infoDiv);
+                }
+                const verifiedDate = new Date(updatedAsset.physicalCountDetails.verifiedAt).toLocaleDateString();
+                infoDiv.textContent = `by ${updatedAsset.physicalCountDetails.verifiedBy} on ${verifiedDate}`;
+            } else {
+                if (infoDiv) infoDiv.remove();
+            }
+            updateVerifyAllCheckboxState();
+        });
+
+        socket.on('asset-updated', (updatedAsset) => {
+            const row = tableBody.querySelector(`tr[data-asset-id="${updatedAsset._id}"]`);
+            if (!row) return;
+
+            // Update status, condition, and remarks
+            row.querySelector('.status-input').value = updatedAsset.status;
+            row.querySelector('.condition-input').value = updatedAsset.condition || '';
+            row.querySelector('.remarks-input').value = updatedAsset.remarks || '';
+            
+            // Reload assets to get fresh summary data, as this is more complex to track
+            loadAssets();
+        });
+
+        socket.on('connect_error', (err) => {
+            console.error('WebSocket connection error:', err.message);
+            showToast('Real-time connection failed. Please refresh.', 'error');
+        });
+    }
+
     // --- EVENT LISTENERS ---
     [searchInput, officeFilter, verificationFilter].forEach(el => {
         el.addEventListener('input', () => {
+            if (el.id === 'office-filter') {
+                if (currentOfficeRoom) {
+                    socket.emit('leave-room', currentOfficeRoom);
+                }
+                const newOffice = officeFilter.value;
+                if (newOffice) {
+                    currentOfficeRoom = `office:${newOffice}`;
+                    socket.emit('join-room', currentOfficeRoom);
+                } else {
+                    currentOfficeRoom = '';
+                }
+            }
             currentPage = 1;
             loadAssets();
         });
