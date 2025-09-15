@@ -440,13 +440,36 @@ function initializeDashboard(user) {
 
     function createOrUpdateCharts(chartData) {
         const chartConfigs = {
+            // UPDATED: Combo bar/line chart for acquisitions
             monthlyAcquisitionChart: {
-                type: 'line',
+                type: 'bar', // Default type is bar
                 data: chartData.monthlyAcquisitions,
                 options: {
-                    tension: 0.2,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     scales: {
-                        y: {
+                        yCount: { // Left axis for count
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Number of Assets'
+                            }
+                        },
+                        yValue: { // Right axis for value
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Asset Value (PHP)'
+                            },
+                            grid: {
+                                drawOnChartArea: false, // only show grid lines for one axis
+                            },
                             ticks: {
                                 callback: function(value) {
                                     return '₱' + new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(value);
@@ -455,15 +478,21 @@ function initializeDashboard(user) {
                         }
                     },
                     plugins: {
+                        // The backend should provide data with two datasets:
+                        // 1. { label: 'Count', type: 'bar', data: [...], yAxisID: 'yCount' }
+                        // 2. { label: 'Value', type: 'line', data: [...], yAxisID: 'yValue' }
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
                                     let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
+                                    if (label) { label += ': '; }
                                     if (context.parsed.y !== null) {
-                                        label += formatCurrency(context.parsed.y);
+                                        // Check which axis this dataset belongs to for correct formatting
+                                        if (context.dataset.yAxisID === 'yValue') {
+                                            label += formatCurrency(context.parsed.y);
+                                        } else {
+                                            label += context.parsed.y;
+                                        }
                                     }
                                     return label;
                                 }
@@ -507,6 +536,24 @@ function initializeDashboard(user) {
                 data: chartData.assetStatus,
                 options: {
                     plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const { labels, datasets } = data;
+                                        return labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+                                            const value = datasets[0].data[i];
+                                            return { text: `${label}: ${value}`, fillStyle: style.backgroundColor, strokeStyle: style.borderColor, lineWidth: style.borderWidth, hidden: !chart.getDataVisibility(i), index: i };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {

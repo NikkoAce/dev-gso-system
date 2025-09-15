@@ -64,6 +64,13 @@
                             <button id="cancel-layout-btn" class="btn btn-ghost btn-sm hidden"><i data-lucide="x"></i> Cancel</button>
                         </div>
                     </div>
+                    <!-- NEW: Quick Actions -->
+                    <div class="flex flex-wrap gap-2 border-b pb-4">
+                        <a href="../assets/asset-form.html" class="btn btn-primary btn-sm"><i data-lucide="plus-circle"></i> Add Movable Asset</a>
+                        <a href="../immovable-assets/immovable-form.html" class="btn btn-primary btn-sm"><i data-lucide="building"></i> Add Immovable Asset</a>
+                        <a href="../reports/reports.html" class="btn btn-secondary btn-sm"><i data-lucide="file-text"></i> Generate Reports</a>
+                        <a href="../assets/physical-count.html" class="btn btn-secondary btn-sm"><i data-lucide="clipboard-check"></i> Start Physical Count</a>
+                    </div>
                     <!-- Active Filters Bar -->
                     <div id="active-filters-bar" class="hidden flex items-center gap-2 p-2 mb-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                         <span class="font-semibold text-blue-800">Active Filters:</span>
@@ -167,7 +174,7 @@
                         <div class="stat card bg-base-100 border hover:bg-base-200 transition-colors cursor-pointer dashboard-component" data-id="totalDepreciationYTD" data-type="card" data-url="../reports/reports.html">
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="stat-figure text-success">
-                                <i data-lucide="dollar-sign" class="h-6 w-6 md:h-8 md:w-8"></i>
+                                <i data-lucide="banknote" class="h-6 w-6 md:h-8 md:w-8"></i>
                             </div>
                             <div class="stat-title">Total Depreciation (YTD)</div>
                             <div id="stat-total-depreciation-ytd" class="stat-value text-3xl md:text-3xl lg:text-2xl xl:text-3xl break-words">Loading...</div>
@@ -192,7 +199,7 @@
                             <div class="drag-handle hidden"><i data-lucide="grip-vertical"></i></div>
                             <div class="card-body">
                                 <h2 class="card-title">Monthly Asset Acquisitions</h2>
-                                <div class="h-64">
+                                <div class="h-96">
                                     <canvas id="monthlyAcquisitionChart"></canvas>
                                 </div>
                             </div>
@@ -209,7 +216,7 @@
                                         <span class="text-xs font-medium">Value</span>
                                     </div>
                                 </div>
-                                <div class="h-64 mt-2">
+                                <div class="h-96 mt-2">
                                     <canvas id="assetsByOfficeChart"></canvas>
                                 </div>
                             </div>
