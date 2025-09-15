@@ -61,9 +61,11 @@ function initializePhysicalCountPage(user) {
 
             let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
             if (asset.specifications && asset.specifications.length > 0) {
+                fullDescription += `<ul class="mt-1 space-y-1 text-xs text-gray-500 list-disc list-inside">`;
                 asset.specifications.forEach(spec => {
-                    fullDescription += `<div class="text-gray-500 text-xs">${spec.key}: ${spec.value}</div>`;
+                    fullDescription += `<li><span class="font-semibold">${spec.key}:</span> ${spec.value}</li>`;
                 });
+                fullDescription += `</ul>`;
             }
 
             let custodianDisplay = '';
