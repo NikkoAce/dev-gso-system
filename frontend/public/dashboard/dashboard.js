@@ -706,18 +706,6 @@ const htmlLegendPlugin = {
         }
     };
 
-    function onChartClick(event, chart, filterKey) {
-        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
-        if (points.length) {
-            const firstPoint = points[0];
-            const label = chart.data.datasets[datasetIndex].labels[dataIndex];
-
-            dashboardFilters[filterKey] = label;
-            renderActiveFilters();
-            fetchDashboardData();
-        }
-    }
-
     // --- NEW: REFACTORED RECENT ACTIVITY TABLE LOGIC ---
 
     function renderActivityTable(config) {
