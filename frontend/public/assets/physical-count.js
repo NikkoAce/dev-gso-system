@@ -1,6 +1,6 @@
 // FILE: frontend/public/physical-count.js
 import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
-import { fetchWithAuth } from '../js/api.js';
+import { fetchWithAuth, API_ROOT_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -55,7 +55,7 @@ function initializePhysicalCountPage(user) {
             await loadAssets();
 
             // Initialize Socket.IO connection
-            socket = io({
+            socket = io(API_ROOT_URL, {
                 auth: { token: getGsoToken() }
             });
             setupSocketListeners();
