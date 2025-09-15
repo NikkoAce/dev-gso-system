@@ -27,6 +27,8 @@ const buildAssetQuery = (queryParams) => {
             { propertyNumber: searchRegex },
             { description: searchRegex },
             { 'custodian.name': searchRegex },
+            { 'specifications.key': searchRegex },
+            { 'specifications.value': searchRegex }
         ];
     }
 
@@ -852,6 +854,44 @@ const downloadCsvTemplate = (req, res) => {
     res.status(200).send(csvContent);
 };
 
+/**
+ * @desc    Update the verification status of an asset during physical count
+ * @route   PUT /api/assets/:id/verify-physical-count
+ * @access  Private (Requires 'asset:update' permission)
+ */
+const verifyAssetForPhysicalCount = asyncHandler(async (req, res) => {
+    const { verified } = req.body;
+    const asset = await Asset.findById(req.params.id);
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    if (typeof verified !== 'boolean') {
+        res.status(400);
+        throw new Error('A boolean "verified" status is required.');
+    }
+
+    if (verified) {
+        asset.physicalCountDetails = {
+            verified: true,
+            verifiedBy: req.user.name,
+            verifiedAt: new Date(),
+        };
+    } else {
+        // If un-verifying, clear the details
+        asset.physicalCountDetails = {
+            verified: false,
+            verifiedBy: null,
+            verifiedAt: null,
+        };
+    }
+
+    const updatedAsset = await asset.save();
+    res.status(200).json(updatedAsset.physicalCountDetails);
+});
+
 module.exports = {
     getAssets, getAssetById, createAsset,
     createBulkAssets, updateAsset, deleteAsset,
@@ -859,5 +899,6 @@ module.exports = {
     createPtrAndTransferAssets,
     getMyOfficeAssets, addRepairRecord,
     deleteRepairRecord, generateMovableLedgerCard,
-    importAssetsFromCsv, downloadCsvTemplate
+    importAssetsFromCsv, downloadCsvTemplate,
+    verifyAssetForPhysicalCount
 };

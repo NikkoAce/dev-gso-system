@@ -60,6 +60,11 @@ const AssetSchema = new mongoose.Schema({
   repairHistory: [repairHistorySchema],
   condition: { type: String, trim: true },
   remarks: { type: String, trim: true },
+  physicalCountDetails: {
+      verified: { type: Boolean, default: false },
+      verifiedBy: { type: String, default: null },
+      verifiedAt: { type: Date, default: null }
+  },
   history: [HistorySchema],
   attachments: [attachmentSchema]
 }, { timestamps: true });

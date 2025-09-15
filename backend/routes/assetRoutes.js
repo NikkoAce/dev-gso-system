@@ -20,7 +20,8 @@ const {
     deleteRepairRecord,
     generateMovableLedgerCard,
     importAssetsFromCsv,
-    downloadCsvTemplate
+    downloadCsvTemplate,
+    verifyAssetForPhysicalCount
 } = require('../controllers/assetController');
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
@@ -43,6 +44,9 @@ router.post('/ptr', protect, checkPermission(PERMISSIONS.ASSET_TRANSFER), create
 
 // Route for updating physical count
 router.put('/physical-count', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updatePhysicalCount);
+
+// Route for verifying an asset during physical count
+router.route('/:id/verify-physical-count').put(protect, checkPermission(PERMISSIONS.ASSET_UPDATE), verifyAssetForPhysicalCount);
 
 // Route for generating a Property Card for a specific asset (shows history)
 router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetById);

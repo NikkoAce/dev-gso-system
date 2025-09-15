@@ -56,7 +56,10 @@ function initializePhysicalCountPage(user) {
 
         assets.forEach(asset => {
             const tr = document.createElement('tr');
-            tr.classList.add('unverified-row'); // Highlight unverified rows by default
+            const isVerified = asset.physicalCountDetails?.verified;
+            if (!isVerified) {
+                tr.classList.add('unverified-row');
+            }
             tr.dataset.assetId = asset._id;
 
             let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
@@ -110,8 +113,14 @@ function initializePhysicalCountPage(user) {
                 </select>
             `;
 
+            let verificationDetailsHTML = '';
+            if (isVerified && asset.physicalCountDetails.verifiedBy) {
+                const verifiedDate = new Date(asset.physicalCountDetails.verifiedAt).toLocaleDateString();
+                verificationDetailsHTML = `<div class="text-xs text-success mt-1 verification-info">by ${asset.physicalCountDetails.verifiedBy} on ${verifiedDate}</div>`;
+            }
+
             const verifiedCheckboxHTML = `
-                <input type="checkbox" class="verify-checkbox checkbox checkbox-success checkbox-sm">
+                <input type="checkbox" class="verify-checkbox checkbox checkbox-success checkbox-sm" ${isVerified ? 'checked' : ''}>
             `;
 
             tr.innerHTML = `
@@ -123,7 +132,10 @@ function initializePhysicalCountPage(user) {
                 <td data-label="Remarks">
                     <input type="text" class="remarks-input input input-bordered input-sm w-full" value="${asset.remarks || ''}">
                 </td>
-                <td data-label="Verified" class="text-center align-middle">${verifiedCheckboxHTML}</td>
+                <td data-label="Verified" class="text-center align-middle">
+                    ${verifiedCheckboxHTML}
+                    ${verificationDetailsHTML}
+                </td>
             `;
             tableBody.appendChild(tr);
         });
@@ -186,13 +198,42 @@ function initializePhysicalCountPage(user) {
         }
     });
 
-    tableBody.addEventListener('change', (e) => {
+    tableBody.addEventListener('change', async (e) => {
         if (e.target.classList.contains('verify-checkbox')) {
-            const row = e.target.closest('tr');
-            if (e.target.checked) {
-                row.classList.remove('unverified-row');
-            } else {
-                row.classList.add('unverified-row');
+            const checkbox = e.target;
+            const row = checkbox.closest('tr');
+            const assetId = row.dataset.assetId;
+            const isVerified = checkbox.checked;
+
+            checkbox.disabled = true;
+            const verifiedCell = row.querySelector('[data-label="Verified"]');
+            let infoDiv = verifiedCell.querySelector('.verification-info');
+
+            try {
+                const updatedDetails = await fetchWithAuth(`assets/${assetId}/verify-physical-count`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ verified: isVerified })
+                });
+
+                row.classList.toggle('unverified-row', !isVerified);
+
+                if (isVerified && updatedDetails.verifiedBy) {
+                    if (!infoDiv) {
+                        infoDiv = document.createElement('div');
+                        infoDiv.className = 'text-xs text-success mt-1 verification-info';
+                        verifiedCell.appendChild(infoDiv);
+                    }
+                    const verifiedDate = new Date(updatedDetails.verifiedAt).toLocaleDateString();
+                    infoDiv.textContent = `by ${updatedDetails.verifiedBy} on ${verifiedDate}`;
+                } else {
+                    if (infoDiv) infoDiv.remove();
+                }
+
+            } catch (error) {
+                showToast(`Error updating verification: ${error.message}`, 'error');
+                checkbox.checked = !isVerified; // Revert on error
+            } finally {
+                checkbox.disabled = false;
             }
         }
     });
