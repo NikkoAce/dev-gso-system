@@ -16,7 +16,6 @@ const GSO_NAV_CONFIG = [
       { href: '../assets/asset-form.html', icon: 'plus-square', text: 'Add New Asset', permission: 'asset:create' },
       { href: '../slips/slip-history.html', icon: 'history', text: 'Slip History', permission: 'slip:read' },
       { href: '../assets/physical-count.html', icon: 'clipboard-check', text: 'Physical Count', permission: 'asset:update' },
-      { href: '../assets/scanner.html', icon: 'scan-line', text: 'Scanner', permission: 'asset:update' },
       { href: '../assets/qr-labels.html', icon: 'qr-code', text: 'Print QR Labels', permission: 'asset:read' },
     ]
   },
