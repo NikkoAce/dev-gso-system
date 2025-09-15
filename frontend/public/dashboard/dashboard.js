@@ -438,6 +438,70 @@ function initializeDashboard(user) {
         lucide.createIcons();
     }
 
+// NEW: Custom Chart.js plugin to generate a clear, two-column HTML legend for the donut chart.
+const htmlLegendPlugin = {
+    id: 'htmlLegend',
+    afterUpdate(chart, args, options) {
+        const legendContainer = document.getElementById(options.containerID);
+        if (!legendContainer) return;
+
+        // Clear old legend
+        legendContainer.innerHTML = '';
+
+        const { datasets } = chart.data;
+        if (!datasets || datasets.length < 2) return;
+
+        const createLegendSection = (title, dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex);
+            if (!meta) return '';
+
+            let itemsHTML = dataset.labels.map((label, i) => {
+                const value = dataset.data[i];
+                const bgColor = dataset.backgroundColor[i];
+                const isHidden = meta.data[i] && meta.data[i].hidden;
+
+                return `
+                    <li class="flex items-center justify-between cursor-pointer p-1 rounded hover:bg-base-200" 
+                        data-dataset-index="${datasetIndex}" data-index="${i}"
+                        style="${isHidden ? 'text-decoration: line-through; opacity: 0.6;' : ''}">
+                        <div class="flex items-center gap-2">
+                            <span class="h-3 w-3 rounded-full" style="background-color: ${bgColor}"></span>
+                            <span class="text-sm">${label}</span>
+                        </div>
+                        <span class="text-sm font-semibold">${value}</span>
+                    </li>
+                `;
+            }).join('');
+
+            return `
+                <div class="flex-1">
+                    <h4 class="font-semibold mb-2 text-base-content/80">${title}</h4>
+                    <ul class="space-y-1">
+                        ${itemsHTML}
+                    </ul>
+                </div>
+            `;
+        };
+
+        legendContainer.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                ${createLegendSection('Status', datasets[0], 0)}
+                ${createLegendSection('Condition', datasets[1], 1)}
+            </div>
+        `;
+
+        // Add click handlers to make the new legend interactive
+        legendContainer.querySelectorAll('li').forEach(item => {
+            item.onclick = () => {
+                const datasetIndex = parseInt(item.dataset.datasetIndex, 10);
+                const index = parseInt(item.dataset.index, 10);
+                chart.toggleDataVisibility(datasetIndex, index);
+                chart.update();
+            };
+        });
+    }
+};
+
     function createOrUpdateCharts(chartData) {
         const chartConfigs = {
             // REVERTED: Simple line chart for acquisition value
@@ -505,40 +569,14 @@ function initializeDashboard(user) {
                 type: 'doughnut',
                 data: chartData.assetDistribution, // This will be prepared by the backend
                 options: {
+                    // The onClick handler for filtering is now handled by the main chart config
                     plugins: {
                         legend: {
-                            position: 'top',
-                            labels: {
-                                generateLabels: function(chart) {
-                                    // Custom legend to show both status and condition
-                                    const { datasets } = chart.data;
-                                    let labels = [];
-                                    if (datasets.length === 2) {
-                                        // Status labels (outer ring)
-                                        labels = labels.concat(datasets[0].labels.map((label, i) => ({
-                                            text: `${label}: ${datasets[0].data[i]}`,
-                                            fillStyle: datasets[0].backgroundColor[i],
-                                            strokeStyle: datasets[0].backgroundColor[i],
-                                            lineWidth: 1,
-                                            hidden: !chart.isDatasetVisible(0) || chart.getDataVisibility(i),
-                                            // Custom properties to identify the segment on click
-                                            datasetIndex: 0,
-                                            index: i
-                                        })));
-                                        // Condition labels (inner ring)
-                                        labels = labels.concat(datasets[1].labels.map((label, i) => ({
-                                            text: `${label}: ${datasets[1].data[i]}`,
-                                            fillStyle: datasets[1].backgroundColor[i],
-                                            strokeStyle: datasets[1].backgroundColor[i],
-                                            lineWidth: 1,
-                                            hidden: !chart.isDatasetVisible(1) || chart.getDataVisibility(i),
-                                            datasetIndex: 1,
-                                            index: i
-                                        })));
-                                    }
-                                    return labels;
-                                }
-                            }
+                            display: false // Disable the default canvas legend
+                        },
+                        // NEW: Register and configure the custom HTML legend plugin
+                        htmlLegend: {
+                            containerID: 'assetDistributionLegend'
                         },
                         tooltip: {
                             callbacks: {
@@ -567,6 +605,15 @@ function initializeDashboard(user) {
         for (const [id, config] of Object.entries(chartConfigs)) {
             const ctx = document.getElementById(id).getContext('2d');
 
+            // NEW: Register the custom legend plugin globally for all charts
+            // It will only activate if the options specify a `containerID`.
+            const chartPlugins = [htmlLegendPlugin];
+
+            // If the chart already exists, we might need to unregister plugins before re-registering
+            if (Chart.getChart(ctx)) {
+                Chart.getChart(ctx).destroy();
+            }
+
             // Special color handling for the new assetDistributionChart
             if (id === 'assetDistributionChart' && config.data.datasets.length > 0) {
                 const colorMap = {
@@ -591,13 +638,12 @@ function initializeDashboard(user) {
                 });
             }
 
-            if (charts[id]) {
-                charts[id].data = config.data;
-                charts[id].update();
-            } else {
+            // Always create a new chart instance to ensure plugins are registered correctly
+            // This also simplifies the logic by removing the if/else for chart existence.
                 charts[id] = new Chart(ctx, {
                     type: config.type,
                     data: config.data,
+                    plugins: chartPlugins, // Register our custom plugin
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
@@ -612,7 +658,6 @@ function initializeDashboard(user) {
                         }
                     }
                 });
-            }
         }
     }
 
@@ -642,6 +687,29 @@ function initializeDashboard(user) {
             const dataIndex = firstPoint.index;
 
             const filterKey = filterKeys[datasetIndex]; // e.g., 'status' or 'condition'
+            
+            // NEW: Correctly get the label from the specific dataset
+            // The default `context.label` would be incorrect for a multi-dataset chart.
+            const label = chart.data.datasets[datasetIndex].labels[dataIndex];
+
+            dashboardFilters[filterKey] = label;
+            renderActiveFilters();
+            fetchDashboardData();
+        }
+    }
+
+    // NEW: Custom toggle function for the legend plugin to handle multi-ring donuts
+    Chart.prototype.toggleDataVisibility = function(datasetIndex, index) {
+        const meta = this.getDatasetMeta(datasetIndex);
+        if (meta && meta.data[index]) {
+            meta.data[index].hidden = !meta.data[index].hidden;
+        }
+    };
+
+    function onChartClick(event, chart, filterKey) {
+        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+        if (points.length) {
+            const firstPoint = points[0];
             const label = chart.data.datasets[datasetIndex].labels[dataIndex];
 
             dashboardFilters[filterKey] = label;
