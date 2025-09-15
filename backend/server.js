@@ -10,6 +10,19 @@ const { errorHandler } = require('./middlewares/errorMiddleware');
 
 const app = express();
 
+// Create the HTTP server from the Express app
+const server = http.createServer(app);
+
+// Initialize Socket.IO server and attach it to the HTTP server
+const io = new Server(server, {
+    cors: {
+        origin: "*", // In production, restrict this to your frontend's URL
+        methods: ["GET", "POST"]
+    }
+});
+
+initSocket(io); // Initialize our custom socket logic
+
 // --- CONFIGURATION & MIDDLEWARE---
 
 // Define the frontend URLs that are allowed to make requests to this backend.
@@ -76,7 +89,7 @@ const PORT = process.env.PORT || 5001;
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
     console.error("Server failed to start:", error);
     process.exit(1); // Exit if the DB connection fails on startup
