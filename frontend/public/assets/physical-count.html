@@ -9,6 +9,8 @@
     <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
     <link href="../css/output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Library for reading QR codes from camera -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         /* Custom style to ensure the highlight for unverified rows is visible over the zebra striping. */
@@ -52,9 +54,12 @@
                 <div class="space-y-6">
                     <div class="flex justify-between items-center">
                         <h1 class="text-3xl font-bold text-gray-800">Annual Physical Count</h1>
-                        <button id="save-count-btn" class="btn btn-primary">
-                            <i data-lucide="save"></i> Save Physical Count
-                        </button>
+                        <div class="flex gap-2">
+                            <button id="scan-asset-btn" class="btn btn-secondary"><i data-lucide="camera"></i> Scan Asset</button>
+                            <button id="save-count-btn" class="btn btn-primary">
+                                <i data-lucide="save"></i> Save Physical Count
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Search and Filter Controls -->
@@ -122,6 +127,23 @@
             </main>
         </div>
     </div>
+
+    <!-- Scanner Modal -->
+    <dialog id="scanner-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Scan Asset QR Code</h3>
+            <div id="scanner-container" class="bg-black rounded-box p-2 relative mt-4">
+                <video id="scanner-video" class="w-full h-auto rounded-md" playsinline></video>
+                <canvas id="scanner-canvas" class="hidden"></canvas>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-64 h-64 border-4 border-dashed border-green-500 rounded-lg opacity-75"></div>
+                </div>
+            </div>
+            <div class="modal-action">
+                <button id="close-scanner-btn" class="btn">Close</button>
+            </div>
+        </div>
+    </dialog>
 
     <script src="../js/layout.js"></script>
     <script type="module" src="./physical-count.js"></script>

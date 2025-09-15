@@ -34,6 +34,14 @@ function initializePhysicalCountPage(user) {
     const paginationControls = document.getElementById('pagination-controls');
     const tableBody = document.getElementById('physical-count-table-body');
     const verifyAllCheckbox = document.getElementById('verify-all-checkbox');
+    const scanAssetBtn = document.getElementById('scan-asset-btn');
+    const scannerModal = document.getElementById('scanner-modal');
+    const scannerVideo = document.getElementById('scanner-video');
+    const scannerCanvas = document.getElementById('scanner-canvas');
+    const scannerCtx = scannerCanvas.getContext('2d');
+    const closeScannerBtn = document.getElementById('close-scanner-btn');
+
+    let videoStream = null;
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
@@ -62,6 +70,7 @@ function initializePhysicalCountPage(user) {
             if (!isVerified) {
                 tr.classList.add('unverified-row');
             }
+            tr.dataset.propertyNumber = asset.propertyNumber;
             tr.dataset.assetId = asset._id;
 
             let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
@@ -236,6 +245,82 @@ function initializePhysicalCountPage(user) {
         }
     }
 
+    // --- SCANNER LOGIC ---
+    async function startScanner() {
+        if (videoStream) {
+            stopScanner();
+            return;
+        }
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            scannerVideo.srcObject = videoStream;
+            scannerVideo.setAttribute("playsinline", true); // Required for iOS
+            await scannerVideo.play();
+            requestAnimationFrame(tick);
+            scannerModal.showModal();
+            scanAssetBtn.innerHTML = `<i data-lucide="camera-off"></i> Stop Scan`;
+            lucide.createIcons();
+        } catch (err) {
+            console.error("Camera access error:", err);
+            showToast("Could not access camera. Please grant permission.", 'error');
+        }
+    }
+
+    function stopScanner() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+        videoStream = null;
+        scannerModal.close();
+        scanAssetBtn.innerHTML = `<i data-lucide="camera"></i> Scan Asset`;
+        lucide.createIcons();
+    }
+
+    function tick() {
+        if (videoStream && scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+            scannerCanvas.height = scannerVideo.videoHeight;
+            scannerCanvas.width = scannerVideo.videoWidth;
+            scannerCtx.drawImage(scannerVideo, 0, 0, scannerCanvas.width, scannerCanvas.height);
+            const imageData = scannerCtx.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+
+            if (code) {
+                handleScannedCode(code.data);
+            }
+        }
+        if (videoStream) {
+            requestAnimationFrame(tick);
+        }
+    }
+
+    async function handleScannedCode(propertyNumber) {
+        stopScanner(); // Stop scanning immediately after a code is found
+        const row = tableBody.querySelector(`tr[data-property-number="${propertyNumber}"]`);
+
+        if (!row) {
+            showToast(`Asset ${propertyNumber} not found on this page.`, 'warning');
+            return;
+        }
+
+        const checkbox = row.querySelector('.verify-checkbox');
+        if (checkbox && !checkbox.checked) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+
+            checkbox.checked = true;
+            await handleVerificationChange(checkbox);
+            updateVerifyAllCheckboxState();
+        }
+
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast(`Asset ${propertyNumber} located and verified.`, 'success');
+    }
+
     // --- EVENT LISTENERS ---
     [searchInput, officeFilter, verificationFilter].forEach(el => {
         el.addEventListener('input', () => {
@@ -288,6 +373,9 @@ function initializePhysicalCountPage(user) {
         verifyAllCheckbox.disabled = false;
         updateVerifyAllCheckboxState();
     });
+
+    scanAssetBtn.addEventListener('click', startScanner);
+    closeScannerBtn.addEventListener('click', stopScanner);
 
     document.getElementById('save-count-btn').addEventListener('click', async () => {
         const updates = [];
