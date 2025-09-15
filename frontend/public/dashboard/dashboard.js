@@ -440,36 +440,14 @@ function initializeDashboard(user) {
 
     function createOrUpdateCharts(chartData) {
         const chartConfigs = {
-            // UPDATED: Combo bar/line chart for acquisitions
+            // REVERTED: Simple line chart for acquisition value
             monthlyAcquisitionChart: {
-                type: 'bar', // Default type is bar
+                type: 'line',
                 data: chartData.monthlyAcquisitions,
                 options: {
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    tension: 0.2,
                     scales: {
-                        yCount: { // Left axis for count
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Number of Assets'
-                            }
-                        },
-                        yValue: { // Right axis for value
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Asset Value (PHP)'
-                            },
-                            grid: {
-                                drawOnChartArea: false, // only show grid lines for one axis
-                            },
+                        y: {
                             ticks: {
                                 callback: function(value) {
                                     return '₱' + new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(value);
@@ -478,21 +456,13 @@ function initializeDashboard(user) {
                         }
                     },
                     plugins: {
-                        // The backend should provide data with two datasets:
-                        // 1. { label: 'Count', type: 'bar', data: [...], yAxisID: 'yCount' }
-                        // 2. { label: 'Value', type: 'line', data: [...], yAxisID: 'yValue' }
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
                                     let label = context.dataset.label || '';
                                     if (label) { label += ': '; }
                                     if (context.parsed.y !== null) {
-                                        // Check which axis this dataset belongs to for correct formatting
-                                        if (context.dataset.yAxisID === 'yValue') {
-                                            label += formatCurrency(context.parsed.y);
-                                        } else {
-                                            label += context.parsed.y;
-                                        }
+                                        label += formatCurrency(context.parsed.y);
                                     }
                                     return label;
                                 }
