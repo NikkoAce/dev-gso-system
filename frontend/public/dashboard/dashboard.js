@@ -12,11 +12,11 @@ const allComponents = {};
 const DEFAULT_PREFERENCES = {
     visibleComponents: [ // NEW: Added 'totalDepreciationYTD'
         'totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife', 'assetCondition', // Cards
-        'monthlyAcquisitions', 'assetsByOffice', 'assetStatus', // Charts
+        'monthlyAcquisitions', 'assetsByOffice', 'assetDistribution', // Charts
         'recentActivity' // Tables
     ],
     cardOrder: ['totalPortfolioValue', 'totalAssets', 'immovableAssets', 'pendingRequisitions', 'avgFulfillmentTime', 'lowStockItems', 'unassignedAssets', 'totalDepreciationYTD', 'nearingEndOfLife'],
-    chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetStatus', 'assetCondition'],
+    chartOrder: ['monthlyAcquisitions', 'assetsByOffice', 'assetDistribution'],
     tableOrder: ['recentActivity']
 };
 
@@ -122,7 +122,7 @@ function populateCustomizeModal() {
     // Sort components within their groups
     componentGroups['Stat Cards'] = sortComponentsByPreference(componentGroups['Stat Cards'], DEFAULT_PREFERENCES.cardOrder);
     componentGroups['Charts'] = sortComponentsByPreference(componentGroups['Charts'], DEFAULT_PREFERENCES.chartOrder);
-    componentGroups['Tables'] = sortComponentsByPreference(componentGroups['Tables'], DEFAULT_PREFERENCES.tableOrder);
+    componentGroups['Tables'] = sortComponentsByPreference(componentGroups['Tables'], DEFAULT_PREFERENCES.tableOrder);    
 
     // Render grouped components
     for (const groupName in componentGroups) {
@@ -501,87 +501,94 @@ function initializeDashboard(user) {
                 },
                 filterKey: 'office'
             },
-            assetStatusChart: {
+            assetDistributionChart: {
                 type: 'doughnut',
-                data: chartData.assetStatus,
+                data: chartData.assetDistribution, // This will be prepared by the backend
                 options: {
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: {
                                 generateLabels: function(chart) {
-                                    const data = chart.data;
-                                    if (data.labels.length && data.datasets.length) {
-                                        const { labels, datasets } = data;
-                                        return labels.map((label, i) => {
-                                            const meta = chart.getDatasetMeta(0);
-                                            const style = meta.controller.getStyle(i);
-                                            const value = datasets[0].data[i];
-                                            return { text: `${label}: ${value}`, fillStyle: style.backgroundColor, strokeStyle: style.borderColor, lineWidth: style.borderWidth, hidden: !chart.getDataVisibility(i), index: i };
-                                        });
+                                    // Custom legend to show both status and condition
+                                    const { datasets } = chart.data;
+                                    let labels = [];
+                                    if (datasets.length === 2) {
+                                        // Status labels (outer ring)
+                                        labels = labels.concat(datasets[0].labels.map((label, i) => ({
+                                            text: `${label}: ${datasets[0].data[i]}`,
+                                            fillStyle: datasets[0].backgroundColor[i],
+                                            strokeStyle: datasets[0].backgroundColor[i],
+                                            lineWidth: 1,
+                                            hidden: !chart.isDatasetVisible(0) || chart.getDataVisibility(i),
+                                            // Custom properties to identify the segment on click
+                                            datasetIndex: 0,
+                                            index: i
+                                        })));
+                                        // Condition labels (inner ring)
+                                        labels = labels.concat(datasets[1].labels.map((label, i) => ({
+                                            text: `${label}: ${datasets[1].data[i]}`,
+                                            fillStyle: datasets[1].backgroundColor[i],
+                                            strokeStyle: datasets[1].backgroundColor[i],
+                                            lineWidth: 1,
+                                            hidden: !chart.isDatasetVisible(1) || chart.getDataVisibility(i),
+                                            datasetIndex: 1,
+                                            index: i
+                                        })));
                                     }
-                                    return [];
+                                    return labels;
                                 }
                             }
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    let label = context.label || '';
+                                    const dataset = context.chart.data.datasets[context.datasetIndex];
+                                    const label = dataset.labels[context.dataIndex] || '';
+                                    let labelString = '';
                                     if (label) {
-                                        label += ': ';
+                                        labelString += `${label}: `;
                                     }
                                     const value = context.parsed;
-                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const total = dataset.data.reduce((a, b) => a + b, 0);
                                     const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
-                                    label += `${value} (${percentage})`;
-                                    return label;
+                                    labelString += `${value} (${percentage})`;
+                                    return labelString;
                                 }
                             }
                         }
                     }
                 },
-                filterKey: 'status'
-            },
-            assetConditionChart: {
-                type: 'bar',
-                data: chartData.assetCondition, // The backend now provides a clean "Not Set" label.
-                options: {
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.x !== null) { label += context.parsed.x + ' assets'; }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    indexAxis: 'y',
-                },
-                filterKey: 'condition'
+                // Custom property to handle filtering for multiple datasets
+                filterKeys: ['status', 'condition']
             }
         };
 
         for (const [id, config] of Object.entries(chartConfigs)) {
             const ctx = document.getElementById(id).getContext('2d');
 
-            // Special color handling for assetStatusChart
-            if (id === 'assetStatusChart' && config.data.datasets[0]) {
+            // Special color handling for the new assetDistributionChart
+            if (id === 'assetDistributionChart' && config.data.datasets.length > 0) {
                 const colorMap = {
+                    // Status Colors
                     'In Use': '#22c55e',        // green-500
                     'In Storage': '#a8a29e',    // stone-400
                     'For Repair': '#f59e0b',    // amber-500
                     'Missing': '#ef4444',       // red-500
                     'Waste': '#f97316',         // orange-500
                     'Disposed': '#71717a',      // zinc-500
+                    // Condition Colors
+                    'Very Good (VG)': '#10b981', // emerald-500
+                    'Good Condition (G)': '#84cc16', // lime-500
+                    'Fair Condition (F)': '#eab308', // yellow-500
+                    'Poor Condition (P)': '#f97316', // orange-500
+                    'Scrap Condition (S)': '#ef4444', // red-500
+                    'Not Set': '#9ca3af', // gray-400
                 };
-                // Assign colors based on the labels provided by the backend
-                config.data.datasets[0].backgroundColor = config.data.labels.map(
-                    label => colorMap[label] || '#6b7280' // default gray-500
-                );
+                // Assign colors to both datasets based on their respective labels
+                config.data.datasets.forEach(dataset => {
+                    dataset.backgroundColor = dataset.labels.map(label => colorMap[label] || '#6b7280');
+                });
             }
 
             if (charts[id]) {
@@ -597,8 +604,10 @@ function initializeDashboard(user) {
                         plugins: { legend: { display: config.type !== 'line' } },
                         ...config.options,
                         onClick: (event) => {
-                            if (config.filterKey) {
+                            if (config.filterKey) { // For simple charts
                                 onChartClick(event, charts[id], config.filterKey);
+                            } else if (config.filterKeys) { // For multi-dataset chart
+                                onMultiDatasetChartClick(event, charts[id], config.filterKeys);
                             }
                         }
                     }
@@ -620,6 +629,23 @@ function initializeDashboard(user) {
             renderActiveFilters();
 
             // Fetch new data with the applied filter
+            fetchDashboardData();
+        }
+    }
+
+    // NEW: Click handler for multi-dataset charts like the combined donut
+    function onMultiDatasetChartClick(event, chart, filterKeys) {
+        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+        if (points.length) {
+            const firstPoint = points[0];
+            const datasetIndex = firstPoint.datasetIndex;
+            const dataIndex = firstPoint.index;
+
+            const filterKey = filterKeys[datasetIndex]; // e.g., 'status' or 'condition'
+            const label = chart.data.datasets[datasetIndex].labels[dataIndex];
+
+            dashboardFilters[filterKey] = label;
+            renderActiveFilters();
             fetchDashboardData();
         }
     }

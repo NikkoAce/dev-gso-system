@@ -583,19 +583,20 @@ const getDashboardStats = asyncHandler(async (req, res) => {
                 data: assetsByOffice.map(o => o.value)
             }]
         },
-        assetStatus: {
-            labels: assetsByStatus.map(s => s._id),
-            datasets: [{
-                label: 'Asset Status',
-                data: assetsByStatus.map(s => s.count)
-            }]
-        },
-        assetCondition: {
-            labels: assetsByCondition.map(c => c._id || 'Not Set'),
-            datasets: [{
-                label: 'Assets by Condition',
-                data: assetsByCondition.map(c => c.count)
-            }]
+        // NEW: Combined chart data for status and condition
+        assetDistribution: {
+            datasets: [
+                { // Outer ring: Status
+                    label: 'Asset Status',
+                    labels: assetsByStatus.map(s => s._id),
+                    data: assetsByStatus.map(s => s.count)
+                },
+                { // Inner ring: Condition
+                    label: 'Asset Condition',
+                    labels: assetsByCondition.map(c => c._id || 'Not Set'),
+                    data: assetsByCondition.map(c => c.count)
+                }
+            ]
         }
     };
 
