@@ -9,7 +9,6 @@ const {
     deleteImmovableAsset,
     deleteImmovableAssetAttachment,
     generateImmovableAssetReport,
-    generatePropertyCardReport,
     generateImmovableLedgerCard,
     addRepairRecord,
     deleteRepairRecord
@@ -20,6 +19,10 @@ const { upload } = require('../middlewares/multer.js');
 router.route('/')
     .post(protect, checkPermission(PERMISSIONS.IMMOVABLE_CREATE), upload.array('attachments'), createImmovableAsset)
     .get(protect, checkPermission(PERMISSIONS.IMMOVABLE_READ), getImmovableAssets);
+
+// Route for generating an Immovable Asset Report.
+// This must be defined BEFORE the '/:id' route to avoid "report" being treated as an ID.
+router.get('/report', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateImmovableAssetReport);
 
 // Route for generating a Real Property Ledger Card for a specific asset
 router.get('/:id/ledger-card', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateImmovableLedgerCard);

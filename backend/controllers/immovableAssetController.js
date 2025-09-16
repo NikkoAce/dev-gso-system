@@ -420,4 +420,4 @@ const deleteRepairRecord = asyncHandler(async (req, res) => {
     res.status(200).json(asset);
 });
 
-module.exports = { createImmovableAsset, updateImmovableAsset, getImmovableAssets, getImmovableAssetById, deleteImmovableAsset, deleteImmovableAssetAttachment, generateImmovableLedgerCard, addRepairRecord, deleteRepairRecord };
+module.exports = { createImmovableAsset, updateImmovableAsset, getImmovableAssets, getImmovableAssetById, deleteImmovableAsset, deleteImmovableAssetAttachment, generateImmovableAssetReport, generateImmovableLedgerCard, addRepairRecord, deleteRepairRecord };
