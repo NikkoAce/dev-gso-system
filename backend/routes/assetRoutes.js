@@ -7,22 +7,14 @@ const {
     getAssets,
     getAssetById,
     createAsset,
-    createBulkAssets,
     deleteAssetAttachment,
     updateAsset,
     deleteAsset,
     getNextPropertyNumber,
-    createPtrAndTransferAssets,
-    updatePhysicalCount,
-    exportAssetsToCsv,
+    createBulkAssets,
     getMyOfficeAssets,
     addRepairRecord,
-    deleteRepairRecord,
-    generateMovableLedgerCard,
-    importAssetsFromCsv,
-    downloadCsvTemplate,
-    verifyAssetForPhysicalCount,
-    exportPhysicalCountResults
+    deleteRepairRecord
 } = require('../controllers/assetController');
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
@@ -30,33 +22,11 @@ router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFF
 // Route for getting the next property number
 router.get('/next-number', protect, checkPermission(PERMISSIONS.ASSET_CREATE), getNextPropertyNumber);
 
-// Route for exporting assets to CSV
-router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportAssetsToCsv);
-
 // Route for bulk asset creation
 router.post('/bulk', protect, checkPermission(PERMISSIONS.ASSET_CREATE), createBulkAssets);
 
-// Routes for CSV Import
-router.get('/import/template', protect, checkPermission(PERMISSIONS.ASSET_CREATE), downloadCsvTemplate);
-router.post('/import', protect, checkPermission(PERMISSIONS.ASSET_CREATE), upload.single('csvfile'), importAssetsFromCsv);
-
-// Route for creating a PTR and transferring assets
-router.post('/ptr', protect, checkPermission(PERMISSIONS.ASSET_TRANSFER), createPtrAndTransferAssets);
-
-// Route for updating physical count
-router.put('/physical-count', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updatePhysicalCount);
-
-// Route for exporting physical count results
-router.get('/physical-count/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportPhysicalCountResults);
-
-// Route for verifying an asset during physical count
-router.route('/:id/verify-physical-count').put(protect, checkPermission(PERMISSIONS.ASSET_UPDATE), verifyAssetForPhysicalCount);
-
 // Route for generating a Property Card for a specific asset (shows history)
 router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetById);
-
-// Route for generating a Ledger Card for a specific asset (shows depreciation)
-router.get('/:id/ledger-card', protect, checkPermission(PERMISSIONS.ASSET_READ), generateMovableLedgerCard);
 
 // Routes for managing repairs on a specific asset
 router.route('/:id/repairs')

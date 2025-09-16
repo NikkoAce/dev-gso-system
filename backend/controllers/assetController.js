@@ -1,177 +1,85 @@
 const Asset = require('../models/Asset'); // This will now be the new model with the middleware
 const asyncHandler = require('express-async-handler');
-const mongoose = require('mongoose');
 const Office = require('../models/Office');
-const PTR = require('../models/PTR'); // Import the new PTR model
+const Counter = require('../models/Counter'); // Import the new Counter model
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
-const { getIo } = require('../config/socket');
-const csv = require('csv-parser');
-const { Readable } = require('stream');
-
-// Replaces the original getAssets to support server-side pagination, sorting, and filtering.
-
-// Helper function to build the filter query for assets
-const buildAssetQuery = (queryParams) => {
-    const {
-        search, category, status, office, assignment, fundSource, startDate, endDate, ids, condition, verified
-    } = queryParams;
-
-    const query = {};
-
-    if (ids) {
-        query._id = { $in: ids.split(',') };
-        return query; // If fetching by IDs, ignore other filters
-    }
-
-    if (search) {
-        const searchRegex = new RegExp(search, 'i');
-        query.$or = [
-            { propertyNumber: searchRegex },
-            { description: searchRegex },
-            { 'custodian.name': searchRegex },
-            { 'specifications.key': searchRegex },
-            { 'specifications.value': searchRegex }
-        ];
-    }
-
-    if (category) query.category = category;
-    if (status) query.status = status;
-    if (office) {
-        // This is the fix. The 'office' filter from the UI should search
-        // against the custodian's office, not the asset's fund office.
-        query['custodian.office'] = office;
-    }
-    if (fundSource) query.fundSource = fundSource;
-    if (condition) {
-        if (condition === 'Not Set') {
-            // Find documents where 'condition' is null, undefined, or an empty string.
-            query.condition = { $in: [null, ''] };
-        } else {
-            query.condition = condition;
-        }
-    }
-
-    if (verified) {
-        if (verified === 'verified') {
-            query['physicalCountDetails.verified'] = true;
-        } else if (verified === 'unverified') {
-            // This will find documents where verified is false, null, or does not exist.
-            query['physicalCountDetails.verified'] = { $ne: true };
-        }
-    }
-
-    if (assignment) {
-        if (assignment === 'unassigned') {
-            query.assignedPAR = { $in: [null, ''] };
-            query.assignedICS = { $in: [null, ''] };
-        } else if (assignment === 'par') {
-            query.assignedPAR = { $ne: null, $ne: '' };
-        } else if (assignment === 'ics') {
-            query.assignedICS = { $ne: null, $ne: '' };
-        }
-    }
-
-    if (startDate || endDate) {
-        query.acquisitionDate = {};
-        if (startDate) query.acquisitionDate.$gte = new Date(startDate);
-        if (endDate) {
-            const endOfDay = new Date(endDate);
-            endOfDay.setUTCHours(23, 59, 59, 999);
-            query.acquisitionDate.$lte = endOfDay;
-        }
-    }
-    return query;
-};
+const { buildAssetQuery } = require('../utils/assetQueryBuilder');
 
 const getAssets = asyncHandler(async (req, res) => {
     const { page, limit, sort = 'propertyNumber', order = 'asc' } = req.query;
 
     // 1. Build the filter query using the helper
     const query = buildAssetQuery(req.query);
+    const physicalCountMode = req.query.physicalCount === 'true';
 
     // 2. Build the sort options
     const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
 
     // 3. Check if pagination is requested
     if (page && limit) {
-        // Pagination logic
         const pageNum = parseInt(page, 10) || 1;
         const limitNum = parseInt(limit, 10) || 20;
         const skip = (pageNum - 1) * limitNum;
 
-        // Using Promise.all to run queries concurrently for better performance.
-        const [assets, totalDocs, summaryResult, summaryStatsResult] = await Promise.all([
+        const queries = [
             Asset.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
             Asset.countDocuments(query),
             Asset.aggregate([
                 { $match: query },
                 { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
-            ]),
-            // NEW: Aggregation for summary stats for the physical count dashboard
-            Asset.aggregate([
-                { $match: query },
-                {
-                    $group: {
-                        _id: null,
-                        verifiedCount: { $sum: { $cond: [{ $eq: ['$physicalCountDetails.verified', true] }, 1, 0] } },
-                        missingCount: { $sum: { $cond: [{ $eq: ['$status', 'Missing'] }, 1, 0] } },
-                        forRepairCount: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } }
-                    }
-                }
             ])
-        ]);
+        ];
+
+        // Only run the summary stats aggregation if in physical count mode
+        if (physicalCountMode) {
+            queries.push(Asset.aggregate([
+                { $match: { 'custodian.office': req.query.office } }, // Summary is for the whole office
+                { $group: { _id: null, verifiedCount: { $sum: { $cond: [{ $eq: ['$physicalCountDetails.verified', true] }, 1, 0] } }, missingCount: { $sum: { $cond: [{ $eq: ['$status', 'Missing'] }, 1, 0] } }, forRepairCount: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } } } }
+            ]));
+        }
+
+        const [assets, totalDocs, summaryResult, summaryStatsResult] = await Promise.all(queries);
 
         const totalValue = summaryResult[0]?.totalValue || 0;
-        const summaryStats = summaryStatsResult[0] || { verifiedCount: 0, missingCount: 0, forRepairCount: 0 };
+        const summaryStats = summaryStatsResult?.[0] || { verifiedCount: 0, missingCount: 0, forRepairCount: 0 };
 
-        // Send the structured paginated response
-        res.json({
+        const response = {
             docs: assets,
             totalDocs,
             totalValue,
-            summaryStats: {
-                totalOfficeAssets: totalDocs,
-                verifiedCount: summaryStats.verifiedCount,
-                missingCount: summaryStats.missingCount,
-                forRepairCount: summaryStats.forRepairCount
-            },
             limit: limitNum,
             totalPages: Math.ceil(totalDocs / limitNum),
             page: pageNum,
-        });
+        };
+
+        if (physicalCountMode) {
+            const officeAssetCount = await Asset.countDocuments({ 'custodian.office': req.query.office });
+            response.summaryStats = {
+                totalOfficeAssets: officeAssetCount,
+                verifiedCount: summaryStats.verifiedCount,
+                missingCount: summaryStats.missingCount,
+                forRepairCount: summaryStats.forRepairCount
+            };
+        }
+
+        res.json(response);
     } else {
-        // No pagination, return all matching assets but in a consistent format.
-        const [assets, summaryResult, summaryStatsResult] = await Promise.all([
+        const [assets, summaryResult] = await Promise.all([
             Asset.find(query).sort(sortOptions).lean(),
             Asset.aggregate([
                 { $match: query },
                 { $group: { _id: null, totalValue: { $sum: '$acquisitionCost' } } }
-            ]),
-            Asset.aggregate([
-                { $match: query },
-                {
-                    $group: {
-                        _id: null,
-                        verifiedCount: { $sum: { $cond: [{ $eq: ['$physicalCountDetails.verified', true] }, 1, 0] } },
-                        missingCount: { $sum: { $cond: [{ $eq: ['$status', 'Missing'] }, 1, 0] } },
-                        forRepairCount: { $sum: { $cond: [{ $eq: ['$status', 'For Repair'] }, 1, 0] } }
-                    }
-                }
             ])
         ]);
         const totalValue = summaryResult[0]?.totalValue || 0;
-        const summaryStats = summaryStatsResult[0] || { verifiedCount: 0, missingCount: 0, forRepairCount: 0 };
 
-        // Return a response object consistent with the paginated one.
         res.json({
-            docs: assets, totalDocs: assets.length, totalValue,
-            summaryStats: {
-                totalOfficeAssets: assets.length,
-                verifiedCount: summaryStats.verifiedCount,
-                missingCount: summaryStats.missingCount,
-                forRepairCount: summaryStats.forRepairCount
-            },
-            limit: assets.length, totalPages: 1, page: 1
+            docs: assets,
+            totalDocs: assets.length,
+            totalValue,
+            limit: assets.length,
+            totalPages: 1,
+            page: 1
         });
     }
 });
@@ -354,32 +262,44 @@ const deleteAssetAttachment = asyncHandler(async (req, res) => {
     res.status(200).json({ message: 'Attachment deleted successfully' });
 });
 
+async function getNextSequenceValue(sequenceName, increment = 1) {
+    const counter = await Counter.findByIdAndUpdate(
+        sequenceName,
+        { $inc: { sequence_value: increment } },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    return counter.sequence_value;
+}
 
 // NEW: Controller for bulk asset creation
 const createBulkAssets = asyncHandler(async (req, res) => {
-    const { assetData, quantity, startNumber } = req.body;
+    // The request now takes prefix components instead of a startNumber to ensure atomicity.
+    const { assetData, quantity, prefixComponents } = req.body;
 
-    if (!assetData || !quantity || !startNumber) {
-        return res.status(400).json({ message: 'Missing required fields for bulk creation.' });
-    }
-    
-    const lastHyphenIndex = startNumber.lastIndexOf('-');
-    if (lastHyphenIndex === -1) {
-        return res.status(400).json({ message: 'Invalid Starting Property Number format. Expected format: PREFIX-NUMBER (e.g., DAET-FUR-001).' });
+    if (!assetData || !quantity || !prefixComponents) {
+        return res.status(400).json({ message: 'assetData, quantity, and prefixComponents are required for bulk creation.' });
     }
 
-    const prefix = startNumber.substring(0, lastHyphenIndex + 1);
-    const numberStr = startNumber.substring(lastHyphenIndex + 1);
-    const startingNumericPart = parseInt(numberStr, 10);
+    const { year, subMajorGroup, glAccount, officeCode } = prefixComponents;
+    if (!year || !subMajorGroup || !glAccount || !officeCode) {
+        return res.status(400).json({ message: 'Incomplete prefix components. Year, subMajorGroup, glAccount, and officeCode are required.' });
+    }
 
-    if (isNaN(startingNumericPart)) {
-        return res.status(400).json({ message: 'The numeric part of the Starting Property Number is invalid.' });
+    const prefix = `${year}-${subMajorGroup}-${glAccount}-${officeCode}-`;
+
+    // Atomically reserve a block of sequence numbers
+    const endSequence = await getNextSequenceValue(prefix, quantity);
+    const startSequence = endSequence - quantity + 1;
+
+    if (startSequence < 1) {
+        // This is a safeguard, should not happen in normal operation
+        throw new Error('Counter returned an invalid sequence. Please try again.');
     }
 
     const assetsToCreate = [];
     for (let i = 0; i < quantity; i++) {
-        const currentNumber = startingNumericPart + i;
-        const newPropertyNumber = `${prefix}${String(currentNumber).padStart(numberStr.length, '0')}`;
+        const currentNumber = startSequence + i;
+        const newPropertyNumber = `${prefix}${String(currentNumber).padStart(4, '0')}`;
         
         // Manually add history here because `insertMany` does not trigger 'save' hooks.
         assetsToCreate.push({
@@ -409,195 +329,11 @@ const getNextPropertyNumber = asyncHandler(async (req, res) => {
 
     const prefix = `${year}-${subMajorGroup}-${glAccount}-${officeCode}-`;
 
-    // Find assets with the same prefix, sort them by property number descending, and get the first one.
-    const lastAsset = await Asset.findOne({ propertyNumber: { $regex: `^${prefix}` } })
-        .sort({ propertyNumber: -1 });
-
-    let nextSerial = 1;
-    if (lastAsset) {
-        const lastNumber = lastAsset.propertyNumber;
-        const lastSerialStr = lastNumber.split('-').pop();
-        const lastSerial = parseInt(lastSerialStr, 10);
-        if (!isNaN(lastSerial)) {
-            nextSerial = lastSerial + 1;
-        }
-    }
+    // Atomically get the next sequence number for this prefix
+    const nextSerial = await getNextSequenceValue(prefix);
 
     const nextPropertyNumber = `${prefix}${String(nextSerial).padStart(4, '0')}`;
     res.json({ nextPropertyNumber });
-});
-
-// NEW: Controller for server-side CSV generation
-const exportAssetsToCsv = (req, res) => {
-    const { sort = 'propertyNumber', order = 'asc' } = req.query;
-
-    // Build the filter query using the helper
-    const query = buildAssetQuery(req.query);
-    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
-
-    // Set headers for streaming the CSV file
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="assets.csv"');
-
-    // Write headers
-    const headers = ['Property Number', 'Description', 'Category', 'Custodian', 'Office', 'Status', 'Acquisition Date', 'Acquisition Cost'];
-    res.write(headers.join(',') + '\n');
-
-    // Use a cursor to stream documents one by one instead of loading all into memory
-    const cursor = Asset.find(query).sort(sortOptions).lean().cursor();
-
-    cursor.on('data', (asset) => {
-        const values = [asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.category, asset.custodian?.name || '', asset.custodian?.office || '', asset.status, asset.acquisitionDate ? new Date(asset.acquisitionDate).toLocaleDateString('en-CA') : 'N/A', asset.acquisitionCost || 0];
-        res.write(values.join(',') + '\n');
-    });
-
-    cursor.on('end', () => {
-        res.end();
-    });
-};
-
-const updatePhysicalCount = asyncHandler(async (req, res) => {
-    const { updates } = req.body; // Expecting an object with updates array
-
-    if (!Array.isArray(updates)) {
-        return res.status(400).json({ message: 'Invalid data format. Expected an array of updates.' });
-    }
-
-    const updatePromises = updates.map(async (update) => {
-        const asset = await Asset.findById(update.id);
-        if (!asset) {
-            console.warn(`Asset with ID ${update.id} not found during physical count. Skipping.`);
-            return; // or handle as an error
-        }
-
-        // Apply the updates to the asset document first
-        asset.status = update.status;
-        asset.condition = update.condition;
-        asset.remarks = update.remarks;
-
-        // Attach user and custom event name for history logging via pre-save hook
-        asset._user = req.user;
-        asset._historyEvent = 'Physical Count';
-
-        return asset.save();
-    });
-
-    const savedAssets = await Promise.all(updatePromises);
-    const io = getIo();
-
-    savedAssets.forEach(asset => {
-        if (asset && asset.custodian && asset.custodian.office) {
-            const room = `office:${asset.custodian.office}`;
-            io.to(room).emit('asset-updated', asset.toObject());
-        }
-    });
-
-    res.json({ message: 'Physical count updated successfully.' });
-});
-
-const createPtrAndTransferAssets = asyncHandler(async (req, res) => {
-    const { assetIds, newOffice, newCustodian, transferDate } = req.body;
-
-    if (!assetIds || !Array.isArray(assetIds) || assetIds.length === 0) {
-        return res.status(400).json({ message: 'Asset IDs must be provided as an array.' });
-    }
-    if (!newOffice || !newCustodian || !newCustodian.name) {
-        return res.status(400).json({ message: 'New office and custodian are required.' });
-    }
-    if (!transferDate) {
-        return res.status(400).json({ message: 'Transfer date is required.' });
-    }
-
-    const session = await mongoose.startSession();
-
-        session.startTransaction();
-
-        // Step 1: Fetch assets and validate the transfer request
-        const assetsToTransfer = await Asset.find({ '_id': { $in: assetIds } }).session(session);
-        if (assetsToTransfer.length !== assetIds.length) {
-            throw new Error('One or more assets not found.');
-        }
-
-        // All assets must have the same "from" custodian for a single PTR
-        const fromCustodian = assetsToTransfer[0].custodian;
-        for (const asset of assetsToTransfer) { // This loop is just for validation
-            if (asset.custodian.name !== fromCustodian.name || asset.custodian.office !== fromCustodian.office) {
-                throw new Error('All selected assets must have the same current custodian and office to be transferred together.');
-            }
-        }
-
-        const transferDetails = {
-            from: fromCustodian,
-            to: { name: newCustodian.name, designation: newCustodian.designation || '', office: newOffice },
-            date: new Date(transferDate),
-            assets: []
-        };
-
-        /**
-         * Generates the next sequential PTR number for the current year.
-         * Example: PTR-2024-0001
-         */
-        async function getNextPtrNumber(session) {
-            const year = new Date().getFullYear();
-            const startOfYear = new Date(year, 0, 1);
-        
-            const lastPTR = await PTR.findOne({
-                createdAt: { $gte: startOfYear }
-            }).sort({ createdAt: -1 }).session(session); // Use session for consistency
-        
-            let sequence = 1;
-            if (lastPTR && lastPTR.ptrNumber) {
-                const lastSequence = parseInt(lastPTR.ptrNumber.split('-').pop(), 10);
-                if (!isNaN(lastSequence)) {
-                    sequence = lastSequence + 1;
-                }
-            }
-            return `PTR-${year}-${String(sequence).padStart(4, '0')}`;
-        }
-
-        // Step 2: Update all assets in a single operation
-        const historyEntry = {
-            event: 'Transfer',
-            details: `Transferred from ${fromCustodian.name} (${fromCustodian.office}) to ${newCustodian.name} (${newOffice}).`,
-            from: `${fromCustodian.name} (${fromCustodian.office})`,
-            to: `${newCustodian.name} (${newOffice})`,
-            user: req.user ? req.user.name : 'System'
-        };
-
-        // Note: Mongoose 'pre-save' hooks do not run on `updateMany`.
-        // History is pushed manually here for this bulk operation.
-        const assetUpdateResult = await Asset.updateMany(
-            { '_id': { $in: assetIds } },
-            {
-                $set: { office: newOffice, custodian: transferDetails.to },
-                $push: { history: historyEntry }
-            }
-        ).session(session);
-
-        if (assetUpdateResult.modifiedCount !== assetIds.length) {
-            throw new Error(`Failed to update all assets. Expected ${assetIds.length} updates, but got ${assetUpdateResult.modifiedCount}.`);
-        }
-
-        // Step 3: Create and save the PTR document
-        const ptrNumber = await getNextPtrNumber(session);
-        const newPTR = new PTR({
-            ptrNumber: ptrNumber,
-            from: transferDetails.from,
-            to: transferDetails.to,
-            assets: [], // Start with an empty array
-            date: transferDetails.date,
-            user: req.user.name // User who performed the transfer
-        });
-        // Populate the assets for the PTR details
-        assetsToTransfer.forEach(asset => {
-            newPTR.assets.push({ propertyNumber: asset.propertyNumber, description: asset.description, acquisitionCost: asset.acquisitionCost, remarks: '' });
-        });
-        const savedPTR = await newPTR.save({ session });
-
-        // Step 4: If all operations were successful, commit the transaction
-        await session.commitTransaction();
-        
-        res.status(200).json({ message: 'Assets transferred successfully.', transferDetails: { ...transferDetails, assets: newPTR.assets, ptrNumber: savedPTR.ptrNumber } });
 });
 
 const getMyOfficeAssets = asyncHandler(async (req, res) => {

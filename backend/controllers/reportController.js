@@ -1,5 +1,6 @@
 const Asset = require('../models/Asset');
 const ImmovableAsset = require('../models/immovableAsset');
+const asyncHandler = require('express-async-handler');
 
 // Helper function to build the base query for asset reports
 const buildAssetQuery = (queryParams) => {
@@ -159,9 +160,67 @@ const testReportRoute = (req, res) => {
     res.json({ message: 'Report test route is working!' });
 };
 
+/**
+ * @desc    Get data for a Movable Property Ledger Card (COA Format)
+ * @route   GET /api/reports/movable-ledger-card/:id
+ * @access  Private (REPORT_GENERATE)
+ */
+const generateMovableLedgerCard = asyncHandler(async (req, res) => {
+    const asset = await Asset.findById(req.params.id).lean();
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    const acquisitionDate = new Date(asset.acquisitionDate);
+    const depreciableCost = asset.acquisitionCost - (asset.salvageValue || 0);
+    const annualDepreciation = asset.usefulLife > 0 ? depreciableCost / asset.usefulLife : 0;
+    const dailyDepreciation = annualDepreciation / 365.25;
+
+    const combinedLog = [
+        ...asset.history.map(h => ({ ...h, logType: 'event' })),
+        ...(asset.repairHistory || []).map(r => ({ ...r, logType: 'repair' }))
+    ].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const ledgerRows = [];
+    const currentCost = asset.acquisitionCost;
+    const totalImpairment = asset.impairmentLosses || 0;
+
+    combinedLog.forEach(logEntry => {
+        const eventDate = new Date(logEntry.date);
+        const daysSinceAcquisition = (eventDate - acquisitionDate) / (1000 * 60 * 60 * 24);
+
+        let accumulatedDepreciation = 0;
+        if (daysSinceAcquisition > 0) {
+            accumulatedDepreciation = Math.min(dailyDepreciation * daysSinceAcquisition, depreciableCost);
+        }
+        const adjustedCost = currentCost - accumulatedDepreciation - totalImpairment;
+
+        const row = {
+            date: logEntry.date,
+            reference: asset.assignedPAR || asset.assignedICS || 'N/A',
+            propertyId: asset.propertyNumber,
+            cost: currentCost,
+            estimatedUsefulLife: asset.usefulLife,
+            accumulatedDepreciation: accumulatedDepreciation,
+            impairmentLosses: totalImpairment,
+            adjustedCost: adjustedCost,
+            repairNature: logEntry.logType === 'repair' ? logEntry.natureOfRepair : 'N/A',
+            repairAmount: logEntry.logType === 'repair' ? logEntry.amount : 0,
+            particulars: logEntry.logType === 'event' ? logEntry.details : `Repair: ${logEntry.natureOfRepair}`,
+            remarks: logEntry.logType === 'event' ? logEntry.event : 'Repair/Maintenance',
+        };
+        ledgerRows.push(row);
+    });
+
+    res.status(200).json({ asset, ledgerRows });
+});
+
 module.exports = {
     generateRpcppeReport,
     generateDepreciationReport,
     generateImmovableReport,
-    testReportRoute
+    testReportRoute,
+    generateMovableLedgerCard
 };
