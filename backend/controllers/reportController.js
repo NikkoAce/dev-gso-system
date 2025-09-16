@@ -155,11 +155,6 @@ const generateImmovableReport = async (req, res) => {
     }
 };
 
-const testReportRoute = (req, res) => {
-    console.log('SUCCESS: /api/reports/test endpoint was hit!');
-    res.json({ message: 'Report test route is working!' });
-};
-
 /**
  * @desc    Get data for a Movable Property Ledger Card (COA Format)
  * @route   GET /api/reports/movable-ledger-card/:id
@@ -221,6 +216,5 @@ module.exports = {
     generateRpcppeReport,
     generateDepreciationReport,
     generateImmovableReport,
-    testReportRoute,
     generateMovableLedgerCard
 };

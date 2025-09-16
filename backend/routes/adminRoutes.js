@@ -17,6 +17,6 @@ router.post('/export-database', protect, checkPermission(PERMISSIONS.ADMIN_DATAB
 // @desc    Run a data integrity health check
 // @route   GET /api/admin/health-check
 // @access  Private/Admin
-router.get('/health-check', protect, checkPermission('admin:data:read'), runHealthCheck);
+router.get('/health-check', protect, checkPermission(PERMISSIONS.ADMIN_DATA_READ), runHealthCheck);
 
 module.exports = router;
