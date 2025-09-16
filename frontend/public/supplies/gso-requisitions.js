@@ -95,10 +95,10 @@ function initializeGsoRequisitionsPage(user) {
                         <input type="number" class="issued-qty-input input input-bordered input-sm w-24 text-center"
                                data-stock-id="${item.stockItem._id}"
                                data-description="${item.description}"
-                               value="${isActionable ? item.quantityRequested : item.quantityIssued}"
+                               value="${isActionable ? item.quantityRequested : (item.quantityIssued || 0)}"
                                min="0" max="${item.quantityRequested}" ${!isActionable ? 'readonly class="bg-base-200"' : ''}>
                     </td>
-                    <td class="text-center">${item.quantityIssued}</td>
+                    <td class="text-center">${item.quantityIssued || 0}</td>
                 </tr>
             `).join('');
 
@@ -107,7 +107,12 @@ function initializeGsoRequisitionsPage(user) {
             footerHTML = `
                 <div class="form-control pt-4 border-t">
                     <label for="remarks-input" class="label"><span class="label-text">Remarks</span></label>
-                    <textarea id="remarks-input" rows="2" class="textarea textarea-bordered" placeholder="Add remarks for
+                    <textarea id="remarks-input" rows="2" class="textarea textarea-bordered" placeholder="Add remarks for approval or rejection..."></textarea>
+                </div>
+                <div class="modal-action mt-4">
+                    <button id="close-modal-btn" class="btn">Cancel</button>
+                    <button id="reject-btn" class="btn btn-error" data-id="${req._id}">Reject</button>
+                    <button id="issue-btn" class="btn btn-success" data-id="${req._id}">Issue Items & Approve</button>
                 </div>
             `;
         } else {
@@ -144,6 +149,17 @@ function initializeGsoRequisitionsPage(user) {
                         <thead>
                             <tr>
                                 <th>Stock No.</th>
+                                <th>Description</th>
+                                <th class="text-center">Requested</th>
+                                <th class="text-center">To Issue</th>
+                                <th class="text-center">Previously Issued</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHTML}
+                        </tbody>
+                    </table>
+                </div>
                 
                 ${footerHTML}
             </div>

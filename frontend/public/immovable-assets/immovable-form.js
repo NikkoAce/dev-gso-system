@@ -77,7 +77,6 @@ function initializeForm(user) {
     let assetGeometry = null; // To store GeoJSON geometry
     let drawnItems = null; // To hold the feature group for drawing
 
-    /**
     function calculateAndDisplayMeasurement(layer) {
         if (!layer) {
             measurementDisplay.classList.add('hidden');

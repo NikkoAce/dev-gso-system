@@ -151,7 +151,5 @@ createAuthenticatedPage({
 
         initializeA68Page(config, user);
 
-    } catch (error) {
-        console.error("Initialization failed:", error);
     }
 });

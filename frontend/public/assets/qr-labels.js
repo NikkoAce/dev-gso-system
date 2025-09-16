@@ -166,7 +166,7 @@ function initializeQrLabelsPage(user) {
 
             const slipNumber = asset.assignedPAR || asset.assignedICS || '';
 
-            // Build HTML - **FIXED**: Added closing backtick
+            // Build HTML
             labelDiv.innerHTML = `
                 <div class="grid grid-cols-[40%_60%] h-full">
                     <!-- Left column: Full QR -->
