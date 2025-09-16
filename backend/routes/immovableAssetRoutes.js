@@ -8,7 +8,9 @@ const {
     updateImmovableAsset,
     deleteImmovableAsset,
     deleteImmovableAssetAttachment,
-    generateImmovableAssetReport,
+    generateImmovableAssetReport, // This is for the general report, not the ledger card
+    addImprovementRecord, // NEW
+    deleteImprovementRecord, // NEW
     generateImmovableLedgerCard,
     addRepairRecord,
     deleteRepairRecord
@@ -37,6 +39,12 @@ router.route('/:id/repairs')
     .post(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), addRepairRecord);
 router.route('/:id/repairs/:repairId')
     .delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), deleteRepairRecord);
+
+// NEW: Routes for managing improvements on a specific asset
+router.route('/:id/improvements')
+    .post(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), addImprovementRecord);
+router.route('/:id/improvements/:improvementId')
+    .delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), deleteImprovementRecord);
 
 // New route for deleting a specific attachment
 router.route('/:id/attachments/:attachmentKey').delete(protect, checkPermission(PERMISSIONS.IMMOVABLE_UPDATE), deleteImmovableAssetAttachment);

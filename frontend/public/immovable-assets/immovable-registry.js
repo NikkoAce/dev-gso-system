@@ -62,6 +62,11 @@ function initializeRegistryPage(user) {
         };
 
         assets.forEach(asset => {
+            if (!asset) { // Defensive check: Skip if asset object is null or undefined
+                console.warn("Skipping null or undefined asset in immovable registry table rendering.");
+                return;
+            }
+
             const canUpdate = user.permissions.includes('immovable:update');
             const canDelete = user.permissions.includes('immovable:delete');
 

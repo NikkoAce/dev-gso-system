@@ -408,7 +408,7 @@ function initializeRegistryPage(user) {
                     body: JSON.stringify(payload)
                 });
 
-                localStorage.setItem('transferData', JSON.stringify(transferResult.transferDetails));
+                localStorage.setItem('transferData', JSON.stringify(transferResult.ptr));
                 window.location.href = '../slips/ptr.html';
                 
             } catch (error) {

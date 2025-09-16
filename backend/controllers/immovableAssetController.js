@@ -451,4 +451,64 @@ const deleteRepairRecord = asyncHandler(async (req, res) => {
     res.status(200).json(asset);
 });
 
+/**
+ * @desc    Add a capital improvement record to an immovable asset
+ * @route   POST /api/immovable-assets/:id/improvements
+ * @access  Private (immovable:update)
+ */
+const addImprovementRecord = asyncHandler(async (req, res) => {
+    const { date, description, cost, fundSource, remarks } = req.body;
+
+    if (!date || !description || !cost) {
+        res.status(400);
+        throw new Error('Date, Description, and Cost are required for an improvement.');
+    }
+
+    const asset = await ImmovableAsset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new Error('Immovable asset not found');
+    }
+
+    asset.capitalImprovements.push({ date, description, cost, fundSource, remarks });
+    asset.history.push({
+        event: 'Improvement Added',
+        details: `Improvement: ${description} for ${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(cost)}.`,
+        user: req.user.name
+    });
+
+    const updatedAsset = await asset.save();
+    res.status(201).json(updatedAsset);
+});
+
+/**
+ * @desc    Delete a capital improvement record from an immovable asset
+ * @route   DELETE /api/immovable-assets/:id/improvements/:improvementId
+ * @access  Private (immovable:update)
+ */
+const deleteImprovementRecord = asyncHandler(async (req, res) => {
+    const asset = await ImmovableAsset.findById(req.params.id);
+    if (!asset) {
+        res.status(404);
+        throw new new Error('Immovable asset not found');
+    }
+
+    const improvement = asset.capitalImprovements.id(req.params.improvementId);
+    if (!improvement) {
+        res.status(404);
+        throw new Error('Improvement record not found');
+    }
+
+    improvement.remove(); // Using the .remove() method on the subdocument
+
+    asset.history.push({
+        event: 'Improvement Removed',
+        details: `Improvement removed: ${improvement.description}.`,
+        user: req.user.name
+    });
+
+    const updatedAsset = await asset.save();
+    res.status(200).json(updatedAsset);
+});
+
 module.exports = { createImmovableAsset, updateImmovableAsset, getImmovableAssets, getImmovableAssetById, deleteImmovableAsset, deleteImmovableAssetAttachment, generateImmovableAssetReport, generateImmovableLedgerCard, addRepairRecord, deleteRepairRecord };

@@ -359,6 +359,10 @@ function initializeForm(user) {
     }
 
     function renderImprovementRow(improvement) {
+        if (!improvement) { // Defensive check
+            console.warn("Attempted to render an undefined or null improvement record.");
+            return;
+        }
         const div = document.createElement('div');
         div.className = 'grid grid-cols-[1fr_2fr_1fr_1fr_auto] gap-4 items-center improvement-row p-2 border-b text-sm';
         const improvementDate = improvement.date ? new Date(improvement.date).toISOString().split('T')[0] : '';

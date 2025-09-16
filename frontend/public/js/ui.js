@@ -367,11 +367,15 @@ export function formatNumberOnInput(inputElement) {
  */
 export function renderHistory(container, history = []) {
     container.innerHTML = '';
-    if (history.length === 0) {
+    // Filter out any null or undefined entries in the history array to prevent errors.
+    const validHistory = history.filter(Boolean);
+
+    if (validHistory.length === 0) {
         container.innerHTML = '<li>No history records found.</li>';
         return;
     }
-    const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const sortedHistory = [...validHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
     sortedHistory.forEach((entry, index) => {
         const li = document.createElement('li');
         const formattedDate = new Date(entry.date).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -450,6 +454,10 @@ export function renderAttachments({ existingAttachmentsContainer, existingAttach
  * @param {object} repair - The repair object to render.
  */
 export function renderRepairRow(container, repair) {
+    if (!repair) { // Defensive check to prevent errors if a null/undefined repair record is passed.
+        console.warn("Attempted to render an undefined or null repair record.");
+        return;
+    }
     const div = document.createElement('div');
     div.className = 'repair-row p-2 border-b text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2';
     const repairDate = repair.date ? new Date(repair.date).toISOString().split('T')[0] : '';
