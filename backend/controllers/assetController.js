@@ -963,7 +963,7 @@ const verifyAssetForPhysicalCount = asyncHandler(async (req, res) => {
  * @route   GET /api/assets/physical-count/export
  * @access  Private (Requires 'asset:export' permission)
  */
-const exportPhysicalCountResults = asyncHandler(async (req, res) => {
+const exportPhysicalCountResults = asyncHandler(async (req, res, next) => {
     const { office } = req.query;
 
     if (!office) {
@@ -971,34 +971,43 @@ const exportPhysicalCountResults = asyncHandler(async (req, res) => {
         throw new Error('Office parameter is required for export.');
     }
 
-    const query = { 'custodian.office': office };
-
+    // Set headers early. If an error occurs after this, we can't change the status code.
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="physical_count_${office.replace(/\s+/g, '_')}.csv"`);
 
-    const headers = [
-        'Property Number', 'Description', 'Custodian', 'Status', 'Condition',
-        'Remarks', 'Verification Status', 'Verified By', 'Verified At'
-    ];
-    res.write(headers.join(',') + '\n');
-
-    const cursor = Asset.find(query).sort({ propertyNumber: 1 }).lean().cursor();
-
-    cursor.on('data', (asset) => {
-        const verificationStatus = asset.physicalCountDetails?.verified ? 'Verified' : 'Unverified';
-        const verifiedBy = asset.physicalCountDetails?.verifiedBy || '';
-        const verifiedAt = asset.physicalCountDetails?.verifiedAt ? new Date(asset.physicalCountDetails.verifiedAt).toLocaleDateString('en-CA') : '';
-
-        const values = [
-            asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.custodian?.name || '',
-            asset.status || '', asset.condition || '', `"${(asset.remarks || '').replace(/"/g, '""')}"`,
-            verificationStatus, verifiedBy, verifiedAt
+    try {
+        const query = { 'custodian.office': office };
+        const headers = [
+            'Property Number', 'Description', 'Custodian', 'Status', 'Condition',
+            'Remarks', 'Verification Status', 'Verified By', 'Verified At'
         ];
-        res.write(values.join(',') + '\n');
-    });
+        res.write(headers.join(',') + '\n');
 
-    cursor.on('end', () => res.end());
-    cursor.on('error', (error) => { console.error('Error streaming physical count export:', error); res.end(); });
+        const cursor = Asset.find(query).sort({ propertyNumber: 1 }).lean().cursor();
+
+        for await (const asset of cursor) {
+            const verificationStatus = asset.physicalCountDetails?.verified ? 'Verified' : 'Unverified';
+            const verifiedBy = asset.physicalCountDetails?.verifiedBy || '';
+            const verifiedAt = asset.physicalCountDetails?.verifiedAt ? new Date(asset.physicalCountDetails.verifiedAt).toLocaleDateString('en-CA') : '';
+
+            const values = [
+                asset.propertyNumber, `"${(asset.description || '').replace(/"/g, '""')}"`, asset.custodian?.name || '',
+                asset.status || '', asset.condition || '', `"${(asset.remarks || '').replace(/"/g, '""')}"`,
+                verificationStatus, verifiedBy, verifiedAt
+            ];
+            res.write(values.join(',') + '\n');
+        }
+
+        res.end();
+    } catch (error) {
+        console.error('Error during physical count export:', error);
+        // If headers haven't been sent, pass the error to the Express error handler.
+        if (!res.headersSent) {
+            return next(error);
+        }
+        // Otherwise, just end the response, as the client will receive a partial file.
+        res.end();
+    }
 });
 
 module.exports = {
