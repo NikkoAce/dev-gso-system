@@ -963,29 +963,27 @@ const verifyAssetForPhysicalCount = asyncHandler(async (req, res) => {
  * @route   GET /api/assets/physical-count/export
  * @access  Private (Requires 'asset:export' permission)
  */
-const exportPhysicalCountResults = asyncHandler(async (req, res, next) => {
+const exportPhysicalCountResults = (req, res) => {
     const { office } = req.query;
 
     if (!office) {
-        res.status(400);
-        throw new Error('Office parameter is required for export.');
+        return res.status(400).json({ message: 'Office parameter is required for export.' });
     }
 
-    // Set headers early. If an error occurs after this, we can't change the status code.
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="physical_count_${office.replace(/\s+/g, '_')}.csv"`);
 
-    try {
-        const query = { 'custodian.office': office };
-        const headers = [
-            'Property Number', 'Description', 'Custodian', 'Status', 'Condition',
-            'Remarks', 'Verification Status', 'Verified By', 'Verified At'
-        ];
-        res.write(headers.join(',') + '\n');
+    const query = { 'custodian.office': office };
+    const headers = [
+        'Property Number', 'Description', 'Custodian', 'Status', 'Condition',
+        'Remarks', 'Verification Status', 'Verified By', 'Verified At'
+    ];
+    res.write(headers.join(',') + '\n');
 
-        const cursor = Asset.find(query).sort({ propertyNumber: 1 }).lean().cursor();
+    const cursor = Asset.find(query).sort({ propertyNumber: 1 }).lean().cursor();
 
-        for await (const asset of cursor) {
+    cursor.on('data', (asset) => {
+        try {
             const verificationStatus = asset.physicalCountDetails?.verified ? 'Verified' : 'Unverified';
             const verifiedBy = asset.physicalCountDetails?.verifiedBy || '';
             const verifiedAt = asset.physicalCountDetails?.verifiedAt ? new Date(asset.physicalCountDetails.verifiedAt).toLocaleDateString('en-CA') : '';
@@ -996,19 +994,24 @@ const exportPhysicalCountResults = asyncHandler(async (req, res, next) => {
                 verificationStatus, verifiedBy, verifiedAt
             ];
             res.write(values.join(',') + '\n');
+        } catch (err) {
+            console.error('Error processing a row for CSV export:', err);
         }
+    });
 
+    cursor.on('end', () => {
         res.end();
-    } catch (error) {
+    });
+
+    cursor.on('error', (error) => {
         console.error('Error during physical count export:', error);
-        // If headers haven't been sent, pass the error to the Express error handler.
         if (!res.headersSent) {
-            return next(error);
+            res.status(500).json({ message: 'Failed to stream data.' });
+        } else {
+            res.end();
         }
-        // Otherwise, just end the response, as the client will receive a partial file.
-        res.end();
-    }
-});
+    });
+};
 
 module.exports = {
     getAssets, getAssetById, createAsset,
