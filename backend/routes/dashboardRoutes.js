@@ -15,13 +15,14 @@ const PERMISSIONS = require('../config/permissions.js');
 // @access  Private/Admin
 router.route('/stats').get(protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW), getDashboardStats);
 
-// @desc    Get details for drill-down modals
-// @route   GET /api/dashboard/details/:type
-// @access  Private/Admin
-router.route('/details/pending-requisitions').get(protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW), getPendingRequisitionsDetails);
-router.route('/details/low-stock-items').get(protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW), getLowStockItemsDetails);
-router.route('/details/unassigned-assets').get(protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW), getUnassignedAssetsDetails);
-router.route('/details/nearing-eol').get(protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW), getNearingEOLDetails);
+// Group all detail routes under the same protection and permission check for conciseness
+const detailsRouter = express.Router();
+detailsRouter.use(protect, checkPermission(PERMISSIONS.DASHBOARD_VIEW));
+detailsRouter.get('/pending-requisitions', getPendingRequisitionsDetails);
+detailsRouter.get('/low-stock-items', getLowStockItemsDetails);
+detailsRouter.get('/unassigned-assets', getUnassignedAssetsDetails);
+detailsRouter.get('/nearing-eol', getNearingEOLDetails);
+router.use('/details', detailsRouter);
 
 
 module.exports = router;
