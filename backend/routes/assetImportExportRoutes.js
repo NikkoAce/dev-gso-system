@@ -9,9 +9,6 @@ const {
     downloadCsvTemplate
 } = require('../controllers/assetImportExportController.js');
 
-// Route for exporting assets to CSV
-router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportAssetsToCsv);
-
 router.get('/import/template', protect, checkPermission(PERMISSIONS.ASSET_CREATE), downloadCsvTemplate);
 router.post('/import', protect, checkPermission(PERMISSIONS.ASSET_CREATE), upload.single('csvfile'), importAssetsFromCsv);
 

@@ -15,12 +15,16 @@ const {
     getMyOfficeAssets,
     addRepairRecord,
     deleteRepairRecord
-} = require('../controllers/assetController');
+} = require('../controllers/assetController.js');
+const { exportAssetsToCsv } = require('../controllers/assetImportExportController.js');
 
 router.get('/my-assets', protect, checkPermission(PERMISSIONS.ASSET_READ_OWN_OFFICE), getMyOfficeAssets);
 
 // Route for getting the next property number
 router.get('/next-number', protect, checkPermission(PERMISSIONS.ASSET_CREATE), getNextPropertyNumber);
+
+// Route for exporting assets to CSV. Must be defined BEFORE the '/:id' route.
+router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportAssetsToCsv);
 
 // Route for bulk asset creation
 router.post('/bulk', protect, checkPermission(PERMISSIONS.ASSET_CREATE), createBulkAssets);
