@@ -1,6 +1,7 @@
 const Asset = require('../models/Asset');
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
+const Office = require('../models/Office');
 const PTR = require('../models/PTR'); // Import the new PTR model
 const { uploadToS3, generatePresignedUrl, s3, DeleteObjectCommand } = require('../lib/s3.js');
 const { getIo } = require('../config/socket');
@@ -234,6 +235,15 @@ const createAsset = asyncHandler(async (req, res) => {
     // Use the helper to parse all incoming form data
     const assetData = parseFormData(req.body);
 
+    // Validate that the custodian's office exists
+    if (assetData.custodian && assetData.custodian.office) {
+        const officeExists = await Office.findOne({ name: assetData.custodian.office });
+        if (!officeExists) {
+            res.status(400);
+            throw new Error(`The custodian office "${assetData.custodian.office}" does not exist. Please select a valid office from the list.`);
+        }
+    }
+
     // Add the initial history entry
     const assetToCreate = {
         ...assetData,
@@ -329,6 +339,16 @@ const updateAsset = asyncHandler(async (req, res) => {
 
     // Use the helper to parse all incoming form data
     const updateData = parseFormData(req.body);
+
+    // Validate the custodian's office if it's being updated
+    if (updateData.custodian && updateData.custodian.office) {
+        const officeExists = await Office.findOne({ name: updateData.custodian.office });
+        if (!officeExists) {
+            res.status(400);
+            throw new Error(`The custodian office "${updateData.custodian.office}" does not exist. Please select a valid office from the list.`);
+        }
+    }
+
 
     const user = req.user; // The user performing the action
 
@@ -850,6 +870,18 @@ const importAssetsFromCsv = (req, res) => {
             }
 
             try {
+                // Pre-validate all unique office names from the CSV file
+                const officeNamesInCsv = [...new Set(results.map(row => row['Custodian Office']).filter(Boolean))];
+                if (officeNamesInCsv.length > 0) {
+                    const existingOffices = await Office.find({ name: { $in: officeNamesInCsv } }).select('name').lean();
+                    const existingOfficeNames = new Set(existingOffices.map(o => o.name));
+                    const missingOffices = officeNamesInCsv.filter(name => !existingOfficeNames.has(name));
+
+                    if (missingOffices.length > 0) {
+                        throw new Error(`The following office names in your CSV do not exist in the system: ${missingOffices.join(', ')}. Please correct them or add them via Settings > Offices before importing.`);
+                    }
+                }
+
                 const assetsToCreate = results.map(row => ({
                     propertyNumber: row['Property Number'],
                     description: row['Description'],
