@@ -1,24 +1,13 @@
 // FILE: frontend/public/physical-count.js
-import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
+import { getGsoToken } from '../js/auth.js';
 import { fetchWithAuth, API_ROOT_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        // Page-level permission check
-        if (!user.permissions || !user.permissions.includes('asset:update')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializePhysicalCountPage(user);
-    } catch (error) {
-        console.error("Authentication failed on physical count page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'asset:update',
+    pageInitializer: initializePhysicalCountPage,
+    pageName: 'Physical Count'
 });
 
 function initializePhysicalCountPage(user) {

@@ -1,20 +1,11 @@
 // FILE: frontend/public/ris-page.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializeRisPage(user);
-    } catch (error) {
-        console.error("Authentication failed on RIS page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'requisition:process', // Assuming a permission for GSO to process requisitions
+    pageInitializer: initializeRisPage,
+    pageName: 'Requisition and Issue Slip'
 });
 
 function initializeRisPage(user) {

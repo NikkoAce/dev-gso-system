@@ -1,18 +1,9 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions?.includes('slip:generate')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-
+createAuthenticatedPage({
+    permission: 'slip:generate',
+    pageInitializer: (user) => {
         const config = {
             slipType: 'A68',
             slipTitle: 'Report of Waste Materials',

@@ -1,20 +1,11 @@
 // FILE: frontend/public/ics-page.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        // A user needs permission to either generate or read slips to view this page.
-        const canAccess = user.permissions.includes('slip:generate') || user.permissions.includes('slip:read');
-        if (!user || !canAccess) {
-            window.location.href = '../assets/asset-registry.html'; // Redirect to a safe page
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-
+createAuthenticatedPage({
+    permission: ['slip:generate', 'slip:read'],
+    pageInitializer: (user) => {
         let currentIcsData = null; // Variable to hold slip data for export
 
         // The populateIcsForm function is passed as a callback to the shared initializer.
@@ -172,7 +163,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         previewBtn.addEventListener('click', handleTogglePreview);
         exitPreviewBtn.addEventListener('click', handleTogglePreview);
 
-    } catch (error) {
-        console.error("Authentication failed on ICS page:", error);
-    }
+    },
+    pageName: 'Inventory Custodian Slip'
 });

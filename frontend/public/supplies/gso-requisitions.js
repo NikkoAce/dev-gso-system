@@ -1,21 +1,11 @@
 // FILE: frontend/public/gso-requisitions.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            // Redirect non-GSO users or show an error
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializeGsoRequisitionsPage(user);
-    } catch (error) {
-        console.error("Authentication failed on GSO requisitions page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'requisition:read:all',
+    pageInitializer: initializeGsoRequisitionsPage,
+    pageName: 'Manage Supply Requisitions'
 });
 
 function initializeGsoRequisitionsPage(user) {

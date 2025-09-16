@@ -1,17 +1,11 @@
 // FILE: frontend/public/my-requisitions.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        initializeLayout(user, gsoLogout);
-        initializeMyRequisitionsPage(user);
-    } catch (error) {
-        console.error("Authentication failed on my-requisitions page:", error);
-    }
+createAuthenticatedPage({
+    permission: null, // Any authenticated user can view their own requisitions
+    pageInitializer: initializeMyRequisitionsPage,
+    pageName: 'My Requisitions'
 });
 
 function initializeMyRequisitionsPage(user) {

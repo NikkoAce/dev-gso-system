@@ -1,23 +1,13 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions || !user.permissions.includes('immovable:read')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-        initializeLayout(user, gsoLogout);
-        initializeAssetMap();
-    } catch (error) {
-        console.error("Authentication failed on asset map page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'immovable:read',
+    pageInitializer: initializeAssetMap,
+    pageName: 'Immovable Asset Map'
 });
 
-async function initializeAssetMap() {
+async function initializeAssetMap(user) {
     const mapContainer = document.getElementById('asset-map');
     if (!mapContainer) return;
 

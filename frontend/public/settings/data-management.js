@@ -1,21 +1,12 @@
-import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
+import { getGsoToken } from '../js/auth.js';
 import { fetchWithAuth, BASE_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions || !user.permissions.includes('admin:data:read')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-        initializeLayout(user, gsoLogout);
-        initializePage(user);
-    } catch (error) {
-        console.error("Authentication failed:", error);
-    }
+createAuthenticatedPage({
+    permission: 'admin:data:read',
+    pageInitializer: initializePage,
+    pageName: 'Data Management'
 });
 
 function initializePage(user) {

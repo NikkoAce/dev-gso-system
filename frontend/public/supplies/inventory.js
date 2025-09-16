@@ -1,20 +1,11 @@
 // FILE: frontend/public/inventory.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializeInventoryPage(user);
-    } catch (error) {
-        console.error("Authentication failed on inventory page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'stock:manage',
+    pageInitializer: initializeInventoryPage,
+    pageName: 'Manage Supplies Inventory'
 });
 
 function initializeInventoryPage(user) {

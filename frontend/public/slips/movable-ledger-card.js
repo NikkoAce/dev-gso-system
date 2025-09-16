@@ -1,25 +1,15 @@
 // FILE: frontend/public/slips/movable-ledger-card.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions || !user.permissions.includes('asset:read')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-        initializeLayout(user, gsoLogout);
-        initializeLedgerCardPage();
-    } catch (error) {
-        console.error("Authentication failed on ledger card page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'asset:read',
+    pageInitializer: initializeLedgerCardPage,
+    pageName: 'Movable Ledger Card'
 });
 
-function initializeLedgerCardPage() {
+function initializeLedgerCardPage(user) {
     // --- STATE & CONFIG ---
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');

@@ -1,16 +1,10 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js'
+import { createAuthenticatedPage } from '../js/page-loader.js';
 import { fetchWithAuth } from '../js/api.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        initializeLayout(user, gsoLogout);
-        initializeViewPage(user);
-    } catch (error) {
-        console.error("Authentication failed:", error);
-    }
+createAuthenticatedPage({
+    permission: 'asset:read:own_office',
+    pageInitializer: initializeViewPage,
+    pageName: 'View My Assets'
 });
 
 function initializeViewPage(user) {

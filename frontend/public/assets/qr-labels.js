@@ -1,23 +1,11 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        // Page-level permission check
-        if (!user.permissions || !user.permissions.includes('asset:read')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user,gsoLogout);
-        initializeQrLabelsPage(user);
-    } catch (error) {
-         console.error("Authentication or layout initialization failed:", error);
-    }
+createAuthenticatedPage({
+    permission: 'asset:read',
+    pageInitializer: initializeQrLabelsPage,
+    pageName: 'QR Labels'
 });
 
 function initializeQrLabelsPage(user) {

@@ -1,7 +1,7 @@
 // FILE: frontend/public/categories.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
 const API_ENDPOINT = 'categories';
 const ENTITY_NAME = 'Category';
@@ -26,23 +26,13 @@ const searchInput = document.getElementById('search-input');
 const paginationControls = document.getElementById('pagination-controls');
 const tableHeader = listContainer.parentElement.querySelector('thead');
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions?.includes('settings:manage')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
+createAuthenticatedPage({
+    permission: 'settings:manage',
+    pageInitializer: async (user) => {
         await loadItems();
         setupEventListeners();
-    } catch (error) {
-        console.error("Authentication failed on categories page:", error);
-        showToast('Failed to initialize page.', 'error');
-    }
+    },
+    pageName: 'Manage Categories'
 });
 
 async function loadItems() {

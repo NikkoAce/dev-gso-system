@@ -1,6 +1,6 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
  
 let currentPageRoles = [];
 let allPermissions = [];
@@ -23,23 +23,12 @@ const cancelBtn = document.getElementById('cancel-edit-btn');
 const roleList = document.getElementById('role-list');
 const searchInput = document.getElementById('search-input');
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        // Page-level permission check
-        if (!user.permissions || !user.permissions.includes('user:manage')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
+createAuthenticatedPage({
+    permission: 'user:manage',
+    pageInitializer: async (user) => {
         await initializePage();
-    } catch (error) {
-        console.error("Initialization failed:", error);
-        showToast('Failed to initialize page.', 'error');
-    }
+    },
+    pageName: 'Role Management'
 });
 
 async function initializePage() {

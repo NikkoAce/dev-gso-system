@@ -1,22 +1,11 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions?.includes('report:generate')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializeReportPage(user);
-    } catch (error) {
-        console.error("Initialization failed:", error);
-    }
+createAuthenticatedPage({
+    permission: 'report:generate',
+    pageInitializer: initializeReportPage,
+    pageName: 'Appendix 68 Waste Report'
 });
 
 function initializeReportPage(user) {

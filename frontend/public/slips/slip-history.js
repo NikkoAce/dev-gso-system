@@ -1,21 +1,12 @@
 // FILE: frontend/public/slip-history.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user || user.office !== 'GSO') {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializeSlipHistoryPage(user);
-    } catch (error) {
-        console.error("Authentication failed on slip history page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'slip:read',
+    pageInitializer: initializeSlipHistoryPage,
+    pageName: 'Slip History'
 });
 
 function initializeSlipHistoryPage(user) {

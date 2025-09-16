@@ -1,17 +1,11 @@
 // FILE: frontend/public/requisition.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        initializeLayout(user, gsoLogout);
-        initializeRequisitionPage(user);
-    } catch (error) {
-        console.error("Authentication failed on requisition page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'requisition:create',
+    pageInitializer: initializeRequisitionPage,
+    pageName: 'Supply Requisition'
 });
 
 function initializeRequisitionPage(user) {

@@ -1,23 +1,12 @@
-import { getCurrentUser, gsoLogout, getGsoToken } from '../js/auth.js';
+import { getGsoToken } from '../js/auth.js';
 import { fetchWithAuth, BASE_URL } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        // Page-level permission check
-        if (!user.permissions || !user.permissions.includes('asset:read')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-        initializeRegistryPage(user);
-    } catch (error) {
-        console.error("Authentication failed on registry page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'asset:read',
+    pageInitializer: initializeRegistryPage,
+    pageName: 'Asset Registry'
 });
 
 function initializeRegistryPage(user) {

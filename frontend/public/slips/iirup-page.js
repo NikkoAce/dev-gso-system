@@ -1,19 +1,10 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        if (!user.permissions?.includes('slip:generate')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
-
+createAuthenticatedPage({
+    permission: 'slip:generate',
+    pageInitializer: (user) => {
         const config = {
             slipType: 'IIRUP',
             slipTitle: 'Inventory and Inspection Report of Unserviceable Property',
@@ -120,7 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         customInitializeSlipPage(config, user);
 
-    } catch (error) {
-        console.error("Initialization failed:", error);
-    }
+    },
+    pageName: 'IIRUP Slip'
 });

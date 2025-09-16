@@ -1,6 +1,6 @@
 // FILE: frontend/public/dashboard/dashboard.js
 import { fetchWithAuth } from '../js/api.js';
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
 let viewOptions = {}; // NEW: To hold view-specific options like grouping
 let dateRange = { start: null, end: null }; // NEW: To hold date range
@@ -20,42 +20,30 @@ const DEFAULT_PREFERENCES = {
     tableOrder: ['recentActivity']
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        let user = await getCurrentUser();
-        if (!user) return;
-
-        // --- FIX: Fetch the full, up-to-date user profile from the server ---
-        // This ensures we always have the latest dashboard preferences,
-        // instead of relying on potentially stale data from the JWT.
+createAuthenticatedPage({
+    permission: 'dashboard:view',
+    pageInitializer: async (user) => {
+        // Dashboard has a special requirement: fetch the full user profile
+        // to get the latest dashboard preferences.
         const fullUser = await fetchWithAuth('users/profile');
-        user = fullUser; // Replace the token-based user with the full user object
 
-        // Check if the user has any saved preferences. If not, use the default layout.
-        const hasPreferences = user.dashboardPreferences && user.dashboardPreferences.visibleComponents && user.dashboardPreferences.visibleComponents.length > 0;
-        userPreferences = hasPreferences ? user.dashboardPreferences : DEFAULT_PREFERENCES;
+        const hasPreferences = fullUser.dashboardPreferences && fullUser.dashboardPreferences.visibleComponents && fullUser.dashboardPreferences.visibleComponents.length > 0;
+        userPreferences = hasPreferences ? fullUser.dashboardPreferences : DEFAULT_PREFERENCES;
 
-        if (!user.permissions || !user.permissions.includes('dashboard:view')) {
-            window.location.href = '../assets/asset-registry.html';
-            return;
-        }
-
-        // Store original component HTML and order
+        // Store original component HTML and order before initializing
         document.querySelectorAll('.dashboard-component').forEach(el => {
             allComponents[el.dataset.id] = {
                 id: el.dataset.id,
                 html: el.outerHTML,
                 title: el.querySelector('.stat-title, .card-title')?.textContent || el.dataset.id,
                 containerId: el.parentElement.id,
-                type: el.dataset.type || 'card' // Identify component type
+                type: el.dataset.type || 'card'
             };
         });
 
-        initializeLayout(user, gsoLogout);
-        initializeDashboard(user);
-    } catch (error) {
-        console.error("Authentication failed on dashboard:", error);
-    }
+        initializeDashboard(fullUser);
+    },
+    pageName: 'Dashboard'
 });
 
 function applyPreferences() {

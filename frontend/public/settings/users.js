@@ -1,6 +1,6 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createUIManager } from '../js/ui.js';
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
  
 let currentPageUsers = [];
 let metadata = { roles: [], permissions: [] };
@@ -12,30 +12,14 @@ let sortDirection = 'asc';
  
 const { showToast, renderPagination, setLoading } = createUIManager();
  
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) {
-            // If no user is found, auth.js will handle the redirect.
-            return;
-        }
-
-        // Page-level permission check
-        if (!user.permissions || !user.permissions.includes('user:read')) {
-            window.location.href = '../dashboard/dashboard.html';
-            return;
-        }
-
-        initializeLayout(user, gsoLogout);
- 
+createAuthenticatedPage({
+    permission: 'user:read',
+    pageInitializer: async (user) => {
         metadata = await fetchWithAuth('users/meta');
         await loadUsers();
         setupEventListeners();
-    } catch (error) {
-        console.error('Error initializing user management page:', error);
-        showToast('Failed to load user data. Please try again.', 'error');
-        document.getElementById('user-list').innerHTML = `<tr><td colspan="4" class="text-center text-error">Could not load users.</td></tr>`;
-    }
+    },
+    pageName: 'User Management'
 });
 
 async function loadUsers() {

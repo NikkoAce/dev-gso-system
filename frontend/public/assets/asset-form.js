@@ -1,23 +1,13 @@
 // FILE: frontend/public/assets/asset-form.js
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
-import { createUIManager } from '../js/ui.js';
+import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow } from '../js/ui.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        // A user can access this form if they can either create or update assets.
-        if (!user.permissions || (!user.permissions.includes('asset:create') && !user.permissions.includes('asset:update'))) {
-            window.location.href = '../dashboard/dashboard.html'; // Redirect if no permission
-            return;
-        }
-        initializeLayout(user, gsoLogout);
-        initializeForm(user);
-    } catch (error) {
-        console.error("Authentication failed on asset form page:", error);
-    }
+createAuthenticatedPage({
+    // A user can access this form if they can either create OR update assets.
+    permission: ['asset:create', 'asset:update'],
+    pageInitializer: initializeForm,
+    pageName: 'Asset Form'
 });
 
 function initializeForm(user) {
@@ -83,144 +73,6 @@ function initializeForm(user) {
         });
     }
 
-    /**
-     * Formats the value of a given input element to include commas for thousands separators.
-     * @param {HTMLInputElement} inputElement The input element to format.
-     */
-    function formatNumberOnInput(inputElement) {
-        if (!inputElement) return;
-
-        // Store original cursor position and value
-        const originalValue = inputElement.value;
-        const originalCursorPos = inputElement.selectionStart;
-        const numCommasBefore = (originalValue.match(/,/g) || []).length;
-
-        // Format the number
-        let value = originalValue.replace(/[^0-9.]/g, '');
-        const parts = value.split('.');
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        if (parts.length > 2) {
-            parts.splice(2); // Keep only the first decimal point
-        }
-        const formattedValue = parts.join('.');
-        const numCommasAfter = (formattedValue.match(/,/g) || []).length;
-
-        // Set the new value
-        inputElement.value = formattedValue;
-
-        // Calculate and set the new cursor position
-        const cursorOffset = numCommasAfter - numCommasBefore;
-        const newCursorPos = originalCursorPos + cursorOffset;
-        if (newCursorPos >= 0) {
-            inputElement.setSelectionRange(newCursorPos, newCursorPos);
-        }
-    }
-
-    function renderSpecification(spec = { key: '', value: '' }) {
-        const div = document.createElement('div');
-        div.className = 'grid grid-cols-[1fr_2fr_auto] gap-2 items-center spec-row';
-        div.innerHTML = `
-            <input type="text" placeholder="Specification Name" class="input input-bordered input-sm spec-key" value="${spec.key || ''}">
-            <input type="text" placeholder="Value" class="input input-bordered input-sm spec-value" value="${spec.value || ''}">
-            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-spec-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
-        `;
-        specificationsContainer.appendChild(div);
-        lucide.createIcons();
-    }
-
-    function renderRepairRow(repair) {
-        const div = document.createElement('div');
-        // Use flexbox for a responsive layout.
-        div.className = 'repair-row p-2 border-b text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2';
-        const repairDate = repair.date ? new Date(repair.date).toISOString().split('T')[0] : '';
-        div.innerHTML = `
-            <div class="flex-grow">
-                <p class="font-semibold">${repair.natureOfRepair}</p>
-                <p class="text-xs text-base-content/70">${repairDate}</p>
-            </div>
-            <div class="flex items-center gap-4 w-full sm:w-auto">
-                <p class="text-right flex-grow sm:flex-grow-0 font-semibold">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(repair.amount)}</p>
-                <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-repair-btn" data-repair-id="${repair._id}"><i data-lucide="x" class="h-4 w-4"></i></button>
-            </div>
-        `;
-        repairsContainer.appendChild(div);
-        lucide.createIcons();
-    }
-
-    function renderNewAttachmentRow() {
-        const div = document.createElement('div');
-        div.className = 'grid grid-cols-[1fr_1fr_auto] gap-2 items-center new-attachment-row';
-        div.innerHTML = `
-            <input type="file" class="file-input file-input-bordered file-input-sm new-attachment-file" required>
-            <input type="text" placeholder="Document Title (required)" class="input input-bordered input-sm new-attachment-title" required>
-            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-new-attachment-btn" title="Remove this attachment"><i data-lucide="x" class="h-4 w-4"></i></button>
-        `;
-        newAttachmentsContainer.appendChild(div);
-        lucide.createIcons();
-    }
-
-    function renderAttachments(attachments = []) {
-        if (attachments.length > 0) {
-            existingAttachmentsContainer.classList.remove('hidden');
-            existingAttachmentsList.innerHTML = '';
-            attachments.forEach(att => {
-                const li = document.createElement('li');
-                li.className = 'flex items-center justify-between text-sm';
-                li.innerHTML = `
-                    <a href="${att.url}" target="_blank" class="link link-primary hover:underline">${att.title || att.originalName}</a>
-                    <button type="button" class="btn btn-xs btn-ghost text-red-500 remove-attachment-btn" data-key="${att.key}" title="Delete Attachment">
-                        <i data-lucide="x" class="h-4 w-4"></i>
-                    </button>
-                `;
-                existingAttachmentsList.appendChild(li);
-            });
-            lucide.createIcons();
-        } else {
-            existingAttachmentsContainer.classList.add('hidden');
-            existingAttachmentsList.innerHTML = '';
-        }
-    }
-
-    function renderHistory(history = []) {
-        historyContainer.innerHTML = '';
-        if (history.length === 0) {
-            historyContainer.innerHTML = '<li>No history records found.</li>';
-            return;
-        }
-        const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-        sortedHistory.forEach((entry, index) => {
-            const li = document.createElement('li');
-            const formattedDate = new Date(entry.date).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const iconMap = {
-                'Created': 'plus-circle',
-                'Updated': 'edit-3',
-                'Transfer': 'arrow-right-left',
-                'Physical Count': 'clipboard-check',
-                'Assignment': 'user-plus',
-                'Disposed': 'trash-2',
-                'Certified as Waste': 'shield-alert'
-            };
-            const icon = iconMap[entry.event] || 'history';
-
-            // Alternate alignment for timeline items. On medium screens and up,
-            // the left-side items will have their text right-aligned for a cleaner look.
-            const alignmentClass = index % 2 === 0 ? 'timeline-start md:text-end' : 'timeline-end';
-
-            li.innerHTML = `
-                <div class="timeline-middle"><i data-lucide="${icon}" class="h-5 w-5"></i></div>
-                <div class="${alignmentClass} timeline-box">
-                    <time class="font-mono italic text-xs">${formattedDate}</time>
-                    <div class="text-lg font-black">${entry.event}</div>
-                    <p class="text-sm">${entry.details}</p>
-                    <p class="text-xs text-base-content/70 mt-1">by ${entry.user}</p>
-                </div>
-                ${index < sortedHistory.length - 1 ? '<hr/>' : ''}
-            `;
-            historyContainer.appendChild(li);
-        });
-        lucide.createIcons();
-    }
-
     function populateForm(asset) {
         Object.keys(asset).forEach(key => {
             if (key === 'custodian') {
@@ -246,11 +98,11 @@ function initializeForm(user) {
 
         if (asset.specifications && asset.specifications.length > 0) {
             specificationsContainer.innerHTML = '';
-            asset.specifications.forEach(spec => renderSpecification(spec));
+            asset.specifications.forEach(spec => renderSpecificationRow(spec));
         }
 
         if (asset.history) {
-            renderHistory(asset.history);
+            renderHistory(historyContainer, asset.history);
         }
 
         if (asset.attachments) {
@@ -258,6 +110,17 @@ function initializeForm(user) {
         }
     }
 
+    function renderSpecificationRow(spec = { key: '', value: '' }) {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-[1fr_2fr_auto] gap-2 items-center spec-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Specification Name" class="input input-bordered input-sm spec-key" value="${spec.key || ''}">
+            <input type="text" placeholder="Value" class="input input-bordered input-sm spec-value" value="${spec.value || ''}">
+            <button type="button" class="btn btn-sm btn-ghost text-red-500 remove-spec-btn"><i data-lucide="x" class="h-4 w-4"></i></button>
+        `;
+        specificationsContainer.appendChild(div);
+        lucide.createIcons();
+    }
     // --- CORE LOGIC ---
     async function loadInitialData() {
         try {
@@ -502,14 +365,14 @@ function initializeForm(user) {
 
     generatePropertyNumberBtn.addEventListener('click', handleGeneratePropertyNumber);
 
-    addSpecBtn.addEventListener('click', () => renderSpecification());
+    addSpecBtn.addEventListener('click', () => renderSpecificationRow());
     specificationsContainer.addEventListener('click', (e) => {
         if (e.target.closest('.remove-spec-btn')) {
             e.target.closest('.spec-row').remove();
         }
     });
 
-    addAttachmentBtn.addEventListener('click', renderNewAttachmentRow);
+    addAttachmentBtn.addEventListener('click', () => renderNewAttachmentRow(newAttachmentsContainer));
     newAttachmentsContainer.addEventListener('click', (e) => {
         const removeBtn = e.target.closest('.remove-new-attachment-btn');
         if (removeBtn) {

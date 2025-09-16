@@ -1,19 +1,13 @@
-import { getCurrentUser, gsoLogout } from '../js/auth.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createAuthenticatedPage } from '../js/page-loader.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const user = await getCurrentUser();
-        if (!user) return;
-
-        initializeLayout(user, gsoLogout);
-        initializeImmovableReportsPage();
-    } catch (error) {
-        console.error("Authentication failed on reports page:", error);
-    }
+createAuthenticatedPage({
+    permission: 'report:generate',
+    pageInitializer: initializeImmovableReportsPage,
+    pageName: 'Immovable Asset Reports'
 });
 
-function initializeImmovableReportsPage() {
+function initializeImmovableReportsPage(user) {
     // --- DOM ELEMENTS ---
     const typeFilter = document.getElementById('type-filter');
     const statusFilter = document.getElementById('status-filter');
