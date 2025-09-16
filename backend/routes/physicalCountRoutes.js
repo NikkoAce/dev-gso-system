@@ -8,13 +8,13 @@ const {
     exportPhysicalCountResults
 } = require('../controllers/physicalCountController.js');
 
-// Route for updating multiple assets from the physical count page
+// Route for submitting bulk updates from the physical count page
 router.put('/', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updatePhysicalCount);
-
-// Route for exporting physical count results
-router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportPhysicalCountResults);
 
 // Route for verifying a single asset during physical count
 router.put('/:id/verify', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), verifyAssetForPhysicalCount);
+
+// Route for exporting physical count results for a specific office
+router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportPhysicalCountResults);
 
 module.exports = router;

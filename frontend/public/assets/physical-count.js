@@ -264,7 +264,7 @@ function initializePhysicalCountPage(user) {
 
         try {
             // The UI update is now handled by the socket listener to ensure real-time sync
-            await fetchWithAuth(`assets/${assetId}/verify-physical-count`, {
+            await fetchWithAuth(`physical-count/${assetId}/verify`, {
                 method: 'PUT',
                 body: JSON.stringify({ verified: isVerified })
             });
@@ -436,7 +436,7 @@ function initializePhysicalCountPage(user) {
             // We can add other filters if needed, but office is the primary one.
             
             // The endpoint will stream a CSV file, so we handle it as a blob.
-            const response = await fetch(`${API_ROOT_URL}/api/assets/physical-count/export?${params}`, {
+            const response = await fetch(`${API_ROOT_URL}/api/physical-count/export?${params}`, {
                 headers: { 'Authorization': `Bearer ${getGsoToken()}` }
             });
 
@@ -562,7 +562,7 @@ function initializePhysicalCountPage(user) {
         }
 
         try {
-            await fetchWithAuth('assets/physical-count', {
+            await fetchWithAuth('physical-count', {
                 method: 'PUT',
                 body: JSON.stringify({
                     updates: updates,
