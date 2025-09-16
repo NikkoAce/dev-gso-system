@@ -105,6 +105,7 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
                 PERMISSIONS.STOCK_READ,
                 PERMISSIONS.REQUISITION_CREATE,
                 PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+                PERMISSIONS.ASSET_EXPORT, // Allow department heads to export their own data
             ];
         } else {
             targetGsoRoleName = 'Employee';

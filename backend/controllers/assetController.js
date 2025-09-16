@@ -963,7 +963,7 @@ const verifyAssetForPhysicalCount = asyncHandler(async (req, res) => {
  * @route   GET /api/assets/physical-count/export
  * @access  Private (Requires 'asset:export' permission)
  */
-const exportPhysicalCountResults = (req, res) => {
+const exportPhysicalCountResults = asyncHandler((req, res) => {
     const { office } = req.query;
 
     if (!office) {
@@ -1011,7 +1011,7 @@ const exportPhysicalCountResults = (req, res) => {
             res.end();
         }
     });
-};
+});
 
 module.exports = {
     getAssets, getAssetById, createAsset,
