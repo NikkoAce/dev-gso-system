@@ -452,8 +452,16 @@ function initializePhysicalCountPage(user) {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-                throw new Error(errorData.message || `Failed to export data. Status: ${response.status}`);
+                let errorMessage = `Failed to export data. Status: ${response.status}`;
+                try {
+                    // Try to parse as JSON first, as that's the expected error format from our API
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    // If JSON parsing fails, it might be a plain text or HTML error from a proxy/server
+                    errorMessage = (await response.text()) || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
             const blob = await response.blob();
