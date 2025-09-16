@@ -350,6 +350,37 @@ const deleteImmovableAssetAttachment = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Generate a report of immovable assets
+ * @route   GET /api/immovable-assets/report
+ * @access  Private
+ */
+const generateImmovableAssetReport = asyncHandler(async (req, res) => {
+    const { type, status } = req.query;
+
+    const query = {};
+    if (type) query.type = type;
+    if (status) query.status = status;
+
+    const assets = await ImmovableAsset.find(query).sort({ propertyIndexNumber: 1 }).lean();
+
+    const headers = ['PIN', 'Name', 'Type', 'Location', 'Date Acquired', 'Assessed Value', 'Condition', 'Status'];
+    const rows = assets.map(a => {
+        return [
+            a.propertyIndexNumber,
+            a.name,
+            a.type,
+            a.location,
+            a.dateAcquired ? new Date(a.dateAcquired).toLocaleDateString('en-CA') : 'N/A',
+            a.assessedValue,
+            a.condition || '',
+            a.status || ''
+        ];
+    });
+
+    res.json({ headers, rows });
+});
+
+/**
  * @desc    Generate a Real Property Ledger Card (depreciation)
  * @route   GET /api/immovable-assets/:id/ledger-card
  * @access  Private
