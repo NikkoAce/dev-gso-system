@@ -522,7 +522,8 @@ function initializeForm(user) {
         // Populate repair history tab
         if (asset.repairHistory && asset.repairHistory.length > 0) {
             repairsContainer.innerHTML = ''; // Clear any empty rows
-            asset.repairHistory.forEach(repair => renderRepairRow(repair));
+            // Filter out any null/undefined entries before rendering to prevent errors from corrupted data.
+            asset.repairHistory.filter(Boolean).forEach(repair => renderRepairRow(repairsContainer, repair));
         } else {
             repairsContainer.innerHTML = '<p class="text-sm text-center text-base-content/70 p-4">No repair records found.</p>';
         }
