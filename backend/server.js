@@ -13,16 +13,6 @@ const app = express();
 // Create the HTTP server from the Express app
 const server = http.createServer(app);
 
-// Initialize Socket.IO server and attach it to the HTTP server
-const io = new Server(server, {
-    cors: {
-        origin: "*", // In production, restrict this to your frontend's URL
-        methods: ["GET", "POST"]
-    }
-});
-
-initSocket(io); // Initialize our custom socket logic
-
 // --- CONFIGURATION & MIDDLEWARE---
 
 // Define the frontend URLs that are allowed to make requests to this backend.
@@ -32,6 +22,18 @@ const allowedOrigins = [
     'http://127.0.0.1:5500',                   // Local dev for GSO
     'http://127.0.0.1:5501'                    // Local dev for Portal
 ];
+
+// Initialize Socket.IO server and attach it to the HTTP server
+const io = new Server(server, {
+    cors: {
+        origin: allowedOrigins,
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    transports: ['websocket', 'polling'] // Explicitly define transports for proxy compatibility
+});
+
+initSocket(io); // Initialize our custom socket logic
 
 const corsOptions = {
     origin: allowedOrigins,
