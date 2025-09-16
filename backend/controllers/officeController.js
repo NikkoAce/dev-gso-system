@@ -90,10 +90,10 @@ const deleteOffice = async (req, res) => {
     try {
         const office = await Office.findById(req.params.id);
 
-        // Server-side check to prevent deletion if the office is in use.
-        const assetCount = await Asset.countDocuments({ office: office.name });
+        // Correctly check if any asset has a custodian in this office.
+        const assetCount = await Asset.countDocuments({ 'custodian.office': office.name });
         if (assetCount > 0) {
-            return res.status(400).json({ message: `Cannot delete office "${office.name}" because it is assigned to ${assetCount} asset(s).` });
+            return res.status(400).json({ message: `Cannot delete office "${office.name}" because it is assigned as a custodian's office to ${assetCount} asset(s).` });
         }
 
         if (office) {
