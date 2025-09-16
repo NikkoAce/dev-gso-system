@@ -12,6 +12,7 @@ createAuthenticatedPage({
             list: {
                 containerId: 'category-list',
                 searchKeys: ['name', 'subMajorGroup', 'glAccount'],
+                defaultSortKey: 'name',
                 renderRow: (item) => {
                     const isDeletable = item.assetCount === 0;
                     const deleteButtonHTML = isDeletable

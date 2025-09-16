@@ -7,54 +7,76 @@ import { createUIManager } from './ui.js';
  * @param {object} config - The configuration object for the specific settings page.
  */
 export function createSettingsPage(config) {
-    let allItems = [];
-    const { showToast } = createUIManager();
+    // State
+    let currentPageItems = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    const itemsPerPage = 15;
+    let sortKey = config.list.defaultSortKey || 'name';
+    let sortDirection = config.list.defaultSortDirection || 'asc';
+
+    const { showToast, showConfirmationModal, renderPagination, setLoading } = createUIManager();
 
     // --- DOM CACHE ---
     const listContainer = document.getElementById(config.list.containerId);
+    const tableHeader = listContainer.parentElement.querySelector('thead');
+    const paginationControls = document.getElementById('pagination-controls');
+    const searchInput = document.getElementById('search-input');
     const form = document.getElementById(config.form.id);
     const idInput = document.getElementById(config.form.idInput);
     const formTitle = document.getElementById(config.form.titleId);
     const submitBtn = document.getElementById(config.form.submitBtnId);
     const cancelBtn = document.getElementById(config.form.cancelBtnId);
-    const searchInput = document.getElementById('search-input');
-    const confirmationModal = document.getElementById('confirmation-modal');
-    const modalTitle = document.getElementById('modal-title-text');
-    const modalBody = document.getElementById('modal-body-text');
-    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
 
     // --- DATA & RENDERING ---
-    async function fetchAndRender() {
+    async function loadItems() {
+        const colSpan = tableHeader.querySelector('tr').children.length;
+        setLoading(true, listContainer, { colSpan });
+        const params = new URLSearchParams({
+            page: currentPage,
+            limit: itemsPerPage,
+            sort: sortKey,
+            order: sortDirection,
+            search: searchInput.value,
+        });
+
         try {
-            allItems = await fetchWithAuth(config.apiEndpoint);
-            renderList();
+            const data = await fetchWithAuth(`${config.apiEndpoint}?${params.toString()}`);
+            currentPageItems = data.docs;
+            totalPages = data.totalPages;
+            renderTable(data.docs);
+            renderPagination(paginationControls, data);
+            updateSortIndicators();
         } catch (error) {
-            console.error(error);
-            const colSpan = config.list.columns.length + 1;
-            listContainer.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-red-500">Error loading ${config.entityNamePlural}.</td></tr>`;
+            console.error(`Error fetching ${config.entityNamePlural}:`, error);
+            listContainer.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-error">Could not load ${config.entityNamePlural}.</td></tr>`;
+        } finally {
+            setLoading(false, listContainer);
         }
     }
 
-    function renderList() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const filteredItems = allItems.filter(item =>
-            config.list.searchKeys.some(key =>
-                item[key]?.toString().toLowerCase().includes(searchTerm)
-            )
-        );
-
+    function renderTable(items) {
         listContainer.innerHTML = '';
-        if (filteredItems.length === 0) {
-            const message = allItems.length === 0 ? `No ${config.entityNamePlural.toLowerCase()} found.` : 'No items match your search.';
-            const colSpan = config.list.columns.length + 1;
-            listContainer.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-base-content/70">${message}</td></tr>`;
+        const colSpan = tableHeader.querySelector('tr').children.length;
+        if (items.length === 0) {
+            listContainer.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">No ${config.entityNamePlural} found.</td></tr>`;
             return;
         }
-
-        filteredItems.forEach(item => {
+        items.forEach(item => {
             const tr = document.createElement('tr');
+            tr.id = `item-row-${item._id}`;
             tr.innerHTML = config.list.renderRow(item);
             listContainer.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
+    function updateSortIndicators() {
+        tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
+            th.querySelector('i[data-lucide]')?.remove();
+            if (th.dataset.sortKey === sortKey) {
+                th.insertAdjacentHTML('beforeend', `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`);
+            }
         });
         lucide.createIcons();
     }
@@ -69,7 +91,7 @@ export function createSettingsPage(config) {
     }
 
     function populateFormForEdit(itemId) {
-        const item = allItems.find(i => i._id === itemId);
+        const item = currentPageItems.find(i => i._id === itemId);
         if (item) {
             idInput.value = item._id;
             config.form.fields.forEach(field => {
@@ -83,7 +105,7 @@ export function createSettingsPage(config) {
     }
 
     // --- EVENT LISTENERS ---
-    form.addEventListener('submit', async (e) => {
+    async function handleSave(e) {
         e.preventDefault();
         const itemId = idInput.value;
         const body = {};
@@ -113,63 +135,76 @@ export function createSettingsPage(config) {
         try {
             await fetchWithAuth(endpoint, { method, body: JSON.stringify(body) });
             resetForm();
-            showToast(`${config.entityName} ${itemId ? 'updated' : 'added'} successfully.`, 'success');
-            fetchAndRender();
+            showToast(`${config.entityName} ${itemId ? 'updated' : 'created'} successfully!`, 'success');
+            await loadItems();
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         } finally {
             submitBtn.classList.remove("loading");
             submitBtn.disabled = false;
         }
-    });
-
-    listContainer.addEventListener('click', (e) => {
-        const editButton = e.target.closest('.edit-btn');
-        if (editButton) {
-            populateFormForEdit(editButton.dataset.id);
-            return;
-        }
-
-        const deleteButton = e.target.closest('.delete-btn');
-        if (deleteButton) {
-            const itemId = deleteButton.dataset.id;
-            const item = allItems.find(i => i._id === itemId);
-            const displayName = item[config.list.searchKeys[0]];
-
-            showConfirmationModal(
-                `Delete ${config.entityName}: ${displayName}`,
-                `Are you sure you want to permanently delete this ${config.entityName.toLowerCase()}? This action cannot be undone.`,
-                async () => {
-                    try {
-                        await fetchWithAuth(`${config.apiEndpoint}/${itemId}`, { method: 'DELETE' });
-                        showToast(`${config.entityName} deleted successfully.`, 'success');
-                        fetchAndRender();
-                    } catch (error) {
-                        showToast(`Error: ${error.message}`, 'error');
-                    }
-                }
-            );
-        }
-    });
-
-    function showConfirmationModal(title, body, onConfirm) {
-        modalTitle.textContent = title;
-        modalBody.textContent = body;
-        
-        const newConfirmBtn = modalConfirmBtn.cloneNode(true);
-        modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, modalConfirmBtn);
-        newConfirmBtn.addEventListener('click', () => {
-            onConfirm();
-            confirmationModal.close();
-        }, { once: true });
-
-        confirmationModal.showModal();
-        document.getElementById('modal-cancel-btn').onclick = () => confirmationModal.close();
     }
 
-    cancelBtn.addEventListener('click', resetForm);
-    searchInput.addEventListener('input', renderList);
+    function handleDelete(item) {
+        const displayName = item[config.list.searchKeys[0]];
+        showConfirmationModal(
+            `Delete ${config.entityName}: ${displayName}`,
+            `Are you sure you want to permanently delete this ${config.entityName.toLowerCase()}? This action cannot be undone.`,
+            async () => {
+                try {
+                    await fetchWithAuth(`${config.apiEndpoint}/${item._id}`, { method: 'DELETE' });
+                    showToast(`${config.entityName} deleted successfully.`, 'success');
+                    resetForm();
+                    await loadItems();
+                } catch (error) {
+                    showToast(`Error: ${error.message}`, 'error');
+                }
+            }
+        );
+    }
+
+    function setupEventListeners() {
+        form.addEventListener('submit', handleSave);
+        cancelBtn.addEventListener('click', resetForm);
+        searchInput.addEventListener('input', () => { currentPage = 1; loadItems(); });
+
+        paginationControls.addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            if (target.id === 'prev-page-btn' && currentPage > 1) { currentPage--; loadItems(); }
+            else if (target.id === 'next-page-btn' && currentPage < totalPages) { currentPage++; loadItems(); }
+            else if (target.classList.contains('page-btn')) {
+                const page = parseInt(target.dataset.page, 10);
+                if (page !== currentPage) { currentPage = page; loadItems(); }
+            }
+        });
+
+        tableHeader.addEventListener('click', (e) => {
+            const th = e.target.closest('th[data-sort-key]');
+            if (th) {
+                const key = th.dataset.sortKey;
+                sortDirection = (sortKey === key && sortDirection === 'asc') ? 'desc' : 'asc';
+                sortKey = key;
+                loadItems();
+            }
+        });
+
+        listContainer.addEventListener('click', e => {
+            const editBtn = e.target.closest('.edit-btn');
+            if (editBtn) {
+                const item = currentPageItems.find(i => i._id === editBtn.dataset.id);
+                if (item) populateFormForEdit(item);
+            }
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (deleteBtn) {
+                const item = currentPageItems.find(i => i._id === deleteBtn.dataset.id);
+                if (item) handleDelete(item);
+            }
+        });
+    }
 
     // --- INITIALIZATION ---
-    fetchAndRender();
+    loadItems();
+    setupEventListeners();
 }

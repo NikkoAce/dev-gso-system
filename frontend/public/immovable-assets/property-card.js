@@ -13,7 +13,7 @@ function initializePropertyCardPage(user) {
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
     let currentAsset = null;
-    const API_ENDPOINT = `immovable-assets/${assetId}/property-card`;
+    const API_ENDPOINT = `immovable-assets/${assetId}`;
 
     // --- DOM ELEMENTS ---
     const loadingState = document.getElementById('loading-state');

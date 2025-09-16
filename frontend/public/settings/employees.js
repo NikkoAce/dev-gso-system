@@ -12,6 +12,7 @@ createAuthenticatedPage({
             list: {
                 containerId: 'employee-list',
                 searchKeys: ['name', 'designation'],
+                defaultSortKey: 'name',
                 renderRow: (item) => {
                     const isDeletable = item.assetCount === 0;
                     const deleteButtonHTML = isDeletable

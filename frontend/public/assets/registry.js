@@ -403,7 +403,7 @@ function initializeRegistryPage(user) {
                     user: userPayload
                 };
 
-                const transferResult = await fetchWithAuth('assets/ptr', {
+                const transferResult = await fetchWithAuth('asset-transfers/ptr', {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });

@@ -13,7 +13,7 @@ function initializeLedgerCardPage(user) {
     // --- STATE & CONFIG ---
     const urlParams = new URLSearchParams(window.location.search);
     const assetId = urlParams.get('id');
-    const API_ENDPOINT = `assets/${assetId}/ledger-card`;
+    const API_ENDPOINT = `reports/movable-ledger-card/${assetId}`;
     let currentAsset = null; // To store asset data for filename
 
     // --- DOM ELEMENTS ---
