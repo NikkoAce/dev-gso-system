@@ -25,9 +25,6 @@ router.get('/next-number', protect, checkPermission(PERMISSIONS.ASSET_CREATE), g
 // Route for bulk asset creation
 router.post('/bulk', protect, checkPermission(PERMISSIONS.ASSET_CREATE), createBulkAssets);
 
-// Route for generating a Property Card for a specific asset (shows history)
-router.get('/:id/property-card', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetById);
-
 // Routes for managing repairs on a specific asset
 router.route('/:id/repairs')
     .post(protect, checkPermission(PERMISSIONS.ASSET_UPDATE), addRepairRecord);

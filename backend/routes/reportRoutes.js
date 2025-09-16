@@ -11,7 +11,5 @@ router.get('/immovable', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), 
 // Route for generating a Ledger Card for a specific movable asset (shows depreciation)
 router.get('/movable-ledger-card/:id', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), generateMovableLedgerCard);
 
-router.get('/test', protect, checkPermission(PERMISSIONS.REPORT_GENERATE), testReportRoute);
-
 module.exports = router;
   
