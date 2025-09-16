@@ -1,4 +1,4 @@
-const Asset = require('../models/Asset');
+const Asset = require('../models/Asset'); // This will now be the new model with the middleware
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 const Office = require('../models/Office');
@@ -244,16 +244,11 @@ const createAsset = asyncHandler(async (req, res) => {
         }
     }
 
-    // Add the initial history entry
-    const assetToCreate = {
-        ...assetData,
-        history: [{
-            event: 'Created',
-            details: `Asset created with Property Number ${assetData.propertyNumber}.`,
-            user: req.user.name // Use authenticated user
-        }]
-    };
-    const asset = new Asset(assetToCreate);
+    const asset = new Asset(assetData);
+
+    // Attach user to the instance for the pre-save hook to use for history logging
+    asset._user = req.user;
+
     const createdAsset = await asset.save();
 
     // --- Handle File Uploads ---
@@ -270,69 +265,6 @@ const createAsset = asyncHandler(async (req, res) => {
 
     res.status(201).json(createdAsset);
 });
-
-/**
- * Helper function to compare fields and generate history logs for movable assets.
- */
-const generateMovableAssetUpdateHistory = (original, updates, user) => {
-    const historyEntries = [];
-    const user_name = user.name;
-
-    const format = (value, field) => {
-        if (value instanceof Date) return new Date(value).toLocaleDateString('en-CA');
-        if (['acquisitionCost', 'salvageValue'].includes(field) && typeof value === 'number') {
-            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
-        }
-        if (value === null || value === undefined || value === '') return 'empty';
-        return `"${value}"`;
-    };
-
-    const compareAndLog = (field, fieldName) => {
-        if (updates[field] === undefined) return;
-
-        const originalValue = original[field];
-        const updatedValue = updates[field];
-
-        // Handle date comparison
-        if (originalValue instanceof Date) {
-            if (new Date(originalValue).toISOString().split('T')[0] !== new Date(updatedValue).toISOString().split('T')[0]) {
-                historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(new Date(updatedValue), field)}.`, user: user_name });
-            }
-            return;
-        }
-
-        // Handle numeric comparison
-        if (typeof originalValue === 'number' && parseFloat(originalValue) !== parseFloat(updatedValue)) {
-            historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(parseFloat(updatedValue), field)}.`, user: user_name });
-            return;
-        }
-
-        // Default string comparison
-        if (String(originalValue ?? '') !== String(updatedValue ?? '')) {
-            historyEntries.push({ event: 'Updated', details: `${fieldName} changed from ${format(originalValue, field)} to ${format(updatedValue, field)}.`, user: user_name });
-        }
-    };
-
-    // Compare core fields
-    compareAndLog('description', 'Description');
-    compareAndLog('category', 'Category');
-    compareAndLog('fundSource', 'Fund Source');
-    compareAndLog('status', 'Status');
-    compareAndLog('acquisitionDate', 'Acquisition Date');
-    compareAndLog('acquisitionCost', 'Acquisition Cost');
-    compareAndLog('usefulLife', 'Useful Life');
-    compareAndLog('salvageValue', 'Salvage Value');
-    compareAndLog('condition', 'Condition');
-    compareAndLog('remarks', 'Remarks');
-    compareAndLog('office', 'Office');
-
-    // Special handling for custodian transfer
-    if (updates.custodian && updates.custodian.name && original.custodian.name !== updates.custodian.name) {
-        historyEntries.push({ event: 'Transfer', details: `Custodian changed from ${format(original.custodian.name)} to ${format(updates.custodian.name)}.`, user: user_name });
-    }
-
-    return historyEntries;
-};
 
 const updateAsset = asyncHandler(async (req, res) => {
     const assetId = req.params.id;
@@ -357,14 +289,6 @@ const updateAsset = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: 'Asset not found' });
     }
 
-    const oldStatus = asset.status; // Capture old status before updates
-
-    // Generate detailed history entries
-    const historyEntries = generateMovableAssetUpdateHistory(asset.toObject(), updateData, user);
-    if (historyEntries.length > 0) {
-        asset.history.push(...historyEntries);
-    }
-
     // --- Handle File Uploads ---
     if (req.files && req.files.length > 0) {
         const attachmentTitles = updateData.attachmentTitles || [];
@@ -376,22 +300,11 @@ const updateAsset = asyncHandler(async (req, res) => {
         asset.history.push({ event: 'Updated', details: `${newAttachments.length} new file(s) attached.`, user: req.user.name });
     }
 
-
     // Apply updates
     asset.set(updateData);
 
-    // If status is set to Missing, clear any active slip assignments but keep the custodian for accountability.
-    if (updateData.status === 'Missing' && oldStatus !== 'Missing') {
-        asset.assignedPAR = null;
-        asset.assignedICS = null;
-        // Add a specific history entry for this action
-        asset.history.push({
-            event: 'Updated',
-            details: 'Active slip assignment (PAR/ICS) cleared due to asset being marked as Missing. Last custodian remains for accountability.',
-            user: user.name
-        });
-    }
-
+    // Attach user to the instance for the pre-save hook to use for history logging
+    asset._user = user;
 
     const updatedAsset = await asset.save({ runValidators: true });
     res.json(updatedAsset);
@@ -402,11 +315,8 @@ const deleteAsset = asyncHandler(async (req, res) => {
     if (asset) {
       // Perform a "soft delete" by changing the status, which is better for auditing.
       asset.status = 'Disposed';
-      asset.history.push({
-          event: 'Disposed',
-          details: 'Asset marked as disposed.',
-          user: req.user.name
-      });
+      // Attach user for history logging via pre-save hook
+      asset._user = req.user;
       await asset.save();
       res.json({ message: 'Asset marked as disposed' });
     } else {
@@ -471,17 +381,20 @@ const createBulkAssets = asyncHandler(async (req, res) => {
         const currentNumber = startingNumericPart + i;
         const newPropertyNumber = `${prefix}${String(currentNumber).padStart(numberStr.length, '0')}`;
         
+        // Manually add history here because `insertMany` does not trigger 'save' hooks.
         assetsToCreate.push({
             ...assetData,
             propertyNumber: newPropertyNumber,
             history: [{
                 event: 'Created',
                 details: `Asset created with Property Number ${newPropertyNumber}.`,
-                user: req.user.name // Use authenticated user
+                user: req.user.name
             }]
         });
     }
 
+    // Note: Mongoose 'pre-save' hooks do NOT run on `insertMany`.
+    // History is manually added above for each item before insertion.
     await Asset.insertMany(assetsToCreate);
     res.status(201).json({ message: `${quantity} assets created successfully.` });
 });
@@ -557,41 +470,15 @@ const updatePhysicalCount = asyncHandler(async (req, res) => {
             return; // or handle as an error
         }
 
-        const oldCondition = asset.condition;
-        const oldRemarks = asset.remarks;
-        const oldStatus = asset.status;
-
-        let details = [];
-        if (oldStatus !== update.status) {
-            details.push(`Status changed from "${oldStatus || 'N/A'}" to "${update.status}".`);
-        }
-        if (oldCondition !== update.condition) {
-            details.push(`Condition changed from "${oldCondition || 'N/A'}" to "${update.condition}".`);
-        }
-        if (oldRemarks !== update.remarks && update.remarks) {
-            details.push(`Remarks updated: "${update.remarks}".`);
-        }
-
         // Apply the updates to the asset document first
         asset.status = update.status;
         asset.condition = update.condition;
         asset.remarks = update.remarks;
 
-        // If status is set to Missing, clear any active slip assignments but keep the custodian for accountability.
-        if (update.status === 'Missing' && oldStatus !== 'Missing') {
-            asset.assignedPAR = null;
-            asset.assignedICS = null;
-            details.push('Slip assignment cleared due to Missing status. Custodian retained for accountability.');
-        }
+        // Attach user and custom event name for history logging via pre-save hook
+        asset._user = req.user;
+        asset._historyEvent = 'Physical Count';
 
-        // Only add to history if there were any changes.
-        if (details.length > 0) {
-            asset.history.push({
-                event: 'Physical Count',
-                details: details.join(' '),
-                user: req.user.name, // Use authenticated user
-            });
-        }
         return asset.save();
     });
 
@@ -677,6 +564,8 @@ const createPtrAndTransferAssets = asyncHandler(async (req, res) => {
             user: req.user ? req.user.name : 'System'
         };
 
+        // Note: Mongoose 'pre-save' hooks do not run on `updateMany`.
+        // History is pushed manually here for this bulk operation.
         const assetUpdateResult = await Asset.updateMany(
             { '_id': { $in: assetIds } },
             {

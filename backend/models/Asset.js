@@ -1,72 +1,116 @@
 const mongoose = require('mongoose');
 
-const attachmentSchema = new mongoose.Schema({
-    key: { type: String, required: true }, // The key/filename in the S3 bucket
-    title: { type: String, trim: true }, // User-defined title for the document
-    originalName: { type: String, required: true },
-    mimeType: { type: String, required: true }
-}, { _id: false });
-
-const SpecificationSchema = new mongoose.Schema({
-    key: { type: String, required: true },
-    value: { type: String, required: true },
-}, {_id: false});
-
-const HistorySchema = new mongoose.Schema({
-    date: {
-        type: Date,
-        default: Date.now
-    },
-    event: {
-        type: String,
-        required: true
-    },
+const historySchema = new mongoose.Schema({
+    event: { type: String, required: true },
     details: { type: String, required: true },
-    from: { type: String },
-    to: { type: String },
-    user: { type: String, required: true }
-}, { _id: false });
+    user: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+});
 
-const repairHistorySchema = new mongoose.Schema({
-    date: { type: Date, required: true },
-    natureOfRepair: { type: String, required: true },
-    amount: { type: Number, required: true }
-}, { _id: false });
+const assetSchema = new mongoose.Schema({
+    propertyNumber: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
+    category: { type: String, required: true },
+    acquisitionDate: { type: Date, required: true },
+    acquisitionCost: { type: Number, required: true },
+    fundSource: { type: String, required: true },
+    status: { type: String, default: 'In Use' },
+    usefulLife: { type: Number },
+    salvageValue: { type: Number, default: 0 },
+    impairmentLosses: { type: Number, default: 0 },
+    condition: { type: String },
+    remarks: { type: String },
+    office: { type: String }, // Top-level office, maybe for fund source or initial assignment
+    custodian: {
+        name: { type: String },
+        office: { type: String },
+        designation: { type: String }
+    },
+    specifications: [{
+        key: { type: String },
+        value: { type: String }
+    }],
+    attachments: [{
+        key: { type: String },
+        title: { type: String },
+        originalName: { type: String },
+        mimeType: { type: String }
+    }],
+    history: [historySchema],
+    repairHistory: [{
+        date: { type: Date, required: true },
+        natureOfRepair: { type: String, required: true },
+        amount: { type: Number, required: true }
+    }],
+    assignedPAR: { type: String },
+    assignedICS: { type: String },
+    physicalCountDetails: {
+        verified: { type: Boolean, default: false },
+        verifiedBy: { type: String },
+        verifiedAt: { type: Date }
+    }
+}, {
+    timestamps: true
+});
 
-const CustodianSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true },
-    designation: { type: String, trim: true },
-    office: { type: String, required: true, trim: true }
-}, {_id: false});
+// --- History Logging Middleware ---
+assetSchema.pre('save', async function (next) {
+    // If not new and no paths were modified, it's likely just an array push (e.g., repairHistory).
+    // The history for those events is handled manually in the controller.
+    if (!this.isNew && this.modifiedPaths().length === 0) {
+        return next();
+    }
+
+    const user = this._user || { name: 'System' };
+    const eventType = this._historyEvent || (this.isNew ? 'Created' : 'Updated');
+
+    const format = (value, field) => {
+        if (value instanceof Date) return new Date(value).toLocaleDateString('en-CA');
+        if (['acquisitionCost', 'salvageValue'].includes(field) && typeof value === 'number') {
+            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
+        }
+        if (value === null || value === undefined || value === '') return 'empty';
+        return `"${value}"`;
+    };
+
+    if (this.isNew) {
+        this.history.push({
+            event: 'Created',
+            details: `Asset created with Property Number ${this.propertyNumber}.`,
+            user: user.name
+        });
+    } else {
+        const original = await this.constructor.findById(this._id).lean();
+
+        for (const path of this.modifiedPaths()) {
+            const oldValue = original[path.split('.')[0]];
+            const newValue = this[path.split('.')[0]];
+
+            if (path === 'status') {
+                let details = `Status changed from ${format(original.status, 'status')} to ${format(this.status, 'status')}.`;
+                if (this.status === 'Missing' && original.status !== 'Missing') {
+                    this.assignedPAR = null; this.assignedICS = null;
+                    details += ' Slip assignment cleared. Custodian retained for accountability.';
+                }
+                this.history.push({ event: eventType, details, user: user.name });
+            } else if (path === 'custodian.name') {
+                this.history.push({ event: 'Transfer', details: `Custodian changed from ${format(original.custodian?.name)} to ${format(this.custodian?.name)}.`, user: user.name });
+            } else if (['description', 'category', 'fundSource', 'acquisitionDate', 'acquisitionCost', 'usefulLife', 'salvageValue', 'condition', 'remarks', 'office'].includes(path)) {
+                const fieldName = path.charAt(0).toUpperCase() + path.slice(1).replace(/([A-Z])/g, ' $1');
+                this.history.push({
+                    event: eventType,
+                    details: `${fieldName} changed from ${format(oldValue, path)} to ${format(newValue, path)}.`,
+                    user: user.name
+                });
+            }
+        }
+    }
+
+    // Clean up temporary properties so they aren't saved to the DB
+    this._user = undefined;
+    this._historyEvent = undefined;
+    next();
+});
 
 
-const AssetSchema = new mongoose.Schema({
-  propertyNumber: { type: String, required: true, unique: true },
-  description: { type: String, required: [true, 'Please add a description'] },
-  specifications: [SpecificationSchema],
-  category: { type: String, required: true },
-  fundSource: { type: String, required: [true, 'Please specify the fund source'] },
-  office: { type: String, required: [true, 'Please specify the office'] },
-  custodian: { type: CustodianSchema, required: true },
-  acquisitionDate: { type: Date, default: Date.now },
-  acquisitionCost: { type: Number, required: [true, 'Please add an acquisition cost'] },
-  usefulLife: { type: Number, required: [true, 'Please add the useful life in years'] },
-  salvageValue: { type: Number, default: 0 },
-  impairmentLosses: { type: Number, default: 0 },
-  status: { type: String, enum: ['In Use', 'In Storage', 'For Repair', 'Missing', 'Waste', 'Disposed'], default: 'In Use' },
-  assignedPAR: { type: String, default: null },
-  assignedICS: { type: String, default: null }, // NEW
-  maintenanceSchedule: { type: Date },
-  repairHistory: [repairHistorySchema],
-  condition: { type: String, trim: true },
-  remarks: { type: String, trim: true },
-  physicalCountDetails: {
-      verified: { type: Boolean, default: false },
-      verifiedBy: { type: String, default: null },
-      verifiedAt: { type: Date, default: null }
-  },
-  history: [HistorySchema],
-  attachments: [attachmentSchema]
-}, { timestamps: true });
-
-module.exports = mongoose.model('Asset', AssetSchema);
+module.exports = mongoose.model('Asset', assetSchema);
