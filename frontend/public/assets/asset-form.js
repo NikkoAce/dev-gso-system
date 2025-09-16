@@ -106,7 +106,7 @@ function initializeForm(user) {
         }
 
         if (asset.attachments) {
-            renderAttachments(asset.attachments);
+            renderAttachments({ existingAttachmentsContainer, existingAttachmentsList }, asset.attachments);
         }
     }
 
