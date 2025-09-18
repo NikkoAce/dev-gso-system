@@ -191,7 +191,7 @@ export function createUIManager() {
         tableBody.innerHTML = '';
 
         if (assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-base-content/70">No assets found for the selected criteria.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-base-content/70">No assets found for the selected criteria.</td></tr>`;
             return;
         }
 
@@ -224,6 +224,26 @@ export function createUIManager() {
             const assignedTo = isAssigned ? (asset.assignedPAR || asset.assignedICS) : '';
             const assignedIndicator = isAssigned ? `<span class="text-xs text-blue-600 block font-normal">Assigned: ${assignedTo}</span>` : '';
             const icon = statusIconMap[asset.status] || 'help-circle';
+
+            let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
+            if (asset.specifications && asset.specifications.length > 0) {
+                const specsHtml = asset.specifications.map(spec => 
+                    `<li><span class="font-semibold">${spec.key}:</span> ${spec.value}</li>`
+                ).join('');
+                fullDescription += `
+                    <div class="collapse collapse-arrow bg-base-200/50 mt-2 rounded-md text-xs">
+                        <input type="checkbox" class="min-h-0" /> 
+                        <div class="collapse-title min-h-0 py-1 px-3 font-medium">
+                            View Specifications
+                        </div>
+                        <div class="collapse-content px-3">
+                            <ul class="mt-1 space-y-1 list-disc list-inside">
+                                ${specsHtml}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
             const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm w-full gap-2">
                                     <i data-lucide="${icon}" class="h-3 w-3"></i>
                                     ${asset.status}
@@ -237,12 +257,13 @@ export function createUIManager() {
             tr.innerHTML = `
                 <td data-label="Select" class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" data-cost="${asset.acquisitionCost}"></td>
                 <td data-label="Property No."><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
-                <td data-label="Description">${asset.description}</td>
+                <td data-label="Description">${fullDescription}</td>
                 <td data-label="Category">${asset.category}</td>
                 <td data-label="Custodian">
                     <div>${asset.custodian.name}</div>
                     <div class="text-xs opacity-70">${asset.custodian.office}</div>
                 </td>
+                <td data-label="Date Acquired">${formatDate(asset.acquisitionDate)}</td>
                 <td data-label="Status">${statusBadge}</td>
                 <td data-label="Date Created">${formatDate(asset.createdAt)}</td>
                 <td data-label="Actions" class="text-center non-printable">

@@ -584,7 +584,7 @@ function initializeRegistryPage(user) {
 
     // --- DATA ORCHESTRATOR ---
     async function loadAssets() {
-        uiManager.setLoading(true, DOM.tableBody, { colSpan: 8 });
+        uiManager.setLoading(true, DOM.tableBody, { colSpan: 9 });
         DOM.selectAllCheckbox.checked = false;
         eventManager.updateSelectionState(); // Clear selection and update buttons
         try {
@@ -640,7 +640,7 @@ function initializeRegistryPage(user) {
             eventManager.updateSelectionState(); // Update buttons for the new view
         } catch (error) {
             console.error('Failed to load assets:', error);
-            DOM.tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+            DOM.tableBody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
         }
     }
 
