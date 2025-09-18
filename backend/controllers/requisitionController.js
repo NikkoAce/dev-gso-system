@@ -102,6 +102,7 @@ const getAllRequisitions = asyncHandler(async (req, res) => {
     const [docs, totalDocs] = await Promise.all([
         Requisition.find(query)
             .populate('items.stockItem', 'stockNumber unitOfMeasure')
+            .populate('receivedByUser', 'name office')
             .populate('requestingUser', 'name office')
             .sort(sortOptions)
             .skip(skip)
@@ -120,7 +121,8 @@ const getRequisitionById = async (req, res) => {
     try {
         const requisition = await Requisition.findById(req.params.id)
             .populate('items.stockItem', 'stockNumber unitOfMeasure quantity')
-            .populate('requestingUser', 'name office');
+            .populate('requestingUser', 'name office')
+            .populate('receivedByUser', 'name office');
 
         if (!requisition) {
             return res.status(404).json({ message: 'Requisition not found' });
@@ -198,6 +200,7 @@ const getMyOfficeRequisitions = asyncHandler(async (req, res) => {
     const requisitions = await Requisition.find({ requestingOffice: req.user.office })
         .populate('items.stockItem')
         .populate('requestingUser')
+        .populate('receivedByUser', 'name office')
         .sort({ dateRequested: -1 });
 
     res.json(requisitions);
@@ -211,7 +214,8 @@ const getMyOfficeRequisitions = asyncHandler(async (req, res) => {
 const getMyOfficeRequisitionById = asyncHandler(async (req, res) => {
     const requisition = await Requisition.findById(req.params.id)
         .populate('items.stockItem', 'stockNumber unitOfMeasure quantity')
-        .populate('requestingUser', 'name office');
+        .populate('requestingUser', 'name office')
+        .populate('receivedByUser', 'name office');
 
     if (!requisition) {
         res.status(404);
@@ -227,6 +231,38 @@ const getMyOfficeRequisitionById = asyncHandler(async (req, res) => {
     res.json(requisition);
 });
 
+/**
+ * @desc    Allows an end-user to mark an 'Issued' requisition as 'Received'.
+ * @route   PUT /api/requisitions/my-office/:id/receive
+ * @access  Private (Requires 'requisition:read:own_office')
+ */
+const markRequisitionAsReceived = asyncHandler(async (req, res) => {
+    const requisition = await Requisition.findById(req.params.id);
+
+    if (!requisition) {
+        res.status(404);
+        throw new Error('Requisition not found');
+    }
+
+    // Security Check: Ensure the user belongs to the office that made the request.
+    if (requisition.requestingOffice !== req.user.office) {
+        res.status(403);
+        throw new Error('Forbidden: You can only receive requisitions for your own office.');
+    }
+
+    if (requisition.status !== 'Issued') {
+        res.status(400);
+        throw new Error(`Cannot mark as received. Requisition status is "${requisition.status}", not "Issued".`);
+    }
+
+    requisition.status = 'Received';
+    requisition.receivedByUser = req.user.id;
+    requisition.dateReceivedByEndUser = new Date();
+
+    const updatedRequisition = await requisition.save();
+    res.json(updatedRequisition);
+});
+
 module.exports = {
     createRequisition,
     getAllRequisitions,
@@ -234,4 +270,5 @@ module.exports = {
     updateRequisition,
     getMyOfficeRequisitions,
     getMyOfficeRequisitionById,
+    markRequisitionAsReceived,
 };

@@ -123,13 +123,13 @@ function initializeRisPage(user) {
                             <td class="text-left font-bold p-1">Signature:</td><td class="border-b border-black h-8"></td><td class="border-b border-black h-8"></td><td class="border-b border-black h-8"></td><td class="border-b border-black h-8"></td>
                         </tr>
                         <tr class="text-center">
-                            <td class="text-left font-bold p-1">Printed Name:</td><td class="border-b border-black p-1 font-bold uppercase">${req.requestingUser?.name || 'N/A'}</td><td class="border-b border-black p-1 font-bold uppercase">MAYOR</td><td class="border-b border-black p-1 font-bold uppercase">GSO</td><td class="border-b border-black p-1"></td>
+                            <td class="text-left font-bold p-1">Printed Name:</td><td class="border-b border-black p-1 font-bold uppercase">${req.requestingUser?.name || 'N/A'}</td><td class="border-b border-black p-1 font-bold uppercase">MAYOR</td><td class="border-b border-black p-1 font-bold uppercase">GSO</td><td class="border-b border-black p-1 font-bold uppercase">${req.receivedByUser?.name || ''}</td>
                         </tr>
                         <tr class="text-center">
-                            <td class="text-left font-bold p-1">Designation:</td><td class="border-b border-black p-1">${req.requestingUser?.office || 'N/A'}</td><td class="border-b border-black p-1">Municipal Mayor</td><td class="border-b border-black p-1">General Services Officer</td><td class="border-b border-black p-1"></td>
+                            <td class="text-left font-bold p-1">Designation:</td><td class="border-b border-black p-1">${req.requestingUser?.office || 'N/A'}</td><td class="border-b border-black p-1">Municipal Mayor</td><td class="border-b border-black p-1">General Services Officer</td><td class="border-b border-black p-1">${req.receivedByUser?.office || ''}</td>
                         </tr>
                         <tr class="text-center">
-                            <td class="text-left font-bold p-1">Date:</td><td class="border-b border-black p-1">${formatDate(req.dateRequested)}</td><td class="border-b border-black p-1"></td><td class="border-b border-black p-1"></td><td class="border-b border-black p-1"></td>
+                            <td class="text-left font-bold p-1">Date:</td><td class="border-b border-black p-1">${formatDate(req.dateRequested)}</td><td class="border-b border-black p-1"></td><td class="border-b border-black p-1"></td><td class="border-b border-black p-1">${req.dateReceivedByEndUser ? formatDate(req.dateReceivedByEndUser) : ''}</td>
                         </tr>
                     </tbody>
                 </table>

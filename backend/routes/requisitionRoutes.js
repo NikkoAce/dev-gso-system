@@ -7,7 +7,8 @@ const {
     getRequisitionById,
     updateRequisition,
     getMyOfficeRequisitions,
-    getMyOfficeRequisitionById
+    getMyOfficeRequisitionById,
+    markRequisitionAsReceived
 } = require('../controllers/requisitionController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const PERMISSIONS = require('../config/permissions.js');
@@ -17,6 +18,9 @@ router.route('/my-office').get(protect, checkPermission(PERMISSIONS.REQUISITION_
 
 // This new route is for fetching a single requisition belonging to the user's office.
 router.route('/my-office/:id').get(protect, checkPermission(PERMISSIONS.REQUISITION_READ_OWN_OFFICE), getMyOfficeRequisitionById);
+
+// NEW: Route for an end-user to mark a requisition as received.
+router.route('/my-office/:id/receive').put(protect, checkPermission(PERMISSIONS.REQUISITION_READ_OWN_OFFICE), markRequisitionAsReceived);
 
 router.route('/')
     .post(protect, checkPermission(PERMISSIONS.REQUISITION_CREATE), createRequisition)

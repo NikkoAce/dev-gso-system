@@ -37,7 +37,8 @@ function initializeGsoRequisitionsPage(user) {
     const statusMap = {
         'Pending': 'badge-warning',
         'For Availability Check': 'badge-primary',
-        'Issued': 'badge-success',
+        'Issued': 'badge-info',
+        'Received': 'badge-success',
         'Rejected': 'badge-error',
         'Cancelled': 'badge-ghost'
     };
@@ -177,14 +178,23 @@ function initializeGsoRequisitionsPage(user) {
             `;
         } else {
             let printButtonHTML = '';
-            if (req.status === 'Issued') {
+            if (req.status === 'Issued' || req.status === 'Received') {
                 printButtonHTML = `<a href="../slips/ris-page.html?id=${req._id}" target="_blank" class="btn btn-info">
                     <i data-lucide="printer" class="h-4 w-4"></i> Print RIS (Appendix 48)
                 </a>`;
             }
+
+            let receivedByInfo = '';
+            if (req.status === 'Received') {
+                receivedByInfo = `<p class="text-sm text-success font-semibold">Received by ${req.receivedByUser?.name || 'N/A'} on ${formatDate(req.dateReceivedByEndUser)}.</p>`;
+            }
+
             footerHTML = `
                 <div class="flex justify-between items-center pt-4 border-t">
-                    <p class="font-semibold text-base-content/70">This requisition is already ${req.status} and cannot be modified.</p>
+                    <div class="flex flex-col gap-1">
+                        <p class="font-semibold text-base-content/70">This requisition is ${req.status} and cannot be modified.</p>
+                        ${receivedByInfo}
+                    </div>
                     ${printButtonHTML}
                 </div>
                 ${req.remarks ? `<div class="mt-2 p-2 bg-base-200 rounded-box text-sm"><strong>Remarks:</strong> ${req.remarks}</div>` : ''}

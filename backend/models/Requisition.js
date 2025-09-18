@@ -47,11 +47,19 @@ const RequisitionSchema = new mongoose.Schema({
     items: [requisitionItemSchema],
     status: {
         type: String,
-        enum: ['For Availability Check', 'Pending', 'Approved', 'Issued', 'Rejected', 'Cancelled'],
+        enum: ['For Availability Check', 'Pending', 'Approved', 'Issued', 'Received', 'Rejected', 'Cancelled'],
         default: 'For Availability Check'
     },
     remarks: String,
     dateRequested: { type: Date, default: Date.now },
+    // NEW: Fields to track when the end-user receives the items
+    receivedByUser: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    dateReceivedByEndUser: {
+        type: Date
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Requisition', RequisitionSchema);
