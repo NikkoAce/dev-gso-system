@@ -137,20 +137,24 @@ function initializeRequisitionPage(user) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
 
+        // The backend gets user and office info from the auth token, so we only need to send the purpose and items.
         const payload = {
             purpose,
-            requestingOffice: user.office,
-            requestingUser: { name: user.name, office: user.office },
             items: requestedItems.map(({ stockItem, description, quantityRequested }) => ({ stockItem, description, quantityRequested }))
         };
 
         try {
-            await fetchWithAuth(REQ_API_ENDPOINT, {
+            const savedRequisition = await fetchWithAuth(REQ_API_ENDPOINT, {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
 
-            alert('Requisition submitted successfully!');
+            // After successful submission, ask the user if they want to print the official form.
+            if (confirm('Requisition submitted successfully! Do you want to print the Supplies Availability Inquiry (SAI) form?')) {
+                window.open(`../slips/sai-page.html?id=${savedRequisition._id}`, '_blank');
+            }
+
+            // Reset the form for the next requisition.
             form.reset();
             requestedItems = [];
             renderRequestedItems();

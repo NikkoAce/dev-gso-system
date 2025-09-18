@@ -162,25 +162,25 @@ function initializeGsoRequisitionsPage(user) {
                     <label for="remarks-input" class="label"><span class="label-text">Remarks</span></label>
                     <textarea id="remarks-input" rows="2" class="textarea textarea-bordered" placeholder="Add remarks for availability confirmation..."></textarea>
                 </div>
-                <div class="modal-action mt-4">
-                    <button id="close-modal-btn" class="btn">Cancel</button>
-                    <button id="reject-btn" class="btn btn-error" data-id="${req._id}">Mark Unavailable</button>
-                    <button id="confirm-availability-btn" class="btn btn-accent" data-id="${req._id}">Confirm Availability</button>
+                <div class="modal-action mt-4 justify-between">
+                    <div>
+                        <a href="../slips/sai-page.html?id=${req._id}" target="_blank" class="btn btn-info btn-sm">
+                            <i data-lucide="printer" class="h-4 w-4"></i> Print SAI
+                        </a>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="close-modal-btn" class="btn">Cancel</button>
+                        <button id="reject-btn" class="btn btn-error" data-id="${req._id}">Mark Unavailable</button>
+                        <button id="confirm-availability-btn" class="btn btn-accent" data-id="${req._id}">Confirm Availability</button>
+                    </div>
                 </div>
             `;
         } else {
             let printButtonHTML = '';
             if (req.status === 'Issued') {
-                printButtonHTML = `
-                <div class="flex flex-wrap gap-2">
-                    <a href="../slips/ris-page.html?id=${req._id}" target="_blank" class="btn btn-info btn-sm">
-                        <i data-lucide="printer" class="h-4 w-4"></i> Print RIS (Internal)
-                    </a>
-                    <a href="../slips/appendix48-page.html?id=${req._id}" target="_blank" class="btn btn-secondary btn-sm">
-                        <i data-lucide="printer" class="h-4 w-4"></i> Print Appendix 48 (COA)
-                    </a>
-                </div>
-                `;
+                printButtonHTML = `<a href="../slips/ris-page.html?id=${req._id}" target="_blank" class="btn btn-info">
+                    <i data-lucide="printer" class="h-4 w-4"></i> Print RIS (Appendix 48)
+                </a>`;
             }
             footerHTML = `
                 <div class="flex justify-between items-center pt-4 border-t">

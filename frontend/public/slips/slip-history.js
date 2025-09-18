@@ -83,14 +83,7 @@ function initializeSlipHistoryPage(user) {
                         <div class="flex justify-center items-center gap-1">`;
 
             if (slip.slipType === 'RIS') {
-                actionButtons = `
-                    <div class="dropdown dropdown-end">
-                        <label tabindex="0" class="btn btn-ghost btn-xs" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></label>
-                        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a href="../slips/ris-page.html?id=${slip._id}" target="_blank">RIS (Internal)</a></li>
-                            <li><a href="../slips/appendix48-page.html?id=${slip._id}" target="_blank">Appendix 48 (COA)</a></li>
-                        </ul>
-                    </div>`;
+                actionButtons = `<a href="../slips/ris-page.html?id=${slip._id}" target="_blank" class="btn btn-ghost btn-xs" title="Reprint RIS"><i data-lucide="printer" class="h-4 w-4"></i></a>`;
             } else {
                 actionButtons = `<button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>`;
             }
