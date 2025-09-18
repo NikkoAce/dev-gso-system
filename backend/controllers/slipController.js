@@ -4,6 +4,7 @@ const ICS = require('../models/ICS');
 const PTR = require('../models/PTR');
 const Appendix68 = require('../models/Appendix68');
 const IIRUP = require('../models/IIRUP');
+const Requisition = require('../models/Requisition');
 
 const getSlips = asyncHandler(async (req, res) => {
     // Since this is an admin-only page, we fetch all slips.

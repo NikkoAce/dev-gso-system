@@ -14,7 +14,8 @@ function initializeMyRequisitionsPage(user) {
 
     const statusMap = {
         'Pending': 'badge-warning',
-        'Approved': 'badge-info',
+        'For Availability Check': 'badge-primary',
+        // 'Approved' is a valid status but is skipped in the GSO workflow for now.
         'Issued': 'badge-success',
         'Rejected': 'badge-error',
         'Cancelled': 'badge-ghost'
@@ -24,19 +25,19 @@ function initializeMyRequisitionsPage(user) {
 
     async function fetchAndRenderMyRequisitions() {
         try {
-            requisitionsList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-base-content/70">Loading your requisitions...</td></tr>`;
+            requisitionsList.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-base-content/70">Loading your requisitions...</td></tr>`;
             const myRequisitions = await fetchWithAuth(API_ENDPOINT);
             renderTable(myRequisitions);
         } catch (error) {
             console.error(error);
-            requisitionsList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-error">Error loading your requisitions.</td></tr>`;
+            requisitionsList.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-error">Error loading your requisitions.</td></tr>`;
         }
     }
 
     function renderTable(requisitions) {
         requisitionsList.innerHTML = '';
         if (requisitions.length === 0) {
-            requisitionsList.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-base-content/70">You have not made any requisitions yet.</td></tr>`;
+            requisitionsList.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-base-content/70">You have not made any requisitions yet.</td></tr>`;
             return;
         }
 
@@ -49,9 +50,15 @@ function initializeMyRequisitionsPage(user) {
                 <td data-label="Status" class="text-center">
                     <span class="badge ${statusMap[req.status] || 'badge-ghost'} badge-sm">${req.status}</span>
                 </td>
+                <td data-label="Actions" class="text-center">
+                    <a href="../slips/sai-page.html?id=${req._id}" target="_blank" class="btn btn-ghost btn-xs" title="Print SAI">
+                        <i data-lucide="printer" class="h-4 w-4"></i>
+                    </a>
+                </td>
             `;
             requisitionsList.appendChild(tr);
         });
+        lucide.createIcons();
     }
 
     fetchAndRenderMyRequisitions();
