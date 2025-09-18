@@ -70,6 +70,7 @@ function initializeSlipHistoryPage(user) {
             const typeBadgeClass = slip.slipType === 'PAR' ? 'badge-success' :
                                    slip.slipType === 'ICS' ? 'badge-info' :
                                    'badge-warning'; // For PTR
+            let actionButtons = '';
 
             rowsHTML += `
                 <tr>
@@ -79,9 +80,23 @@ function initializeSlipHistoryPage(user) {
                     <td data-label="Items">${slip.assets.length}</td>
                     <td data-label="Date">${formatDate(slip.issuedDate)}</td>
                     <td data-label="Actions" class="text-center non-printable">
-                        <div class="flex justify-center items-center gap-1">
-                            <button class="view-slip-btn btn btn-ghost btn-xs" data-id="${slip._id}" title="View Details"><i data-lucide="eye" class="h-4 w-4"></i></button>
-                            <button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>
+                        <div class="flex justify-center items-center gap-1">`;
+
+            if (slip.slipType === 'RIS') {
+                actionButtons = `
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-xs" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></label>
+                        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a href="../slips/ris-page.html?id=${slip._id}" target="_blank">RIS (Internal)</a></li>
+                            <li><a href="../slips/appendix48-page.html?id=${slip._id}" target="_blank">Appendix 48 (COA)</a></li>
+                        </ul>
+                    </div>`;
+            } else {
+                actionButtons = `<button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>`;
+            }
+
+            rowsHTML += `<button class="view-slip-btn btn btn-ghost btn-xs" data-id="${slip._id}" title="View Details"><i data-lucide="eye" class="h-4 w-4"></i></button>
+                            ${actionButtons}
                         </div>
                     </td>
                 </tr>
@@ -168,22 +183,45 @@ function initializeSlipHistoryPage(user) {
         }
 
         const assetsTableBody = document.getElementById('modal-slip-assets-table');
+        const assetsTableHeader = assetsTableBody.previousElementSibling; // Get the <thead>
         assetsTableBody.innerHTML = '';
-        slip.assets.forEach(asset => {
-            let desc = asset.description;
-            if(asset.specifications && asset.specifications.length > 0) {
-                const specs = asset.specifications.map(s => `${s.key}: ${s.value}`).join(', ');
-                desc += ` (${specs})`;
-            }
-            const row = `
+
+        if (slip.slipType === 'RIS') {
+            // Special rendering for Requisition Items
+            assetsTableHeader.innerHTML = `
                 <tr>
-                    <td>${asset.propertyNumber}</td>
-                    <td>${desc}</td>
-                    <td class="text-right">${formatCurrency(asset.acquisitionCost)}</td>
+                    <th>Stock No.</th>
+                    <th>Description</th>
+                    <th class="text-center">Qty Requested</th>
+                    <th class="text-center">Qty Issued</th>
                 </tr>
             `;
-            assetsTableBody.innerHTML += row;
-        });
+            slip.items.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.stockItem?.stockNumber || 'N/A'}</td>
+                        <td>${item.description}</td>
+                        <td class="text-center">${item.quantityRequested}</td>
+                        <td class="text-center">${item.quantityIssued || 0}</td>
+                    </tr>
+                `;
+                assetsTableBody.innerHTML += row;
+            });
+        } else {
+            // Original rendering for Asset slips
+            assetsTableHeader.innerHTML = `
+                <tr>
+                    <th>Property No.</th>
+                    <th>Description</th>
+                    <th class="text-right">Acquisition Cost</th>
+                </tr>
+            `;
+            slip.assets.forEach(asset => {
+                const desc = asset.specifications?.length > 0 ? `${asset.description} (${asset.specifications.map(s => `${s.key}: ${s.value}`).join(', ')})` : asset.description;
+                const row = `<tr><td>${asset.propertyNumber}</td><td>${desc}</td><td class="text-right">${formatCurrency(asset.acquisitionCost)}</td></tr>`;
+                assetsTableBody.innerHTML += row;
+            });
+        }
 
         slipDetailsModal.showModal();
     }
