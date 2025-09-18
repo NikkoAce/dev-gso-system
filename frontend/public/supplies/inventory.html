@@ -43,7 +43,12 @@
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-6xl mx-auto">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Supplies Inventory</h1>
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800">Manage Supplies Inventory</h1>
+                        <button id="open-receive-stock-modal-btn" class="btn btn-accent">
+                            <i data-lucide="package-plus"></i> Receive Stock
+                        </button>
+                    </div>
 
                     <div class="card bg-base-100 border mb-8">
                         <form id="stock-item-form" class="card-body">
@@ -111,6 +116,64 @@
             </main>
         </div>
     </div>
+
+    <!-- Receive Stock Modal -->
+    <dialog id="receive-stock-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl">
+            <form id="receive-stock-form">
+                <h3 class="font-bold text-lg mb-4">Create Receiving Report</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="form-control">
+                        <div class="label"><span class="label-text">Supplier *</span></div>
+                        <input type="text" id="supplier-input" placeholder="e.g., National Bookstore" class="input input-bordered w-full" required>
+                    </label>
+                    <label class="form-control">
+                        <div class="label"><span class="label-text">Date Received *</span></div>
+                        <input type="date" id="date-received-input" class="input input-bordered w-full" required>
+                    </label>
+                </div>
+
+                <div class="divider">Add Items</div>
+                <div class="flex flex-col md:flex-row items-end gap-2 p-4 bg-base-200 rounded-box">
+                    <label class="form-control flex-grow w-full">
+                        <div class="label"><span class="label-text">Select Item</span></div>
+                        <select id="stock-item-select-for-receiving" class="select select-bordered font-normal">
+                            <option value="">Loading items...</option>
+                        </select>
+                    </label>
+                    <label class="form-control w-full md:w-28">
+                        <div class="label"><span class="label-text">Qty Received</span></div>
+                        <input type="number" id="received-quantity-input" value="1" min="1" class="input input-bordered">
+                    </label>
+                    <label class="form-control w-full md:w-32">
+                        <div class="label"><span class="label-text">Unit Cost (₱)</span></div>
+                        <input type="number" id="unit-cost-input" value="0" min="0" step="0.01" class="input input-bordered">
+                    </label>
+                    <div class="w-full md:w-auto">
+                        <button type="button" id="add-received-item-btn" class="btn btn-primary w-full">
+                            <i data-lucide="plus" class="h-5 w-5"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="divider">Items in this Report</div>
+                <div class="overflow-x-auto max-h-60">
+                    <table class="table table-zebra w-full table-sm">
+                        <thead><tr><th>Description</th><th>Qty</th><th>Unit Cost</th><th>Total</th><th></th></tr></thead>
+                        <tbody id="received-items-list">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">No items added yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-action mt-6">
+                    <button type="button" id="cancel-receive-stock-btn" class="btn">Cancel</button>
+                    <button type="submit" id="submit-receive-report-btn" class="btn btn-success">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
     <script src="../js/layout.js"></script>
     <script type="module" src="./inventory.js"></script>
 </body>

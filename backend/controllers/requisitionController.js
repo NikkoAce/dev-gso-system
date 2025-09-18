@@ -76,7 +76,8 @@ const getAllRequisitions = async (req, res) => {
 const getRequisitionById = async (req, res) => {
     try {
         const requisition = await Requisition.findById(req.params.id)
-            .populate('items.stockItem', 'stockNumber unitOfMeasure quantity');
+            .populate('items.stockItem', 'stockNumber unitOfMeasure quantity')
+            .populate('requestingUser', 'name office');
 
         if (!requisition) {
             return res.status(404).json({ message: 'Requisition not found' });

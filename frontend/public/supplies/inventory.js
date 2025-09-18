@@ -11,6 +11,7 @@ createAuthenticatedPage({
 function initializeInventoryPage(user) {
     const API_ENDPOINT = 'stock-items';
     let allStockItems = [];
+    let receivedItems = []; // For the new modal
 
     // DOM Cache
     const itemList = document.getElementById('stock-item-list');
@@ -25,10 +26,23 @@ function initializeInventoryPage(user) {
     const formTitle = document.getElementById('stock-item-form-title');
     const submitBtn = document.getElementById('submit-stock-item-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
+    // New Modal DOM Cache
+    const openReceiveModalBtn = document.getElementById('open-receive-stock-modal-btn');
+    const receiveStockModal = document.getElementById('receive-stock-modal');
+    const receiveStockForm = document.getElementById('receive-stock-form');
+    const cancelReceiveBtn = document.getElementById('cancel-receive-stock-btn');
+    const supplierInput = document.getElementById('supplier-input');
+    const dateReceivedInput = document.getElementById('date-received-input');
+    const itemSelectForReceiving = document.getElementById('stock-item-select-for-receiving');
+    const receivedQuantityInput = document.getElementById('received-quantity-input');
+    const unitCostInput = document.getElementById('unit-cost-input');
+    const addReceivedItemBtn = document.getElementById('add-received-item-btn');
+    const receivedItemsList = document.getElementById('received-items-list');
 
     // --- DATA FETCHING & RENDERING ---
     async function fetchAndRenderItems() {
         try {
+            itemList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Loading...</td></tr>`;
             allStockItems = await fetchWithAuth(API_ENDPOINT);
             renderItemList();
         } catch (error) {
@@ -92,6 +106,82 @@ function initializeInventoryPage(user) {
         }
     }
 
+    // --- RECEIVE STOCK MODAL LOGIC ---
+    function openReceiveModal() {
+        receiveStockForm.reset();
+        receivedItems = [];
+        renderReceivedItemsTable();
+        populateItemSelectForReceiving();
+        dateReceivedInput.value = new Date().toISOString().split('T')[0];
+        receiveStockModal.showModal();
+    }
+
+    function closeReceiveModal() {
+        receiveStockModal.close();
+    }
+
+    function populateItemSelectForReceiving() {
+        itemSelectForReceiving.innerHTML = '<option value="">-- Select an item --</option>';
+        allStockItems.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item._id;
+            option.textContent = `${item.description} (${item.stockNumber})`;
+            itemSelectForReceiving.appendChild(option);
+        });
+    }
+
+    function handleAddReceivedItem() {
+        const stockItemId = itemSelectForReceiving.value;
+        const quantity = parseInt(receivedQuantityInput.value, 10);
+        const unitCost = parseFloat(unitCostInput.value);
+
+        if (!stockItemId || !quantity || quantity < 1 || unitCost < 0) {
+            alert('Please select an item and enter a valid quantity and unit cost.');
+            return;
+        }
+
+        const stockItem = allStockItems.find(i => i._id === stockItemId);
+        if (receivedItems.some(i => i.stockItem === stockItemId)) {
+            alert('This item is already in the report. You can remove it and add it again with a new quantity.');
+            return;
+        }
+
+        receivedItems.push({
+            stockItem: stockItem._id,
+            description: stockItem.description,
+            quantityReceived: quantity,
+            unitCost: unitCost
+        });
+
+        renderReceivedItemsTable();
+        itemSelectForReceiving.value = '';
+        receivedQuantityInput.value = '1';
+        unitCostInput.value = '0';
+    }
+
+    function renderReceivedItemsTable() {
+        receivedItemsList.innerHTML = '';
+        if (receivedItems.length === 0) {
+            receivedItemsList.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No items added yet.</td></tr>`;
+            return;
+        }
+        receivedItems.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            const totalCost = item.quantityReceived * item.unitCost;
+            tr.innerHTML = `
+                <td>${item.description}</td>
+                <td class="text-center">${item.quantityReceived}</td>
+                <td class="text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(item.unitCost)}</td>
+                <td class="text-right font-semibold">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalCost)}</td>
+                <td class="text-center">
+                    <button type="button" class="remove-received-item-btn btn btn-ghost btn-xs text-red-500" data-index="${index}"><i data-lucide="x"></i></button>
+                </td>
+            `;
+            receivedItemsList.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
     // --- EVENT LISTENERS ---
     itemForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -140,6 +230,46 @@ function initializeInventoryPage(user) {
                     alert(`Error: ${error.message}`);
                 }
             }
+        }
+    });
+
+    openReceiveModalBtn.addEventListener('click', openReceiveModal);
+    cancelReceiveBtn.addEventListener('click', closeReceiveModal);
+    addReceivedItemBtn.addEventListener('click', handleAddReceivedItem);
+
+    receivedItemsList.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove-received-item-btn');
+        if (removeBtn) {
+            const index = parseInt(removeBtn.dataset.index, 10);
+            receivedItems.splice(index, 1);
+            renderReceivedItemsTable();
+        }
+    });
+
+    receiveStockForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (receivedItems.length === 0) {
+            alert('Please add at least one item to the report.');
+            return;
+        }
+
+        const payload = {
+            supplier: supplierInput.value,
+            dateReceived: dateReceivedInput.value,
+            items: receivedItems,
+            remarks: '' // Can add a remarks field later if needed
+        };
+
+        try {
+            await fetchWithAuth('receiving-reports', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            closeReceiveModal();
+            alert('Stock received and inventory updated successfully!');
+            await fetchAndRenderItems();
+        } catch (error) {
+            alert(`Error submitting report: ${error.message}`);
         }
     });
 
