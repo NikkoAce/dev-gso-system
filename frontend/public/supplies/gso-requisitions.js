@@ -144,8 +144,8 @@ function initializeGsoRequisitionsPage(user) {
         modalContent.innerHTML = `
             <div class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div><strong>Requesting Office:</strong> ${req.requestingOffice}</div>
-                    <div><strong>Requested By:</strong> ${req.requestingUser.name}</div>
+                    <div><strong>Requesting Office:</strong> ${req.requestingOffice || 'N/A'}</div>
+                    <div><strong>Requested By:</strong> ${req.requestingUser?.name || 'N/A'}</div>
                     <div><strong>Date Requested:</strong> ${formatDate(req.dateRequested)}</div>
                 </div>
                 <p class="text-sm"><strong>Purpose:</strong> ${req.purpose}</p>
