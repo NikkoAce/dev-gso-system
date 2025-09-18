@@ -21,7 +21,7 @@ async function getNextReportNumber(session) {
 // @access  Private (stock:manage)
 const createReceivingReport = asyncHandler(async (req, res) => {
     const { supplier, dateReceived, items, remarks } = req.body;
-    const receivedBy = req.user._id;
+    const receivedBy = req.user.id; // Correctly get the user ID from the token payload
 
     if (!supplier || !dateReceived || !items || items.length === 0) {
         res.status(400);

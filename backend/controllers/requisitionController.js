@@ -29,31 +29,28 @@ async function getNextRisNumber() {
 // @desc    Create a new requisition
 // @route   POST /api/requisitions
 // @access  Private
-const createRequisition = async (req, res) => {
+const createRequisition = asyncHandler(async (req, res) => {
     const { purpose, items } = req.body;
-    const { name, office, _id } = req.user; // Get user info from the token via middleware
+    // Get user info from the token via middleware. The 'id' property holds the user's MongoDB _id.
+    const { office, id } = req.user; 
 
     if (!items || items.length === 0) {
-        return res.status(400).json({ message: 'Requisition must have at least one item.' });
+        res.status(400);
+        throw new Error('Requisition must have at least one item.');
     }
 
-    try {
-        const risNumber = await getNextRisNumber();
-        const newRequisition = new Requisition({
-            risNumber,
-            purpose,
-            requestingOffice: office,
-            requestingUser: _id,
-            items,
-        });
+    const risNumber = await getNextRisNumber();
+    const newRequisition = new Requisition({
+        risNumber,
+        purpose,
+        requestingOffice: office,
+        requestingUser: id, // Use the correct 'id' from the token payload
+        items,
+    });
 
-        const savedRequisition = await newRequisition.save();
-        res.status(201).json(savedRequisition);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Server Error: ' + err.message });
-    }
-};
+    const savedRequisition = await newRequisition.save();
+    res.status(201).json(savedRequisition);
+});
 
 // @desc    Get all requisitions
 // @route   GET /api/requisitions
