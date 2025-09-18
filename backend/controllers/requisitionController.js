@@ -55,17 +55,13 @@ const createRequisition = asyncHandler(async (req, res) => {
 // @desc    Get all requisitions
 // @route   GET /api/requisitions
 // @access  Private
-const getAllRequisitions = async (req, res) => {
-    try {
-        const requisitions = await Requisition.find()
-            .populate('items.stockItem', 'stockNumber unitOfMeasure')
-            .sort({ dateRequested: -1 });
-        res.json(requisitions);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-};
+const getAllRequisitions = asyncHandler(async (req, res) => {
+    const requisitions = await Requisition.find()
+        .populate('items.stockItem', 'stockNumber unitOfMeasure')
+        .populate('requestingUser', 'name office') // Populate the user's name and office
+        .sort({ dateRequested: -1 });
+    res.json(requisitions);
+});
 
 // @desc    Get a single requisition by ID
 // @route   GET /api/requisitions/:id
