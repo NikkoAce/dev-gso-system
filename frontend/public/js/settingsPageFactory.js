@@ -90,8 +90,7 @@ export function createSettingsPage(config) {
         cancelBtn.classList.add('hidden');
     }
 
-    function populateFormForEdit(itemId) {
-        const item = currentPageItems.find(i => i._id === itemId);
+    function populateFormForEdit(item) {
         if (item) {
             idInput.value = item._id;
             config.form.fields.forEach(field => {
