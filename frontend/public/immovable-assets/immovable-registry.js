@@ -101,7 +101,7 @@ function initializeRegistryPage(user) {
                 <td data-label="Actions" class="text-center non-printable">
                      <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
-                        <ul tabindex="0" class="dropdown-content z-[2] menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <ul tabindex="0" class="dropdown-content z-[50] menu p-2 shadow bg-base-100 rounded-box w-52">
                             ${editLink}
                             <li><a href="./property-card.html?id=${asset._id}" class="flex items-center gap-2"><i data-lucide="book-user" class="h-4 w-4"></i> Property Card (History)</a></li>
                             ${ledgerCardLink}

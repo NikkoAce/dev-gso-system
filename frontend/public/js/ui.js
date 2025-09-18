@@ -269,7 +269,7 @@ export function createUIManager() {
                 <td data-label="Actions" class="text-center non-printable">
                     <div class="dropdown dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-xs m-1"><i data-lucide="more-vertical"></i></label>
-                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <ul tabindex="0" class="dropdown-content z-[50] menu p-2 shadow bg-base-100 rounded-box w-52">
                             ${editButton}
                             <li><a href="../slips/movable-property-card.html?id=${asset._id}" class="property-card-btn flex items-center"><i data-lucide="book-user"></i> Property Card (History)</a></li>
                             <li><a href="../slips/movable-ledger-card.html?id=${asset._id}" class="ledger-card-btn flex items-center"><i data-lucide="book-down"></i> Ledger Card (Depreciation)</a></li>
