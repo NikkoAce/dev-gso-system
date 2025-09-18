@@ -203,10 +203,35 @@ const getMyOfficeRequisitions = asyncHandler(async (req, res) => {
     res.json(requisitions);
 });
 
+/**
+ * @desc    Get a single requisition by ID, but only if it belongs to the user's office.
+ * @route   GET /api/requisitions/my-office/:id
+ * @access  Private (Requires 'requisition:read:own_office')
+ */
+const getMyOfficeRequisitionById = asyncHandler(async (req, res) => {
+    const requisition = await Requisition.findById(req.params.id)
+        .populate('items.stockItem', 'stockNumber unitOfMeasure quantity')
+        .populate('requestingUser', 'name office');
+
+    if (!requisition) {
+        res.status(404);
+        throw new Error('Requisition not found');
+    }
+
+    // Security Check: Ensure the requisition belongs to the user's office
+    if (requisition.requestingOffice !== req.user.office) {
+        res.status(403);
+        throw new Error('Forbidden: You do not have permission to view this requisition.');
+    }
+
+    res.json(requisition);
+});
+
 module.exports = {
     createRequisition,
     getAllRequisitions,
     getRequisitionById,
     updateRequisition,
     getMyOfficeRequisitions,
+    getMyOfficeRequisitionById,
 };

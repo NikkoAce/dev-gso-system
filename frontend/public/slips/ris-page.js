@@ -23,7 +23,11 @@ function initializeRisPage(user) {
         }
 
         try {
-            const requisition = await fetchWithAuth(`requisitions/${requisitionId}`);
+            // Determine which endpoint to use based on user permissions for security and correctness.
+            const endpoint = user.permissions.includes('requisition:read:all')
+                ? `requisitions/${requisitionId}`
+                : `requisitions/my-office/${requisitionId}`;
+            const requisition = await fetchWithAuth(endpoint);
             renderRIS(requisition);
         } catch (error) {
             console.error('Failed to fetch RIS data:', error);

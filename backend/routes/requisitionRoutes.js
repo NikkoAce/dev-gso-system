@@ -6,13 +6,17 @@ const {
     getAllRequisitions,
     getRequisitionById,
     updateRequisition,
-    getMyOfficeRequisitions // Import the new controller
+    getMyOfficeRequisitions,
+    getMyOfficeRequisitionById
 } = require('../controllers/requisitionController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const PERMISSIONS = require('../config/permissions.js');
 
 // This new route is protected and will only return requisitions for the user's office
 router.route('/my-office').get(protect, checkPermission(PERMISSIONS.REQUISITION_READ_OWN_OFFICE), getMyOfficeRequisitions);
+
+// This new route is for fetching a single requisition belonging to the user's office.
+router.route('/my-office/:id').get(protect, checkPermission(PERMISSIONS.REQUISITION_READ_OWN_OFFICE), getMyOfficeRequisitionById);
 
 router.route('/')
     .post(protect, checkPermission(PERMISSIONS.REQUISITION_CREATE), createRequisition)
