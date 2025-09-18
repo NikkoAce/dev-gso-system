@@ -56,11 +56,35 @@ const createRequisition = asyncHandler(async (req, res) => {
 // @route   GET /api/requisitions
 // @access  Private
 const getAllRequisitions = asyncHandler(async (req, res) => {
-    const requisitions = await Requisition.find()
-        .populate('items.stockItem', 'stockNumber unitOfMeasure')
-        .populate('requestingUser', 'name office') // Populate the user's name and office
-        .sort({ dateRequested: -1 });
-    res.json(requisitions);
+    const { page = 1, limit = 15, sort = 'dateRequested', order = 'desc', search = '' } = req.query;
+
+    const query = {};
+    if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        query.$or = [
+            { risNumber: searchRegex },
+            { requestingOffice: searchRegex },
+            { purpose: searchRegex }
+        ];
+    }
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+
+    const [docs, totalDocs] = await Promise.all([
+        Requisition.find(query)
+            .populate('items.stockItem', 'stockNumber unitOfMeasure')
+            .populate('requestingUser', 'name office')
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNum)
+            .lean(),
+        Requisition.countDocuments(query)
+    ]);
+
+    res.json({ docs, totalDocs, limit: limitNum, totalPages: Math.ceil(totalDocs / limitNum), page: pageNum });
 });
 
 // @desc    Get a single requisition by ID

@@ -1,6 +1,7 @@
 // FILE: frontend/public/gso-requisitions.js
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { createUIManager } from '../js/ui.js';
 
 createAuthenticatedPage({
     permission: 'requisition:read:all',
@@ -10,13 +11,26 @@ createAuthenticatedPage({
 
 function initializeGsoRequisitionsPage(user) {
     const API_ENDPOINT = 'requisitions';
-    let allRequisitions = [];
+
+    // State
+    let currentPage = 1;
+    let totalPages = 1;
+    const itemsPerPage = 15;
+    let sortKey = 'dateRequested';
+    let sortDirection = 'desc';
+    let searchTimeout;
+
+    // UI Manager
+    const { renderPagination, setLoading } = createUIManager();
 
     // DOM Cache
     const requisitionsList = document.getElementById('requisitions-list');
     const modal = document.getElementById('requisition-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
+    const searchInput = document.getElementById('search-input');
+    const tableHeader = requisitionsList.parentElement.querySelector('thead');
+    const paginationControls = document.getElementById('pagination-controls');
 
     const statusMap = {
         'Pending': 'badge-warning',
@@ -28,25 +42,41 @@ function initializeGsoRequisitionsPage(user) {
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
 
     // --- DATA FETCHING & RENDERING ---
-    async function fetchAndRenderRequisitions() {
+    async function loadRequisitions() {
+        const colSpan = tableHeader.querySelector('tr').children.length;
+        setLoading(true, requisitionsList, { colSpan });
+
+        const params = new URLSearchParams({
+            page: currentPage,
+            limit: itemsPerPage,
+            sort: sortKey,
+            order: sortDirection,
+            search: searchInput.value,
+        });
+
         try {
-            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-base-content/70">Loading requisitions...</td></tr>`;
-            // No auth headers needed, fetchWithAuth handles it.
-            allRequisitions = await fetchWithAuth(API_ENDPOINT);
-            renderRequisitionsTable();
+            const data = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
+            totalPages = data.totalPages;
+            renderRequisitionsTable(data.docs);
+            renderPagination(paginationControls, data);
+            updateSortIndicators();
         } catch (error) {
             console.error(error);
-            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error loading requisitions.</td></tr>`;
+            requisitionsList.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-red-500">Error loading requisitions.</td></tr>`;
+        } finally {
+            setLoading(false, requisitionsList);
         }
     }
 
-    function renderRequisitionsTable() {
+    function renderRequisitionsTable(requisitions) {
         requisitionsList.innerHTML = '';
-        if (allRequisitions.length === 0) {
-            requisitionsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-base-content/70">No requisitions found.</td></tr>`;
+        const colSpan = tableHeader.querySelector('tr').children.length;
+        if (requisitions.length === 0) {
+            requisitionsList.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-base-content/70">No requisitions found.</td></tr>`;
             return;
         }
-        allRequisitions.forEach(req => {
+
+        requisitions.forEach(req => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td data-label="RIS No." class="font-mono">${req.risNumber}</td>
@@ -63,6 +93,16 @@ function initializeGsoRequisitionsPage(user) {
                 </td>
             `;
             requisitionsList.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
+    function updateSortIndicators() {
+        tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
+            th.querySelector('i[data-lucide]')?.remove();
+            if (th.dataset.sortKey === sortKey) {
+                th.insertAdjacentHTML('beforeend', `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`);
+            }
         });
         lucide.createIcons();
     }
@@ -212,13 +252,38 @@ function initializeGsoRequisitionsPage(user) {
             });
 
             closeModal();
-            await fetchAndRenderRequisitions();
+            await loadRequisitions();
         } catch (error) {
             alert(`Error: ${error.message}`);
             actionBtn.disabled = false;
             actionBtn.textContent = newStatus === 'Issued' ? 'Issue Items & Approve' : 'Reject';
         }
     }
+
+    // --- EVENT BINDING ---
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            loadRequisitions();
+        }, 300);
+    });
+
+    tableHeader.addEventListener('click', (e) => {
+        const th = e.target.closest('th[data-sort-key]');
+        if (th) {
+            const key = th.dataset.sortKey;
+            sortDirection = (sortKey === key && sortDirection === 'asc') ? 'desc' : 'asc';
+            sortKey = key;
+            loadRequisitions();
+        }
+    });
+
+    paginationControls.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        if (target.id === 'prev-page-btn' && currentPage > 1) { currentPage--; loadRequisitions(); } else if (target.id === 'next-page-btn' && currentPage < totalPages) { currentPage++; loadRequisitions(); } else if (target.classList.contains('page-btn')) { const page = parseInt(target.dataset.page, 10); if (page !== currentPage) { currentPage = page; loadRequisitions(); } }
+    });
 
     // --- EVENT BINDING ---
     requisitionsList.addEventListener('click', (e) => {
@@ -237,5 +302,5 @@ function initializeGsoRequisitionsPage(user) {
     modalContent.addEventListener('click', handleModalAction);
 
     // --- INITIALIZATION ---
-    fetchAndRenderRequisitions();
+    loadRequisitions();
 }
