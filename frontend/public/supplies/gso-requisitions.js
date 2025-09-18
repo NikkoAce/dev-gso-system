@@ -118,9 +118,16 @@ function initializeGsoRequisitionsPage(user) {
         } else {
             let printButtonHTML = '';
             if (req.status === 'Issued') {
-                printButtonHTML = `<a href="../slips/ris-page.html?id=${req._id}" target="_blank" class="print-ris-btn btn btn-info">
-                    <i data-lucide="printer" class="h-4 w-4"></i> Print RIS
-                </a>`;
+                printButtonHTML = `
+                <div class="flex flex-wrap gap-2">
+                    <a href="../slips/ris-page.html?id=${req._id}" target="_blank" class="btn btn-info btn-sm">
+                        <i data-lucide="printer" class="h-4 w-4"></i> Print RIS (Internal)
+                    </a>
+                    <a href="../slips/appendix48-page.html?id=${req._id}" target="_blank" class="btn btn-secondary btn-sm">
+                        <i data-lucide="printer" class="h-4 w-4"></i> Print Appendix 48 (COA)
+                    </a>
+                </div>
+                `;
             }
             footerHTML = `
                 <div class="flex justify-between items-center pt-4 border-t">
