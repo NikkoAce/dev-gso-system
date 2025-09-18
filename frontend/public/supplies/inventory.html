@@ -91,18 +91,23 @@
 
                     <div class="card bg-base-100 border">
                         <div class="card-body">
-                            <h2 class="card-title">Existing Stock Items</h2>
+                            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                                <h2 class="card-title">Existing Stock Items</h2>
+                                <div class="form-control w-full md:w-auto">
+                                    <input type="text" id="search-input" placeholder="Search by description, stock no..." class="input input-bordered w-full md:w-80">
+                                </div>
+                            </div>
                         </div>
                         <div class="md:overflow-x-auto">
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
-                                        <th>Stock No.</th>
-                                        <th>Description</th>
-                                        <th>Unit</th>
-                                        <th class="text-center">Quantity</th>
-                                        <th class="text-center">Re-order Pt.</th>
-                                        <th>Category</th>
+                                        <th class="cursor-pointer" data-sort-key="stockNumber">Stock No.</th>
+                                        <th class="cursor-pointer" data-sort-key="description">Description</th>
+                                        <th class="cursor-pointer" data-sort-key="unitOfMeasure">Unit</th>
+                                        <th class="text-center cursor-pointer" data-sort-key="quantity">Quantity</th>
+                                        <th class="text-center cursor-pointer" data-sort-key="reorderPoint">Re-order Pt.</th>
+                                        <th class="cursor-pointer" data-sort-key="category">Category</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -110,6 +115,9 @@
                                     <!-- JS will populate this -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div id="pagination-controls" class="card-body py-4 flex justify-between items-center">
+                            <!-- Pagination will be rendered here -->
                         </div>
                     </div>
                 </div>

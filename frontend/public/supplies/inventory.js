@@ -1,6 +1,7 @@
 // FILE: frontend/public/inventory.js
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { createUIManager } from '../js/ui.js';
 
 createAuthenticatedPage({
     permission: 'stock:manage',
@@ -10,8 +11,20 @@ createAuthenticatedPage({
 
 function initializeInventoryPage(user) {
     const API_ENDPOINT = 'stock-items';
-    let allStockItems = [];
+    let allStockItems = []; // For dropdowns and lookups
+    let currentPageItems = []; // For the paginated table view
     let receivedItems = []; // For the new modal
+
+    // NEW: State for pagination and sorting
+    let currentPage = 1;
+    let totalPages = 1;
+    const itemsPerPage = 10;
+    let sortKey = 'description';
+    let sortDirection = 'asc';
+    let searchTimeout;
+
+    // NEW: UI Manager
+    const { renderPagination, setLoading } = createUIManager();
 
     // DOM Cache
     const itemList = document.getElementById('stock-item-list');
@@ -26,6 +39,9 @@ function initializeInventoryPage(user) {
     const formTitle = document.getElementById('stock-item-form-title');
     const submitBtn = document.getElementById('submit-stock-item-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
+    const tableHeader = itemList.parentElement.querySelector('thead');
+    const paginationControls = document.getElementById('pagination-controls');
+    const searchInput = document.getElementById('search-input');
     // New Modal DOM Cache
     const openReceiveModalBtn = document.getElementById('open-receive-stock-modal-btn');
     const receiveStockModal = document.getElementById('receive-stock-modal');
@@ -40,24 +56,41 @@ function initializeInventoryPage(user) {
     const receivedItemsList = document.getElementById('received-items-list');
 
     // --- DATA FETCHING & RENDERING ---
-    async function fetchAndRenderItems() {
+    async function loadItems() {
+        const colSpan = tableHeader.querySelector('tr').children.length;
+        setLoading(true, itemList, { colSpan });
+
+        const params = new URLSearchParams({
+            page: currentPage,
+            limit: itemsPerPage,
+            sort: sortKey,
+            order: sortDirection,
+            search: searchInput.value,
+        });
+
         try {
-            itemList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Loading...</td></tr>`;
-            allStockItems = await fetchWithAuth(API_ENDPOINT);
-            renderItemList();
+            const data = await fetchWithAuth(`${API_ENDPOINT}?${params.toString()}`);
+            currentPageItems = data.docs;
+            totalPages = data.totalPages;
+            renderItemList(data.docs);
+            renderPagination(paginationControls, data);
+            updateSortIndicators();
         } catch (error) {
             console.error(error);
-            itemList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">Error loading stock items.</td></tr>`;
+            itemList.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-red-500">Error loading stock items.</td></tr>`;
+        } finally {
+            setLoading(false, itemList);
         }
     }
 
-    function renderItemList() {
+    function renderItemList(items) {
         itemList.innerHTML = '';
-        if (allStockItems.length === 0) {
-            itemList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">No stock items found. Add one using the form above.</td></tr>`;
+        const colSpan = tableHeader.querySelector('tr').children.length;
+        if (items.length === 0) {
+            itemList.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-gray-500">No stock items found.</td></tr>`;
             return;
         }
-        allStockItems.forEach(item => {
+        items.forEach(item => {
             const tr = document.createElement('tr');
             const quantityClass = item.quantity <= item.reorderPoint ? 'text-red-600 font-bold' : '';
             tr.innerHTML = `
@@ -79,6 +112,16 @@ function initializeInventoryPage(user) {
         lucide.createIcons();
     }
 
+    function updateSortIndicators() {
+        tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
+            th.querySelector('i[data-lucide]')?.remove();
+            if (th.dataset.sortKey === sortKey) {
+                th.insertAdjacentHTML('beforeend', `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`);
+            }
+        });
+        lucide.createIcons();
+    }
+
     // --- FORM STATE & LOGIC ---
     function resetForm() {
         itemForm.reset();
@@ -89,7 +132,7 @@ function initializeInventoryPage(user) {
     }
 
     function populateForm(itemId) {
-        const item = allStockItems.find(i => i._id === itemId);
+        const item = currentPageItems.find(i => i._id === itemId);
         if (item) {
             itemIdInput.value = item._id;
             stockNumberInput.value = item.stockNumber;
@@ -122,6 +165,7 @@ function initializeInventoryPage(user) {
 
     function populateItemSelectForReceiving() {
         itemSelectForReceiving.innerHTML = '<option value="">-- Select an item --</option>';
+        // This uses the master list of all items fetched on page load
         allStockItems.forEach(item => {
             const option = document.createElement('option');
             option.value = item._id;
@@ -204,7 +248,7 @@ function initializeInventoryPage(user) {
                 body: JSON.stringify(body)
             });
             resetForm();
-            await fetchAndRenderItems();
+            await loadItems();
         } catch (error) {
             alert(`Error: ${error.message}`);
         }
@@ -225,7 +269,7 @@ function initializeInventoryPage(user) {
             if (confirm('Are you sure you want to delete this stock item?')) {
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${id}`, { method: 'DELETE' });
-                    await fetchAndRenderItems();
+                    await loadItems();
                 } catch (error) {
                     alert(`Error: ${error.message}`);
                 }
@@ -235,6 +279,33 @@ function initializeInventoryPage(user) {
 
     openReceiveModalBtn.addEventListener('click', openReceiveModal);
     cancelReceiveBtn.addEventListener('click', closeReceiveModal);
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            loadItems();
+        }, 300);
+    });
+
+    tableHeader.addEventListener('click', (e) => {
+        const th = e.target.closest('th[data-sort-key]');
+        if (th) {
+            const key = th.dataset.sortKey;
+            sortDirection = (sortKey === key && sortDirection === 'asc') ? 'desc' : 'asc';
+            sortKey = key;
+            loadItems();
+        }
+    });
+
+    paginationControls.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        if (target.id === 'prev-page-btn' && currentPage > 1) { currentPage--; loadItems(); }
+        else if (target.id === 'next-page-btn' && currentPage < totalPages) { currentPage++; loadItems(); }
+        else if (target.classList.contains('page-btn')) { const page = parseInt(target.dataset.page, 10); if (page !== currentPage) { currentPage = page; loadItems(); } }
+    });
+
     addReceivedItemBtn.addEventListener('click', handleAddReceivedItem);
 
     receivedItemsList.addEventListener('click', (e) => {
@@ -267,13 +338,24 @@ function initializeInventoryPage(user) {
             });
             closeReceiveModal();
             alert('Stock received and inventory updated successfully!');
-            await fetchAndRenderItems();
+            await loadItems();
         } catch (error) {
             alert(`Error submitting report: ${error.message}`);
         }
     });
 
     // --- INITIALIZATION ---
-    fetchAndRenderItems();
+    async function initialize() {
+        try {
+            // Fetch all items once for dropdowns and other lookups
+            allStockItems = await fetchWithAuth(API_ENDPOINT);
+            // Then load the first page for the table
+            await loadItems();
+        } catch (error) {
+            console.error("Initialization failed:", error);
+            itemList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">Failed to initialize page.</td></tr>`;
+        }
+    }
+    initialize();
 }
     

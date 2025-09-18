@@ -7,13 +7,41 @@ const asyncHandler = require('express-async-handler');
 // @route   GET /api/stock-items
 // @access  Private
 const getAllStockItems = asyncHandler(async (req, res) => {
-    try {
-        const stockItems = await StockItem.find().sort({ description: 1 });
-        res.json(stockItems);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+    const { page, limit, sort = 'description', order = 'asc', search = '' } = req.query;
+
+    // If no pagination is requested, return all items (for dropdowns, etc.)
+    if (!page || !limit) {
+        const allItems = await StockItem.find().sort({ description: 1 });
+        return res.json(allItems);
     }
+
+    const query = {};
+    if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        query.$or = [
+            { description: searchRegex },
+            { stockNumber: searchRegex },
+            { category: searchRegex }
+        ];
+    }
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+    const sortOptions = { [sort]: order === 'asc' ? 1 : -1 };
+
+    const [docs, totalDocs] = await Promise.all([
+        StockItem.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
+        StockItem.countDocuments(query)
+    ]);
+
+    res.json({
+        docs,
+        totalDocs,
+        limit: limitNum,
+        totalPages: Math.ceil(totalDocs / limitNum),
+        page: pageNum,
+    });
 });
 
 // @desc    Get single stock item by ID
