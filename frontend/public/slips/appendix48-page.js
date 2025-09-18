@@ -81,7 +81,7 @@ function initializeRisPage(user) {
                     </div>
                     <div class="p-1">
                         <strong>RIS No.:</strong> <span class="underline">${req.risNumber}</span><br>
-                        <strong>SAI No.:</strong> <span class="underline"></span> &nbsp;&nbsp; <strong>Date:</strong> <span class="underline"></span>
+                        <strong>SAI No.:</strong> <span class="underline">${req.saiNumber || ''}</span> &nbsp;&nbsp; <strong>Date:</strong> <span class="underline">${req.saiNumber ? formatDate(req.updatedAt) : ''}</span>
                     </div>
                 </div>
                 <table class="w-full border-collapse border-t-2 border-black text-xs">

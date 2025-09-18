@@ -26,6 +26,29 @@ async function getNextRisNumber() {
     return `RIS-${year}-${String(sequence).padStart(4, '0')}`;
 }
 
+/**
+ * Generates the next sequential SAI number for the current year.
+ * Example: SAI-2024-0001
+ * @param {mongoose.ClientSession} session - The mongoose session for the transaction.
+ */
+async function getNextSaiNumber(session) {
+    const year = new Date().getFullYear();
+    const startOfYear = new Date(year, 0, 1);
+
+    // Find the last requisition that has an SAI number
+    const lastRequisitionWithSai = await Requisition.findOne({
+        saiNumber: { $exists: true, $ne: null },
+        createdAt: { $gte: startOfYear }
+    }).sort({ createdAt: -1 }).session(session);
+
+    let sequence = 1;
+    if (lastRequisitionWithSai && lastRequisitionWithSai.saiNumber) {
+        const lastSequence = parseInt(lastRequisitionWithSai.saiNumber.split('-').pop(), 10);
+        if (!isNaN(lastSequence)) { sequence = lastSequence + 1; }
+    }
+    return `SAI-${year}-${String(sequence).padStart(4, '0')}`;
+}
+
 // @desc    Create a new requisition
 // @route   POST /api/requisitions
 // @access  Private
@@ -56,7 +79,7 @@ const createRequisition = asyncHandler(async (req, res) => {
 // @route   GET /api/requisitions
 // @access  Private
 const getAllRequisitions = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 15, sort = 'dateRequested', order = 'desc', search = '' } = req.query;
+    const { page = 1, limit = 15, sort = 'dateRequested', order = 'desc', search = '', status = '' } = req.query;
 
     const query = {};
     if (search) {
@@ -66,6 +89,9 @@ const getAllRequisitions = asyncHandler(async (req, res) => {
             { requestingOffice: searchRegex },
             { purpose: searchRegex }
         ];
+    }
+    if (status) {
+        query.status = status;
     }
 
     const pageNum = parseInt(page, 10);
@@ -119,14 +145,26 @@ const updateRequisition = async (req, res) => {
     try {
         const requisition = await Requisition.findById(req.params.id).session(session);
         if (!requisition) throw new Error('Requisition not found');
-        if (['Issued', 'Rejected', 'Cancelled'].includes(requisition.status)) {
-            throw new Error(`Cannot update a requisition that is already ${requisition.status}.`);
+
+        const originalStatus = requisition.status;
+
+        // Prevent illegal status transitions
+        if (['Issued', 'Rejected', 'Cancelled'].includes(originalStatus)) {
+            throw new Error(`Cannot update a requisition that is already ${originalStatus}.`);
         }
 
-        requisition.status = status || requisition.status;
+        // If transitioning from 'For Availability Check' to 'Pending', assign SAI number.
+        if (originalStatus === 'For Availability Check' && status === 'Pending') {
+            requisition.saiNumber = await getNextSaiNumber(session);
+        }
+
+        requisition.status = status || originalStatus;
         requisition.remarks = remarks || requisition.remarks;
 
         if (status === 'Issued') {
+            if (originalStatus !== 'Pending') {
+                throw new Error('Can only issue items for requisitions that are pending approval.');
+            }
             for (const reqItem of items) {
                 const stockItem = await StockItem.findById(reqItem.stockItem).session(session);
                 if (!stockItem) throw new Error(`Stock item ${reqItem.description} not found.`);

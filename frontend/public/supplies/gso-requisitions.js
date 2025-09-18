@@ -13,6 +13,7 @@ function initializeGsoRequisitionsPage(user) {
     const API_ENDPOINT = 'requisitions';
 
     // State
+    let statusFilter = 'For Availability Check'; // Default to the new first step
     let currentPage = 1;
     let totalPages = 1;
     const itemsPerPage = 15;
@@ -28,12 +29,14 @@ function initializeGsoRequisitionsPage(user) {
     const modal = document.getElementById('requisition-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
+    const statusTabs = document.getElementById('status-tabs');
     const searchInput = document.getElementById('search-input');
     const tableHeader = requisitionsList.parentElement.querySelector('thead');
     const paginationControls = document.getElementById('pagination-controls');
 
     const statusMap = {
         'Pending': 'badge-warning',
+        'For Availability Check': 'badge-primary',
         'Issued': 'badge-success',
         'Rejected': 'badge-error',
         'Cancelled': 'badge-ghost'
@@ -52,6 +55,7 @@ function initializeGsoRequisitionsPage(user) {
             sort: sortKey,
             order: sortDirection,
             search: searchInput.value,
+            status: statusFilter,
         });
 
         try {
@@ -124,7 +128,8 @@ function initializeGsoRequisitionsPage(user) {
 
     function renderModalContent(req) {
         modalTitle.textContent = `Requisition Details: ${req.risNumber}`;
-        const isActionable = !['Issued', 'Rejected', 'Cancelled'].includes(req.status);
+        const isForChecking = req.status === 'For Availability Check';
+        const isActionable = req.status === 'Pending';
 
         const itemsHTML = req.items.map(item => `
                 <tr class="border-b">
@@ -132,11 +137,7 @@ function initializeGsoRequisitionsPage(user) {
                     <td>${item.description}</td>
                     <td class="text-center">${item.quantityRequested}</td>
                     <td class="text-center">
-                        <input type="number" class="issued-qty-input input input-bordered input-sm w-24 text-center"
-                               data-stock-id="${item.stockItem._id}"
-                               data-description="${item.description}"
-                               value="${isActionable ? item.quantityRequested : (item.quantityIssued || 0)}"
-                               min="0" max="${item.quantityRequested}" ${!isActionable ? 'readonly class="bg-base-200"' : ''}>
+                        <input type="number" class="issued-qty-input input input-bordered input-sm w-24 text-center" data-stock-id="${item.stockItem._id}" data-description="${item.description}" value="${isActionable ? item.quantityRequested : (item.quantityIssued || 0)}" min="0" max="${item.quantityRequested}" ${!isActionable ? 'readonly class="bg-base-200"' : ''}>
                     </td>
                     <td class="text-center">${item.quantityIssued || 0}</td>
                 </tr>
@@ -153,6 +154,18 @@ function initializeGsoRequisitionsPage(user) {
                     <button id="close-modal-btn" class="btn">Cancel</button>
                     <button id="reject-btn" class="btn btn-error" data-id="${req._id}">Reject</button>
                     <button id="issue-btn" class="btn btn-success" data-id="${req._id}">Issue Items & Approve</button>
+                </div>
+            `;
+        } else if (isForChecking) {
+            footerHTML = `
+                <div class="form-control pt-4 border-t">
+                    <label for="remarks-input" class="label"><span class="label-text">Remarks</span></label>
+                    <textarea id="remarks-input" rows="2" class="textarea textarea-bordered" placeholder="Add remarks for availability confirmation..."></textarea>
+                </div>
+                <div class="modal-action mt-4">
+                    <button id="close-modal-btn" class="btn">Cancel</button>
+                    <button id="reject-btn" class="btn btn-error" data-id="${req._id}">Mark Unavailable</button>
+                    <button id="confirm-availability-btn" class="btn btn-accent" data-id="${req._id}">Confirm Availability</button>
                 </div>
             `;
         } else {
@@ -184,7 +197,7 @@ function initializeGsoRequisitionsPage(user) {
         modalContent.innerHTML = `
             <div class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div><strong>Requesting Office:</strong> ${req.requestingOffice || 'N/A'}</div>
+                    <div><strong>Office:</strong> ${req.requestingOffice || 'N/A'}</div>
                     <div><strong>Requested By:</strong> ${req.requestingUser?.name || 'N/A'}</div>
                     <div><strong>Date Requested:</strong> ${formatDate(req.dateRequested)}</div>
                 </div>
@@ -222,15 +235,22 @@ function initializeGsoRequisitionsPage(user) {
             return;
         }
 
+        const confirmBtn = target.closest('#confirm-availability-btn');
         const actionBtn = target.closest('#issue-btn') || target.closest('#reject-btn');
-        if (!actionBtn) return;
+        if (!actionBtn && !confirmBtn) return;
 
-        const requisitionId = actionBtn.dataset.id;
+        const button = actionBtn || confirmBtn;
+        const requisitionId = button.dataset.id;
         const remarks = document.getElementById('remarks-input')?.value || '';
-        const newStatus = actionBtn.id === 'issue-btn' ? 'Issued' : 'Rejected';
+        let newStatus;
 
         const itemsToUpdate = [];
-        if (newStatus === 'Issued') {
+        if (confirmBtn) {
+            newStatus = 'Pending'; // This triggers backend to add SAI number
+        } else if (actionBtn) {
+            newStatus = actionBtn.id === 'issue-btn' ? 'Issued' : 'Rejected';
+        }
+        if (actionBtn && actionBtn.id === 'issue-btn') {
             document.querySelectorAll('.issued-qty-input').forEach(input => {
                 itemsToUpdate.push({
                     stockItem: input.dataset.stockId,
@@ -242,8 +262,8 @@ function initializeGsoRequisitionsPage(user) {
 
         const payload = { status: newStatus, remarks, items: itemsToUpdate };
 
-        actionBtn.disabled = true;
-        actionBtn.textContent = 'Processing...';
+        button.disabled = true;
+        button.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Processing...`;
 
         try {
             await fetchWithAuth(`${API_ENDPOINT}/${requisitionId}`, {
@@ -255,12 +275,24 @@ function initializeGsoRequisitionsPage(user) {
             await loadRequisitions();
         } catch (error) {
             alert(`Error: ${error.message}`);
-            actionBtn.disabled = false;
-            actionBtn.textContent = newStatus === 'Issued' ? 'Issue Items & Approve' : 'Reject';
+            button.disabled = false;
+            if (confirmBtn) button.textContent = 'Confirm Availability';
+            else button.textContent = newStatus === 'Issued' ? 'Issue Items & Approve' : 'Reject';
         }
     }
 
     // --- EVENT BINDING ---
+    statusTabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.tab');
+        if (tab && !tab.classList.contains('tab-active')) {
+            statusTabs.querySelector('.tab-active')?.classList.remove('tab-active');
+            tab.classList.add('tab-active');
+            statusFilter = tab.dataset.statusFilter;
+            currentPage = 1;
+            loadRequisitions();
+        }
+    });
+
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {

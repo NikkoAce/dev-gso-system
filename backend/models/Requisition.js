@@ -28,6 +28,10 @@ const RequisitionSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    saiNumber: { // NEW: To store the Supplies Availability Inquiry number
+        type: String,
+        index: true,
+    },
     requestingOffice: {
         type: String,
         required: true,
@@ -43,8 +47,8 @@ const RequisitionSchema = new mongoose.Schema({
     items: [requisitionItemSchema],
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Issued', 'Rejected', 'Cancelled'],
-        default: 'Pending'
+        enum: ['For Availability Check', 'Pending', 'Approved', 'Issued', 'Rejected', 'Cancelled'],
+        default: 'For Availability Check'
     },
     remarks: String,
     dateRequested: { type: Date, default: Date.now },

@@ -81,8 +81,8 @@ function initializeRisPage(user) {
                 <span class="font-bold">RIS No: <span class="underline">${req.risNumber}</span></span>
             </div>
             <div class="flex justify-between mb-2 text-sm">
-                <span>Office: <span class="font-semibold underline">${req.requestingOffice}</span></span>
-                <span>Fund Cluster: <span class="font-semibold underline">01</span></span>
+                <span>Office: <span class="font-semibold underline">${req.requestingOffice || 'N/A'}</span></span>
+                <span class="font-bold">SAI No: <span class="underline">${req.saiNumber || 'N/A'}</span></span>
             </div>
             <table class="w-full border-collapse border border-black text-xs">
                 <thead>
