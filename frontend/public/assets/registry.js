@@ -17,8 +17,8 @@ function initializeRegistryPage(user) {
         allCategories: [],
         allOffices: [],
         allEmployees: [],
-        assetsToTransfer: [], // To hold asset objects for the modal
-        selectedAssets: [], // Changed from selectedAssetIds to hold {id, cost} objects
+        assetsToTransfer: [], // To hold asset objects for the transfer modal
+        selectedAssets: new Map(), // Use a Map to persist selection across pages. Key: assetId, Value: asset object
         currentPage: 1,
         assetsPerPage: 20,
         sortKey: 'createdAt',
@@ -82,21 +82,6 @@ function initializeRegistryPage(user) {
     // --- MODULE: UI MANAGER ---
     const uiManager = createUIManager();
 
-    function renderSummary(totalValue) {
-        const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
-        if (totalValue > 0) {
-            DOM.assetTableFooter.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-right font-bold">Total Value (All Filtered Pages):</td>
-                    <td class="text-right font-bold">${formatCurrency(totalValue)}</td>
-                    <td colspan="2"></td>
-                </tr>
-            `;
-        } else {
-            DOM.assetTableFooter.innerHTML = '';
-        }
-    }
-
     // --- MODULE: MODAL LOGIC ---
     function openTransferModal(assetIds) {
         if (assetIds.length === 0) {
@@ -150,7 +135,7 @@ function initializeRegistryPage(user) {
 
     function openAppendix68Modal() {
         // The button is only visible if there are eligible assets.
-        const eligibleAssets = state.selectedAssets.filter(a => ['In Storage', 'For Repair'].includes(a.status));
+        const eligibleAssets = Array.from(state.selectedAssets.values()).filter(a => ['In Storage', 'For Repair'].includes(a.status));
         if (eligibleAssets.length === 0) {
             uiManager.showToast('Please select at least one asset that is "In Storage" or "For Repair".', 'warning');
             return;
@@ -171,21 +156,22 @@ function initializeRegistryPage(user) {
     // --- MODULE: SLIP MANAGER ---
     const slipManager = {
         prepareForSlipGeneration(slipType) {
-            if (state.selectedAssets.length === 0) {
+            const selectedAssetsArray = Array.from(state.selectedAssets.values());
+            if (selectedAssetsArray.length === 0) {
                 uiManager.showToast(`Please select at least one asset to generate a ${slipType}.`, 'warning');
                 return;
             }
 
             // For PAR and ICS, all assets must belong to the same custodian and not be assigned to another slip.
             if (slipType === 'PAR' || slipType === 'ICS') {
-                const alreadyAssignedAssets = state.selectedAssets.filter(asset => asset.assignedPAR || asset.assignedICS);
+                const alreadyAssignedAssets = selectedAssetsArray.filter(asset => asset.assignedPAR || asset.assignedICS);
                 if (alreadyAssignedAssets.length > 0) {
                     const assignedNumbers = alreadyAssignedAssets.map(a => a.propertyNumber).join(', ');
                     uiManager.showToast(`Error: The following assets are already assigned to a slip and cannot be added to a new one: ${assignedNumbers}`, 'error');
                     return;
                 }
-                const firstCustodian = state.selectedAssets[0].custodian.name;
-                if (!state.selectedAssets.every(asset => asset.custodian.name === firstCustodian)) {
+                const firstCustodian = selectedAssetsArray[0].custodian.name;
+                if (!selectedAssetsArray.every(asset => asset.custodian.name === firstCustodian)) {
                     uiManager.showToast(`Error: All selected assets must belong to the same custodian to be on one ${slipType}.`, 'error');
                     return;
                 }
@@ -193,8 +179,7 @@ function initializeRegistryPage(user) {
 
             // For IIRUP and Appendix 68, the custodian check is not needed as they are GSO-level documents.
             // The visibility logic in ui.js already ensures the correct assets are selected based on status.
-
-            localStorage.setItem(`assetsFor${slipType}`, JSON.stringify(state.selectedAssets));
+            localStorage.setItem(`assetsFor${slipType}`, JSON.stringify(selectedAssetsArray));
             window.location.href = `../slips/${slipType.toLowerCase()}-page.html`;
         }
     };
@@ -341,28 +326,50 @@ function initializeRegistryPage(user) {
             }
         },
 
-        handleTableChange(e) {
-            // This function now delegates the main logic to updateSelectionState
-            if (e.target.classList.contains('asset-checkbox')) {
-                this.updateSelectionState();
-            } else if (e.target.id === 'select-all-assets') {
-                this.handleSelectAll(e.target.checked);
-                this.updateSelectionState();
+    handleTableChange(e) { // For checkbox clicks
+        const checkbox = e.target.closest('.asset-checkbox');
+        if (checkbox) {
+            const assetId = checkbox.dataset.id;
+            const asset = state.currentPageAssets.find(a => a._id === assetId);
+            if (checkbox.checked && asset) {
+                state.selectedAssets.set(assetId, asset);
+            } else {
+                state.selectedAssets.delete(assetId);
             }
+            this.updateSelectionState();
+        }
+
+        if (e.target.id === 'select-all-assets') {
+            this.handleSelectAll(e.target.checked);
+            this.updateSelectionState();
+        }
         },
 
         updateSelectionState() {
-            const selectedCheckboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:checked');
-            const selectedAssetIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+        const selectedAssetsArray = Array.from(state.selectedAssets.values());
 
-            // Get the full asset objects for the selected IDs and store them in the state
-            state.selectedAssets = state.currentPageAssets.filter(asset => selectedAssetIds.includes(asset._id));
+        // Update select-all checkbox state based on current page's assets
+        const allCheckboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
+        const selectedOnPageCount = Array.from(allCheckboxesOnPage).filter(cb => state.selectedAssets.has(cb.dataset.id)).length;
 
-            const allCheckboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
-            DOM.selectAllCheckbox.checked = allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length;
+        if (allCheckboxesOnPage.length > 0) {
+            if (selectedOnPageCount === allCheckboxesOnPage.length) {
+                DOM.selectAllCheckbox.checked = true;
+                DOM.selectAllCheckbox.indeterminate = false;
+            } else if (selectedOnPageCount > 0) {
+                DOM.selectAllCheckbox.checked = false;
+                DOM.selectAllCheckbox.indeterminate = true;
+            } else {
+                DOM.selectAllCheckbox.checked = false;
+                DOM.selectAllCheckbox.indeterminate = false;
+            }
+        } else {
+            DOM.selectAllCheckbox.checked = false;
+            DOM.selectAllCheckbox.indeterminate = false;
+        }
 
             // Pass the full asset objects to the UI manager
-            uiManager.updateSlipButtonVisibility(state.selectedAssets, {
+        uiManager.updateSlipButtonVisibility(selectedAssetsArray, {
                 generateParBtn: DOM.generateParBtn,
                 generateIcsBtn: DOM.generateIcsBtn,
                 transferSelectedBtn: DOM.transferSelectedBtn,
@@ -373,9 +380,19 @@ function initializeRegistryPage(user) {
         },
 
         handleSelectAll(isChecked) {
-            const checkboxes = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
+        const checkboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
+        checkboxesOnPage.forEach(checkbox => {
+            const assetId = checkbox.dataset.id;
+            const asset = state.currentPageAssets.find(a => a._id === assetId);
+            if (asset) {
+                if (isChecked) {
+                    checkbox.checked = true;
+                    state.selectedAssets.set(assetId, asset);
+                } else {
+                    checkbox.checked = false;
+                    state.selectedAssets.delete(assetId);
+                }
+            }
             });
         },
 
@@ -421,11 +438,11 @@ function initializeRegistryPage(user) {
 
         async handleConfirmAppendix68() {
             DOM.confirmAppendix68Btn.disabled = true;
-            DOM.confirmAppendix68Btn.textContent = 'Generating...';
+            DOM.confirmAppendix68Btn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Generating...`;
 
             try {                
                 // Get the full asset objects that are eligible
-                const eligibleAssets = state.selectedAssets.filter(a => ['In Storage', 'For Repair'].includes(a.status));
+                const eligibleAssets = Array.from(state.selectedAssets.values()).filter(a => ['In Storage', 'For Repair'].includes(a.status));
                 
                 if (eligibleAssets.length === 0) {
                     uiManager.showToast('No eligible assets selected for Appendix 68.', 'warning');
@@ -542,7 +559,7 @@ function initializeRegistryPage(user) {
             standardFilters.forEach(el => el?.addEventListener('input', () => this.handleFilterChange()));
 
             // The standard 'change' event is more reliable for date pickers that
-            // programmatically update an input's value. The custom 'changeDate' event
+            // programmatically update an input's value.
             // can be less reliable depending on initialization order.
             const dateFilters = [DOM.startDateFilter, DOM.endDateFilter];
             dateFilters.forEach(el => el?.addEventListener('change', () => this.handleFilterChange()));
@@ -553,14 +570,14 @@ function initializeRegistryPage(user) {
             });
             DOM.paginationControls?.addEventListener('click', e => this.handlePaginationClick(e));
             DOM.resetFiltersBtn?.addEventListener('click', () => this.resetAllFilters());            
-            DOM.tableBody?.parentElement.addEventListener('change', e => this.handleTableChange(e)); // Listen on table for tbody and thead changes
+            DOM.tableBody?.parentElement.addEventListener('change', e => this.handleTableChange(e)); // Listen on table for checkbox changes
             DOM.tableBody?.addEventListener('click', e => this.handleTableClick(e)); // For edit, delete, etc.
             DOM.tableHeader?.addEventListener('click', (e) => this.handleSort(e));
             DOM.generateParBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('PAR'));
             DOM.generateIcsBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
             DOM.generateIIRUPBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('IIRUP'));
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
-            DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(state.selectedAssets.map(a => a._id)));
+            DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(Array.from(state.selectedAssets.keys())));
             // Transfer Modal Listeners
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
@@ -585,8 +602,6 @@ function initializeRegistryPage(user) {
     // --- DATA ORCHESTRATOR ---
     async function loadAssets() {
         uiManager.setLoading(true, DOM.tableBody, { colSpan: 9 });
-        DOM.selectAllCheckbox.checked = false;
-        eventManager.updateSelectionState(); // Clear selection and update buttons
         try {
             let endDateValue = DOM.endDateFilter?.value;
             if (endDateValue) {
@@ -632,15 +647,68 @@ function initializeRegistryPage(user) {
                 page: state.currentPage,
                 limit: state.assetsPerPage
             };
-            const domElements = { tableBody: DOM.tableBody, paginationControls: DOM.paginationControls };
 
-            uiManager.renderAssetTable(assets, domElements, user);
+            renderAssetTable(assets);
             uiManager.renderPagination(DOM.paginationControls, paginationInfo);
+            renderSummary(totalValue);
             renderSummary(totalValue);
             eventManager.updateSelectionState(); // Update buttons for the new view
         } catch (error) {
             console.error('Failed to load assets:', error);
             DOM.tableBody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+        }
+    }
+    
+    function renderAssetTable(assets) {
+        DOM.tableBody.innerHTML = '';
+        if (!assets || assets.length === 0) {
+            DOM.tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-500">No assets found for the selected criteria.</td></tr>`;
+            return;
+        }
+    
+        const canUpdate = user.permissions.includes('asset:update');
+        const canDelete = user.permissions.includes('asset:delete');
+    
+        assets.forEach(asset => {
+            const isSelected = state.selectedAssets.has(asset._id);
+            const tr = document.createElement('tr');
+            if (isSelected) {
+                tr.classList.add('bg-blue-50', 'hover:bg-blue-100');
+            }
+    
+            const editButton = canUpdate ? `<a href="./asset-form.html?id=${asset._id}" class="edit-btn btn btn-ghost btn-xs" data-id="${asset._id}" title="Edit Asset"><i data-lucide="edit" class="h-4 w-4"></i></a>` : '';
+            const deleteButton = canDelete ? `<button class="delete-btn btn btn-ghost btn-xs text-red-500" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i></button>` : '';
+            const transferButton = canUpdate ? `<button class="transfer-btn btn btn-ghost btn-xs" data-id="${asset._id}" title="Transfer Asset"><i data-lucide="arrow-right-left" class="h-4 w-4"></i></button>` : '';
+    
+            tr.innerHTML = `
+                <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isSelected ? 'checked' : ''}></td>
+                <td data-label="Property No.">${asset.propertyNumber}</td>
+                <td data-label="Description">${asset.description}</td>
+                <td data-label="Category">${asset.category}</td>
+                <td data-label="Custodian">${asset.custodian?.name || 'N/A'}</td>
+                <td data-label="Date Acquired">${new Date(asset.acquisitionDate).toLocaleDateString()}</td>
+                <td data-label="Status"><span class="badge badge-ghost badge-sm">${asset.status}</span></td>
+                <td data-label="Date Created">${new Date(asset.createdAt).toLocaleDateString()}</td>
+                <td class="text-center non-printable">
+                    <div class="flex justify-center items-center gap-1">
+                        <a href="./movable-property-card.html?id=${asset._id}" class="ledger-card-btn btn btn-ghost btn-xs" title="View Property Card"><i data-lucide="book-user" class="h-4 w-4"></i></a>
+                        ${editButton}
+                        ${transferButton}
+                        ${deleteButton}
+                    </div>
+                </td>
+            `;
+            DOM.tableBody.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
+    function renderSummary(totalValue) {
+        const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
+        if (totalValue > 0) {
+            DOM.assetTableFooter.innerHTML = `<tr><td colspan="5" class="text-right font-bold">Total Value (All Filtered Pages):</td><td class="text-right font-bold">${formatCurrency(totalValue)}</td><td colspan="3"></td></tr>`;
+        } else {
+            DOM.assetTableFooter.innerHTML = '';
         }
     }
 
