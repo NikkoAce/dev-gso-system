@@ -3,6 +3,36 @@ body { font-family: 'Inter', sans-serif; }
 @media print {
     .non-printable { display: none !important; }
     #print-container { display: block !important; }
+
+    /* Reset layout for printing */
+    body, html {
+        height: auto;
+        background-color: white !important; /* Ensure background is white */
+    }
+    
+    /* Remove overflow restrictions from parent containers that prevent page breaks */
+    body > .flex, 
+    body > .flex > .flex-1 {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    main {
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    .printable-area {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .page-break-after {
+        page-break-after: always;
+    }
 }
 
 /* --- FIX: Button Alignment with Tooltips --- */
