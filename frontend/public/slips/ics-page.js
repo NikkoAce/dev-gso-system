@@ -16,69 +16,81 @@ createAuthenticatedPage({
             icsContainer.innerHTML = ''; // Clear previous content
 
             const assets = icsData.assets || [];
-            // --- NEW: Smart Chunking Logic with different limits for final page ---
-            const INTERMEDIATE_PAGE_MAX_ITEMS = 20; // More items for pages without signatories
-            const INTERMEDIATE_PAGE_MAX_LINES = 55; // More lines for pages without signatories
-            const FINAL_PAGE_MAX_ITEMS = 12;        // A few more items on the final page
-            const FINAL_PAGE_MAX_LINES = 30;
+            // --- REVISED: Smart Chunking Logic with different capacities for each page type ---
+            const FIRST_PAGE_CAPACITY = { items: 15, lines: 40 };      // Smaller capacity due to header
+            const INTERMEDIATE_PAGE_CAPACITY = { items: 20, lines: 55 }; // Largest capacity
+            const FINAL_PAGE_CAPACITY = { items: 12, lines: 30 };      // Smaller capacity for signatures and totals
 
             const pages = [];
 
             if (assets.length > 0) {
-                // Step 1: Determine the assets that will go on the final page by working backwards.
+                // Step 1: Work backwards to determine which assets belong on the final page.
                 const assetsForFinalPage = [];
                 let linesOnFinalPage = 0;
                 let splitIndex = assets.length;
 
                 for (let i = assets.length - 1; i >= 0; i--) {
                     const asset = assets[i];
-                    // Estimate lines for this asset. 1 for the main row + 1 for each spec.
                     const assetLineCount = 1 + (asset.specifications?.length || 0);
-                    if (assetsForFinalPage.length < FINAL_PAGE_MAX_ITEMS && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_MAX_LINES) {
-                        assetsForFinalPage.unshift(asset); // Add to the beginning of the array
+                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY.items && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_CAPACITY.lines) {
+                        assetsForFinalPage.unshift(asset);
                         linesOnFinalPage += assetLineCount;
-                        splitIndex = i; // Mark the split point in the original assets array
+                        splitIndex = i;
                     } else {
-                        break; // Final page is full
+                        break;
                     }
                 }
 
-                // Step 2: Chunk the remaining (intermediate) assets using the larger page limits.
-                const intermediateAssets = assets.slice(0, splitIndex);
-                if (intermediateAssets.length > 0) {
+                // Step 2: Chunk the remaining assets for the first and intermediate pages.
+                const assetsForDistribution = assets.slice(0, splitIndex);
+                if (assetsForDistribution.length > 0) {
                     let currentPageAssets = [];
                     let currentLineCount = 0;
-                    intermediateAssets.forEach(asset => {
+                    let isFirstPageOfBlock = true;
+
+                    assetsForDistribution.forEach(asset => {
                         const assetLineCount = 1 + (asset.specifications?.length || 0);
+                        const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+
                         const pageIsFull = currentPageAssets.length > 0 &&
-                            (currentPageAssets.length >= INTERMEDIATE_PAGE_MAX_ITEMS || currentLineCount + assetLineCount > INTERMEDIATE_PAGE_MAX_LINES);
+                            (currentPageAssets.length >= capacity.items || currentLineCount + assetLineCount > capacity.lines);
 
                         if (pageIsFull) {
                             pages.push(currentPageAssets);
                             currentPageAssets = [];
                             currentLineCount = 0;
+                            isFirstPageOfBlock = false; // Subsequent pages are intermediate
                         }
                         currentPageAssets.push(asset);
                         currentLineCount += assetLineCount;
                     });
+
                     if (currentPageAssets.length > 0) {
                         pages.push(currentPageAssets);
                     }
                 }
 
-                // Step 3: Add the final page's assets as the last page.
+                // Step 3: Add the final page's assets.
                 if (assetsForFinalPage.length > 0) {
                     pages.push(assetsForFinalPage);
                 }
             } else {
-                // If there are no assets, create one empty page to show the form structure.
                 pages.push([]);
             }
 
             pages.forEach((pageAssets, pageIndex) => {
                 const totalPages = pages.length;
                 const isLastPage = pageIndex === totalPages - 1;
-                const maxItemsForThisPage = isLastPage ? FINAL_PAGE_MAX_ITEMS : INTERMEDIATE_PAGE_MAX_ITEMS;
+                const isFirstPage = pageIndex === 0;
+
+                let maxItemsForThisPage;
+                if (isLastPage) {
+                    maxItemsForThisPage = FINAL_PAGE_CAPACITY.items;
+                } else if (isFirstPage) {
+                    maxItemsForThisPage = FIRST_PAGE_CAPACITY.items;
+                } else {
+                    maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY.items;
+                }
 
                 let assetsHTML = '';
                 let totalAmountOnPage = 0;
