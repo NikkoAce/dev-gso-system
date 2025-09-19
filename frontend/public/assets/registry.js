@@ -676,10 +676,27 @@ function initializeRegistryPage(user) {
                 tr.classList.add('bg-blue-50', 'hover:bg-blue-100');
             }
     
-            const editButton = canUpdate ? `<a href="./asset-form.html?id=${asset._id}" class="edit-btn btn btn-ghost btn-xs" data-id="${asset._id}" title="Edit Asset"><i data-lucide="edit" class="h-4 w-4"></i></a>` : '';
-            const deleteButton = canDelete ? `<button class="delete-btn btn btn-ghost btn-xs text-red-500" data-id="${asset._id}" title="Delete Asset"><i data-lucide="trash-2" class="h-4 w-4"></i></button>` : '';
-            const transferButton = canUpdate ? `<button class="transfer-btn btn btn-ghost btn-xs" data-id="${asset._id}" title="Transfer Asset"><i data-lucide="arrow-right-left" class="h-4 w-4"></i></button>` : '';
-    
+            const propertyCardLink = `<li><a href="./movable-property-card.html?id=${asset._id}"><i data-lucide="book-user"></i>View Property Card</a></li>`;
+            const ledgerCardLink = `<li><a href="../slips/movable-ledger-card.html?id=${asset._id}"><i data-lucide="book-open-check"></i>View Ledger Card</a></li>`;
+            const editLink = canUpdate ? `<li><a href="./asset-form.html?id=${asset._id}" class="edit-btn"><i data-lucide="edit"></i>Edit</a></li>` : '';
+            const transferButton = canUpdate ? `<li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i>Transfer</button></li>` : '';
+            const deleteButton = canDelete ? `<div class="divider my-1"></div><li><button class="delete-btn text-error" data-id="${asset._id}"><i data-lucide="trash-2"></i>Delete</button></li>` : '';
+
+            const dropdownActions = `
+                <div class="dropdown dropdown-end">
+                    <label tabindex="0" class="btn btn-ghost btn-xs">
+                        <i data-lucide="more-vertical" class="h-4 w-4"></i>
+                    </label>
+                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                        ${propertyCardLink}
+                        ${ledgerCardLink}
+                        ${editLink}
+                        ${transferButton}
+                        ${deleteButton}
+                    </ul>
+                </div>
+            `;
+
             tr.innerHTML = `
                 <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isSelected ? 'checked' : ''}></td>
                 <td data-label="Property No.">${asset.propertyNumber}</td>
@@ -690,12 +707,7 @@ function initializeRegistryPage(user) {
                 <td data-label="Status"><span class="badge badge-ghost badge-sm">${asset.status}</span></td>
                 <td data-label="Date Created">${new Date(asset.createdAt).toLocaleDateString()}</td>
                 <td class="text-center non-printable">
-                    <div class="flex justify-center items-center gap-1">
-                        <a href="./movable-property-card.html?id=${asset._id}" class="ledger-card-btn btn btn-ghost btn-xs" title="View Property Card"><i data-lucide="book-user" class="h-4 w-4"></i></a>
-                        ${editButton}
-                        ${transferButton}
-                        ${deleteButton}
-                    </div>
+                    ${dropdownActions}
                 </td>
             `;
             DOM.tableBody.appendChild(tr);
