@@ -6,7 +6,8 @@ const {
     getStockItemById,
     createStockItem,
     updateStockItem,
-    deleteStockItem
+    deleteStockItem,
+    getStockItemLedger
 } = require('../controllers/stockItemController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const PERMISSIONS = require('../config/permissions');
