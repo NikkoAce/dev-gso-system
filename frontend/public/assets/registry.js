@@ -676,7 +676,7 @@ function initializeRegistryPage(user) {
                 tr.classList.add('bg-blue-50', 'hover:bg-blue-100');
             }
     
-            const propertyCardLink = `<li><a href="./movable-property-card.html?id=${asset._id}"><i data-lucide="book-user"></i>View Property Card</a></li>`;
+            const propertyCardLink = `<li><a href="../slips/movable-property-card.html?id=${asset._id}"><i data-lucide="book-user"></i>View Property Card</a></li>`;
             const ledgerCardLink = `<li><a href="../slips/movable-ledger-card.html?id=${asset._id}"><i data-lucide="book-open-check"></i>View Ledger Card</a></li>`;
             const editLink = canUpdate ? `<li><a href="./asset-form.html?id=${asset._id}" class="edit-btn"><i data-lucide="edit"></i>Edit</a></li>` : '';
             const transferButton = canUpdate ? `<li><button class="transfer-btn" data-id="${asset._id}"><i data-lucide="arrow-right-left"></i>Transfer</button></li>` : '';
