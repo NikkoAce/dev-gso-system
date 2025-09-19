@@ -33,40 +33,98 @@ createAuthenticatedPage({
                 // The slip number is part of the footer in IIRUP, but we can add it here if needed.
                 // For now, we'll rely on the title.
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
-
-                const assetList = document.getElementById('asset-list');
-                let totalCost = 0;
-                assetList.innerHTML = slipData.assets.map(asset => {
-                    totalCost += asset.acquisitionCost;
-                    // For IIRUP, we need more details than just description.
-                    // In create mode, we have the full asset object.
-                    // In reprint mode, we have what was saved in the IIRUP model.
-                    const depreciation = 0; // Placeholder, calculation is complex
-                    const impairment = asset.impairmentLosses || 0;
-                    const bookValue = asset.acquisitionCost - depreciation - impairment;
-
-                    return `
-                        <tr class="text-center">
-                            <td class="border border-black p-1">${formatDate(asset.acquisitionDate)}</td>
-                            <td class="border border-black p-1">${asset.propertyNumber}</td>
-                            <td class="border border-black p-1 text-left">${asset.description}</td>
-                            <td class="border border-black p-1">1</td>
-                            <td class="border border-black p-1 text-right">${formatCurrency(asset.acquisitionCost)}</td>
-                            <td class="border border-black p-1 text-right">${formatCurrency(asset.acquisitionCost)}</td>
-                            <td class="border border-black p-1 text-right">${formatCurrency(depreciation)}</td>
-                            <td class="border border-black p-1 text-right">${formatCurrency(impairment)}</td>
-                            <td class="border border-black p-1 text-right">${formatCurrency(bookValue)}</td>
-                            <td class="border border-black p-1 text-left">${asset.remarks || asset.condition || ''}</td>
-                        </tr>
-                    `;
-                }).join('');
                 
-                // Add empty rows for a consistent look
-                for (let i = slipData.assets.length; i < 10; i++) {
-                    assetList.innerHTML += `<tr><td class="border border-black h-6" colspan="10"></td></tr>`;
-                }
+                const formContainer = document.getElementById('form-container');
+                formContainer.innerHTML = ''; // Clear existing content
 
-                document.getElementById('grand-total-cost').textContent = formatCurrency(totalCost);
+                const assets = slipData.assets || [];
+                const ITEMS_PER_PAGE = 10;
+                const totalPages = Math.ceil(assets.length / ITEMS_PER_PAGE) || 1;
+
+                for (let i = 0; i < totalPages; i++) {
+                    const pageAssets = assets.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
+                    const isLastPage = i === totalPages - 1;
+
+                    let assetRows = '';
+                    pageAssets.forEach(asset => {
+                        const depreciation = 0; // Placeholder
+                        const impairment = asset.impairmentLosses || 0;
+                        const bookValue = asset.acquisitionCost - depreciation - impairment;
+                        assetRows += `
+                            <tr class="text-center">
+                                <td class="border border-black p-1">${formatDate(asset.acquisitionDate)}</td>
+                                <td class="border border-black p-1">${asset.propertyNumber}</td>
+                                <td class="border border-black p-1 text-left">${asset.description}</td>
+                                <td class="border border-black p-1">1</td>
+                                <td class="border border-black p-1 text-right">${formatCurrency(asset.acquisitionCost)}</td>
+                                <td class="border border-black p-1 text-right">${formatCurrency(asset.acquisitionCost)}</td>
+                                <td class="border border-black p-1 text-right">${formatCurrency(depreciation)}</td>
+                                <td class="border border-black p-1 text-right">${formatCurrency(impairment)}</td>
+                                <td class="border border-black p-1 text-right">${formatCurrency(bookValue)}</td>
+                                <td class="border border-black p-1 text-left">${asset.remarks || asset.condition || ''}</td>
+                            </tr>
+                        `;
+                    });
+
+                    const remainingRows = ITEMS_PER_PAGE - pageAssets.length;
+                    for (let j = 0; j < remainingRows; j++) {
+                        assetRows += `<tr><td class="border border-black h-6" colspan="10"></td></tr>`;
+                    }
+
+                    let footerHTML = '';
+                    if (isLastPage) {
+                        const grandTotalCost = assets.reduce((sum, asset) => sum + asset.acquisitionCost, 0);
+                        footerHTML = `
+                            <tr class="font-bold">
+                                <td colspan="5" class="border border-black p-1 text-center">TOTAL</td>
+                                <td class="border border-black p-1 text-right">${formatCurrency(grandTotalCost)}</td>
+                                <td colspan="3" class="border border-black p-1"></td>
+                                <td class="border border-black p-1"></td>
+                            </tr>
+                        `;
+                    }
+
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
+                    pageDiv.innerHTML = `
+                        <div class="text-center mb-4">
+                            <h3 class="font-bold text-lg">INVENTORY AND INSPECTION REPORT OF UNSERVICEABLE PROPERTY</h3>
+                            <p class="text-sm">(IIRUP)</p>
+                        </div>
+                        <div class="flex justify-between items-end mt-4 text-sm">
+                            <span>Entity Name: <span class="font-semibold">LGU of Daet</span></span>
+                            <span>Fund Cluster: <span class="font-semibold">01</span></span>
+                        </div>
+                        <table class="w-full text-xs border-collapse border border-black mt-4">
+                            <thead>
+                                <tr class="bg-gray-100 text-center">
+                                    <th rowspan="2" class="border border-black p-1">Date Acquired</th>
+                                    <th rowspan="2" class="border border-black p-1">Property No.</th>
+                                    <th rowspan="2" class="border border-black p-1">Description</th>
+                                    <th rowspan="2" class="border border-black p-1">Qty.</th>
+                                    <th rowspan="2" class="border border-black p-1">Unit Cost</th>
+                                    <th rowspan="2" class="border border-black p-1">Total Cost</th>
+                                    <th colspan="2" class="border border-black p-1">Accumulated</th>
+                                    <th rowspan="2" class="border border-black p-1">Book Value</th>
+                                    <th rowspan="2" class="border border-black p-1">Remarks</th>
+                                </tr>
+                                <tr class="bg-gray-100 text-center">
+                                    <th class="border border-black p-1">Depreciation</th>
+                                    <th class="border border-black p-1">Impairment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="asset-list">${assetRows}</tbody>
+                            <tfoot>${footerHTML}</tfoot>
+                        </table>
+                        ${isLastPage ? document.getElementById('iirup-footer-content').innerHTML : ''}
+                        <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">
+                            Page ${i + 1} of ${totalPages}
+                        </div>
+                    `;
+                    formContainer.appendChild(pageDiv);
+                }
+                // Hide the original footer template
+                document.getElementById('iirup-footer-content').classList.add('hidden');
             },
             checkFundSource: false // No fund source check needed for this slip
         };

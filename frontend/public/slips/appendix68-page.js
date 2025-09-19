@@ -27,47 +27,76 @@ createAuthenticatedPage({
                 reprint: '../slips/slip-history.html'
             },
             populateFormFn: (slipData) => {
-                const slipDate = slipData.date || slipData.issuedDate || Date.now();
-                document.getElementById('issued-date').value = new Date(slipDate).toISOString().split('T')[0];
-                document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
+                const formContainer = document.getElementById('form-container');
+                formContainer.innerHTML = ''; // Clear existing content
 
-                // Populate fields for reprint mode
-                if (slipData.placeOfStorage) {
-                    document.getElementById('place-of-storage').value = slipData.placeOfStorage;
-                }
-                if (slipData.disposalApprovedBy) {
-                    document.getElementById('disposal-approved-by').value = slipData.disposalApprovedBy;
-                }
-                if (slipData.certifiedByInspector) {
-                    document.getElementById('certified-by-inspector').value = slipData.certifiedByInspector;
-                }
-                if (slipData.witnessToDisposal) {
-                    document.getElementById('witness-to-disposal').value = slipData.witnessToDisposal;
-                }
-                if (slipData.inspectionCertificate) {
-                    document.getElementById('inspection-destroyed').checked = slipData.inspectionCertificate.isDestroyed;
-                    document.getElementById('inspection-sold-private').checked = slipData.inspectionCertificate.isSoldPrivate;
-                    document.getElementById('inspection-sold-public').checked = slipData.inspectionCertificate.isSoldPublic;
-                    document.getElementById('inspection-transferred').checked = slipData.inspectionCertificate.isTransferred;
-                    document.getElementById('inspection-transferred-to').value = slipData.inspectionCertificate.transferredTo || '';
-                }
+                const assets = slipData.assets || [];
+                const ITEMS_PER_PAGE = 15;
+                const totalPages = Math.ceil(assets.length / ITEMS_PER_PAGE) || 1;
 
-                const assetList = document.getElementById('asset-list');
-                let totalAmount = 0;
-                assetList.innerHTML = slipData.assets.map((asset, index) => {
-                    // In a real scenario, sales data would come from the slipData. For now, it's blank.
-                    return `
-                    <tr>
-                        <td class="border border-black p-1 text-center">${index + 1}</td>
-                        <td class="border border-black p-1 text-center">${asset.quantity || 1}</td>
-                        <td class="border border-black p-1 text-center">${asset.unit || 'unit'}</td>
-                        <td class="border border-black p-1">${asset.description}</td>
-                        <td class="border border-black p-1"></td> <!-- OR No. -->
-                        <td class="border border-black p-1"></td> <!-- Date -->
-                        <td class="border border-black p-1"></td> <!-- Amount -->
-                    </tr>
-                `}).join('');
-                document.getElementById('total-amount').textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalAmount);
+                for (let i = 0; i < totalPages; i++) {
+                    const pageAssets = assets.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
+                    const isLastPage = i === totalPages - 1;
+
+                    let assetRows = '';
+                    pageAssets.forEach((asset, index) => {
+                        assetRows += `
+                            <tr>
+                                <td class="border border-black p-1 text-center">${(i * ITEMS_PER_PAGE) + index + 1}</td>
+                                <td class="border border-black p-1 text-center">${asset.quantity || 1}</td>
+                                <td class="border border-black p-1 text-center">${asset.unit || 'unit'}</td>
+                                <td class="border border-black p-1">${asset.description}</td>
+                                <td class="border border-black p-1"></td> <!-- OR No. -->
+                                <td class="border border-black p-1"></td> <!-- Date -->
+                                <td class="border border-black p-1"></td> <!-- Amount -->
+                            </tr>
+                        `;
+                    });
+
+                    const remainingRows = ITEMS_PER_PAGE - pageAssets.length;
+                    for (let j = 0; j < remainingRows; j++) {
+                        assetRows += `<tr><td class="border border-black h-6" colspan="7"></td></tr>`;
+                    }
+
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
+
+                    // Use the original form content as a template
+                    const template = document.getElementById('appendix68-template').innerHTML;
+                    pageDiv.innerHTML = template;
+
+                    // Populate the dynamic parts of the template
+                    pageDiv.querySelector('#asset-list').innerHTML = assetRows;
+                    pageDiv.querySelector('#signatory-1-name').textContent = slipData.user?.name || user.name;
+                    
+                    // Only show footer on the last page
+                    if (!isLastPage) {
+                        pageDiv.querySelector('footer').remove();
+                    } else {
+                        // Populate reprint data if available
+                        if (slipData.placeOfStorage) pageDiv.querySelector('#place-of-storage').value = slipData.placeOfStorage;
+                        if (slipData.disposalApprovedBy) pageDiv.querySelector('#disposal-approved-by').value = slipData.disposalApprovedBy;
+                        if (slipData.certifiedByInspector) pageDiv.querySelector('#certified-by-inspector').value = slipData.certifiedByInspector;
+                        if (slipData.witnessToDisposal) pageDiv.querySelector('#witness-to-disposal').value = slipData.witnessToDisposal;
+                        if (slipData.inspectionCertificate) {
+                            pageDiv.querySelector('#inspection-destroyed').checked = slipData.inspectionCertificate.isDestroyed;
+                            pageDiv.querySelector('#inspection-sold-private').checked = slipData.inspectionCertificate.isSoldPrivate;
+                            pageDiv.querySelector('#inspection-sold-public').checked = slipData.inspectionCertificate.isSoldPublic;
+                            pageDiv.querySelector('#inspection-transferred').checked = slipData.inspectionCertificate.isTransferred;
+                            pageDiv.querySelector('#inspection-transferred-to').value = slipData.inspectionCertificate.transferredTo || '';
+                        }
+                    }
+
+                    // Set date and total amount
+                    const slipDate = slipData.date || slipData.issuedDate || Date.now();
+                    pageDiv.querySelector('#issued-date').value = new Date(slipDate).toISOString().split('T')[0];
+                    pageDiv.querySelector('#total-amount').textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(0); // Total is always 0 for waste
+
+                    pageDiv.innerHTML += `<div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">Page ${i + 1} of ${totalPages}</div>`;
+                    formContainer.appendChild(pageDiv);
+                }
+                // Hide the original template
+                document.getElementById('appendix68-template').classList.add('hidden');
             },
             checkFundSource: false // No fund source check needed for this slip
         };
