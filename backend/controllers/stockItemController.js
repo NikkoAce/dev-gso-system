@@ -1,6 +1,7 @@
 // FILE: backend/controllers/stockItemController.js
 const StockItem = require('../models/StockItem');
 const Requisition = require('../models/Requisition');
+const ReceivingReport = require('../models/ReceivingReport');
 const asyncHandler = require('express-async-handler');
 
 // @desc    Get all stock items
@@ -133,10 +134,79 @@ const deleteStockItem = asyncHandler(async (req, res) => {
     res.json({ msg: 'Stock item removed' });
 });
 
+// @desc    Get transaction ledger for a single stock item
+// @route   GET /api/stock-items/:id/ledger
+// @access  Private (GSO)
+const getStockItemLedger = asyncHandler(async (req, res) => {
+    const stockItemId = req.params.id;
+
+    const stockItem = await StockItem.findById(stockItemId).lean();
+    if (!stockItem) {
+        res.status(404);
+        throw new Error('Stock item not found');
+    }
+
+    // Fetch stock-in transactions (from Receiving Reports)
+    const stockInTransactions = await ReceivingReport.find({ 'items.stockItem': stockItemId }).lean();
+
+    // Fetch stock-out transactions (from issued/received Requisitions)
+    const stockOutTransactions = await Requisition.find({
+        'items.stockItem': stockItemId,
+        status: { $in: ['Issued', 'Received'] }
+    }).lean();
+
+    // Format transactions into a unified ledger format
+    let ledger = [];
+
+    stockInTransactions.forEach(report => {
+        const item = report.items.find(i => i.stockItem.equals(stockItemId));
+        if (item) {
+            ledger.push({
+                date: report.dateReceived,
+                type: 'Stock-In',
+                reference: report.rrNumber,
+                details: `From Supplier: ${report.supplier}`,
+                quantityIn: item.quantityReceived,
+                quantityOut: 0,
+            });
+        }
+    });
+
+    stockOutTransactions.forEach(req => {
+        const item = req.items.find(i => i.stockItem.equals(stockItemId));
+        if (item && item.quantityIssued > 0) {
+            ledger.push({
+                date: req.dateReceivedByEndUser || req.updatedAt, // Prefer received date, fallback to issued date
+                type: 'Stock-Out',
+                reference: req.risNumber,
+                details: `To Office: ${req.requestingOffice}`,
+                quantityIn: 0,
+                quantityOut: item.quantityIssued,
+            });
+        }
+    });
+
+    // Sort all transactions by date
+    ledger.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculate running balance
+    let balance = 0;
+    const ledgerWithBalance = ledger.map(entry => {
+        balance += entry.quantityIn - entry.quantityOut;
+        return { ...entry, balance };
+    });
+
+    res.json({
+        stockItem,
+        ledger: ledgerWithBalance
+    });
+});
+
 module.exports = {
     getAllStockItems,
     getStockItemById,
     createStockItem,
     updateStockItem,
-    deleteStockItem
+    deleteStockItem,
+    getStockItemLedger
 };

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Ledger Card - LGU GSO System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
+    <script src="../js/theme.js"></script>
+    <link href="../css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <script type="module" src="/js/auth.js" defer></script>
+</head>
+<body>
+    <div class="flex h-screen">
+        <aside id="sidebar-container" class="w-64 text-gray-800 flex-col h-full border-r hidden md:flex non-printable"></aside>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="md:hidden bg-white text-gray-800 p-4 flex justify-between items-center shadow-md border-b non-printable"></header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex justify-between items-center mb-6 non-printable">
+                        <h1 class="text-3xl font-bold text-gray-800">Stock Ledger Card</h1>
+                        <div>
+                            <a href="../supplies/inventory.html" class="btn btn-ghost mr-2">Back to Inventory</a>
+                            <button id="print-btn" class="btn btn-primary flex items-center gap-2">
+                                <i data-lucide="printer"></i> Print
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="loading-state" class="text-center p-8">
+                        <span class="loading loading-spinner loading-lg"></span>
+                        <p class="mt-2">Loading Ledger...</p>
+                    </div>
+
+                    <div id="error-state" class="hidden text-center p-8">
+                        <p id="error-message" class="text-red-500">Error loading data.</p>
+                    </div>
+
+                    <div id="report-output" class="hidden bg-white p-8 rounded-lg border printable-area">
+                        <div class="text-center mb-6">
+                            <h2 class="text-xl font-bold">STOCK LEDGER CARD</h2>
+                            <p class="text-sm">General Services Office - LGU Daet</p>
+                        </div>
+
+                        <div id="item-details" class="mb-6 p-4 border rounded-lg bg-base-200/50 text-sm">
+                            <!-- JS will populate this -->
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full text-xs">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Reference No.</th>
+                                        <th>Details</th>
+                                        <th>In</th>
+                                        <th>Out</th>
+                                        <th>Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ledger-table-body">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="../js/layout.js"></script>
+    <script type="module" src="./stock-ledger-card.js"></script>
+</body>
+</html>

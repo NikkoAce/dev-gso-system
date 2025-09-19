@@ -102,6 +102,9 @@ function initializeInventoryPage(user) {
                 <td>${item.category || 'N/A'}</td>
                 <td class="text-center">
                     <div class="flex justify-center items-center gap-1">
+                        <a href="../supplies/stock-ledger-card.html?id=${item._id}" class="btn btn-ghost btn-xs" title="View Ledger Card">
+                            <i data-lucide="history" class="h-4 w-4"></i>
+                        </a>
                         <button class="edit-item-btn btn btn-ghost btn-xs" data-id="${item._id}" title="Edit Item"><i data-lucide="edit" class="h-4 w-4"></i></button>
                         <button class="delete-item-btn btn btn-ghost btn-xs text-red-500" data-id="${item._id}" title="Delete Item"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
                     </div>
