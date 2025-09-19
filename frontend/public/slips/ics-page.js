@@ -17,10 +17,10 @@ createAuthenticatedPage({
 
             const assets = icsData.assets || [];
             // --- NEW: Smart Chunking Logic with different limits for final page ---
-            const INTERMEDIATE_PAGE_MAX_ITEMS = 15; // More items for pages without signatories
-            const INTERMEDIATE_PAGE_MAX_LINES = 40; // More lines for pages without signatories
-            const FINAL_PAGE_MAX_ITEMS = 10;        // Original limit for the page with signatories
-            const FINAL_PAGE_MAX_LINES = 25;
+            const INTERMEDIATE_PAGE_MAX_ITEMS = 20; // More items for pages without signatories
+            const INTERMEDIATE_PAGE_MAX_LINES = 55; // More lines for pages without signatories
+            const FINAL_PAGE_MAX_ITEMS = 12;        // A few more items on the final page
+            const FINAL_PAGE_MAX_LINES = 30;
 
             const pages = [];
 
@@ -108,13 +108,18 @@ createAuthenticatedPage({
                     assetsHTML += `<tr><td class="border border-gray-400 p-2 h-8" colspan="5"></td></tr>`;
                 }
 
-                const footerHTML = `
-                    <tr class="font-bold bg-gray-50">
-                        <td class="border border-gray-400 p-2 text-right" colspan="3">TOTAL</td>
-                        <td class="border border-gray-400 p-2 text-right">${formatCurrency(totalAmountOnPage)}</td>
-                        <td class="border border-gray-400 p-2"></td>
-                    </tr>
-                `;
+                // --- NEW: Conditional Footer ---
+                let footerHTML = '';
+                if (isLastPage) {
+                    const grandTotalAmount = assets.reduce((sum, asset) => sum + asset.acquisitionCost, 0);
+                    footerHTML = `
+                        <tr class="font-bold bg-gray-50">
+                            <td class="border border-gray-400 p-2 text-right" colspan="3">GRAND TOTAL</td>
+                            <td class="border border-gray-400 p-2 text-right">${formatCurrency(grandTotalAmount)}</td>
+                            <td class="border border-gray-400 p-2"></td>
+                        </tr>
+                    `;
+                }
 
                 const pageDiv = document.createElement('div');
                 pageDiv.className = (pageIndex < totalPages - 1) ? 'printable-page page-break-after' : 'printable-page';
@@ -162,6 +167,13 @@ createAuthenticatedPage({
                     `;
                 }
 
+                // --- NEW: Page Footer ---
+                const pageFooterHTML = `
+                    <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">
+                        Page ${pageIndex + 1} of ${totalPages}
+                    </div>
+                `;
+
                 pageDiv.innerHTML = `
                     <div class="text-center mb-6">
                         <h2 class="text-xl font-bold">INVENTORY CUSTODIAN SLIP</h2>
@@ -186,6 +198,7 @@ createAuthenticatedPage({
                         <tfoot>${footerHTML}</tfoot>
                     </table>
                     ${signatoryBlockHTML}
+                    ${pageFooterHTML}
                 `;
                 icsContainer.appendChild(pageDiv);
             });
