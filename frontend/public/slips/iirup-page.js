@@ -136,39 +136,34 @@ createAuthenticatedPage({
 
         // Custom initializer to override save behavior for IIRUP, which has no date inputs
         function customInitializeSlipPage(config, currentUser) {
-            initializeSlipPage(config, currentUser); // Run the original setup
+            // We need to get the original data before the common initializer clears it from localStorage.
+            const createDataString = localStorage.getItem(config.localStorageKeys.create);
+            let selectedAssets = [];
+            if (createDataString) {
+                selectedAssets = JSON.parse(createDataString);
+            }
+
+            // Now, run the common setup which will populate the form and also clear localStorage.
+            initializeSlipPage(config, currentUser);
 
             const saveButton = document.getElementById(config.domIds.saveButton);
-            if (saveButton) {
-                // We need to get the original data prepared by the common function
-                const createDataString = localStorage.getItem(config.localStorageKeys.create);
-                if (createDataString) {
-                    const selectedAssets = JSON.parse(createDataString);
+            if (saveButton && selectedAssets.length > 0) {
+                // Replace the default event listener to avoid trying to read date inputs
+                const newSaveButton = saveButton.cloneNode(true);
+                saveButton.parentNode.replaceChild(newSaveButton, saveButton);
 
-                    const dataToSave = {
-                        assetIds: selectedAssets.map(a => a._id)
-                        // The controller will generate the number and date
-                    };
-
-                    // Replace the event listener to avoid trying to read date inputs
-                    const newSaveButton = saveButton.cloneNode(true);
-                    saveButton.parentNode.replaceChild(newSaveButton, saveButton);
-
-                    newSaveButton.addEventListener('click', async () => {
-                        try {
-                            const savedSlip = await fetchWithAuth(config.apiEndpoint, {
-                                method: 'POST',
-                                body: JSON.stringify(dataToSave)
-                            });
-                            alert(`${config.slipType} saved successfully!`);
-                            localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
-                            window.print();
-                            window.location.href = config.backUrls.create;
-                        } catch (error) {
-                            alert(`Error: ${error.message}`);
-                        }
-                    });
-                }
+                newSaveButton.addEventListener('click', async () => {
+                    try {
+                        const dataToSave = { assetIds: selectedAssets.map(a => a._id) };
+                        const savedSlip = await fetchWithAuth(config.apiEndpoint, { method: 'POST', body: JSON.stringify(dataToSave) });
+                        alert(`${config.slipType} saved successfully!`);
+                        localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
+                        window.print();
+                        window.location.href = config.backUrls.create;
+                    } catch (error) {
+                        alert(`Error: ${error.message}`);
+                    }
+                });
             }
         }
 
