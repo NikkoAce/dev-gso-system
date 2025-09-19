@@ -152,31 +152,54 @@ function initializePage(user) {
 
     // Add event listener for the dynamically created "Fix All" button
     healthCheckResultsContent.addEventListener('click', async (e) => {
-        const fixBtn = e.target.closest('#fix-designations-btn');
-        if (!fixBtn) return;
+        const fixMismatchedBtn = e.target.closest('#fix-designations-btn');
+        if (fixMismatchedBtn) {
+            showConfirmationModal(
+                'Fix Mismatched Designations',
+                'This will update the designation on all listed assets to match the official designation in the Employees database. This action cannot be undone. Continue?',
+                async () => {
+                    fixMismatchedBtn.disabled = true;
+                    fixMismatchedBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Fixing...`;
 
-        showConfirmationModal(
-            'Fix Custodian Designations',
-            'This will update the designation on all listed assets to match the official designation in the Employees database. This action cannot be undone. Continue?',
-            async () => {
-                fixBtn.disabled = true;
-                fixBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Fixing...`;
+                    try {
+                        const result = await fetchWithAuth('admin/health-check/fix-designations', { method: 'POST' });
+                        showToast(result.message, 'success');
+                        await performHealthCheck(); // Re-run the health check to show the updated results
+                    } catch (error) {
+                        showToast(`Error fixing designations: ${error.message}`, 'error');
+                        fixMismatchedBtn.disabled = false;
+                        fixMismatchedBtn.innerHTML = `<i data-lucide="wrench" class="h-4 w-4"></i> Fix All`;
+                        lucide.createIcons();
+                    }
+                },
+                'btn-secondary'
+            );
+            return; // Stop further execution
+        }
 
-                try {
-                    const result = await fetchWithAuth('admin/health-check/fix-designations', { method: 'POST' });
-                    showToast(result.message, 'success');
-                    // Re-run the health check to show the updated results
-                    await performHealthCheck();
-                } catch (error) {
-                    showToast(`Error fixing designations: ${error.message}`, 'error');
-                    // Re-enable the button on failure, but it will be gone on success after the re-check
-                    fixBtn.disabled = false;
-                    fixBtn.innerHTML = `<i data-lucide="wrench" class="h-4 w-4"></i> Fix All`;
-                    lucide.createIcons();
-                }
-            },
-            'btn-secondary'
-        );
+        const fixMissingBtn = e.target.closest('#fix-missing-designations-btn');
+        if (fixMissingBtn) {
+            showConfirmationModal(
+                'Fix Missing Designations',
+                'This will look up and populate the designation for all listed assets from the Employees database. This action cannot be undone. Continue?',
+                async () => {
+                    fixMissingBtn.disabled = true;
+                    fixMissingBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span> Fixing...`;
+
+                    try {
+                        const result = await fetchWithAuth('admin/health-check/fix-missing-designations', { method: 'POST' });
+                        showToast(result.message, 'success');
+                        await performHealthCheck(); // Re-run the health check
+                    } catch (error) {
+                        showToast(`Error fixing designations: ${error.message}`, 'error');
+                        fixMissingBtn.disabled = false;
+                        fixMissingBtn.innerHTML = `<i data-lucide="wrench" class="h-4 w-4"></i> Fix All`;
+                        lucide.createIcons();
+                    }
+                },
+                'btn-secondary'
+            );
+        }
     });
 }
 
@@ -258,6 +281,16 @@ function renderHealthCheckReport(report, container) {
             { label: 'Custodian', path: 'custodian.name' },
             { label: 'Asset Designation', path: 'assetDesignation' },
             { label: 'Correct Designation', path: 'correctDesignation' }
+        ]
+    );
+
+    renderSection(
+        'Assets with Missing Custodian Designations',
+        report.missingCustodianDesignations,
+        [
+            { label: 'Property No.', path: 'propertyNumber' },
+            { label: 'Description', path: 'description' },
+            { label: 'Custodian', path: 'custodian.name' }
         ]
     );
 

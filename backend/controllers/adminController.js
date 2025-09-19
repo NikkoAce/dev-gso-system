@@ -120,7 +120,8 @@ const runHealthCheck = asyncHandler(async (req, res) => {
         orphanedMovableAssetsByCategory,
         orphanedRequisitionItems,
         orphanedImmovableChildren,
-        mismatchedCustodianDesignations
+        mismatchedCustodianDesignations,
+        missingCustodianDesignations
     ] = await Promise.all([
         // Check 1: Movable assets with custodians not in the employees collection
         Asset.aggregate([
