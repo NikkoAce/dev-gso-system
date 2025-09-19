@@ -16,41 +16,70 @@ createAuthenticatedPage({
             icsContainer.innerHTML = ''; // Clear previous content
 
             const assets = icsData.assets || [];
-            // --- Smart Chunking Logic ---
-            const MAX_LINES_PER_TABLE = 25; // Heuristic: Estimated max text lines that fit in the table body.
-            const MAX_ITEMS_PER_PAGE = 10;  // Hard limit on the number of rows to maintain visual consistency.
+            // --- NEW: Smart Chunking Logic with different limits for final page ---
+            const INTERMEDIATE_PAGE_MAX_ITEMS = 15; // More items for pages without signatories
+            const INTERMEDIATE_PAGE_MAX_LINES = 40; // More lines for pages without signatories
+            const FINAL_PAGE_MAX_ITEMS = 10;        // Original limit for the page with signatories
+            const FINAL_PAGE_MAX_LINES = 25;
 
             const pages = [];
-            let currentPageAssets = [];
-            let currentLineCount = 0;
 
             if (assets.length > 0) {
-                assets.forEach(asset => {
+                // Step 1: Determine the assets that will go on the final page by working backwards.
+                const assetsForFinalPage = [];
+                let linesOnFinalPage = 0;
+                let splitIndex = assets.length;
+
+                for (let i = assets.length - 1; i >= 0; i--) {
+                    const asset = assets[i];
                     // Estimate lines for this asset. 1 for the main row + 1 for each spec.
                     const assetLineCount = 1 + (asset.specifications?.length || 0);
-
-                    // A page is full if adding the new asset would exceed either the visual item limit or the estimated line limit.
-                    const pageIsFull = currentPageAssets.length > 0 &&
-                        (currentPageAssets.length >= MAX_ITEMS_PER_PAGE || currentLineCount + assetLineCount > MAX_LINES_PER_TABLE);
-
-                    if (pageIsFull) {
-                        pages.push(currentPageAssets); // Finalize the current page
-                        currentPageAssets = [];      // Start a new page
-                        currentLineCount = 0;        // Reset line count for the new page
+                    if (assetsForFinalPage.length < FINAL_PAGE_MAX_ITEMS && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_MAX_LINES) {
+                        assetsForFinalPage.unshift(asset); // Add to the beginning of the array
+                        linesOnFinalPage += assetLineCount;
+                        splitIndex = i; // Mark the split point in the original assets array
+                    } else {
+                        break; // Final page is full
                     }
+                }
 
-                    currentPageAssets.push(asset);
-                    currentLineCount += assetLineCount;
-                });
-            }
+                // Step 2: Chunk the remaining (intermediate) assets using the larger page limits.
+                const intermediateAssets = assets.slice(0, splitIndex);
+                if (intermediateAssets.length > 0) {
+                    let currentPageAssets = [];
+                    let currentLineCount = 0;
+                    intermediateAssets.forEach(asset => {
+                        const assetLineCount = 1 + (asset.specifications?.length || 0);
+                        const pageIsFull = currentPageAssets.length > 0 &&
+                            (currentPageAssets.length >= INTERMEDIATE_PAGE_MAX_ITEMS || currentLineCount + assetLineCount > INTERMEDIATE_PAGE_MAX_LINES);
 
-            // Add the last (or only) page.
-            if (currentPageAssets.length > 0 || pages.length === 0) {
-                pages.push(currentPageAssets);
+                        if (pageIsFull) {
+                            pages.push(currentPageAssets);
+                            currentPageAssets = [];
+                            currentLineCount = 0;
+                        }
+                        currentPageAssets.push(asset);
+                        currentLineCount += assetLineCount;
+                    });
+                    if (currentPageAssets.length > 0) {
+                        pages.push(currentPageAssets);
+                    }
+                }
+
+                // Step 3: Add the final page's assets as the last page.
+                if (assetsForFinalPage.length > 0) {
+                    pages.push(assetsForFinalPage);
+                }
+            } else {
+                // If there are no assets, create one empty page to show the form structure.
+                pages.push([]);
             }
 
             pages.forEach((pageAssets, pageIndex) => {
                 const totalPages = pages.length;
+                const isLastPage = pageIndex === totalPages - 1;
+                const maxItemsForThisPage = isLastPage ? FINAL_PAGE_MAX_ITEMS : INTERMEDIATE_PAGE_MAX_ITEMS;
+
                 let assetsHTML = '';
                 let totalAmountOnPage = 0;
 
@@ -74,7 +103,7 @@ createAuthenticatedPage({
                 });
 
                 // Fill remaining rows to ensure consistent page height
-                const remainingRows = MAX_ITEMS_PER_PAGE - pageAssets.length;
+                const remainingRows = maxItemsForThisPage - pageAssets.length;
                 for (let i = 0; i < remainingRows; i++) {
                     assetsHTML += `<tr><td class="border border-gray-400 p-2 h-8" colspan="5"></td></tr>`;
                 }
@@ -92,7 +121,7 @@ createAuthenticatedPage({
 
                 // --- NEW: Conditional Signatory Block ---
                 let signatoryBlockHTML = '';
-                if (pageIndex === totalPages - 1) {
+                if (isLastPage) {
                     // Only add the signatory block on the last page
                     const issuedDateInputId = `id="${icsConfig.domIds.issuedDateInput}"`;
                     const receivedDateInputId = `id="${icsConfig.domIds.receivedDateInput}"`;
