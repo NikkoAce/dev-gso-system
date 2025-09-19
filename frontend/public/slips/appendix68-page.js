@@ -28,7 +28,15 @@ createAuthenticatedPage({
             },
             populateFormFn: (slipData) => {
                 const formContainer = document.getElementById('form-container');
-                formContainer.innerHTML = ''; // Clear existing content
+
+                // Get the template HTML *before* clearing the container to avoid a null reference.
+                const templateHTML = document.getElementById('appendix68-template')?.innerHTML;
+                if (!templateHTML) {
+                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report template not found.</p>';
+                    return;
+                }
+                // Now clear the container.
+                formContainer.innerHTML = '';
 
                 const assets = slipData.assets || [];
                 const ITEMS_PER_PAGE = 15;
@@ -62,8 +70,7 @@ createAuthenticatedPage({
                     pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
 
                     // Use the original form content as a template
-                    const template = document.getElementById('appendix68-template').innerHTML;
-                    pageDiv.innerHTML = template;
+                    pageDiv.innerHTML = templateHTML;
 
                     // Populate the dynamic parts of the template
                     pageDiv.querySelector('#asset-list').innerHTML = assetRows;
@@ -95,8 +102,6 @@ createAuthenticatedPage({
                     pageDiv.innerHTML += `<div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">Page ${i + 1} of ${totalPages}</div>`;
                     formContainer.appendChild(pageDiv);
                 }
-                // Hide the original template
-                document.getElementById('appendix68-template').classList.add('hidden');
             },
             checkFundSource: false // No fund source check needed for this slip
         };

@@ -33,9 +33,16 @@ createAuthenticatedPage({
                 // The slip number is part of the footer in IIRUP, but we can add it here if needed.
                 // For now, we'll rely on the title.
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
-                
+
                 const formContainer = document.getElementById('form-container');
-                formContainer.innerHTML = ''; // Clear existing content
+
+                // Get the footer template HTML *before* clearing the container.
+                const footerTemplateHTML = document.getElementById('iirup-footer-content')?.innerHTML;
+                if (!footerTemplateHTML) {
+                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report footer template not found.</p>';
+                    return;
+                }
+                formContainer.innerHTML = ''; // Now clear the container.
 
                 const assets = slipData.assets || [];
                 const ITEMS_PER_PAGE = 10;
@@ -116,15 +123,13 @@ createAuthenticatedPage({
                             <tbody id="asset-list">${assetRows}</tbody>
                             <tfoot>${footerHTML}</tfoot>
                         </table>
-                        ${isLastPage ? document.getElementById('iirup-footer-content').innerHTML : ''}
+                        ${isLastPage ? footerTemplateHTML : ''}
                         <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">
                             Page ${i + 1} of ${totalPages}
                         </div>
                     `;
                     formContainer.appendChild(pageDiv);
                 }
-                // Hide the original footer template
-                document.getElementById('iirup-footer-content').classList.add('hidden');
             },
             checkFundSource: false // No fund source check needed for this slip
         };
