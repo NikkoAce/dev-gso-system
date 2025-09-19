@@ -252,14 +252,50 @@ function initializeForm(user) {
         // --- HANDLE BULK vs SINGLE ---
         if (isBulkCreate) {
             // --- BULK CREATE ---
+            // Get the components needed for the backend to generate property numbers.
+            const categoryName = assetData.category;
+            const officeName = assetData.office; // This is the FUND office.
+            const acquisitionDate = assetData.acquisitionDate;
+
+            if (!categoryName || !officeName || !acquisitionDate) {
+                showToast('Please select a Category, Fund Office, and Acquisition Date for bulk creation.', 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
+                lucide.createIcons();
+                return;
+            }
+
+            const selectedCategory = categoriesData.find(c => c.name === categoryName);
+            const selectedOffice = officesData.find(o => o.name === officeName);
+            const year = new Date(acquisitionDate).getFullYear();
+
+            if (!selectedCategory || !selectedOffice) {
+                showToast('Could not find data for the selected category or fund office.', 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
+                lucide.createIcons();
+                return;
+            }
+
+            const { subMajorGroup, glAccount } = selectedCategory;
+            const { code: officeCode } = selectedOffice;
+
+            if (!subMajorGroup || !glAccount || !officeCode) {
+                showToast('The selected category or fund office is missing required code information.', 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
+                lucide.createIcons();
+                return;
+            }
+
             const payload = {
-                assetData: assetData,
+                assetData,
                 quantity: parseInt(bulkQuantityInput.value, 10),
-                startNumber: propertyNumberInput.value.trim()
+                prefixComponents: { year, subMajorGroup, glAccount, officeCode }
             };
 
-            if (!payload.quantity || payload.quantity < 1 || !payload.startNumber) {
-                showToast('Please provide a valid quantity and starting property number for bulk creation.', 'error');
+            if (!payload.quantity || payload.quantity < 1) {
+                showToast('Please provide a valid quantity for bulk creation.', 'error');
                 submitButton.disabled = false;
                 submitButton.innerHTML = `<i data-lucide="save"></i> Save Asset`;
                 lucide.createIcons();
@@ -267,7 +303,7 @@ function initializeForm(user) {
             }
 
             try {
-                await fetchWithAuth('assets/bulk', { method: 'POST', body: payload });
+                await fetchWithAuth('assets/bulk', { method: 'POST', body: JSON.stringify(payload) });
                 showToast(`${payload.quantity} assets created successfully!`, 'success');
                 setTimeout(() => window.location.href = './asset-registry.html', 1500);
             } catch (error) {
