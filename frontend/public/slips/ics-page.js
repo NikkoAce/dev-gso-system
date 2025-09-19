@@ -90,8 +90,48 @@ createAuthenticatedPage({
                 const pageDiv = document.createElement('div');
                 pageDiv.className = (pageIndex < totalPages - 1) ? 'printable-page page-break-after' : 'printable-page';
 
-                const issuedDateInputId = pageIndex === 0 ? `id="${icsConfig.domIds.issuedDateInput}"` : '';
-                const receivedDateInputId = pageIndex === 0 ? `id="${icsConfig.domIds.receivedDateInput}"` : '';
+                // --- NEW: Conditional Signatory Block ---
+                let signatoryBlockHTML = '';
+                if (pageIndex === totalPages - 1) {
+                    // Only add the signatory block on the last page
+                    const issuedDateInputId = `id="${icsConfig.domIds.issuedDateInput}"`;
+                    const receivedDateInputId = `id="${icsConfig.domIds.receivedDateInput}"`;
+
+                    signatoryBlockHTML = `
+                        <div class="grid grid-cols-2 gap-4 mt-8 pt-4 border-t-2 border-black">
+                            <div class="text-sm">
+                                <p class="font-bold">Received from:</p>
+                                <div class="mt-12 text-center">
+                                    <p class="font-bold uppercase border-b border-black">DR. RAYCHEL B. VALENCIA</p>
+                                    <p>(Signature Over Printed Name)</p>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <p class="border-b border-black">Municipal Administrator/OIC GSO</p>
+                                    <p>(Position/Office)</p>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <input type="date" ${issuedDateInputId} class="border-b border-black text-center w-full" value="${formatDate(icsData.issuedDate)}">
+                                    <p>(Date)</p>
+                                </div>
+                            </div>
+                            <div class="text-sm">
+                                <p class="font-bold">Received by:</p>
+                                <div class="mt-12 text-center">
+                                    <p class="font-bold uppercase border-b border-black">${icsData.custodian.name}</p>
+                                    <p>(Signature Over Printed Name)</p>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <p class="border-b border-black">${icsData.custodian.designation || ''}, ${icsData.custodian.office || ''}</p>
+                                    <p>(Position/Office)</p>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <input type="date" ${receivedDateInputId} class="border-b border-black text-center w-full" value="${formatDate(icsData.receivedDate)}">
+                                    <p>(Date)</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
 
                 pageDiv.innerHTML = `
                     <div class="text-center mb-6">
@@ -116,38 +156,7 @@ createAuthenticatedPage({
                         <tbody>${assetsHTML}</tbody>
                         <tfoot>${footerHTML}</tfoot>
                     </table>
-                    <div class="grid grid-cols-2 gap-4 mt-8 pt-4 border-t-2 border-black">
-                        <div class="text-sm">
-                            <p class="font-bold">Received from:</p>
-                            <div class="mt-12 text-center">
-                                <p class="font-bold uppercase border-b border-black">DR. RAYCHEL B. VALENCIA</p>
-                                <p>(Signature Over Printed Name)</p>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <p class="border-b border-black">Municipal Administrator/OIC GSO</p>
-                                <p>(Position/Office)</p>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <input type="date" ${issuedDateInputId} class="border-b border-black text-center w-full" value="${formatDate(icsData.issuedDate)}">
-                                <p>(Date)</p>
-                            </div>
-                        </div>
-                        <div class="text-sm">
-                            <p class="font-bold">Received by:</p>
-                            <div class="mt-12 text-center">
-                                <p class="font-bold uppercase border-b border-black">${icsData.custodian.name}</p>
-                                <p>(Signature Over Printed Name)</p>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <p class="border-b border-black">${icsData.custodian.designation || ''}, ${icsData.custodian.office || ''}</p>
-                                <p>(Position/Office)</p>
-                            </div>
-                            <div class="mt-4 text-center">
-                                <input type="date" ${receivedDateInputId} class="border-b border-black text-center w-full" value="${formatDate(icsData.receivedDate)}">
-                                <p>(Date)</p>
-                            </div>
-                        </div>
-                    </div>
+                    ${signatoryBlockHTML}
                 `;
                 icsContainer.appendChild(pageDiv);
             });
