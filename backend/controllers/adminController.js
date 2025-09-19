@@ -119,7 +119,8 @@ const runHealthCheck = asyncHandler(async (req, res) => {
         orphanedMovableAssetsByCustodian,
         orphanedMovableAssetsByCategory,
         orphanedRequisitionItems,
-        orphanedImmovableChildren
+        orphanedImmovableChildren,
+        mismatchedCustodianDesignations
     ] = await Promise.all([
         // Check 1: Movable assets with custodians not in the employees collection
         Asset.aggregate([
@@ -151,7 +152,45 @@ const runHealthCheck = asyncHandler(async (req, res) => {
             { $lookup: { from: 'immovableassets', localField: 'parentAsset', foreignField: '_id', as: 'parentDetails' } },
             { $match: { parentDetails: { $eq: [] } } },
             { $project: { propertyIndexNumber: 1, name: 1, parentAsset: 1, _id: 0 } }
-        ])
+        ]),
+
+        // NEW Check 5: Movable assets with mismatched custodian designations
+        Asset.aggregate([
+            { $match: { 'custodian.name': { $exists: true, $ne: 'Unassigned', $ne: null, $ne: '' } } },
+            { $lookup: { from: 'employees', localField: 'custodian.name', foreignField: 'name', as: 'employeeDetails' } },
+            { $unwind: { path: '$employeeDetails', preserveNullAndEmptyArrays: true } },
+            {
+                $match: {
+                    'employeeDetails': { $ne: null }, // Only check assets where the employee exists
+                    $expr: { $ne: ['$custodian.designation', '$employeeDetails.designation'] }
+                }
+            },
+            {
+                $project: {
+                    propertyNumber: 1,
+                    description: 1,
+                    'custodian.name': 1,
+                    assetDesignation: '$custodian.designation',
+                    correctDesignation: '$employeeDetails.designation',
+                    _id: 0
+                }
+            }
+        ]),
+
+        // NEW Check 6: Movable assets with a valid custodian but a missing designation
+        Asset.aggregate([
+            {
+                $match: {
+                    'custodian.name': { $exists: true, $ne: 'Unassigned', $ne: null, $ne: '' },
+                    'custodian.designation': { $in: [null, ''] }
+                }
+            },
+            {
+                $project: {
+                    propertyNumber: 1, description: 1, 'custodian.name': 1, _id: 0
+                }
+            }
+        ]),
     ]);
 
     res.status(200).json({
@@ -160,9 +199,94 @@ const runHealthCheck = asyncHandler(async (req, res) => {
             orphanedMovableAssetsByCustodian,
             orphanedMovableAssetsByCategory,
             orphanedRequisitionItems,
-            orphanedImmovableChildren
+            orphanedImmovableChildren,
+            mismatchedCustodianDesignations
         }
     });
 });
 
-module.exports = { migrateAssetConditions, exportDatabase, runHealthCheck };
+/**
+ * @desc    Finds and fixes all assets where the custodian's designation does not match the official employee record.
+ * @route   POST /api/admin/health-check/fix-designations
+ * @access  Private/Admin (Requires 'admin:data:migrate')
+ */
+const fixMismatchedDesignations = asyncHandler(async (req, res) => {
+    // 1. Aggregate to find assets that need fixing
+    const assetsToFix = await Asset.aggregate([
+        { $match: { 'custodian.name': { $exists: true, $ne: 'Unassigned', $ne: null, $ne: '' } } },
+        { $lookup: { from: 'employees', localField: 'custodian.name', foreignField: 'name', as: 'employeeDetails' } },
+        { $unwind: '$employeeDetails' }, // We only care about assets where the employee exists
+        {
+            $match: {
+                $expr: { $ne: ['$custodian.designation', '$employeeDetails.designation'] }
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                correctDesignation: '$employeeDetails.designation'
+            }
+        }
+    ]);
+
+    if (assetsToFix.length === 0) {
+        return res.status(200).json({ message: 'No mismatched designations found to fix.', modifiedCount: 0 });
+    }
+
+    // 2. Prepare bulk update operations
+    const updates = assetsToFix.map(asset => ({
+        updateOne: {
+            filter: { _id: asset._id },
+            update: {
+                $set: { 'custodian.designation': asset.correctDesignation },
+                $push: { history: { event: 'Data Fix', details: `Custodian designation automatically updated to "${asset.correctDesignation}".`, user: req.user.name, date: new Date() } }
+            }
+        }
+    }));
+
+    const result = await Asset.bulkWrite(updates);
+    res.status(200).json({ message: `${result.modifiedCount} asset designations have been corrected.`, modifiedCount: result.modifiedCount });
+});
+
+/**
+ * @desc    Finds and fixes all assets where the custodian's designation is missing (null or empty).
+ * @route   POST /api/admin/health-check/fix-missing-designations
+ * @access  Private/Admin (Requires 'admin:data:migrate')
+ */
+const fixMissingDesignations = asyncHandler(async (req, res) => {
+    // 1. Aggregate to find assets that need fixing and their correct designation
+    const assetsToFix = await Asset.aggregate([
+        { $match: { 'custodian.name': { $exists: true, $ne: 'Unassigned', $ne: null, $ne: '' }, 'custodian.designation': { $in: [null, ''] } } },
+        { $lookup: { from: 'employees', localField: 'custodian.name', foreignField: 'name', as: 'employeeDetails' } },
+        { $unwind: '$employeeDetails' }, // Only process assets where the custodian exists in the employees collection
+        { $match: { 'employeeDetails.designation': { $exists: true, $ne: null, $ne: '' } } }, // Ensure the employee has a designation to copy
+        { $project: { _id: 1, correctDesignation: '$employeeDetails.designation' } }
+    ]);
+
+    if (assetsToFix.length === 0) {
+        return res.status(200).json({ message: 'No missing designations found to fix.', modifiedCount: 0 });
+    }
+
+    // 2. Prepare bulk update operations
+    const updates = assetsToFix.map(asset => ({
+        updateOne: {
+            filter: { _id: asset._id },
+            update: {
+                $set: { 'custodian.designation': asset.correctDesignation },
+                $push: { history: { event: 'Data Fix', details: `Custodian designation automatically populated to "${asset.correctDesignation}".`, user: req.user.name, date: new Date() } }
+            }
+        }
+    }));
+
+    const result = await Asset.bulkWrite(updates);
+    res.status(200).json({ message: `${result.modifiedCount} asset designations have been populated.`, modifiedCount: result.modifiedCount });
+});
+
+
+module.exports = {
+    migrateAssetConditions,
+    exportDatabase,
+    runHealthCheck,
+    fixMismatchedDesignations,
+    fixMissingDesignations
+};
