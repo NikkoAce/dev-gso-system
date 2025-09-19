@@ -16,14 +16,41 @@ createAuthenticatedPage({
             icsContainer.innerHTML = ''; // Clear previous content
 
             const assets = icsData.assets || [];
-            const ITEMS_PER_PAGE = 10; // Adjust this number based on how many items fit comfortably on one page
-            const totalPages = assets.length > 0 ? Math.ceil(assets.length / ITEMS_PER_PAGE) : 1;
+            // --- Smart Chunking Logic ---
+            const MAX_LINES_PER_TABLE = 25; // Heuristic: Estimated max text lines that fit in the table body.
+            const MAX_ITEMS_PER_PAGE = 10;  // Hard limit on the number of rows to maintain visual consistency.
 
-            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                const start = pageIndex * ITEMS_PER_PAGE;
-                const end = start + ITEMS_PER_PAGE;
-                const pageAssets = assets.slice(start, end);
+            const pages = [];
+            let currentPageAssets = [];
+            let currentLineCount = 0;
 
+            if (assets.length > 0) {
+                assets.forEach(asset => {
+                    // Estimate lines for this asset. 1 for the main row + 1 for each spec.
+                    const assetLineCount = 1 + (asset.specifications?.length || 0);
+
+                    // A page is full if adding the new asset would exceed either the visual item limit or the estimated line limit.
+                    const pageIsFull = currentPageAssets.length > 0 &&
+                        (currentPageAssets.length >= MAX_ITEMS_PER_PAGE || currentLineCount + assetLineCount > MAX_LINES_PER_TABLE);
+
+                    if (pageIsFull) {
+                        pages.push(currentPageAssets); // Finalize the current page
+                        currentPageAssets = [];      // Start a new page
+                        currentLineCount = 0;        // Reset line count for the new page
+                    }
+
+                    currentPageAssets.push(asset);
+                    currentLineCount += assetLineCount;
+                });
+            }
+
+            // Add the last (or only) page.
+            if (currentPageAssets.length > 0 || pages.length === 0) {
+                pages.push(currentPageAssets);
+            }
+
+            pages.forEach((pageAssets, pageIndex) => {
+                const totalPages = pages.length;
                 let assetsHTML = '';
                 let totalAmountOnPage = 0;
 
@@ -47,7 +74,7 @@ createAuthenticatedPage({
                 });
 
                 // Fill remaining rows to ensure consistent page height
-                const remainingRows = ITEMS_PER_PAGE - pageAssets.length;
+                const remainingRows = MAX_ITEMS_PER_PAGE - pageAssets.length;
                 for (let i = 0; i < remainingRows; i++) {
                     assetsHTML += `<tr><td class="border border-gray-400 p-2 h-8" colspan="5"></td></tr>`;
                 }
@@ -61,10 +88,8 @@ createAuthenticatedPage({
                 `;
 
                 const pageDiv = document.createElement('div');
-                // Add a class to control page breaks
                 pageDiv.className = (pageIndex < totalPages - 1) ? 'printable-page page-break-after' : 'printable-page';
 
-                // Only add IDs to the date inputs on the first page so the common save logic can find them.
                 const issuedDateInputId = pageIndex === 0 ? `id="${icsConfig.domIds.issuedDateInput}"` : '';
                 const receivedDateInputId = pageIndex === 0 ? `id="${icsConfig.domIds.receivedDateInput}"` : '';
 
@@ -125,7 +150,7 @@ createAuthenticatedPage({
                     </div>
                 `;
                 icsContainer.appendChild(pageDiv);
-            }
+            });
         }
 
         // Configuration object that tells the common initializer how to behave for an ICS.
