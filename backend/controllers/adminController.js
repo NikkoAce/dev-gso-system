@@ -201,7 +201,8 @@ const runHealthCheck = asyncHandler(async (req, res) => {
             orphanedMovableAssetsByCategory,
             orphanedRequisitionItems,
             orphanedImmovableChildren,
-            mismatchedCustodianDesignations
+            mismatchedCustodianDesignations,
+            missingCustodianDesignations
         }
     });
 });

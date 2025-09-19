@@ -206,13 +206,15 @@ function initializePage(user) {
 function renderHealthCheckReport(report, container) {
     let html = '';
     const renderSection = (title, items, fields) => {
-        html += `<h4 class="font-bold text-sm mt-4 mb-2 text-base-content/80">${title} (${items.length})</h4>`;
-        if (items.length === 0) {
+        // Make the function safer by providing a default empty array for items.
+        const safeItems = items || [];
+        html += `<h4 class="font-bold text-sm mt-4 mb-2 text-base-content/80">${title} (${safeItems.length})</h4>`;
+        if (safeItems.length === 0) {
             html += `<p class="text-success text-xs">No issues found in this category.</p>`;
         } else {
             html += `<div class="bg-base-100 p-2 rounded-md max-h-40 overflow-y-auto">`;
             html += `<ul class="space-y-2">`;
-            items.forEach(item => {
+            safeItems.forEach(item => {
                 const details = fields.map(fieldInfo => {
                     const value = fieldInfo.path.split('.').reduce((o, i) => o ? o[i] : 'N/A', item);
                     return `<li><span class="font-semibold">${fieldInfo.label}:</span> ${value}</li>`;
@@ -222,13 +224,13 @@ function renderHealthCheckReport(report, container) {
             html += `</ul></div>`;
 
             // Add the "Fix All" button specifically for the designation mismatch section
-            if (title === 'Assets with Mismatched Custodian Designations' && items.length > 0) {
-                html += `<button id="fix-designations-btn" class="btn btn-secondary btn-sm mt-2"><i data-lucide="wrench" class="h-4 w-4"></i> Fix All (${items.length})</button>`;
+            if (title === 'Assets with Mismatched Custodian Designations' && safeItems.length > 0) {
+                html += `<button id="fix-designations-btn" class="btn btn-secondary btn-sm mt-2"><i data-lucide="wrench" class="h-4 w-4"></i> Fix All (${safeItems.length})</button>`;
             }
 
             // Add the "Fix All" button specifically for the missing designation section
-            if (title === 'Assets with Missing Custodian Designations' && items.length > 0) {
-                html += `<button id="fix-missing-designations-btn" class="btn btn-secondary btn-sm mt-2"><i data-lucide="wrench" class="h-4 w-4"></i> Fix All (${items.length})</button>`;
+            if (title === 'Assets with Missing Custodian Designations' && safeItems.length > 0) {
+                html += `<button id="fix-missing-designations-btn" class="btn btn-secondary btn-sm mt-2"><i data-lucide="wrench" class="h-4 w-4"></i> Fix All (${safeItems.length})</button>`;
             }
         }
     };
@@ -281,16 +283,6 @@ function renderHealthCheckReport(report, container) {
             { label: 'Custodian', path: 'custodian.name' },
             { label: 'Asset Designation', path: 'assetDesignation' },
             { label: 'Correct Designation', path: 'correctDesignation' }
-        ]
-    );
-
-    renderSection(
-        'Assets with Missing Custodian Designations',
-        report.missingCustodianDesignations,
-        [
-            { label: 'Property No.', path: 'propertyNumber' },
-            { label: 'Description', path: 'description' },
-            { label: 'Custodian', path: 'custodian.name' }
         ]
     );
 
