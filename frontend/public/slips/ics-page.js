@@ -212,7 +212,6 @@ createAuthenticatedPage({
                     ${logoHeader}
                     <div class="text-center mb-6">
                         <h2 class="text-xl font-bold">INVENTORY CUSTODIAN SLIP</h2>
-                        <h3 class="font-semibold">LGU Daet, Camarines Norte</h3>
                         <p class="text-sm">Fund: <span class="font-semibold">${(icsData.assets && icsData.assets.length > 0) ? icsData.assets[0].fundSource : 'N/A'}</span></p>
                     </div>
                     <div class="flex justify-between mb-4 text-sm">

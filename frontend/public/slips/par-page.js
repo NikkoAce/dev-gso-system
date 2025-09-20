@@ -201,7 +201,6 @@ createAuthenticatedPage({
                     ${logoHeader}
                     <div class="text-center mb-6">
                         <h2 class="text-xl font-bold">PROPERTY ACKNOWLEDGMENT RECEIPT</h2>
-                        <h3 class="font-semibold">LGU Daet, Camarines Norte</h3>
                         <p class="text-sm">Fund: <span id="par-fund-source" class="font-semibold">${(parData.assets && parData.assets.length > 0) ? parData.assets[0].fundSource : ''}</span></p>
                     </div>
                     <div class="flex justify-between mb-4 text-sm">
