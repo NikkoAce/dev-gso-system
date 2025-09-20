@@ -123,7 +123,7 @@ createAuthenticatedPage({
                                     <th class="border border-black p-1">Impairment</th>
                                 </tr>
                             </thead>
-                            <tbody id="asset-list">${assetRows}</tbody>
+                            <tbody>${assetRows}</tbody>
                             <tfoot>${footerHTML}</tfoot>
                         </table>
                         ${isLastPage ? footerTemplateHTML : ''}

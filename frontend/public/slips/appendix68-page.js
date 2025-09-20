@@ -32,23 +32,25 @@ createAuthenticatedPage({
             populateFormFn: (slipData) => {
                 currentSlipData = slipData;
                 const formContainer = document.getElementById(config.domIds.formContainer);
-
-                // Get the template HTML *before* clearing the container to avoid a null reference.
-                const templateHTML = document.getElementById('appendix68-template')?.innerHTML;
-                if (!templateHTML) {
+                
+                // Get the footer template HTML *once* and then clear the container.
+                const fullTemplate = document.getElementById('appendix68-template');
+                const footerTemplateHTML = fullTemplate?.querySelector('footer')?.innerHTML;
+                if (!footerTemplateHTML) {
                     formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report template not found.</p>';
                     return;
                 }
-                // Now clear the container.
                 formContainer.innerHTML = '';
 
                 const assets = slipData.assets || [];
                 const ITEMS_PER_PAGE = 15;
                 const totalPages = Math.ceil(assets.length / ITEMS_PER_PAGE) || 1;
+                const slipDate = new Date(slipData.date || slipData.issuedDate || Date.now()).toISOString().split('T')[0];
 
                 for (let i = 0; i < totalPages; i++) {
                     const pageAssets = assets.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
                     const isLastPage = i === totalPages - 1;
+                    const isFirstPage = i === 0;
 
                     let assetRows = '';
                     pageAssets.forEach((asset, index) => {
@@ -70,40 +72,83 @@ createAuthenticatedPage({
                         assetRows += `<tr><td class="border border-black h-6" colspan="7"></td></tr>`;
                     }
 
+                    const logoHeader = isFirstPage ? `
+                        <div class="flex flex-col items-center mb-8">
+                            <img src="/LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                            <div class="text-center mt-4">
+                                <p>Republic of the Philippines</p>
+                                <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                                <p class="font-bold">MUNICIPALITY OF DAET</p>
+                            </div>
+                        </div>
+                    ` : '<div class="h-36"></div>'; // Placeholder to keep spacing consistent
+
                     const pageDiv = document.createElement('div');
                     pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
 
-                    // Use the original form content as a template
-                    pageDiv.innerHTML = templateHTML;
+                    // Build the page HTML from scratch to avoid duplicate IDs
+                    pageDiv.innerHTML = `
+                        ${logoHeader}
+                        <div class="text-center mb-4">
+                            <h3 class="font-bold text-lg">WASTE MATERIALS REPORT</h3>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
+                            <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
+                            <span>Fund: <span class="font-semibold underline">General Fund</span></span>
+                            <label class="form-control">
+                                <div class="label py-0"><span class="label-text">Place of Storage</span></div>
+                                <input type="text" id="place-of-storage" class="input input-bordered input-sm w-full" value="${slipData.placeOfStorage || 'GSO Warehouse'}" ${!isFirstPage ? 'disabled' : ''}>
+                            </label>
+                            <label class="form-control">
+                                <div class="label py-0"><span class="label-text">Date</span></div>
+                                <input type="date" id="issued-date" class="input input-bordered input-sm w-full" value="${slipDate}" ${!isFirstPage ? 'disabled' : ''}>
+                            </label>
+                        </div>
+                        <table class="w-full text-xs border-collapse border border-black mt-4">
+                            <thead>
+                                <tr class="text-center">
+                                    <th colspan="4" class="border border-black p-1 font-bold">ITEMS FOR DISPOSAL</th>
+                                    <th colspan="3" class="border border-black p-1 font-bold">Record of Sales</th>
+                                </tr>
+                                <tr class="bg-gray-100 text-center">
+                                    <th class="border border-black p-1 w-[5%]">Item</th>
+                                    <th class="border border-black p-1 w-[10%]">Quantity</th>
+                                    <th class="border border-black p-1 w-[10%]">Unit</th>
+                                    <th class="border border-black p-1">Description</th>
+                                    <th class="border border-black p-1 w-[15%]">Official Receipt No.</th>
+                                    <th class="border border-black p-1 w-[10%]">Date</th>
+                                    <th class="border border-black p-1 w-[10%]">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>${assetRows}</tbody>
+                            <tfoot>
+                                <tr class="font-bold">
+                                    <td colspan="6" class="border border-black p-1 text-center">TOTAL</td>
+                                    <td class="border border-black p-1 text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(0)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        ${isLastPage ? `<footer class="mt-8 text-xs space-y-8">${footerTemplateHTML}</footer>` : ''}
+                        <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">Page ${i + 1} of ${totalPages}</div>
+                    `;
 
-                    // Populate the dynamic parts of the template
-                    pageDiv.querySelector('#asset-list').innerHTML = assetRows;
-                    pageDiv.querySelector('#signatory-1-name').textContent = slipData.user?.name || user.name;
-                    
-                    // Only show footer on the last page
-                    if (!isLastPage) {
-                        pageDiv.querySelector('footer').remove();
-                    } else {
-                        // Populate reprint data if available
-                        if (slipData.placeOfStorage) pageDiv.querySelector('#place-of-storage').value = slipData.placeOfStorage;
-                        if (slipData.disposalApprovedBy) pageDiv.querySelector('#disposal-approved-by').value = slipData.disposalApprovedBy;
-                        if (slipData.certifiedByInspector) pageDiv.querySelector('#certified-by-inspector').value = slipData.certifiedByInspector;
-                        if (slipData.witnessToDisposal) pageDiv.querySelector('#witness-to-disposal').value = slipData.witnessToDisposal;
-                        if (slipData.inspectionCertificate) {
-                            pageDiv.querySelector('#inspection-destroyed').checked = slipData.inspectionCertificate.isDestroyed;
-                            pageDiv.querySelector('#inspection-sold-private').checked = slipData.inspectionCertificate.isSoldPrivate;
-                            pageDiv.querySelector('#inspection-sold-public').checked = slipData.inspectionCertificate.isSoldPublic;
-                            pageDiv.querySelector('#inspection-transferred').checked = slipData.inspectionCertificate.isTransferred;
-                            pageDiv.querySelector('#inspection-transferred-to').value = slipData.inspectionCertificate.transferredTo || '';
+                    // If it's the last page, populate the unique footer fields.
+                    if (isLastPage) {
+                        const footer = pageDiv.querySelector('footer');
+                        if (footer) {
+                            footer.querySelector('#signatory-1-name').textContent = slipData.user?.name || user.name;
+                            if (slipData.disposalApprovedBy) footer.querySelector('#disposal-approved-by').value = slipData.disposalApprovedBy;
+                            if (slipData.certifiedByInspector) footer.querySelector('#certified-by-inspector').value = slipData.certifiedByInspector;
+                            if (slipData.witnessToDisposal) footer.querySelector('#witness-to-disposal').value = slipData.witnessToDisposal;
+                            if (slipData.inspectionCertificate) {
+                                footer.querySelector('#inspection-destroyed').checked = slipData.inspectionCertificate.isDestroyed;
+                                footer.querySelector('#inspection-sold-private').checked = slipData.inspectionCertificate.isSoldPrivate;
+                                footer.querySelector('#inspection-sold-public').checked = slipData.inspectionCertificate.isSoldPublic;
+                                footer.querySelector('#inspection-transferred').checked = slipData.inspectionCertificate.isTransferred;
+                                footer.querySelector('#inspection-transferred-to').value = slipData.inspectionCertificate.transferredTo || '';
+                            }
                         }
                     }
-
-                    // Set date and total amount
-                    const slipDate = slipData.date || slipData.issuedDate || Date.now();
-                    pageDiv.querySelector('#issued-date').value = new Date(slipDate).toISOString().split('T')[0];
-                    pageDiv.querySelector('#total-amount').textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(0); // Total is always 0 for waste
-
-                    pageDiv.innerHTML += `<div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">Page ${i + 1} of ${totalPages}</div>`;
                     formContainer.appendChild(pageDiv);
                 }
             },
