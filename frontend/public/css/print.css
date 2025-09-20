@@ -42,4 +42,10 @@
   #asset-details-container .md\:col-span-2 {
       grid-column: span 1 / span 1 !important;
   }
+
+  /* Utility to force long words to wrap in print view */
+  .print-break-words {
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+  }
 }

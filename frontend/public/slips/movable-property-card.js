@@ -81,7 +81,7 @@ function initializePropertyCardPage(user) {
                     <tr class="border-b">
                         <td class="border border-black p-1">${formatDate(entry.date)}</td>
                         <td class="border border-black p-1">${entry.event}</td>
-                        <td class="border border-black p-1">${entry.details}</td>
+                        <td class="border border-black p-1 print-break-words">${entry.details}</td>
                         <td class="border border-black p-1">${entry.user}</td>
                     </tr>
                 `).join('')}
