@@ -256,7 +256,6 @@ createAuthenticatedPage({
 
         function handleTogglePreview() {
             togglePreviewMode({
-                reportElementId: 'report-output',
                 orientation: 'portrait',
                 exitButtonId: 'exit-preview-btn'
             });

@@ -124,52 +124,25 @@ export async function exportToPDF(options) {
  * @param {string} options.exitButtonId - The ID of the button used to exit preview mode.
  */
 export function togglePreviewMode(options) {
-    const { orientation, exitButtonId, reportElementId = 'report-output' } = options;
+    const { orientation, exitButtonId } = options;
     const exitButton = document.getElementById(exitButtonId);
+    const mainElement = document.querySelector('main');
+    // The direct parent of <main> is the container that has the overflow-hidden property.
+    const mainWrapper = mainElement ? mainElement.parentElement : null;
     const isPreviewing = document.body.classList.contains('print-preview-mode');
-
-    // Use a global state object to store the original position of the previewed element
-    if (!window.gsoPreviewState) {
-        window.gsoPreviewState = {
-            originalParent: null,
-            originalNextSibling: null,
-            previewedElement: null,
-        };
-    }
 
     if (isPreviewing) {
         // Exit preview mode
         document.body.classList.remove('print-preview-mode', 'preview-portrait', 'preview-landscape');
         if (exitButton) exitButton.classList.add('hidden');
-
-        // Move the element back to its original position in the DOM
-        const { previewedElement, originalParent, originalNextSibling } = window.gsoPreviewState;
-        if (previewedElement && originalParent) {
-            originalParent.insertBefore(previewedElement, originalNextSibling);
-        }
-        
-        // Reset state
-        window.gsoPreviewState = {
-            originalParent: null,
-            originalNextSibling: null,
-            previewedElement: null,
-        };
-
+        // Restore overflow properties to allow normal page scrolling
+        if (mainElement) mainElement.classList.add('overflow-x-hidden', 'overflow-y-auto');
+        if (mainWrapper) mainWrapper.classList.add('overflow-hidden');
     } else {
         // Enter preview mode
-        const elementToPreview = document.getElementById(reportElementId);
-        if (!elementToPreview) {
-            console.error(`Preview failed: element with ID "${reportElementId}" not found.`);
-            return;
-        }
-
-        // Save original position and the element itself
-        window.gsoPreviewState.originalParent = elementToPreview.parentElement;
-        window.gsoPreviewState.originalNextSibling = elementToPreview.nextSibling;
-        window.gsoPreviewState.previewedElement = elementToPreview;
-
-        // Move element to be a direct child of the body to escape clipping contexts
-        document.body.appendChild(elementToPreview);
+        // Remove overflow properties from parent containers to prevent the fixed-position preview from being clipped
+        if (mainElement) mainElement.classList.remove('overflow-x-hidden', 'overflow-y-auto');
+        if (mainWrapper) mainWrapper.classList.remove('overflow-hidden');
 
         document.body.classList.add('print-preview-mode', `preview-${orientation}`);
         if (exitButton) exitButton.classList.remove('hidden');
