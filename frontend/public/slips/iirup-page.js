@@ -18,7 +18,7 @@ createAuthenticatedPage({
             },
             domIds: {
                 pageTitle: 'page-title', // The main H1 title of the page
-                formContainer: 'report-output', // The main container for the slip content
+                formContainer: 'form-container', // The main container for the slip content
                 backButton: 'back-button',
                 saveButton: 'save-button',
                 reprintButton: 'reprint-button',
@@ -37,15 +37,15 @@ createAuthenticatedPage({
                 // For now, we'll rely on the title.
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
 
-                const reportOutputContainer = document.getElementById(config.domIds.formContainer);
+                const formContainer = document.getElementById(config.domIds.formContainer);
 
                 // Get the footer template HTML *before* clearing the container.
                 const footerTemplateHTML = document.getElementById('iirup-footer-content')?.innerHTML;
                 if (!footerTemplateHTML) {
-                    reportOutputContainer.innerHTML = '<p class="text-center text-red-500">Error: Report footer template not found.</p>';
+                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report footer template not found.</p>';
                     return;
                 }
-                reportOutputContainer.innerHTML = ''; // Now clear the container.
+                formContainer.innerHTML = ''; // Now clear the container.
 
                 const assets = slipData.assets || [];
                 const ITEMS_PER_PAGE = 10;
@@ -131,7 +131,7 @@ createAuthenticatedPage({
                             Page ${i + 1} of ${totalPages}
                         </div>
                     `;
-                    reportOutputContainer.appendChild(pageDiv);
+                    formContainer.appendChild(pageDiv);
                 }
             },
             checkFundSource: false // No fund source check needed for this slip

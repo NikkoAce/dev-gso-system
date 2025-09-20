@@ -43,74 +43,76 @@
                 </div>
 
                 <div id="report-output" class="bg-white p-8 rounded-lg border printable-area">
-                    <!-- The content below is a template for JS. It will be cleared and rebuilt. -->
-                    <div class="text-center mb-4">
-                        <h3 class="font-bold text-lg">INVENTORY AND INSPECTION REPORT OF UNSERVICEABLE PROPERTY</h3>
-                        <p class="text-sm">(IIRUP)</p>
-                    </div>
-                    <div class="flex justify-between items-end mt-4 text-sm">
-                        <span>Entity Name: <span class="font-semibold">LGU of Daet</span></span>
-                        <span>Fund Cluster: <span class="font-semibold">01</span></span>
-                    </div>
-                    <table class="w-full text-xs border-collapse border border-black mt-4">
-                        <thead>
-                            <tr class="bg-gray-100 text-center">
-                                <th rowspan="2" class="border border-black p-1">Date Acquired</th>
-                                <th rowspan="2" class="border border-black p-1">Property No.</th>
-                                <th rowspan="2" class="border border-black p-1">Description</th>
-                                <th rowspan="2" class="border border-black p-1">Qty.</th>
-                                <th rowspan="2" class="border border-black p-1">Unit Cost</th>
-                                <th rowspan="2" class="border border-black p-1">Total Cost</th>
-                                <th colspan="2" class="border border-black p-1">Accumulated</th>
-                                <th rowspan="2" class="border border-black p-1">Book Value</th>
-                                <th rowspan="2" class="border border-black p-1">Remarks</th>
-                            </tr>
-                            <tr class="bg-gray-100 text-center">
-                                <th class="border border-black p-1">Depreciation</th>
-                                <th class="border border-black p-1">Impairment</th>
-                            </tr>
-                        </thead>
-                        <tbody id="asset-list">
-                            <!-- Assets will be populated by JS -->
-                        </tbody>
-                        <tfoot>
-                            <tr class="font-bold">
-                                <td colspan="5" class="border border-black p-1 text-center">TOTAL</td>
-                                <td id="grand-total-cost" class="border border-black p-1 text-right"></td>
-                                <td colspan="3" class="border border-black p-1"></td>
-                                <td class="border border-black p-1"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div id="iirup-footer-content">
-                        <footer class="mt-8 text-xs">
-                            <div class="grid grid-cols-2 gap-8">
-                                <!-- Left Side: Inspection -->
-                                <div class="border-r pr-4">
-                                    <p class="font-bold text-center">INSPECTION</p>
-                                    <p class="mt-4">I hereby certify that I have inspected the property/ies enumerated above and that the recommendation for disposal is proper.</p>
-                                    <div class="mt-16 text-center">
-                                        <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
-                                        <p>Inspection Officer</p>
-                                    </div>
-                                </div>
-                                    <!-- Right Side: Disposal -->
-                                    <div class="pl-4">
-                                        <p class="font-bold text-center">DISPOSAL</p>
-                                        <p class="mt-4">I hereby certify that the property/ies enumerated above was/were disposed of as follows:</p>
-                                        <div class="mt-8 space-y-2">
-                                            <div><input type="checkbox" class="mr-2"> Destroyed</div>
-                                            <div><input type="checkbox" class="mr-2"> Sold at Private Sale</div>
-                                            <div><input type="checkbox" class="mr-2"> Sold at Public Auction</div>
-                                            <div><input type="checkbox" class="mr-2"> Transferred to _________________</div>
-                                        </div>
-                                        <div class="mt-8 text-center">
-                                            <p class="font-bold uppercase border-t border-black pt-1" id="signatory-1-name"></p>
-                                            <p>Property and Supply Officer</p>
+                    <div id="form-container">
+                        <!-- The content below is a template for JS. It will be cleared and rebuilt. -->
+                        <div class="text-center mb-4">
+                            <h3 class="font-bold text-lg">INVENTORY AND INSPECTION REPORT OF UNSERVICEABLE PROPERTY</h3>
+                            <p class="text-sm">(IIRUP)</p>
+                        </div>
+                        <div class="flex justify-between items-end mt-4 text-sm">
+                            <span>Entity Name: <span class="font-semibold">LGU of Daet</span></span>
+                            <span>Fund Cluster: <span class="font-semibold">01</span></span>
+                        </div>
+                        <table class="w-full text-xs border-collapse border border-black mt-4">
+                            <thead>
+                                <tr class="bg-gray-100 text-center">
+                                    <th rowspan="2" class="border border-black p-1">Date Acquired</th>
+                                    <th rowspan="2" class="border border-black p-1">Property No.</th>
+                                    <th rowspan="2" class="border border-black p-1">Description</th>
+                                    <th rowspan="2" class="border border-black p-1">Qty.</th>
+                                    <th rowspan="2" class="border border-black p-1">Unit Cost</th>
+                                    <th rowspan="2" class="border border-black p-1">Total Cost</th>
+                                    <th colspan="2" class="border border-black p-1">Accumulated</th>
+                                    <th rowspan="2" class="border border-black p-1">Book Value</th>
+                                    <th rowspan="2" class="border border-black p-1">Remarks</th>
+                                </tr>
+                                <tr class="bg-gray-100 text-center">
+                                    <th class="border border-black p-1">Depreciation</th>
+                                    <th class="border border-black p-1">Impairment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="asset-list">
+                                <!-- Assets will be populated by JS -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="font-bold">
+                                    <td colspan="5" class="border border-black p-1 text-center">TOTAL</td>
+                                    <td id="grand-total-cost" class="border border-black p-1 text-right"></td>
+                                    <td colspan="3" class="border border-black p-1"></td>
+                                    <td class="border border-black p-1"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div id="iirup-footer-content">
+                            <footer class="mt-8 text-xs">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <!-- Left Side: Inspection -->
+                                    <div class="border-r pr-4">
+                                        <p class="font-bold text-center">INSPECTION</p>
+                                        <p class="mt-4">I hereby certify that I have inspected the property/ies enumerated above and that the recommendation for disposal is proper.</p>
+                                        <div class="mt-16 text-center">
+                                            <p class="font-bold uppercase border-t border-black pt-1">________________________</p>
+                                            <p>Inspection Officer</p>
                                         </div>
                                     </div>
-                                </div>
-                            </footer>
+                                        <!-- Right Side: Disposal -->
+                                        <div class="pl-4">
+                                            <p class="font-bold text-center">DISPOSAL</p>
+                                            <p class="mt-4">I hereby certify that the property/ies enumerated above was/were disposed of as follows:</p>
+                                            <div class="mt-8 space-y-2">
+                                                <div><input type="checkbox" class="mr-2"> Destroyed</div>
+                                                <div><input type="checkbox" class="mr-2"> Sold at Private Sale</div>
+                                                <div><input type="checkbox" class="mr-2"> Sold at Public Auction</div>
+                                                <div><input type="checkbox" class="mr-2"> Transferred to _________________</div>
+                                            </div>
+                                            <div class="mt-8 text-center">
+                                                <p class="font-bold uppercase border-t border-black pt-1" id="signatory-1-name"></p>
+                                                <p>Property and Supply Officer</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </footer>
+                            </div>
                         </div>
                     </div>
                 </div>

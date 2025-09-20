@@ -18,7 +18,7 @@ createAuthenticatedPage({
             },
             domIds: {
                 pageTitle: 'page-title', // The main H1 title of the page
-                formContainer: 'report-output', // The main container for the slip content
+                formContainer: 'form-container', // The main container for the slip content
                 backButton: 'back-button',
                 saveButton: 'save-button',
                 reprintButton: 'reprint-button',
@@ -31,16 +31,16 @@ createAuthenticatedPage({
             },
             populateFormFn: (slipData) => {
                 currentSlipData = slipData;
-                const reportOutputContainer = document.getElementById(config.domIds.formContainer);
+                const formContainer = document.getElementById(config.domIds.formContainer);
 
                 // Get the template HTML *before* clearing the container to avoid a null reference.
                 const templateHTML = document.getElementById('appendix68-template')?.innerHTML;
                 if (!templateHTML) {
-                    reportOutputContainer.innerHTML = '<p class="text-center text-red-500">Error: Report template not found.</p>';
+                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report template not found.</p>';
                     return;
                 }
                 // Now clear the container.
-                reportOutputContainer.innerHTML = '';
+                formContainer.innerHTML = '';
 
                 const assets = slipData.assets || [];
                 const ITEMS_PER_PAGE = 15;
@@ -104,7 +104,7 @@ createAuthenticatedPage({
                     pageDiv.querySelector('#total-amount').textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(0); // Total is always 0 for waste
 
                     pageDiv.innerHTML += `<div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">Page ${i + 1} of ${totalPages}</div>`;
-                    reportOutputContainer.appendChild(pageDiv);
+                    formContainer.appendChild(pageDiv);
                 }
             },
             checkFundSource: false // No fund source check needed for this slip

@@ -42,108 +42,110 @@
                     </div>
                 </div>
 
-                 <div id="report-output" class="bg-white p-8 rounded-lg border printable-area">
-                    <div id="appendix68-template">
-                        <div class="flex flex-col items-center mb-8">
-                            <img src="/LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
-                            <div class="text-center mt-4">
-                                <p>Republic of the Philippines</p>
-                                <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
-                                <p class="font-bold">MUNICIPALITY OF DAET</p>
+                <div id="report-output" class="bg-white p-8 rounded-lg border printable-area">
+                    <div id="form-container">
+                        <div id="appendix68-template">
+                            <div class="flex flex-col items-center mb-8">
+                                <img src="/LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                                <div class="text-center mt-4">
+                                    <p>Republic of the Philippines</p>
+                                    <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                                    <p class="font-bold">MUNICIPALITY OF DAET</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="text-center mb-4">
-                            <h3 class="font-bold text-lg">WASTE MATERIALS REPORT</h3>
-                        </div>
-                        <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
-                            <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
-                            <span>Fund: <span class="font-semibold underline">General Fund</span></span>
-                            <label class="form-control">
-                                <div class="label py-0"><span class="label-text">Place of Storage</span></div>
-                                <input type="text" id="place-of-storage" class="input input-bordered input-sm w-full" value="GSO Warehouse">
-                            </label>
-                            <label class="form-control">
-                                <div class="label py-0"><span class="label-text">Date</span></div>
-                                <input type="date" id="issued-date" class="input input-bordered input-sm w-full">
-                            </label>
-                        </div>
+                            <div class="text-center mb-4">
+                                <h3 class="font-bold text-lg">WASTE MATERIALS REPORT</h3>
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
+                                <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
+                                <span>Fund: <span class="font-semibold underline">General Fund</span></span>
+                                <label class="form-control">
+                                    <div class="label py-0"><span class="label-text">Place of Storage</span></div>
+                                    <input type="text" id="place-of-storage" class="input input-bordered input-sm w-full" value="GSO Warehouse">
+                                </label>
+                                <label class="form-control">
+                                    <div class="label py-0"><span class="label-text">Date</span></div>
+                                    <input type="date" id="issued-date" class="input input-bordered input-sm w-full">
+                                </label>
+                            </div>
 
-                        <table class="w-full text-xs border-collapse border border-black mt-4">
-                            <thead>
-                                <tr class="text-center">
-                                    <th colspan="4" class="border border-black p-1 font-bold">ITEMS FOR DISPOSAL</th>
-                                    <th colspan="3" class="border border-black p-1 font-bold">Record of Sales</th>
-                                </tr>
-                                <tr class="bg-gray-100 text-center">
-                                    <th class="border border-black p-1 w-[5%]">Item</th>
-                                    <th class="border border-black p-1 w-[10%]">Quantity</th>
-                                    <th class="border border-black p-1 w-[10%]">Unit</th>
-                                    <th class="border border-black p-1">Description</th>
-                                    <th class="border border-black p-1 w-[15%]">Official Receipt No.</th>
-                                    <th class="border border-black p-1 w-[10%]">Date</th>
-                                    <th class="border border-black p-1 w-[10%]">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody id="asset-list">
-                                <!-- Assets will be populated by JS -->
-                            </tbody>
-                            <tfoot>
-                                <tr class="font-bold">
-                                    <td colspan="6" class="border border-black p-1 text-center">TOTAL</td>
-                                    <td id="total-amount" class="border border-black p-1 text-right"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                            <table class="w-full text-xs border-collapse border border-black mt-4">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th colspan="4" class="border border-black p-1 font-bold">ITEMS FOR DISPOSAL</th>
+                                        <th colspan="3" class="border border-black p-1 font-bold">Record of Sales</th>
+                                    </tr>
+                                    <tr class="bg-gray-100 text-center">
+                                        <th class="border border-black p-1 w-[5%]">Item</th>
+                                        <th class="border border-black p-1 w-[10%]">Quantity</th>
+                                        <th class="border border-black p-1 w-[10%]">Unit</th>
+                                        <th class="border border-black p-1">Description</th>
+                                        <th class="border border-black p-1 w-[15%]">Official Receipt No.</th>
+                                        <th class="border border-black p-1 w-[10%]">Date</th>
+                                        <th class="border border-black p-1 w-[10%]">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-list">
+                                    <!-- Assets will be populated by JS -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="font-bold">
+                                        <td colspan="6" class="border border-black p-1 text-center">TOTAL</td>
+                                        <td id="total-amount" class="border border-black p-1 text-right"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
 
-                        <footer class="mt-8 text-xs space-y-8">
-                            <!-- Row 1: Certified Correct & Disposal Approved -->
-                            <div class="grid grid-cols-2 gap-x-16">
-                                <div>
-                                    <p>Certified Correct:</p>
-                                    <div class="mt-16 text-center">
-                                        <p id="signatory-1-name" class="font-bold uppercase border-t border-black pt-1"></p>
-                                        <p>Signature over Printed Name of Supply and/or Property Custodian</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p>Disposal Approved:</p>
-                                    <div class="mt-16 text-center">
-                                        <input type="text" id="disposal-approved-by" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
-                                        <p>Signature over Printed Name of Head of the Agency/Entity or his/her Authorized Representative</p>
-                                    </div>
-                                </div>
-                            </div>
-                    
-                            <!-- Row 2: Certificate of Inspection -->
-                            <div>
-                                <p class="font-bold text-center">CERTIFICATE OF INSPECTION</p>
-                                <p class="mt-4">I hereby certify that the property enumerated above was disposed of as follows:</p>
-                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2" id="inspection-certificate-options">
-                                    <div class="flex items-center gap-2"><input type="checkbox" id="inspection-destroyed" class="checkbox checkbox-sm" /> <span>Destroyed</span></div>
-                                    <div class="flex items-center gap-2"><input type="checkbox" id="inspection-sold-private" class="checkbox checkbox-sm" /> <span>Sold at private sale</span></div>
-                                    <div class="flex items-center gap-2"><input type="checkbox" id="inspection-sold-public" class="checkbox checkbox-sm" /> <span>Sold at public auction</span></div>
-                                    <div class="flex items-center gap-2"><input type="checkbox" id="inspection-transferred" class="checkbox checkbox-sm" /> <span>Transferred without cost to <input type="text" id="inspection-transferred-to" class="input input-bordered input-xs w-48"></span></div>
-                                </div>
-                            </div>
-                    
-                            <!-- Row 3: Certified Correct (Inspector) & Witness -->
-                            <div class="grid grid-cols-2 gap-x-16 pt-8">
-                                <div>
-                                    <p>Certified Correct:</p>
-                                    <div class="mt-16 text-center">
-                                        <input type="text" id="certified-by-inspector" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
-                                        <p>Signature over Printed Name of Inspection Officer</p>
-                                    </div>
-                                </div>
+                            <footer class="mt-8 text-xs space-y-8">
+                                <!-- Row 1: Certified Correct & Disposal Approved -->
+                                <div class="grid grid-cols-2 gap-x-16">
                                     <div>
-                                    <p>Witness to Disposal:</p>
-                                    <div class="mt-16 text-center">
-                                        <input type="text" id="witness-to-disposal" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
-                                        <p>Signature over Printed Name of Witness</p>
+                                        <p>Certified Correct:</p>
+                                        <div class="mt-16 text-center">
+                                            <p id="signatory-1-name" class="font-bold uppercase border-t border-black pt-1"></p>
+                                            <p>Signature over Printed Name of Supply and/or Property Custodian</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p>Disposal Approved:</p>
+                                        <div class="mt-16 text-center">
+                                            <input type="text" id="disposal-approved-by" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
+                                            <p>Signature over Printed Name of Head of the Agency/Entity or his/her Authorized Representative</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </footer>
+                        
+                                <!-- Row 2: Certificate of Inspection -->
+                                <div>
+                                    <p class="font-bold text-center">CERTIFICATE OF INSPECTION</p>
+                                    <p class="mt-4">I hereby certify that the property enumerated above was disposed of as follows:</p>
+                                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2" id="inspection-certificate-options">
+                                        <div class="flex items-center gap-2"><input type="checkbox" id="inspection-destroyed" class="checkbox checkbox-sm" /> <span>Destroyed</span></div>
+                                        <div class="flex items-center gap-2"><input type="checkbox" id="inspection-sold-private" class="checkbox checkbox-sm" /> <span>Sold at private sale</span></div>
+                                        <div class="flex items-center gap-2"><input type="checkbox" id="inspection-sold-public" class="checkbox checkbox-sm" /> <span>Sold at public auction</span></div>
+                                        <div class="flex items-center gap-2"><input type="checkbox" id="inspection-transferred" class="checkbox checkbox-sm" /> <span>Transferred without cost to <input type="text" id="inspection-transferred-to" class="input input-bordered input-xs w-48"></span></div>
+                                    </div>
+                                </div>
+                        
+                                <!-- Row 3: Certified Correct (Inspector) & Witness -->
+                                <div class="grid grid-cols-2 gap-x-16 pt-8">
+                                    <div>
+                                        <p>Certified Correct:</p>
+                                        <div class="mt-16 text-center">
+                                            <input type="text" id="certified-by-inspector" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
+                                            <p>Signature over Printed Name of Inspection Officer</p>
+                                        </div>
+                                    </div>
+                                        <div>
+                                        <p>Witness to Disposal:</p>
+                                        <div class="mt-16 text-center">
+                                            <input type="text" id="witness-to-disposal" class="font-bold uppercase border-t border-black pt-1 w-full text-center bg-transparent" placeholder="Type Name Here">
+                                            <p>Signature over Printed Name of Witness</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </footer>
+                        </div>
                     </div>
                 </div>
             </main>
