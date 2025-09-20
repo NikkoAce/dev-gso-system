@@ -17,52 +17,42 @@ createAuthenticatedPage({
 
             const assets = parData.assets || [];
             // --- Smart Chunking Logic with different capacities for each page type ---
-            const FIRST_PAGE_CAPACITY = { items: 15, lines: 40 }; // Smaller capacity due to header
-            const INTERMEDIATE_PAGE_CAPACITY = { items: 20, lines: 55 }; // Largest capacity
-            const FINAL_PAGE_CAPACITY = { items: 10, lines: 25 };      // Smaller capacity for signatures and totals
+            const FIRST_PAGE_CAPACITY = 15;
+            const INTERMEDIATE_PAGE_CAPACITY = 20;
+            const FINAL_PAGE_CAPACITY = 10;
 
             const pages = [];
 
             if (assets.length > 0) {
                 // Step 1: Work backwards to determine which assets belong on the final page.
                 const assetsForFinalPage = [];
-                let linesOnFinalPage = 0;
                 let splitIndex = assets.length;
 
                 for (let i = assets.length - 1; i >= 0; i--) {
-                    const asset = assets[i];
-                    const assetLineCount = 1 + (asset.specifications?.length || 0);
-                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY.items && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_CAPACITY.lines) {
-                        assetsForFinalPage.unshift(asset);
-                        linesOnFinalPage += assetLineCount;
+                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
+                        assetsForFinalPage.unshift(assets[i]);
                         splitIndex = i;
                     } else {
                         break;
                     }
                 }
 
-                // Step 2: Chunk the remaining assets for the intermediate pages.
+                // Step 2: Chunk the remaining assets for the first and intermediate pages.
                 const assetsForDistribution = assets.slice(0, splitIndex);
                 if (assetsForDistribution.length > 0) {
                     let currentPageAssets = [];
-                    let currentLineCount = 0;
-                    let isFirstPageOfBlock = true; // New flag
+                    let isFirstPageOfBlock = true;
 
                     assetsForDistribution.forEach(asset => {
-                        const assetLineCount = 1 + (asset.specifications?.length || 0);
-                        const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY; // Use correct capacity
-
-                        const pageIsFull = currentPageAssets.length > 0 &&
-                            (currentPageAssets.length >= capacity.items || currentLineCount + assetLineCount > capacity.lines);
+                        const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+                        const pageIsFull = currentPageAssets.length >= capacity;
 
                         if (pageIsFull) {
                             pages.push(currentPageAssets);
                             currentPageAssets = [];
-                            currentLineCount = 0;
-                            isFirstPageOfBlock = false; // Subsequent pages are intermediate
+                            isFirstPageOfBlock = false;
                         }
                         currentPageAssets.push(asset);
-                        currentLineCount += assetLineCount;
                     });
 
                     if (currentPageAssets.length > 0) {
@@ -85,11 +75,12 @@ createAuthenticatedPage({
 
                 let maxItemsForThisPage;
                 if (isLastPage) {
-                    maxItemsForThisPage = FINAL_PAGE_CAPACITY.items;
+                    // If it's the only page, it should have a larger capacity
+                    maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
                 } else if (isFirstPage) {
-                    maxItemsForThisPage = FIRST_PAGE_CAPACITY.items;
+                    maxItemsForThisPage = FIRST_PAGE_CAPACITY;
                 } else {
-                    maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY.items;
+                    maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY;
                 }
 
                 let assetsHTML = '';

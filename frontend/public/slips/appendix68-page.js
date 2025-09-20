@@ -43,6 +43,7 @@ createAuthenticatedPage({
                 formContainer.innerHTML = '';
 
                 const assets = slipData.assets || [];
+                const FIRST_PAGE_CAPACITY = 10; // Smaller capacity due to large header
                 const FINAL_PAGE_CAPACITY = 8; // Fewer items on the last page for the large footer
                 const INTERMEDIATE_PAGE_CAPACITY = 20; // More items on pages without the footer
                 const pages = [];
@@ -64,8 +65,12 @@ createAuthenticatedPage({
                     // Step 2: Chunk the remaining assets for the intermediate pages.
                     const assetsForDistribution = assets.slice(0, splitIndex);
                     if (assetsForDistribution.length > 0) {
-                        for (let i = 0; i < assetsForDistribution.length; i += INTERMEDIATE_PAGE_CAPACITY) {
-                            pages.push(assetsForDistribution.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
+                        const firstPageAssets = assetsForDistribution.slice(0, FIRST_PAGE_CAPACITY);
+                        pages.push(firstPageAssets);
+
+                        const remainingForIntermediate = assetsForDistribution.slice(FIRST_PAGE_CAPACITY);
+                        for (let i = 0; i < remainingForIntermediate.length; i += INTERMEDIATE_PAGE_CAPACITY) {
+                            pages.push(remainingForIntermediate.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
                         }
                     }
 
@@ -104,6 +109,8 @@ createAuthenticatedPage({
                     let maxItemsForThisPage;
                     if (isLastPage) {
                         maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+                    } else if (isFirstPage) {
+                        maxItemsForThisPage = FIRST_PAGE_CAPACITY;
                     } else {
                         maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY;
                     }
