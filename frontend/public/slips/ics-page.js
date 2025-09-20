@@ -187,6 +187,7 @@ createAuthenticatedPage({
                 `;
 
                 pageDiv.innerHTML = `
+                    ${logoHeader}
                     <div class="text-center mb-6">
                         <h2 class="text-xl font-bold">INVENTORY CUSTODIAN SLIP</h2>
                         <h3 class="font-semibold">LGU Daet, Camarines Norte</h3>
