@@ -52,25 +52,30 @@ body.print-preview-mode .hide-in-preview {
 
 body.print-preview-mode {
     background-color: #525659; /* A neutral gray background for the preview */
-}
-
-body.print-preview-mode main {
-    padding: 2rem 0 !important;
-    margin: 0 !important;
-    overflow: auto !important;
+    overflow: hidden; /* Prevent body scroll when preview is active */
 }
 
 body.print-preview-mode .printable-area {
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    overflow: auto;
+    padding: 2rem;
+    background-color: transparent;
+}
+
+body.print-preview-mode .printable-area > * {
     margin: 0 auto;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     border: 1px solid #ccc;
+    background: white;
 }
 
 /* A4 Portrait Size for preview */
-body.print-preview-mode.preview-portrait .printable-area { width: 210mm; min-height: 297mm; }
+body.print-preview-mode.preview-portrait .printable-area > * { width: 210mm; min-height: 297mm; }
 
 /* Legal Landscape Size for preview */
-body.print-preview-mode.preview-landscape .printable-area { width: 356mm; min-height: 216mm; }
+body.print-preview-mode.preview-landscape .printable-area > * { width: 356mm; min-height: 216mm; }
 
 #exit-preview-btn {
     position: fixed;
