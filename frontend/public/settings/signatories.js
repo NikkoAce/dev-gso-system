@@ -71,9 +71,12 @@ function initializeSignatoriesPage(user) {
             const name = setting.value?.name || config.defaultName;
             const title = setting.value?.title || config.defaultTitle;
 
-            const employeeOptions = employees.map(emp => 
-                `<option value="${emp.name}" ${name === emp.name ? 'selected' : ''}>${emp.name}</option>`
-            ).join('');
+            const employeeOptions = employees.map(emp => {
+                // Escape double quotes in names to prevent breaking the HTML attribute
+                const escapedName = emp.name.replace(/"/g, '&quot;');
+                const isSelected = name === emp.name ? 'selected' : '';
+                return `<option value="${escapedName}" ${isSelected}>${emp.name}</option>`;
+            }).join('');
 
             const nameSelectHTML = `
                 <select id="${config.key}_name" class="select select-bordered w-full font-normal">
@@ -106,7 +109,9 @@ function initializeSignatoriesPage(user) {
                 const selectedEmployee = employees.find(emp => emp.name === nameSelect.value);
                 if (selectedEmployee) {
                     titleInput.value = selectedEmployee.designation;
-                } else if (nameSelect.value === '________________________') {
+                } else {
+                    // Reset to the default title for this role if no employee is selected
+                    // or if "Leave Blank" is chosen.
                     titleInput.value = config.defaultTitle;
                 }
             });
