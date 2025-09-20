@@ -28,20 +28,30 @@ function initializeRisPage(user) {
         }
 
         try {
-            // Determine which endpoint to use based on user permissions for security and correctness.
-            const endpoint = user.permissions.includes('requisition:read:all')
-                ? `requisitions/${requisitionId}`
-                : `requisitions/my-office/${requisitionId}`;
-            const requisition = await fetchWithAuth(endpoint);
-            currentRequisition = requisition;
-            renderRIS(requisition);
+            // Fetch both the requisition and the signatory settings in parallel
+            const [requisition, settings] = await Promise.all([
+                fetchWithAuth(`requisitions/${requisitionId}`),
+                fetchWithAuth('settings/signatories')
+            ]);
+
+            // Create a simple map of settings for easy lookup
+            const settingsMap = settings.reduce((acc, setting) => {
+                acc[setting.key] = setting.value;
+                return acc;
+            }, {});
+
+            currentRequisition = requisition; // Store for export
+            renderRIS(requisition, settingsMap); // Pass settings to the render function
+
         } catch (error) {
             console.error('Failed to fetch RIS data:', error);
             risContainer.innerHTML = `<p class="text-center text-red-500">Error loading RIS: ${error.message}</p>`;
         }
     }
 
-    function renderRIS(req) {
+    function renderRIS(req, settings) {
+        const approvedBy = settings.ris_approved_by || { name: 'MAYOR', title: 'Municipal Mayor' };
+        const issuedBy = settings.ris_issued_by || { name: 'GSO', title: 'General Services Officer' };
         let itemsHTML = '';
         const totalRows = 6; // Standard number of rows on this form part
 
@@ -138,10 +148,10 @@ function initializeRisPage(user) {
                             <td class="text-left font-bold p-1">Signature:</td><td class="border-b border-black h-8"></td><td class="border-b border-black h-8"></td><td class="border-b border-black h-8"></td><td class="border-b border-black h-8"></td>
                         </tr>
                         <tr class="text-center">
-                            <td class="text-left font-bold p-1">Printed Name:</td><td class="border-b border-black p-1 font-bold uppercase">${req.requestingUser?.name || 'N/A'}</td><td class="border-b border-black p-1 font-bold uppercase">MAYOR</td><td class="border-b border-black p-1 font-bold uppercase">GSO</td><td class="border-b border-black p-1 font-bold uppercase">${req.receivedByUser?.name || ''}</td>
+                            <td class="text-left font-bold p-1">Printed Name:</td><td class="border-b border-black p-1 font-bold uppercase">${req.requestingUser?.name || 'N/A'}</td><td class="border-b border-black p-1 font-bold uppercase">${approvedBy.name}</td><td class="border-b border-black p-1 font-bold uppercase">${issuedBy.name}</td><td class="border-b border-black p-1 font-bold uppercase">${req.receivedByUser?.name || ''}</td>
                         </tr>
                         <tr class="text-center">
-                            <td class="text-left font-bold p-1">Designation:</td><td class="border-b border-black p-1">${req.requestingUser?.office || 'N/A'}</td><td class="border-b border-black p-1">Municipal Mayor</td><td class="border-b border-black p-1">General Services Officer</td><td class="border-b border-black p-1">${req.receivedByUser?.office || ''}</td>
+                            <td class="text-left font-bold p-1">Designation:</td><td class="border-b border-black p-1">${req.requestingUser?.office || 'N/A'}</td><td class="border-b border-black p-1">${approvedBy.title}</td><td class="border-b border-black p-1">${issuedBy.title}</td><td class="border-b border-black p-1">${req.receivedByUser?.office || ''}</td>
                         </tr>
                         <tr class="text-center">
                             <td class="text-left font-bold p-1">Date:</td><td class="border-b border-black p-1">${formatDate(req.dateRequested)}</td><td class="border-b border-black p-1"></td><td class="border-b border-black p-1"></td><td class="border-b border-black p-1">${req.dateReceivedByEndUser ? formatDate(req.dateReceivedByEndUser) : ''}</td>

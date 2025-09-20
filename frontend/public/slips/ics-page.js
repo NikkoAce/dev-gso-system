@@ -10,10 +10,23 @@ createAuthenticatedPage({
 
         // The populateIcsForm function is passed as a callback to the shared initializer.
         // It contains only the logic specific to rendering the ICS form itself.
-        const populateIcsForm = (icsData) => {
+        const populateIcsForm = async (icsData) => {
             currentIcsData = icsData; // Store the data for export functions
             const icsContainer = document.getElementById('ics-form-container');
             icsContainer.innerHTML = ''; // Clear previous content
+
+            let settingsMap = {};
+            try {
+                const settings = await fetchWithAuth('settings/signatories');
+                settingsMap = settings.reduce((acc, setting) => {
+                    acc[setting.key] = setting.value;
+                    return acc;
+                }, {});
+            } catch (error) {
+                console.warn('Could not load signatory settings, using defaults.', error);
+            }
+
+            const issuedBy = settingsMap.par_ics_issued_by || { name: 'DR. RAYCHEL B. VALENCIA', title: 'Municipal Administrator/OIC GSO' };
 
             const assets = icsData.assets || [];
             // --- REVISED: Smart Chunking Logic with different capacities for each page type ---
@@ -159,11 +172,11 @@ createAuthenticatedPage({
                             <div class="text-sm">
                                 <p class="font-bold">Received from:</p>
                                 <div class="mt-12 text-center">
-                                    <p class="font-bold uppercase border-b border-black">DR. RAYCHEL B. VALENCIA</p>
+                                    <p class="font-bold uppercase border-b border-black">${issuedBy.name}</p>
                                     <p>(Signature Over Printed Name)</p>
                                 </div>
                                 <div class="mt-4 text-center">
-                                    <p class="border-b border-black">Municipal Administrator/OIC GSO</p>
+                                    <p class="border-b border-black">${issuedBy.title}</p>
                                     <p>(Position/Office)</p>
                                 </div>
                                 <div class="mt-4 text-center">

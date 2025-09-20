@@ -10,10 +10,23 @@ createAuthenticatedPage({
 
         // The populateParForm function is passed as a callback to the shared initializer.
         // It contains only the logic specific to rendering the PAR form itself.
-        const populateParForm = (parData) => {
+        const populateParForm = async (parData) => {
             currentParData = parData; // Store the data for export functions
             const parFormContainer = document.getElementById('par-form-container');
             parFormContainer.innerHTML = ''; // Clear previous content
+
+            let settingsMap = {};
+            try {
+                const settings = await fetchWithAuth('settings/signatories');
+                settingsMap = settings.reduce((acc, setting) => {
+                    acc[setting.key] = setting.value;
+                    return acc;
+                }, {});
+            } catch (error) {
+                console.warn('Could not load signatory settings, using defaults.', error);
+            }
+
+            const issuedBy = settingsMap.par_ics_issued_by || { name: 'DR. RAYCHEL B. VALENCIA', title: 'Municipal Administrator/OIC GSO' };
 
             const assets = parData.assets || [];
             // --- Smart Chunking Logic with different capacities for each page type ---
@@ -164,11 +177,11 @@ createAuthenticatedPage({
                             <div class="text-sm">
                                 <p class="font-bold">Issued by:</p>
                                 <div class="mt-12 text-center">
-                                    <p class="font-bold uppercase border-b border-black">DR. RAYCHEL B. VALENCIA</p>
+                                    <p class="font-bold uppercase border-b border-black">${issuedBy.name}</p>
                                     <p>(Signature Over Printed Name of Supply Officer)</p>
                                 </div>
                                 <div class="mt-4 text-center">
-                                    <p class="border-b border-black">Municipal Administrator/OIC GSO</p>
+                                    <p class="border-b border-black">${issuedBy.title}</p>
                                     <p>(Position/Office)</p>
                                 </div>
                                 <div class="mt-4 text-center">

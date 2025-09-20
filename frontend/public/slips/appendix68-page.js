@@ -29,8 +29,24 @@ createAuthenticatedPage({
                 create: '../assets/asset-registry.html',
                 reprint: '../slips/slip-history.html'
             },
-            populateFormFn: (slipData) => {
+            populateFormFn: async (slipData) => {
                 currentSlipData = slipData;
+
+                let settingsMap = {};
+                try {
+                    const settings = await fetchWithAuth('settings/signatories');
+                    settingsMap = settings.reduce((acc, setting) => {
+                        acc[setting.key] = setting.value;
+                        return acc;
+                    }, {});
+                } catch (error) {
+                    console.warn('Could not load signatory settings, using defaults.', error);
+                }
+
+                const disposalApprovedBy = settingsMap.a68_disposal_approved_by || { name: '' };
+                const certifiedByInspector = settingsMap.a68_certified_by_inspector || { name: '' };
+                const witnessToDisposal = settingsMap.a68_witness_to_disposal || { name: '' };
+
                 const formContainer = document.getElementById(config.domIds.formContainer);
                 
                 // Get the footer template HTML *once* and then clear the container.
@@ -208,9 +224,9 @@ createAuthenticatedPage({
                         const footer = pageDiv.querySelector('footer');
                         if (footer) {
                             footer.querySelector('#signatory-1-name').textContent = slipData.user?.name || user.name;
-                            if (slipData.disposalApprovedBy) footer.querySelector('#disposal-approved-by').value = slipData.disposalApprovedBy;
-                            if (slipData.certifiedByInspector) footer.querySelector('#certified-by-inspector').value = slipData.certifiedByInspector;
-                            if (slipData.witnessToDisposal) footer.querySelector('#witness-to-disposal').value = slipData.witnessToDisposal;
+                            footer.querySelector('#disposal-approved-by').value = slipData.disposalApprovedBy || disposalApprovedBy.name;
+                            footer.querySelector('#certified-by-inspector').value = slipData.certifiedByInspector || certifiedByInspector.name;
+                            footer.querySelector('#witness-to-disposal').value = slipData.witnessToDisposal || witnessToDisposal.name;
                             if (slipData.inspectionCertificate) {
                                 footer.querySelector('#inspection-destroyed').checked = slipData.inspectionCertificate.isDestroyed;
                                 footer.querySelector('#inspection-sold-private').checked = slipData.inspectionCertificate.isSoldPrivate;

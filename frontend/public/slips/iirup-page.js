@@ -31,8 +31,21 @@ createAuthenticatedPage({
                 create: '../assets/asset-registry.html',
                 reprint: '../slips/slip-history.html'
             },
-            populateFormFn: (slipData) => {
+            populateFormFn: async (slipData) => {
                 currentSlipData = slipData;
+
+                let settingsMap = {};
+                try {
+                    const settings = await fetchWithAuth('settings/signatories');
+                    settingsMap = settings.reduce((acc, setting) => {
+                        acc[setting.key] = setting.value;
+                        return acc;
+                    }, {});
+                } catch (error) {
+                    console.warn('Could not load signatory settings, using defaults.', error);
+                }
+
+                const inspectionOfficer = settingsMap.iirup_inspection_officer || { name: '________________________', title: 'Inspection Officer' };
 
                 const formContainer = document.getElementById(config.domIds.formContainer);
 
@@ -200,6 +213,15 @@ createAuthenticatedPage({
                         const signatoryNameEl = pageDiv.querySelector('#signatory-1-name');
                         if (signatoryNameEl) {
                             signatoryNameEl.textContent = slipData.user?.name || user.name;
+                        }
+                        // Populate inspection officer from settings
+                        const inspectionOfficerNameEl = pageDiv.querySelector('#inspection-officer-name');
+                        if (inspectionOfficerNameEl) {
+                            inspectionOfficerNameEl.textContent = inspectionOfficer.name;
+                        }
+                        const inspectionOfficerTitleEl = pageDiv.querySelector('#inspection-officer-title');
+                        if (inspectionOfficerTitleEl) {
+                            inspectionOfficerTitleEl.textContent = inspectionOfficer.title;
                         }
                     }
                     formContainer.appendChild(pageDiv);
