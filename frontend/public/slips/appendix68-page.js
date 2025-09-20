@@ -110,6 +110,34 @@ createAuthenticatedPage({
             checkFundSource: false // No fund source check needed for this slip
         };
 
+        // --- EXPORT AND PREVIEW LOGIC ---
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const exitPreviewBtn = document.querySelector('#exit-preview-btn') || document.createElement('button');
+
+        function handleExportPDF() {
+            if (!currentSlipData) return;
+            const fileName = `A68-${currentSlipData?.appendixNumber || 'report'}.pdf`;
+            exportToPDF({
+                reportElementId: 'form-container',
+                fileName: fileName,
+                buttonElement: exportPdfBtn,
+                orientation: 'portrait',
+                format: 'a4'
+            });
+        }
+
+        function handleTogglePreview() {
+            togglePreviewMode({
+                orientation: 'portrait',
+                exitButtonId: 'exit-preview-btn'
+            });
+        }
+
+        if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleExportPDF);
+        if (previewBtn) previewBtn.addEventListener('click', handleTogglePreview);
+        if (exitPreviewBtn) exitPreviewBtn.addEventListener('click', handleTogglePreview);
+
         // This custom initializer handles the entire page logic for A68,
         // as it has different requirements than standard slips.
         function initializeA68Page(config, currentUser) {
@@ -134,7 +162,11 @@ createAuthenticatedPage({
 
                 config.populateFormFn(slipData);
 
-                reprintButton.addEventListener('click', () => window.print());
+                reprintButton.addEventListener('click', () => {
+                    // Blur active element to close dropdown before printing
+                    if (document.activeElement) document.activeElement.blur();
+                    window.print();
+                });
 
             } else if (createDataString) {
                 // --- CREATE MODE ---
@@ -189,32 +221,5 @@ createAuthenticatedPage({
 
         initializeA68Page(config, user);
 
-        // --- EXPORT AND PREVIEW LOGIC ---
-        const exportPdfBtn = document.getElementById('export-pdf-btn');
-        const previewBtn = document.getElementById('preview-btn');
-        const exitPreviewBtn = document.querySelector('#exit-preview-btn') || document.createElement('button');
-
-        function handleExportPDF() {
-            if (!currentSlipData) return;
-            const fileName = `A68-${currentSlipData?.appendixNumber || 'report'}.pdf`;
-            exportToPDF({
-                reportElementId: 'form-container',
-                fileName: fileName,
-                buttonElement: exportPdfBtn,
-                orientation: 'portrait',
-                format: 'a4'
-            });
-        }
-
-        function handleTogglePreview() {
-            togglePreviewMode({
-                orientation: 'portrait',
-                exitButtonId: 'exit-preview-btn'
-            });
-        }
-
-        if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleExportPDF);
-        if (previewBtn) previewBtn.addEventListener('click', handleTogglePreview);
-        if (exitPreviewBtn) exitPreviewBtn.addEventListener('click', handleTogglePreview);
     }
 });

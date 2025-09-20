@@ -109,6 +109,8 @@ export function initializeSlipPage(config, currentUser) {
     const reprintButton = document.getElementById(config.domIds.reprintButton);
     if (reprintButton) {
         reprintButton.addEventListener('click', () => {
+            // Blur active element to close dropdown before printing
+            if (document.activeElement) document.activeElement.blur();
             window.print();
         });
     }
