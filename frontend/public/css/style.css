@@ -74,18 +74,20 @@ body.print-preview-mode .printable-area {
     background-color: transparent;
 }
 
-body.print-preview-mode .printable-area > * {
-    margin: 0 auto;
+body.print-preview-mode .printable-page {
+    margin: 0 auto 2rem auto; /* Center horizontally and add space between pages */
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     border: 1px solid #ccc;
     background: white;
+    padding: 1cm; /* Simulate print margins */
+    box-sizing: border-box;
 }
 
 /* A4 Portrait Size for preview */
-body.print-preview-mode.preview-portrait .printable-area > * { width: 210mm; min-height: 297mm; }
+body.print-preview-mode.preview-portrait .printable-page { width: 210mm; min-height: 297mm; }
 
 /* Legal Landscape Size for preview */
-body.print-preview-mode.preview-landscape .printable-area > * { width: 356mm; min-height: 216mm; }
+body.print-preview-mode.preview-landscape .printable-page { width: 356mm; min-height: 216mm; }
 
 #exit-preview-btn {
     position: fixed;
