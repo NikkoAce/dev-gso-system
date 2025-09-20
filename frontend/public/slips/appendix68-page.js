@@ -101,16 +101,7 @@ createAuthenticatedPage({
                     pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
 
                     // Build the page HTML from scratch to avoid duplicate IDs
-                    pageDiv.innerHTML = `
-                        ${logoHeader}
-                        <div class="text-center mb-4">
-                            <h3 class="font-bold text-lg">WASTE MATERIALS REPORT</h3>
-                        </div>
-                        <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
-                            <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
-                            <span>Fund: <span class="font-semibold underline">General Fund</span></span>
-                            ${headerInputsHTML}
-                        </div>
+                    const tableHTML = `
                         <table class="w-full text-xs border-collapse border border-black mt-4">
                             <thead>
                                 <tr class="text-center">
@@ -118,9 +109,9 @@ createAuthenticatedPage({
                                     <th colspan="3" class="border border-black p-1 font-bold">Record of Sales</th>
                                 </tr>
                                 <tr class="bg-gray-100 text-center">
-                                    <th class="border border-black p-1 w-[5%]">Item</th>
-                                    <th class="border border-black p-1 w-[10%]">Quantity</th>
-                                    <th class="border border-black p-1 w-[10%]">Unit</th>
+                                    <th class="border border-black p-1 w-[5%]" id="item-header">Item</th>
+                                    <th class="border border-black p-1 w-[10%]" id="quantity-header">Quantity</th>
+                                    <th class="border border-black p-1 w-[10%]" id="unit-header">Unit</th>
                                     <th class="border border-black p-1">Description</th>
                                     <th class="border border-black p-1 w-[15%]">Official Receipt No.</th>
                                     <th class="border border-black p-1 w-[10%]">Date</th>
@@ -134,7 +125,19 @@ createAuthenticatedPage({
                                     <td class="border border-black p-1 text-right">${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(0)}</td>
                                 </tr>
                             </tfoot>
-                        </table>
+                        </table>`;
+
+                    pageDiv.innerHTML = `
+                        ${logoHeader}
+                        <div class="text-center mb-4">
+                            <h3 class="font-bold text-lg">WASTE MATERIALS REPORT</h3>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
+                            <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
+                            <span>Fund: <span class="font-semibold underline">General Fund</span></span>
+                            ${headerInputsHTML}
+                        </div>
+                        ${tableHTML}
                         ${isLastPage ? `<footer class="mt-8 text-xs space-y-8">${footerTemplateHTML}</footer>` : ''}
                         <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">Page ${i + 1} of ${totalPages}</div>
                     `;
