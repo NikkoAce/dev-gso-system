@@ -31,7 +31,7 @@ function initializeRisPage(user) {
             // Fetch both the requisition and the signatory settings in parallel
             const [requisition, settings] = await Promise.all([
                 fetchWithAuth(`requisitions/${requisitionId}`),
-                fetchWithAuth('settings/signatories')
+                fetchWithAuth('signatories')
             ]);
 
             // Create a simple map of settings for easy lookup

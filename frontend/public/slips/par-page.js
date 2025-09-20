@@ -17,7 +17,7 @@ createAuthenticatedPage({
 
             let settingsMap = {};
             try {
-                const settings = await fetchWithAuth('settings/signatories');
+                const settings = await fetchWithAuth('signatories');
                 settingsMap = settings.reduce((acc, setting) => {
                     acc[setting.key] = setting.value;
                     return acc;
