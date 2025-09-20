@@ -94,7 +94,7 @@ export async function exportToPDF(options) {
         buttonElement.disabled = false;
         buttonElement.innerHTML = originalButtonContent;
         lucide.createIcons();
-    });
+    }
 }
 
 /**
