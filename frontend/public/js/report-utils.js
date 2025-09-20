@@ -126,14 +126,22 @@ export async function exportToPDF(options) {
 export function togglePreviewMode(options) {
     const { orientation, exitButtonId } = options;
     const exitButton = document.getElementById(exitButtonId);
+    const mainElement = document.querySelector('main');
+    const mainWrapper = mainElement ? mainElement.parentElement : null; // The div with 'overflow-hidden'
     const isPreviewing = document.body.classList.contains('print-preview-mode');
 
     if (isPreviewing) {
         // Exit preview mode
         document.body.classList.remove('print-preview-mode', 'preview-portrait', 'preview-landscape');
         if (exitButton) exitButton.classList.add('hidden');
+        // Restore overflow to the main content area
+        if (mainElement) mainElement.classList.add('overflow-x-hidden', 'overflow-y-auto');
+        if (mainWrapper) mainWrapper.classList.add('overflow-hidden');
     } else {
         // Enter preview mode
+        // Remove overflow from the main content area to prevent the preview from being clipped
+        if (mainElement) mainElement.classList.remove('overflow-x-hidden', 'overflow-y-auto');
+        if (mainWrapper) mainWrapper.classList.remove('overflow-hidden');
         document.body.classList.add('print-preview-mode', `preview-${orientation}`);
         if (exitButton) exitButton.classList.remove('hidden');
     }
