@@ -17,6 +17,7 @@ createAuthenticatedPage({
 
             const assets = icsData.assets || [];
             // --- REVISED: Smart Chunking Logic with different capacities for each page type ---
+            const SINGLE_PAGE_CAPACITY = { items: 8, lines: 20 };       // Smallest capacity for pages with both header and footer
             const FIRST_PAGE_CAPACITY = { items: 15, lines: 40 };      // Smaller capacity due to header
             const INTERMEDIATE_PAGE_CAPACITY = { items: 20, lines: 55 }; // Largest capacity
             const FINAL_PAGE_CAPACITY = { items: 12, lines: 30 };      // Smaller capacity for signatures and totals
@@ -24,55 +25,63 @@ createAuthenticatedPage({
             const pages = [];
 
             if (assets.length > 0) {
-                // Step 1: Work backwards to determine which assets belong on the final page.
-                const assetsForFinalPage = [];
-                let linesOnFinalPage = 0;
-                let splitIndex = assets.length;
+                const totalLineCount = assets.reduce((sum, asset) => sum + 1 + (asset.specifications?.length || 0), 0);
 
-                for (let i = assets.length - 1; i >= 0; i--) {
-                    const asset = assets[i];
-                    const assetLineCount = 1 + (asset.specifications?.length || 0);
-                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY.items && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_CAPACITY.lines) {
-                        assetsForFinalPage.unshift(asset);
-                        linesOnFinalPage += assetLineCount;
-                        splitIndex = i;
-                    } else {
-                        break;
-                    }
-                }
+                if (assets.length <= SINGLE_PAGE_CAPACITY.items && totalLineCount <= SINGLE_PAGE_CAPACITY.lines) {
+                    // Case 1: Everything fits on a single page
+                    pages.push(assets);
+                } else {
+                    // Case 2: Multi-page logic
+                    // Step 1: Work backwards to determine which assets belong on the final page.
+                    const assetsForFinalPage = [];
+                    let linesOnFinalPage = 0;
+                    let splitIndex = assets.length;
 
-                // Step 2: Chunk the remaining assets for the first and intermediate pages.
-                const assetsForDistribution = assets.slice(0, splitIndex);
-                if (assetsForDistribution.length > 0) {
-                    let currentPageAssets = [];
-                    let currentLineCount = 0;
-                    let isFirstPageOfBlock = true;
-
-                    assetsForDistribution.forEach(asset => {
+                    for (let i = assets.length - 1; i >= 0; i--) {
+                        const asset = assets[i];
                         const assetLineCount = 1 + (asset.specifications?.length || 0);
-                        const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-
-                        const pageIsFull = currentPageAssets.length > 0 &&
-                            (currentPageAssets.length >= capacity.items || currentLineCount + assetLineCount > capacity.lines);
-
-                        if (pageIsFull) {
-                            pages.push(currentPageAssets);
-                            currentPageAssets = [];
-                            currentLineCount = 0;
-                            isFirstPageOfBlock = false; // Subsequent pages are intermediate
+                        if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY.items && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_CAPACITY.lines) {
+                            assetsForFinalPage.unshift(asset);
+                            linesOnFinalPage += assetLineCount;
+                            splitIndex = i;
+                        } else {
+                            break;
                         }
-                        currentPageAssets.push(asset);
-                        currentLineCount += assetLineCount;
-                    });
-
-                    if (currentPageAssets.length > 0) {
-                        pages.push(currentPageAssets);
                     }
-                }
 
-                // Step 3: Add the final page's assets.
-                if (assetsForFinalPage.length > 0) {
-                    pages.push(assetsForFinalPage);
+                    // Step 2: Chunk the remaining assets for the first and intermediate pages.
+                    const assetsForDistribution = assets.slice(0, splitIndex);
+                    if (assetsForDistribution.length > 0) {
+                        let currentPageAssets = [];
+                        let currentLineCount = 0;
+                        let isFirstPageOfBlock = true;
+
+                        assetsForDistribution.forEach(asset => {
+                            const assetLineCount = 1 + (asset.specifications?.length || 0);
+                            const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+
+                            const pageIsFull = currentPageAssets.length > 0 &&
+                                (currentPageAssets.length >= capacity.items || currentLineCount + assetLineCount > capacity.lines);
+
+                            if (pageIsFull) {
+                                pages.push(currentPageAssets);
+                                currentPageAssets = [];
+                                currentLineCount = 0;
+                                isFirstPageOfBlock = false; // Subsequent pages are intermediate
+                            }
+                            currentPageAssets.push(asset);
+                            currentLineCount += assetLineCount;
+                        });
+
+                        if (currentPageAssets.length > 0) {
+                            pages.push(currentPageAssets);
+                        }
+                    }
+
+                    // Step 3: Add the final page's assets.
+                    if (assetsForFinalPage.length > 0) {
+                        pages.push(assetsForFinalPage);
+                    }
                 }
             } else {
                 pages.push([]);
@@ -84,7 +93,9 @@ createAuthenticatedPage({
                 const isFirstPage = pageIndex === 0;
 
                 let maxItemsForThisPage;
-                if (isLastPage) {
+                if (totalPages === 1) {
+                    maxItemsForThisPage = SINGLE_PAGE_CAPACITY.items;
+                } else if (isLastPage) {
                     maxItemsForThisPage = FINAL_PAGE_CAPACITY.items;
                 } else if (isFirstPage) {
                     maxItemsForThisPage = FIRST_PAGE_CAPACITY.items;

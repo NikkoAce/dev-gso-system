@@ -44,46 +44,51 @@ createAuthenticatedPage({
 
                 const assets = slipData.assets || [];
                 const FIRST_PAGE_CAPACITY = 10; // Smaller capacity due to large header
-                const FINAL_PAGE_CAPACITY = 5; // Fewer items on the last page for the large footer
+                const FINAL_PAGE_CAPACITY = 5;  // Fewer items on the last page for the large footer
                 const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without the footer
+                const SINGLE_PAGE_CAPACITY = 4; // Smallest capacity for a page with both header and footer
                 const pages = [];
 
                 if (assets.length > 0) {
-                    // Step 1: Work backwards to determine which assets belong on the final page.
-                    const assetsForFinalPage = [];
-                    let splitIndex = assets.length;
+                    if (assets.length <= SINGLE_PAGE_CAPACITY) {
+                        pages.push(assets);
+                    } else {
+                        // Step 1: Work backwards to determine which assets belong on the final page.
+                        const assetsForFinalPage = [];
+                        let splitIndex = assets.length;
 
-                    for (let i = assets.length - 1; i >= 0; i--) {
-                        if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
-                            assetsForFinalPage.unshift(assets[i]);
-                            splitIndex = i;
-                        } else {
-                            break;
-                        }
-                    }
-
-                    // Step 2: Chunk the remaining assets for the intermediate pages.
-                    const assetsForDistribution = assets.slice(0, splitIndex);
-                    if (assetsForDistribution.length > 0) {
-                        let currentPageAssets = [];
-                        let isFirstPageOfBlock = true;
-                        assetsForDistribution.forEach(asset => {
-                            const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-                            if (currentPageAssets.length >= capacity) {
-                                pages.push(currentPageAssets);
-                                currentPageAssets = [];
-                                isFirstPageOfBlock = false;
+                        for (let i = assets.length - 1; i >= 0; i--) {
+                            if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
+                                assetsForFinalPage.unshift(assets[i]);
+                                splitIndex = i;
+                            } else {
+                                break;
                             }
-                            currentPageAssets.push(asset);
-                        });
-                        if (currentPageAssets.length > 0) {
-                            pages.push(currentPageAssets);
                         }
-                    }
 
-                    // Step 3: Add the final page's assets.
-                    if (assetsForFinalPage.length > 0) {
-                        pages.push(assetsForFinalPage);
+                        // Step 2: Chunk the remaining assets for the intermediate pages.
+                        const assetsForDistribution = assets.slice(0, splitIndex);
+                        if (assetsForDistribution.length > 0) {
+                            let currentPageAssets = [];
+                            let isFirstPageOfBlock = true;
+                            assetsForDistribution.forEach(asset => {
+                                const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+                                if (currentPageAssets.length >= capacity) {
+                                    pages.push(currentPageAssets);
+                                    currentPageAssets = [];
+                                    isFirstPageOfBlock = false;
+                                }
+                                currentPageAssets.push(asset);
+                            });
+                            if (currentPageAssets.length > 0) {
+                                pages.push(currentPageAssets);
+                            }
+                        }
+
+                        // Step 3: Add the final page's assets.
+                        if (assetsForFinalPage.length > 0) {
+                            pages.push(assetsForFinalPage);
+                        }
                     }
                 }
 
@@ -114,8 +119,10 @@ createAuthenticatedPage({
 
                     // Determine max items for padding rows
                     let maxItemsForThisPage;
-                    if (isLastPage) {
-                        maxItemsForThisPage = (totalPages === 1) ? FIRST_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+                    if (totalPages === 1) {
+                        maxItemsForThisPage = SINGLE_PAGE_CAPACITY;
+                    } else if (isLastPage) {
+                        maxItemsForThisPage = FINAL_PAGE_CAPACITY;
                     } else if (isFirstPage) {
                         maxItemsForThisPage = FIRST_PAGE_CAPACITY;
                     } else {
