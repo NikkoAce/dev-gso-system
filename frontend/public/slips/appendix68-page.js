@@ -46,7 +46,7 @@ createAuthenticatedPage({
                 const FIRST_PAGE_CAPACITY = 10; // Smaller capacity due to large header
                 const FINAL_PAGE_CAPACITY = 5;  // Fewer items on the last page for the large footer
                 const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without the footer
-                const SINGLE_PAGE_CAPACITY = 4; // Smallest capacity for a page with both header and footer
+                const SINGLE_PAGE_CAPACITY = 5; // Smallest capacity for a page with both header and footer
                 const pages = [];
 
                 if (assets.length > 0) {

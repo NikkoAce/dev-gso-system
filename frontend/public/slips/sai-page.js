@@ -71,6 +71,7 @@ function initializeSaiPage(user) {
         }
 
         saiContainer.innerHTML = `
+            <div class="printable-page">
             <div class="text-center mb-4">
                 <h2 class="text-xl font-bold">SUPPLIES AVAILABILITY INQUIRY</h2>
             </div>
@@ -115,7 +116,7 @@ function initializeSaiPage(user) {
                         <p>Signature over Printed Name of GSO</p>
                     </div>
                 </div>
-            </div>
+            </div></div>
         `;
     }
 

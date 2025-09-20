@@ -44,7 +44,7 @@ function initializePtrPage(user) {
         const { from, to, assets, date, ptrNumber } = ptrData;
         ptrContainer.innerHTML = ''; // Clear previous content
         
-        const SINGLE_PAGE_CAPACITY = 5;
+        const SINGLE_PAGE_CAPACITY = 6;
         const FIRST_PAGE_CAPACITY = 12; // Smaller capacity due to large header
         const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without it
         const FINAL_PAGE_CAPACITY = 6; // Fewer items for the large signatory block

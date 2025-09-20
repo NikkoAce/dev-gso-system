@@ -17,7 +17,7 @@ createAuthenticatedPage({
 
             const assets = icsData.assets || [];
             // --- REVISED: Smart Chunking Logic with different capacities for each page type ---
-            const SINGLE_PAGE_CAPACITY = { items: 8, lines: 20 };       // Smallest capacity for pages with both header and footer
+            const SINGLE_PAGE_CAPACITY = { items: 10, lines: 25 };       // Smallest capacity for pages with both header and footer
             const FIRST_PAGE_CAPACITY = { items: 15, lines: 40 };      // Smaller capacity due to header
             const INTERMEDIATE_PAGE_CAPACITY = { items: 20, lines: 55 }; // Largest capacity
             const FINAL_PAGE_CAPACITY = { items: 12, lines: 30 };      // Smaller capacity for signatures and totals

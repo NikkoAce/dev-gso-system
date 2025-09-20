@@ -73,6 +73,7 @@ function initializeRisPage(user) {
         }
 
         risContainer.innerHTML = `
+            <div class="printable-page">
             <div class="flex justify-between items-start mb-2">
                 <div class="font-bold text-lg">REQUISITION AND ISSUE SLIP</div>
                 <div class="text-right text-sm">
@@ -139,7 +140,7 @@ function initializeRisPage(user) {
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </div></div>
         `;
     }
 
