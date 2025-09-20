@@ -181,7 +181,7 @@ createAuthenticatedPage({
             if (!currentSlipData) return;
             const fileName = `IIRUP-${currentSlipData?.iirupNumber || 'report'}.pdf`;
             exportToPDF({
-                reportElementId: 'form-container',
+                reportElementId: 'report-output',
                 fileName: fileName,
                 buttonElement: exportPdfBtn,
                 orientation: 'landscape',

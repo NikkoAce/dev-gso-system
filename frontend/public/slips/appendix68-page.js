@@ -202,7 +202,7 @@ createAuthenticatedPage({
             if (!currentSlipData) return;
             const fileName = `A68-${currentSlipData?.appendixNumber || 'report'}.pdf`;
             exportToPDF({
-                reportElementId: 'form-container',
+                reportElementId: 'report-output',
                 fileName: fileName,
                 buttonElement: exportPdfBtn,
                 orientation: 'portrait',
