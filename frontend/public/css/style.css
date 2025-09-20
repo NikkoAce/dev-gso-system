@@ -55,6 +55,16 @@ body.print-preview-mode {
     overflow: hidden; /* Prevent body scroll when preview is active */
 }
 
+/* When preview is active, find the main layout containers and remove their overflow properties
+   to prevent them from clipping the fixed-position preview overlay. */
+body.print-preview-mode .flex-1.flex.flex-col.overflow-hidden {
+    overflow: visible !important;
+}
+body.print-preview-mode main.flex-1 {
+    overflow: visible !important;
+}
+
+
 body.print-preview-mode .printable-area {
     position: fixed;
     inset: 0;

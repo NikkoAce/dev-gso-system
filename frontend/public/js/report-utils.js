@@ -126,23 +126,14 @@ export async function exportToPDF(options) {
 export function togglePreviewMode(options) {
     const { orientation, exitButtonId } = options;
     const exitButton = document.getElementById(exitButtonId);
-    const mainElement = document.querySelector('main');
-    // The direct parent of <main> is the container that has the overflow-hidden property.
-    const mainWrapper = mainElement ? mainElement.parentElement : null;
     const isPreviewing = document.body.classList.contains('print-preview-mode');
 
     if (isPreviewing) {
         // Exit preview mode
         document.body.classList.remove('print-preview-mode', 'preview-portrait', 'preview-landscape');
         if (exitButton) exitButton.classList.add('hidden');
-        // Restore overflow properties to allow normal page scrolling
-        if (mainElement) mainElement.classList.add('overflow-x-hidden', 'overflow-y-auto');
-        if (mainWrapper) mainWrapper.classList.add('overflow-hidden');
     } else {
         // Enter preview mode
-        // Remove overflow properties from parent containers to prevent the fixed-position preview from being clipped
-        if (mainElement) mainElement.classList.remove('overflow-x-hidden', 'overflow-y-auto');
-        if (mainWrapper) mainWrapper.classList.remove('overflow-hidden');
         document.body.classList.add('print-preview-mode', `preview-${orientation}`);
         if (exitButton) exitButton.classList.remove('hidden');
     }
