@@ -397,35 +397,31 @@ function initializeRegistryPage(user) {
         },
 
         async handleConfirmTransfer() {
-            DOM.confirmTransferBtn.disabled = true;
-            DOM.confirmTransferBtn.textContent = 'Transferring...';
+            const newOffice = DOM.transferOfficeSelect.value;
+            const newCustodianName = DOM.transferCustodianSelect.value;
 
+            if (!newOffice || !newCustodianName) {
+                uiManager.showToast('Please select a new office and custodian.', 'warning');
+                return;
+            }
+
+            const selectedEmployee = state.allEmployees.find(emp => emp.name === newCustodianName);
+            if (!selectedEmployee) {
+                uiManager.showToast('Selected custodian not found.', 'error');
+                return;
+            }
+
+            const fromCustodian = state.assetsToTransfer[0].custodian;
+
+            const transferData = {
+                assetsToDisplay: state.assetsToTransfer,
+                fromCustodian: fromCustodian,
+                newCustodian: { name: selectedEmployee.name, designation: selectedEmployee.designation },
+                newOffice: newOffice
+            };
+
+            localStorage.setItem('transferData', JSON.stringify(transferData));
             try {
-                const newOffice = DOM.transferOfficeSelect.value;
-                const newCustodianName = DOM.transferCustodianSelect.value;
-                const transferDate = DOM.transferModalDate.value;
-
-                if (!newOffice || !newCustodianName || !transferDate) {
-                    throw new Error('Please select a new office, custodian, and transfer date.');
-                }
-
-                const selectedEmployee = state.allEmployees.find(emp => emp.name === newCustodianName);
-                const newCustodian = { name: newCustodianName, designation: selectedEmployee?.designation || '', office: newOffice };
-                const userPayload = { name: user.name, office: user.office };
-                const payload = {
-                    assetIds: state.assetsToTransfer.map(a => a._id),
-                    newOffice,
-                    newCustodian,
-                    transferDate,
-                    user: userPayload
-                };
-
-                const transferResult = await fetchWithAuth('asset-transfers/ptr', {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-
-                localStorage.setItem('transferData', JSON.stringify(transferResult.ptr));
                 window.location.href = '../slips/ptr.html';
                 
             } catch (error) {

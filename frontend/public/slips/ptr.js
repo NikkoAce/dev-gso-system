@@ -10,38 +10,84 @@ createAuthenticatedPage({
 });
 
 function initializePtrPage(user) {
+    // --- DOM ELEMENTS ---
     const ptrContainer = document.getElementById('ptr-container');
-    const printButton = document.getElementById('print-btn');
+    const pageTitle = document.getElementById('page-title');
+    const backButton = document.getElementById('back-button');
+    const saveButton = document.getElementById('save-btn');
+    const reprintButton = document.getElementById('reprint-btn');
     const exportPdfBtn = document.getElementById('export-pdf-btn');
     const previewBtn = document.getElementById('preview-btn');
     const exitPreviewBtn = document.getElementById('exit-preview-btn');
-    let currentPtrData = null;
 
+    // --- STATE ---
+    let currentPtrData = null;
+    let dataForSave = null;
+
+    // --- UTILITIES ---
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
 
-    // Check for reprint data first, then for new transfer data
-    async function renderPTR() {
-        let ptrData = null;
+    // --- CORE LOGIC ---
+    async function initializePage() {
         const reprintDataString = localStorage.getItem('ptrToReprint');
         const transferDataString = localStorage.getItem('transferData');
 
         if (reprintDataString) {
-            ptrData = JSON.parse(reprintDataString);
+            // --- REPRINT MODE ---
+            pageTitle.textContent = 'Reprint Property Transfer Report';
+            saveButton.classList.add('hidden');
+            reprintButton.classList.remove('hidden');
+            backButton.href = '../slips/slip-history.html';
+
+            const ptrData = JSON.parse(reprintDataString);
             localStorage.removeItem('ptrToReprint'); // Clean up after use
+            await renderPTR(ptrData, false); // Render the saved data
+
         } else if (transferDataString) {
-            const responseData = JSON.parse(transferDataString);
-            // Make it robust: handle cases where the whole response is stored
-            // or just the transferDetails object.
-            ptrData = responseData.transferDetails ? responseData.transferDetails : responseData;
+            // --- CREATE MODE ---
+            pageTitle.textContent = 'New Property Transfer Report';
+            saveButton.classList.remove('hidden');
+            reprintButton.classList.add('hidden');
+            backButton.href = '../assets/asset-registry.html';
+
+            const transferInput = JSON.parse(transferDataString);
             localStorage.removeItem('transferData'); // Clean up after use
-        }
 
-        if (!ptrData) {
-            ptrContainer.innerHTML = `<p class="text-center text-red-500">No transfer data found. Please initiate a transfer from the Asset Registry.</p>`;
-            return;
-        }
+            if (!transferInput || !transferInput.assetsToDisplay || transferInput.assetsToDisplay.length === 0) {
+                ptrContainer.innerHTML = `<p class="text-center text-red-500">No assets selected for transfer. Please go back to the <a href="../assets/asset-registry.html" class="text-blue-600 hover:underline">Asset Registry</a>.</p>`;
+                saveButton.classList.add('hidden');
+                return;
+            }
 
+            // Prepare data for the save action
+            dataForSave = {
+                assetIds: transferInput.assetsToDisplay.map(a => a._id),
+                newOffice: transferInput.newOffice,
+                newCustodian: transferInput.newCustodian,
+                transferDate: new Date().toLocaleDateString('en-ca') // Default to today
+            };
+
+            // Construct a temporary ptrData object for display
+            const ptrDataForDisplay = {
+                from: transferInput.fromCustodian,
+                to: transferInput.newCustodian,
+                assets: transferInput.assetsToDisplay,
+                date: dataForSave.transferDate,
+                ptrNumber: 'Pending...'
+            };
+            await renderPTR(ptrDataForDisplay, true); // Render the preview
+
+        } else {
+            // --- NO DATA ---
+            pageTitle.textContent = 'Property Transfer Report';
+            ptrContainer.innerHTML = `<p class="text-center text-red-500">No transfer data found. Please initiate a transfer from the <a href="../assets/asset-registry.html" class="text-blue-600 hover:underline">Asset Registry</a>.</p>`;
+            saveButton.classList.add('hidden');
+            reprintButton.classList.add('hidden');
+        }
+    }
+
+    async function renderPTR(ptrData, isCreateMode = false) {
         // --- FETCH SIGNATORIES ---
         let settingsMap = {};
         try {
@@ -54,6 +100,11 @@ function initializePtrPage(user) {
             console.warn('Could not load signatory settings, using defaults.', error);
         }
         const approvedBy = settingsMap.ptr_approved_by || { name: '________________________', title: 'Head of Agency/Entity or his/her Authorized Representative' };
+
+        if (!ptrData) {
+            ptrContainer.innerHTML = `<p class="text-center text-red-500">No transfer data found. Please initiate a transfer from the Asset Registry.</p>`;
+            return;
+        }
 
         currentPtrData = ptrData; // Store for export
         const { from, to, assets, date, ptrNumber } = ptrData;
@@ -149,6 +200,15 @@ function initializePtrPage(user) {
 
             let signatoryBlockHTML = '';
             if (isLastPage) {
+                const dateHTML = isCreateMode
+                    ? `<input type="date" id="ptr-transfer-date" class="input input-bordered input-sm w-full text-center" value="${formatDate(date)}">`
+                    : `<p class="font-bold uppercase border-b border-black">${formatDate(date)}</p>`;
+
+                // Update the date in dataForSave if it's changed in create mode
+                if (isCreateMode) {
+                    document.addEventListener('change', e => { if (e.target.id === 'ptr-transfer-date') dataForSave.transferDate = e.target.value; });
+                }
+
                 signatoryBlockHTML = `
                     <div class="grid grid-cols-2 gap-8 mt-4 text-sm">
                         <div>
@@ -184,7 +244,7 @@ function initializePtrPage(user) {
                         <div>
                             <p>Date:</p>
                             <div class="mt-12 text-center">
-                                <p class="font-bold uppercase border-b border-black">${formatDate(date)}</p>
+                                ${dateHTML}
                             </div>
                         </div>
                     </div>
@@ -255,30 +315,46 @@ function initializePtrPage(user) {
         }
     }
 
-    function handleExportPDF() {
+    async function handleSaveAndPrint() {
+        if (!dataForSave) {
+            alert('No data available to save.');
+            return;
+        }
+        // Ensure the date is up-to-date from the input field
+        const dateInput = document.getElementById('ptr-transfer-date');
+        if (dateInput) dataForSave.transferDate = dateInput.value;
+
+        if (!dataForSave.transferDate) {
+            alert('Please select a transfer date.');
+            return;
+        }
+
+        try {
+            const savedPTR = await fetchWithAuth('asset-transfers/ptr', {
+                method: 'POST',
+                body: JSON.stringify(dataForSave)
+            });
+            alert('Property Transfer Report saved successfully!');
+            // Store the response for reprinting, then print
+            localStorage.setItem('ptrToReprint', JSON.stringify(savedPTR.ptr));
+            window.print();
+            // Redirect back to the registry after printing
+            window.location.href = '../assets/asset-registry.html';
+        } catch (error) {
+            alert(`Error saving PTR: ${error.message}`);
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    saveButton.addEventListener('click', handleSaveAndPrint);
+    reprintButton.addEventListener('click', () => window.print());
+    exportPdfBtn.addEventListener('click', () => {
         const fileName = `PTR-${currentPtrData?.ptrNumber || 'report'}.pdf`;
-        exportToPDF({
-            reportElementId: 'report-output',
-            fileName: fileName,
-            buttonElement: exportPdfBtn,
-            orientation: 'portrait',
-            format: 'a4'
-        });
-    }
-
-    function handleTogglePreview() {
-        togglePreviewMode({
-            orientation: 'portrait',
-            exitButtonId: 'exit-preview-btn'
-        });
-    }
-
-    printButton.addEventListener('click', () => {
-        window.print();
+        exportToPDF({ reportElementId: 'report-output', fileName, buttonElement: exportPdfBtn, orientation: 'portrait', format: 'a4' });
     });
-    exportPdfBtn.addEventListener('click', handleExportPDF);
-    previewBtn.addEventListener('click', handleTogglePreview);
-    exitPreviewBtn.addEventListener('click', handleTogglePreview);
+    previewBtn.addEventListener('click', () => togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' }));
+    exitPreviewBtn.addEventListener('click', () => togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' }));
 
-    renderPTR();
+    // --- INITIALIZATION ---
+    initializePage();
 }
