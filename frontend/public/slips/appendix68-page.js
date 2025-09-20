@@ -1,9 +1,12 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 createAuthenticatedPage({
     permission: 'slip:generate',
     pageInitializer: (user) => {
+        let currentSlipData = null;
+
         const config = {
             slipType: 'A68',
             slipTitle: 'Report of Waste Materials',
@@ -27,6 +30,7 @@ createAuthenticatedPage({
                 reprint: '../slips/slip-history.html'
             },
             populateFormFn: (slipData) => {
+                currentSlipData = slipData;
                 const formContainer = document.getElementById('form-container');
 
                 // Get the template HTML *before* clearing the container to avoid a null reference.
@@ -185,5 +189,32 @@ createAuthenticatedPage({
 
         initializeA68Page(config, user);
 
+        // --- EXPORT AND PREVIEW LOGIC ---
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const exitPreviewBtn = document.querySelector('#exit-preview-btn') || document.createElement('button');
+
+        function handleExportPDF() {
+            if (!currentSlipData) return;
+            const fileName = `A68-${currentSlipData?.appendixNumber || 'report'}.pdf`;
+            exportToPDF({
+                reportElementId: 'form-container',
+                fileName: fileName,
+                buttonElement: exportPdfBtn,
+                orientation: 'portrait',
+                format: 'a4'
+            });
+        }
+
+        function handleTogglePreview() {
+            togglePreviewMode({
+                orientation: 'portrait',
+                exitButtonId: 'exit-preview-btn'
+            });
+        }
+
+        if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleExportPDF);
+        if (previewBtn) previewBtn.addEventListener('click', handleTogglePreview);
+        if (exitPreviewBtn) exitPreviewBtn.addEventListener('click', handleTogglePreview);
     }
 });

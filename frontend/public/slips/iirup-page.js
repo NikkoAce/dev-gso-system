@@ -1,10 +1,12 @@
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 createAuthenticatedPage({
     permission: 'slip:generate',
     pageInitializer: (user) => {
+        let currentSlipData = null;
         const config = {
             slipType: 'IIRUP',
             slipTitle: 'Inventory and Inspection Report of Unserviceable Property',
@@ -30,19 +32,13 @@ createAuthenticatedPage({
                 reprint: '../slips/slip-history.html'
             },
             populateFormFn: (slipData) => {
+                currentSlipData = slipData;
                 // The slip number is part of the footer in IIRUP, but we can add it here if needed.
                 // For now, we'll rely on the title.
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
-
+                
                 const formContainer = document.getElementById('form-container');
-
-                // Get the footer template HTML *before* clearing the container.
-                const footerTemplateHTML = document.getElementById('iirup-footer-content')?.innerHTML;
-                if (!footerTemplateHTML) {
-                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report footer template not found.</p>';
-                    return;
-                }
-                formContainer.innerHTML = ''; // Now clear the container.
+                formContainer.innerHTML = ''; // Clear existing content
 
                 const assets = slipData.assets || [];
                 const ITEMS_PER_PAGE = 10;
@@ -125,7 +121,7 @@ createAuthenticatedPage({
                                 <tfoot>${footerHTML}</tfoot>
                             </table>
                         </div>
-                        ${isLastPage ? footerTemplateHTML : ''}
+                        ${isLastPage ? document.getElementById('iirup-footer-content').innerHTML : ''}
                         <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">
                             Page ${i + 1} of ${totalPages}
                         </div>
@@ -138,39 +134,71 @@ createAuthenticatedPage({
 
         // Custom initializer to override save behavior for IIRUP, which has no date inputs
         function customInitializeSlipPage(config, currentUser) {
-            // We need to get the original data before the common initializer clears it from localStorage.
-            const createDataString = localStorage.getItem(config.localStorageKeys.create);
-            let selectedAssets = [];
-            if (createDataString) {
-                selectedAssets = JSON.parse(createDataString);
-            }
-
-            // Now, run the common setup which will populate the form and also clear localStorage.
-            initializeSlipPage(config, currentUser);
+            initializeSlipPage(config, currentUser); // Run the original setup
 
             const saveButton = document.getElementById(config.domIds.saveButton);
-            if (saveButton && selectedAssets.length > 0) {
-                // Replace the default event listener to avoid trying to read date inputs
-                const newSaveButton = saveButton.cloneNode(true);
-                saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+            if (saveButton) {
+                // We need to get the original data prepared by the common function
+                const createDataString = localStorage.getItem(config.localStorageKeys.create);
+                if (createDataString) {
+                    const selectedAssets = JSON.parse(createDataString);
 
-                newSaveButton.addEventListener('click', async () => {
-                    try {
-                        const dataToSave = { assetIds: selectedAssets.map(a => a._id) };
-                        const savedSlip = await fetchWithAuth(config.apiEndpoint, { method: 'POST', body: JSON.stringify(dataToSave) });
-                        alert(`${config.slipType} saved successfully!`);
-                        localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
-                        window.print();
-                        window.location.href = config.backUrls.create;
-                    } catch (error) {
-                        alert(`Error: ${error.message}`);
-                    }
-                });
+                    const dataToSave = {
+                        assetIds: selectedAssets.map(a => a._id)
+                        // The controller will generate the number and date
+                    };
+
+                    // Replace the event listener to avoid trying to read date inputs
+                    const newSaveButton = saveButton.cloneNode(true);
+                    saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+
+                    newSaveButton.addEventListener('click', async () => {
+                        try {
+                            const savedSlip = await fetchWithAuth(config.apiEndpoint, {
+                                method: 'POST',
+                                body: JSON.stringify(dataToSave)
+                            });
+                            alert(`${config.slipType} saved successfully!`);
+                            localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
+                            window.print();
+                            window.location.href = config.backUrls.create;
+                        } catch (error) {
+                            alert(`Error: ${error.message}`);
+                        }
+                    });
+                }
             }
         }
 
         customInitializeSlipPage(config, user);
 
+        // --- EXPORT AND PREVIEW LOGIC ---
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const exitPreviewBtn = document.querySelector('#exit-preview-btn') || document.createElement('button'); // Fallback
+
+        function handleExportPDF() {
+            if (!currentSlipData) return;
+            const fileName = `IIRUP-${currentSlipData?.iirupNumber || 'report'}.pdf`;
+            exportToPDF({
+                reportElementId: 'form-container',
+                fileName: fileName,
+                buttonElement: exportPdfBtn,
+                orientation: 'landscape',
+                format: 'legal'
+            });
+        }
+
+        function handleTogglePreview() {
+            togglePreviewMode({
+                orientation: 'landscape',
+                exitButtonId: 'exit-preview-btn'
+            });
+        }
+
+        if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleExportPDF);
+        if (previewBtn) previewBtn.addEventListener('click', handleTogglePreview);
+        if (exitPreviewBtn) exitPreviewBtn.addEventListener('click', handleTogglePreview);
     },
     pageName: 'IIRUP Slip'
 });
