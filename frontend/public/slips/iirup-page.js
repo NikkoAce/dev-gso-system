@@ -37,14 +37,16 @@ createAuthenticatedPage({
                 const formContainer = document.getElementById(config.domIds.formContainer);
 
                 // Get the footer template HTML *before* clearing the container.
+                const headerTemplateHTML = document.getElementById('iirup-header-content')?.innerHTML;
                 const footerTemplateHTML = document.getElementById('iirup-footer-content')?.innerHTML;
-                if (!footerTemplateHTML) {
-                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report footer template not found.</p>';
+                if (!footerTemplateHTML || !headerTemplateHTML) {
+                    formContainer.innerHTML = '<p class="text-center text-red-500">Error: Report header or footer template not found.</p>';
                     return;
                 }
                 formContainer.innerHTML = ''; // Now clear the container.
 
                 const assets = slipData.assets || [];
+                const FIRST_PAGE_CAPACITY = 10; // Smaller capacity for the new header
                 const FINAL_PAGE_CAPACITY = 5; // Fewer items on the last page to make room for the large footer
                 const INTERMEDIATE_PAGE_CAPACITY = 15; // More items on pages without the footer
                 const pages = [];
@@ -66,8 +68,12 @@ createAuthenticatedPage({
                     // Step 2: Chunk the remaining assets for the intermediate pages.
                     const assetsForDistribution = assets.slice(0, splitIndex);
                     if (assetsForDistribution.length > 0) {
-                        for (let i = 0; i < assetsForDistribution.length; i += INTERMEDIATE_PAGE_CAPACITY) {
-                            pages.push(assetsForDistribution.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
+                        const firstPageAssets = assetsForDistribution.slice(0, FIRST_PAGE_CAPACITY);
+                        pages.push(firstPageAssets);
+
+                        const remainingForIntermediate = assetsForDistribution.slice(FIRST_PAGE_CAPACITY);
+                        for (let i = 0; i < remainingForIntermediate.length; i += INTERMEDIATE_PAGE_CAPACITY) {
+                            pages.push(remainingForIntermediate.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
                         }
                     }
 
@@ -83,6 +89,7 @@ createAuthenticatedPage({
                 for (let i = 0; i < totalPages; i++) {
                     const pageAssets = pages[i];
                     const isLastPage = i === totalPages - 1;
+                    const isFirstPage = i === 0;
 
                     let assetRows = '';
                     pageAssets.forEach(asset => {
@@ -109,6 +116,8 @@ createAuthenticatedPage({
                     let maxItemsForThisPage;
                     if (isLastPage) {
                         maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+                    } else if (isFirstPage) {
+                        maxItemsForThisPage = FIRST_PAGE_CAPACITY;
                     } else {
                         maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY;
                     }
@@ -132,8 +141,12 @@ createAuthenticatedPage({
 
                     const pageDiv = document.createElement('div');
                     pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
+
+                    const logoHeader = isFirstPage ? headerTemplateHTML : '';
+
                     pageDiv.innerHTML = `
-                        <div class="text-center mb-4">
+                        ${logoHeader}
+                        <div class="text-center mb-4 mt-4">
                             <h3 class="font-bold text-lg">INVENTORY AND INSPECTION REPORT OF UNSERVICEABLE PROPERTY</h3>
                             <p class="text-sm">(IIRUP)</p>
                         </div>
