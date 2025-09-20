@@ -14,7 +14,7 @@ const getSlips = asyncHandler(async (req, res) => {
         PTR.find({}).lean(),
         Appendix68.find({}).lean(),
         IIRUP.find({}).lean(),
-        Requisition.find({ status: 'Issued' }).populate('requestingUser', 'name office').lean() // Fetch issued requisitions
+        Requisition.find({ status: { $in: ['Issued', 'Received'] } }).populate('requestingUser', 'name office').lean() // Fetch issued & received requisitions
     ]);
 
     const formattedPars = pars.map(p => ({ ...p, slipType: 'PAR', number: p.parNumber }));

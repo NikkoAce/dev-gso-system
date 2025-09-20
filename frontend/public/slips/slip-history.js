@@ -13,6 +13,7 @@ function initializeSlipHistoryPage(user) {
     // --- STATE MANAGEMENT ---
     let allSlips = []; // Master list of all slips fetched from the server
     let currentPage = 1;
+    let totalPages = 1;
     const itemsPerPage = 20;
     const { renderPagination } = createUIManager();
 
@@ -42,8 +43,7 @@ function initializeSlipHistoryPage(user) {
                 totalPages: 0,
                 totalDocs: 0,
                 itemsPerPage
-            });
-            renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
+        });
             return;
         }
 
@@ -117,7 +117,7 @@ function initializeSlipHistoryPage(user) {
 
         // 2. Apply pagination to the filtered list
         const totalDocs = filteredSlips.length;
-        const totalPages = Math.ceil(totalDocs / itemsPerPage);
+        totalPages = Math.ceil(totalDocs / itemsPerPage);
         if (currentPage > totalPages) {
             currentPage = totalPages || 1;
         }
@@ -238,7 +238,6 @@ function initializeSlipHistoryPage(user) {
     });
     
     paginationControls.addEventListener('click', (e) => {
-        const paginationData = JSON.parse(e.currentTarget.dataset.pagination || '{}');
         if (e.target && e.target.id === 'prev-page-btn') {
             if (currentPage > 1) {
                 currentPage--;
@@ -246,7 +245,7 @@ function initializeSlipHistoryPage(user) {
             }
         }
         if (e.target && e.target.id === 'next-page-btn') {
-            if (currentPage < paginationData.totalPages) {
+            if (currentPage < totalPages) {
                 currentPage++;
                 applyFiltersAndRender();
             }
