@@ -32,6 +32,7 @@ createAuthenticatedPage({
                 reprint: '../slips/slip-history.html'
             },
             populateFormFn: (slipData) => {
+                currentSlipData = slipData;
                 // The slip number is part of the footer in IIRUP, but we can add it here if needed.
                 // For now, we'll rely on the title.
                 document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
