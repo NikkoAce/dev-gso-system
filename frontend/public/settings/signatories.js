@@ -61,6 +61,12 @@ function initializeSignatoriesPage(user) {
             defaultName: '',
             defaultTitle: 'Witness'
         },
+        {
+            key: 'sai_certified_by',
+            label: 'SAI - Availability Certified By',
+            defaultName: 'GSO',
+            defaultTitle: 'General Services Officer'
+        },
     ];
 
     // --- RENDERING ---

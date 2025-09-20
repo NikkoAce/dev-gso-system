@@ -28,20 +28,28 @@ function initializeSaiPage(user) {
         }
 
         try {
-            // Determine which endpoint to use based on user permissions for security and correctness.
-            const endpoint = user.permissions.includes('requisition:read:all')
-                ? `requisitions/${requisitionId}`
-                : `requisitions/my-office/${requisitionId}`;
-            const requisition = await fetchWithAuth(endpoint);
+            // Fetch both the requisition and the signatory settings in parallel
+            const [requisition, settings] = await Promise.all([
+                fetchWithAuth(`requisitions/${requisitionId}`), // Simplified endpoint, backend handles permissions
+                fetchWithAuth('settings/signatories')
+            ]);
+
+            // Create a simple map of settings for easy lookup
+            const settingsMap = settings.reduce((acc, setting) => {
+                acc[setting.key] = setting.value;
+                return acc;
+            }, {});
+
             currentRequisition = requisition;
-            renderSAI(requisition);
+            renderSAI(requisition, settingsMap);
         } catch (error) {
             console.error('Failed to fetch SAI data:', error);
             saiContainer.innerHTML = `<p class="text-center text-red-500">Error loading SAI: ${error.message}</p>`;
         }
     }
 
-    function renderSAI(req) {
+    function renderSAI(req, settings) {
+        const certifiedBy = settings.sai_certified_by || { name: 'GSO', title: 'General Services Officer' };
         let itemsHTML = '';
         const totalRows = 15; // Standard number of rows on a physical form
 
@@ -120,8 +128,8 @@ function initializeSaiPage(user) {
                 <div>
                     <p>Availability Certified by:</p>
                     <div class="mt-12 text-center">
-                        <p class="font-bold uppercase border-b border-black">&nbsp;</p>
-                        <p>Signature over Printed Name of GSO</p>
+                        <p class="font-bold uppercase border-b border-black">${certifiedBy.name}</p>
+                        <p>${certifiedBy.title}</p>
                     </div>
                 </div>
             </div></div>
