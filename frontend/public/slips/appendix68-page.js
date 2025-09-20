@@ -78,6 +78,7 @@ createAuthenticatedPage({
                 if (pages.length === 0) pages.push([]); // Ensure at least one page is rendered
                 const totalPages = pages.length;
                 const slipDate = new Date(slipData.date || slipData.issuedDate || Date.now()).toISOString().split('T')[0];
+                let itemNumberOffset = 0;
 
                 for (let i = 0; i < totalPages; i++) {
                     const pageAssets = pages[i];
@@ -88,7 +89,7 @@ createAuthenticatedPage({
                     pageAssets.forEach((asset, index) => {
                         assetRows += `
                             <tr>
-                                <td class="border border-black p-1 text-center">${(i * ITEMS_PER_PAGE) + index + 1}</td>
+                                <td class="border border-black p-1 text-center">${itemNumberOffset + index + 1}</td>
                                 <td class="border border-black p-1 text-center">${asset.quantity || 1}</td>
                                 <td class="border border-black p-1 text-center">${asset.unit || 'unit'}</td>
                                 <td class="border border-black p-1">${asset.description}</td>
@@ -199,6 +200,7 @@ createAuthenticatedPage({
                         }
                     }
                     formContainer.appendChild(pageDiv);
+                    itemNumberOffset += pageAssets.length;
                 }
             },
             checkFundSource: false // No fund source check needed for this slip

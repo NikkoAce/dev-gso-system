@@ -44,11 +44,43 @@ function initializePtrPage(user) {
         const { from, to, assets, date, ptrNumber } = ptrData;
         ptrContainer.innerHTML = ''; // Clear previous content
 
-        const ITEMS_PER_PAGE = 15;
-        const totalPages = Math.ceil(assets.length / ITEMS_PER_PAGE) || 1;
+        const FINAL_PAGE_CAPACITY = 8; // Fewer items for the large signatory block
+        const INTERMEDIATE_PAGE_CAPACITY = 20; // More items on pages without it
+        const pages = [];
+
+        if (assets.length > 0) {
+            // Step 1: Work backwards to determine which assets belong on the final page.
+            const assetsForFinalPage = [];
+            let splitIndex = assets.length;
+
+            for (let i = assets.length - 1; i >= 0; i--) {
+                if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
+                    assetsForFinalPage.unshift(assets[i]);
+                    splitIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            // Step 2: Chunk the remaining assets for the intermediate pages.
+            const assetsForDistribution = assets.slice(0, splitIndex);
+            if (assetsForDistribution.length > 0) {
+                for (let i = 0; i < assetsForDistribution.length; i += INTERMEDIATE_PAGE_CAPACITY) {
+                    pages.push(assetsForDistribution.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
+                }
+            }
+
+            // Step 3: Add the final page's assets.
+            if (assetsForFinalPage.length > 0) {
+                pages.push(assetsForFinalPage);
+            }
+        }
+
+        if (pages.length === 0) pages.push([]); // Ensure at least one page is rendered
+        const totalPages = pages.length;
 
         for (let i = 0; i < totalPages; i++) {
-            const pageAssets = assets.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE);
+            const pageAssets = pages[i];
             const isLastPage = i === totalPages - 1;
 
             let assetRows = '';
@@ -65,8 +97,15 @@ function initializePtrPage(user) {
                 `;
             });
 
-            const remainingRows = ITEMS_PER_PAGE - pageAssets.length;
-            for (let j = 0; j < remainingRows; j++) {
+            // Determine max items for padding rows
+            let maxItemsForThisPage;
+            if (isLastPage) {
+                maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+            } else {
+                maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY;
+            }
+            const remainingRows = Math.max(0, maxItemsForThisPage - pageAssets.length);
+             for (let j = 0; j < remainingRows; j++) {
                 assetRows += `<tr><td class="border border-black h-6" colspan="6"></td></tr>`;
             }
 

@@ -17,6 +17,7 @@ createAuthenticatedPage({
 
             const assets = parData.assets || [];
             // --- Smart Chunking Logic with different capacities for each page type ---
+            const FIRST_PAGE_CAPACITY = { items: 15, lines: 40 }; // Smaller capacity due to header
             const INTERMEDIATE_PAGE_CAPACITY = { items: 20, lines: 55 }; // Largest capacity
             const FINAL_PAGE_CAPACITY = { items: 10, lines: 25 };      // Smaller capacity for signatures and totals
 
@@ -45,16 +46,20 @@ createAuthenticatedPage({
                 if (assetsForDistribution.length > 0) {
                     let currentPageAssets = [];
                     let currentLineCount = 0;
+                    let isFirstPageOfBlock = true; // New flag
 
                     assetsForDistribution.forEach(asset => {
                         const assetLineCount = 1 + (asset.specifications?.length || 0);
+                        const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY; // Use correct capacity
+
                         const pageIsFull = currentPageAssets.length > 0 &&
-                            (currentPageAssets.length >= INTERMEDIATE_PAGE_CAPACITY.items || currentLineCount + assetLineCount > INTERMEDIATE_PAGE_CAPACITY.lines);
+                            (currentPageAssets.length >= capacity.items || currentLineCount + assetLineCount > capacity.lines);
 
                         if (pageIsFull) {
                             pages.push(currentPageAssets);
                             currentPageAssets = [];
                             currentLineCount = 0;
+                            isFirstPageOfBlock = false; // Subsequent pages are intermediate
                         }
                         currentPageAssets.push(asset);
                         currentLineCount += assetLineCount;
@@ -76,7 +81,16 @@ createAuthenticatedPage({
             pages.forEach((pageAssets, pageIndex) => {
                 const totalPages = pages.length;
                 const isLastPage = pageIndex === totalPages - 1;
-                const maxItemsForThisPage = isLastPage ? FINAL_PAGE_CAPACITY.items : INTERMEDIATE_PAGE_CAPACITY.items;
+                const isFirstPage = pageIndex === 0;
+
+                let maxItemsForThisPage;
+                if (isLastPage) {
+                    maxItemsForThisPage = FINAL_PAGE_CAPACITY.items;
+                } else if (isFirstPage) {
+                    maxItemsForThisPage = FIRST_PAGE_CAPACITY.items;
+                } else {
+                    maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY.items;
+                }
 
                 let assetsHTML = '';
                 pageAssets.forEach(asset => {
