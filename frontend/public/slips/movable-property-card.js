@@ -66,14 +66,14 @@ function initializePropertyCardPage(user) {
         const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         const table = document.createElement('table');
-        table.className = 'w-full text-xs border-collapse border border-black';
+        table.className = 'w-full text-xs border-collapse border border-black table-fixed';
         table.innerHTML = `
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="border border-black p-1">Date</th>
-                    <th class="border border-black p-1">Event</th>
-                    <th class="border border-black p-1">Details</th>
-                    <th class="border border-black p-1">User</th>
+                    <th class="border border-black p-1 w-1/6">Date</th>
+                    <th class="border border-black p-1 w-1/6">Event</th>
+                    <th class="border border-black p-1 w-1/2">Details</th>
+                    <th class="border border-black p-1 w-1/6">User</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,7 +81,7 @@ function initializePropertyCardPage(user) {
                     <tr class="border-b">
                         <td class="border border-black p-1">${formatDate(entry.date)}</td>
                         <td class="border border-black p-1">${entry.event}</td>
-                        <td class="border border-black p-1 print-break-words">${entry.details}</td>
+                        <td class="border border-black p-1 break-words">${entry.details}</td>
                         <td class="border border-black p-1">${entry.user}</td>
                     </tr>
                 `).join('')}
