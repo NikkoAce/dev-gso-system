@@ -1,5 +1,6 @@
 // FILE: frontend/public/par-page.js
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
+import { fetchWithAuth } from '../js/api.js';
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
