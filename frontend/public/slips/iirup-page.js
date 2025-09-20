@@ -102,27 +102,29 @@ createAuthenticatedPage({
                             <span>Entity Name: <span class="font-semibold">LGU of Daet</span></span>
                             <span>Fund Cluster: <span class="font-semibold">01</span></span>
                         </div>
-                        <table class="w-full text-xs border-collapse border border-black mt-4">
-                            <thead>
-                                <tr class="bg-gray-100 text-center">
-                                    <th rowspan="2" class="border border-black p-1">Date Acquired</th>
-                                    <th rowspan="2" class="border border-black p-1">Property No.</th>
-                                    <th rowspan="2" class="border border-black p-1">Description</th>
-                                    <th rowspan="2" class="border border-black p-1">Qty.</th>
-                                    <th rowspan="2" class="border border-black p-1">Unit Cost</th>
-                                    <th rowspan="2" class="border border-black p-1">Total Cost</th>
-                                    <th colspan="2" class="border border-black p-1">Accumulated</th>
-                                    <th rowspan="2" class="border border-black p-1">Book Value</th>
-                                    <th rowspan="2" class="border border-black p-1">Remarks</th>
-                                </tr>
-                                <tr class="bg-gray-100 text-center">
-                                    <th class="border border-black p-1">Depreciation</th>
-                                    <th class="border border-black p-1">Impairment</th>
-                                </tr>
-                            </thead>
-                            <tbody id="asset-list">${assetRows}</tbody>
-                            <tfoot>${footerHTML}</tfoot>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border-collapse border border-black mt-4">
+                                <thead>
+                                    <tr class="bg-gray-100 text-center">
+                                        <th rowspan="2" class="border border-black p-1">Date Acquired</th>
+                                        <th rowspan="2" class="border border-black p-1">Property No.</th>
+                                        <th rowspan="2" class="border border-black p-1">Description</th>
+                                        <th rowspan="2" class="border border-black p-1">Qty.</th>
+                                        <th rowspan="2" class="border border-black p-1">Unit Cost</th>
+                                        <th rowspan="2" class="border border-black p-1">Total Cost</th>
+                                        <th colspan="2" class="border border-black p-1">Accumulated</th>
+                                        <th rowspan="2" class="border border-black p-1">Book Value</th>
+                                        <th rowspan="2" class="border border-black p-1">Remarks</th>
+                                    </tr>
+                                    <tr class="bg-gray-100 text-center">
+                                        <th class="border border-black p-1">Depreciation</th>
+                                        <th class="border border-black p-1">Impairment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-list">${assetRows}</tbody>
+                                <tfoot>${footerHTML}</tfoot>
+                            </table>
+                        </div>
                         ${isLastPage ? footerTemplateHTML : ''}
                         <div class="text-right text-xs italic mt-8 pt-2 border-t border-dashed">
                             Page ${i + 1} of ${totalPages}

@@ -181,20 +181,22 @@ createAuthenticatedPage({
                         <span>Entity Name: LGU Daet</span>
                         <span class="font-bold">PAR No: <span id="par-no">${parData.parNumber || parData.number}</span></span>
                     </div>
-                    <table class="w-full border-collapse border border-gray-400 text-sm">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="border border-gray-400 p-2 text-center" width="10%">Quantity</th>
-                                <th class="border border-gray-400 p-2 text-center" width="10%">Unit</th>
-                                <th class="border border-gray-400 p-2 text-left">Description</th>
-                                <th class="border border-gray-400 p-2 text-center" width="20%">Property Number</th>
-                                <th class="border border-gray-400 p-2 text-center" width="15%">Date Acquired</th>
-                                <th class="border border-gray-400 p-2 text-right" width="15%">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>${assetsHTML}</tbody>
-                        <tfoot>${footerHTML}</tfoot>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-400 text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-400 p-2 text-center" width="10%">Quantity</th>
+                                    <th class="border border-gray-400 p-2 text-center" width="10%">Unit</th>
+                                    <th class="border border-gray-400 p-2 text-left">Description</th>
+                                    <th class="border border-gray-400 p-2 text-center" width="20%">Property Number</th>
+                                    <th class="border border-gray-400 p-2 text-center" width="15%">Date Acquired</th>
+                                    <th class="border border-gray-400 p-2 text-right" width="15%">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>${assetsHTML}</tbody>
+                            <tfoot>${footerHTML}</tfoot>
+                        </table>
+                    </div>
                     ${signatoryBlockHTML}
                     ${pageFooterHTML}
                 `;
