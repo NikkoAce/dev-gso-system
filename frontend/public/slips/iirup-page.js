@@ -46,8 +46,8 @@ createAuthenticatedPage({
                 formContainer.innerHTML = ''; // Now clear the container.
 
                 const assets = slipData.assets || [];
-                const FIRST_PAGE_CAPACITY = 10; // Smaller capacity for the new header
-                const FINAL_PAGE_CAPACITY = 5; // Fewer items on the last page to make room for the large footer
+                const FIRST_PAGE_CAPACITY = 12; // Smaller capacity for the new header
+                const FINAL_PAGE_CAPACITY = 6; // Fewer items on the last page to make room for the large footer
                 const INTERMEDIATE_PAGE_CAPACITY = 15; // More items on pages without the footer
                 const pages = [];
 
@@ -68,12 +68,19 @@ createAuthenticatedPage({
                     // Step 2: Chunk the remaining assets for the intermediate pages.
                     const assetsForDistribution = assets.slice(0, splitIndex);
                     if (assetsForDistribution.length > 0) {
-                        const firstPageAssets = assetsForDistribution.slice(0, FIRST_PAGE_CAPACITY);
-                        pages.push(firstPageAssets);
-
-                        const remainingForIntermediate = assetsForDistribution.slice(FIRST_PAGE_CAPACITY);
-                        for (let i = 0; i < remainingForIntermediate.length; i += INTERMEDIATE_PAGE_CAPACITY) {
-                            pages.push(remainingForIntermediate.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
+                        let currentPageAssets = [];
+                        let isFirstPageOfBlock = true;
+                        assetsForDistribution.forEach(asset => {
+                            const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+                            if (currentPageAssets.length >= capacity) {
+                                pages.push(currentPageAssets);
+                                currentPageAssets = [];
+                                isFirstPageOfBlock = false;
+                            }
+                            currentPageAssets.push(asset);
+                        });
+                        if (currentPageAssets.length > 0) {
+                            pages.push(currentPageAssets);
                         }
                     }
 
@@ -115,7 +122,7 @@ createAuthenticatedPage({
                     // Determine max items for padding rows
                     let maxItemsForThisPage;
                     if (isLastPage) {
-                        maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+                        maxItemsForThisPage = (totalPages === 1) ? FIRST_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
                     } else if (isFirstPage) {
                         maxItemsForThisPage = FIRST_PAGE_CAPACITY;
                     } else {

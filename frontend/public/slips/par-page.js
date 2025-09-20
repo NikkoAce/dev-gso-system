@@ -17,20 +17,24 @@ createAuthenticatedPage({
 
             const assets = parData.assets || [];
             // --- Smart Chunking Logic with different capacities for each page type ---
-            const FIRST_PAGE_CAPACITY = 15;
-            const INTERMEDIATE_PAGE_CAPACITY = 20;
-            const FINAL_PAGE_CAPACITY = 10;
+            const FIRST_PAGE_CAPACITY = { items: 15, lines: 40 }; // Smaller capacity due to header
+            const INTERMEDIATE_PAGE_CAPACITY = { items: 20, lines: 55 }; // Largest capacity
+            const FINAL_PAGE_CAPACITY = { items: 10, lines: 25 };      // Smaller capacity for signatures and totals
 
             const pages = [];
 
             if (assets.length > 0) {
                 // Step 1: Work backwards to determine which assets belong on the final page.
                 const assetsForFinalPage = [];
+                let linesOnFinalPage = 0;
                 let splitIndex = assets.length;
 
                 for (let i = assets.length - 1; i >= 0; i--) {
-                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
-                        assetsForFinalPage.unshift(assets[i]);
+                    const asset = assets[i];
+                    const assetLineCount = 1 + (asset.specifications?.length || 0);
+                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY.items && (linesOnFinalPage + assetLineCount) <= FINAL_PAGE_CAPACITY.lines) {
+                        assetsForFinalPage.unshift(asset);
+                        linesOnFinalPage += assetLineCount;
                         splitIndex = i;
                     } else {
                         break;
@@ -41,18 +45,24 @@ createAuthenticatedPage({
                 const assetsForDistribution = assets.slice(0, splitIndex);
                 if (assetsForDistribution.length > 0) {
                     let currentPageAssets = [];
+                    let currentLineCount = 0;
                     let isFirstPageOfBlock = true;
 
                     assetsForDistribution.forEach(asset => {
+                        const assetLineCount = 1 + (asset.specifications?.length || 0);
                         const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-                        const pageIsFull = currentPageAssets.length >= capacity;
+
+                        const pageIsFull = currentPageAssets.length > 0 &&
+                            (currentPageAssets.length >= capacity.items || currentLineCount + assetLineCount > capacity.lines);
 
                         if (pageIsFull) {
                             pages.push(currentPageAssets);
                             currentPageAssets = [];
+                            currentLineCount = 0;
                             isFirstPageOfBlock = false;
                         }
                         currentPageAssets.push(asset);
+                        currentLineCount += assetLineCount;
                     });
 
                     if (currentPageAssets.length > 0) {
@@ -75,12 +85,11 @@ createAuthenticatedPage({
 
                 let maxItemsForThisPage;
                 if (isLastPage) {
-                    // If it's the only page, it should have a larger capacity
-                    maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+                    maxItemsForThisPage = (totalPages === 1) ? FIRST_PAGE_CAPACITY.items : FINAL_PAGE_CAPACITY.items;
                 } else if (isFirstPage) {
-                    maxItemsForThisPage = FIRST_PAGE_CAPACITY;
+                    maxItemsForThisPage = FIRST_PAGE_CAPACITY.items;
                 } else {
-                    maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY;
+                    maxItemsForThisPage = INTERMEDIATE_PAGE_CAPACITY.items;
                 }
 
                 let assetsHTML = '';

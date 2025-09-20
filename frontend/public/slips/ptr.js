@@ -43,17 +43,17 @@ function initializePtrPage(user) {
         currentPtrData = ptrData; // Store for export
         const { from, to, assets, date, ptrNumber } = ptrData;
         ptrContainer.innerHTML = ''; // Clear previous content
-
-        const FIRST_PAGE_CAPACITY = 10; // Smaller capacity due to large header
-        const FINAL_PAGE_CAPACITY = 8; // Fewer items for the large signatory block
-        const INTERMEDIATE_PAGE_CAPACITY = 20; // More items on pages without it
+        
+        const FIRST_PAGE_CAPACITY = 12;
+        const INTERMEDIATE_PAGE_CAPACITY = 25;
+        const FINAL_PAGE_CAPACITY = 6;
         const pages = [];
 
         if (assets.length > 0) {
             // Step 1: Work backwards to determine which assets belong on the final page.
             const assetsForFinalPage = [];
             let splitIndex = assets.length;
-
+            
             for (let i = assets.length - 1; i >= 0; i--) {
                 if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
                     assetsForFinalPage.unshift(assets[i]);
@@ -62,16 +62,25 @@ function initializePtrPage(user) {
                     break;
                 }
             }
-
+            
             // Step 2: Chunk the remaining assets for the first and intermediate pages.
             const assetsForDistribution = assets.slice(0, splitIndex);
             if (assetsForDistribution.length > 0) {
-                const firstPageAssets = assetsForDistribution.slice(0, FIRST_PAGE_CAPACITY);
-                pages.push(firstPageAssets);
+                let currentPageAssets = [];
+                let isFirstPageOfBlock = true;
 
-                const remainingForIntermediate = assetsForDistribution.slice(FIRST_PAGE_CAPACITY);
-                for (let i = 0; i < remainingForIntermediate.length; i += INTERMEDIATE_PAGE_CAPACITY) {
-                    pages.push(remainingForIntermediate.slice(i, i + INTERMEDIATE_PAGE_CAPACITY));
+                assetsForDistribution.forEach(asset => {
+                    const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+                    if (currentPageAssets.length >= capacity) {
+                        pages.push(currentPageAssets);
+                        currentPageAssets = [];
+                        isFirstPageOfBlock = false;
+                    }
+                    currentPageAssets.push(asset);
+                });
+
+                if (currentPageAssets.length > 0) {
+                    pages.push(currentPageAssets);
                 }
             }
 
@@ -80,7 +89,6 @@ function initializePtrPage(user) {
                 pages.push(assetsForFinalPage);
             }
         }
-
         if (pages.length === 0) pages.push([]); // Ensure at least one page is rendered
         const totalPages = pages.length;
 
@@ -106,7 +114,7 @@ function initializePtrPage(user) {
             // Determine max items for padding rows
             let maxItemsForThisPage;
             if (isLastPage) {
-                maxItemsForThisPage = (totalPages === 1) ? INTERMEDIATE_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
+                maxItemsForThisPage = (totalPages === 1) ? FIRST_PAGE_CAPACITY : FINAL_PAGE_CAPACITY;
             } else if (isFirstPage) {
                 maxItemsForThisPage = FIRST_PAGE_CAPACITY;
             } else {
