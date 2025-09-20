@@ -74,6 +74,14 @@ function initializeRisPage(user) {
 
         risContainer.innerHTML = `
             <div class="printable-page">
+            <div class="flex flex-col items-center mb-8">
+                <img src="/LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                <div class="text-center mt-4">
+                    <p>Republic of the Philippines</p>
+                    <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                    <p class="font-bold">MUNICIPALITY OF DAET</p>
+                </div>
+            </div>
             <div class="flex justify-between items-start mb-2">
                 <div class="font-bold text-lg">REQUISITION AND ISSUE SLIP</div>
                 <div class="text-right text-sm">

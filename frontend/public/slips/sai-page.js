@@ -72,6 +72,14 @@ function initializeSaiPage(user) {
 
         saiContainer.innerHTML = `
             <div class="printable-page">
+            <div class="flex flex-col items-center mb-8">
+                <img src="/LGU-DAET-LOGO.png" alt="LGU Daet Logo" class="h-20 w-20">
+                <div class="text-center mt-4">
+                    <p>Republic of the Philippines</p>
+                    <p class="font-bold">PROVINCE OF CAMARINES NORTE</p>
+                    <p class="font-bold">MUNICIPALITY OF DAET</p>
+                </div>
+            </div>
             <div class="text-center mb-4">
                 <h2 class="text-xl font-bold">SUPPLIES AVAILABILITY INQUIRY</h2>
             </div>
