@@ -124,11 +124,11 @@ export async function exportToPDF(options) {
  * @param {string} options.exitButtonId - The ID of the button used to exit preview mode.
  */
 export function togglePreviewMode(options) {
-    const { orientation, exitButtonId, reportElementId } = options;
+    const { orientation, exitButtonId, reportElementId = 'report-output' } = options;
     const exitButton = document.getElementById(exitButtonId);
     const isPreviewing = document.body.classList.contains('print-preview-mode');
 
-    // Use a closure to store the original position of the previewed element
+    // Use a global state object to store the original position of the previewed element
     if (!window.gsoPreviewState) {
         window.gsoPreviewState = {
             originalParent: null,
@@ -142,14 +142,18 @@ export function togglePreviewMode(options) {
         document.body.classList.remove('print-preview-mode', 'preview-portrait', 'preview-landscape');
         if (exitButton) exitButton.classList.add('hidden');
 
-        // Move the element back to its original position
+        // Move the element back to its original position in the DOM
         const { previewedElement, originalParent, originalNextSibling } = window.gsoPreviewState;
         if (previewedElement && originalParent) {
             originalParent.insertBefore(previewedElement, originalNextSibling);
         }
         
         // Reset state
-        window.gsoPreviewState = {};
+        window.gsoPreviewState = {
+            originalParent: null,
+            originalNextSibling: null,
+            previewedElement: null,
+        };
 
     } else {
         // Enter preview mode
