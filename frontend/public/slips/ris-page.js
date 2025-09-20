@@ -1,5 +1,6 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 createAuthenticatedPage({
     permission: 'requisition:read:own_office', // Allow users to print their own slips
@@ -10,6 +11,10 @@ createAuthenticatedPage({
 function initializeRisPage(user) {
     const risContainer = document.getElementById('ris-container');
     const printButton = document.getElementById('print-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const exitPreviewBtn = document.getElementById('exit-preview-btn');
+    let currentRequisition = null;
 
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
@@ -28,6 +33,7 @@ function initializeRisPage(user) {
                 ? `requisitions/${requisitionId}`
                 : `requisitions/my-office/${requisitionId}`;
             const requisition = await fetchWithAuth(endpoint);
+            currentRequisition = requisition;
             renderRIS(requisition);
         } catch (error) {
             console.error('Failed to fetch RIS data:', error);
@@ -137,7 +143,29 @@ function initializeRisPage(user) {
         `;
     }
 
+    function handleExportPDF() {
+        if (!currentRequisition) return;
+        const fileName = `RIS-${currentRequisition.risNumber || 'report'}.pdf`;
+        exportToPDF({
+            reportElementId: 'report-output',
+            fileName: fileName,
+            buttonElement: exportPdfBtn,
+            orientation: 'portrait',
+            format: 'a4'
+        });
+    }
+
+    function handleTogglePreview() {
+        togglePreviewMode({
+            orientation: 'portrait',
+            exitButtonId: 'exit-preview-btn'
+        });
+    }
+
     printButton.addEventListener('click', () => window.print());
+    exportPdfBtn.addEventListener('click', handleExportPDF);
+    previewBtn.addEventListener('click', handleTogglePreview);
+    exitPreviewBtn.addEventListener('click', handleTogglePreview);
 
     fetchAndRenderRIS();
 }

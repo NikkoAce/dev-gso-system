@@ -23,13 +23,19 @@
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 non-printable">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 non-printable ">
                     <h1 class="text-3xl font-bold text-gray-800">Supplies Availability Inquiry</h1>
-                    <div class="self-end md:self-auto">
+                    <div class="self-end md:self-auto flex items-center gap-2 hide-in-preview">
                         <a href="../portal/my-requisitions.html" class="btn btn-ghost mr-2">Back</a>
-                        <button id="print-btn" class="btn btn-primary flex items-center gap-2">
-                            <i data-lucide="printer"></i> Print
-                        </button>
+                        <div class="dropdown dropdown-end">
+                            <label tabindex="0" class="btn btn-primary"><i data-lucide="settings"></i> Actions</label>
+                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                <li><button id="preview-btn"><i data-lucide="monitor"></i> Preview</button></li>
+                                <div class="divider my-1"></div>
+                                <li><button id="print-btn"><i data-lucide="printer"></i> Print</button></li>
+                                <li><button id="export-pdf-btn"><i data-lucide="file-type-2"></i> Export as PDF</button></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div id="report-output" class="bg-white p-8 rounded-lg border printable-area">
@@ -41,6 +47,7 @@
             </main>
         </div>
     </div>
+    <button id="exit-preview-btn" class="btn btn-error hidden non-printable"><i data-lucide="x"></i> Exit Preview</button>
     <script src="../js/layout.js"></script>
     <script type="module" src="./sai-page.js"></script>
 </body>

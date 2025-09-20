@@ -36,6 +36,7 @@ export async function exportToPDF(options) {
     lucide.createIcons();
 
     try {
+        const margin = 15; // 15mm margin on each side
         const pdf = new jsPDF({ orientation, unit: 'mm', format });
         const pagesToProcess = reportElement.querySelectorAll('.printable-page');
         const elements = pagesToProcess.length > 0 ? Array.from(pagesToProcess) : [reportElement];
@@ -77,12 +78,31 @@ export async function exportToPDF(options) {
             const imgData = canvas.toDataURL('image/png');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const ratio = canvas.height / canvas.width;
+
+            // Calculate available width and height inside margins
+            const contentWidth = pdfWidth - (margin * 2);
+            const contentHeight = pdfHeight - (margin * 2);
+
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const canvasRatio = canvasHeight / canvasWidth;
+
+            let imgWidth = contentWidth;
+            let imgHeight = imgWidth * canvasRatio;
+
+            // If the image height exceeds the content area, scale it down.
+            if (imgHeight > contentHeight) {
+                imgHeight = contentHeight;
+                imgWidth = imgHeight / canvasRatio;
+            }
 
             if (i > 0) {
                 pdf.addPage();
             }
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfWidth * ratio);
+            // Center the image within the content area
+            const x = margin + (contentWidth - imgWidth) / 2;
+            const y = margin + (contentHeight - imgHeight) / 2;
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
         }
 
         pdf.save(fileName);

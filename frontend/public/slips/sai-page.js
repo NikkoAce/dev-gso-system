@@ -1,5 +1,6 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 createAuthenticatedPage({
     permission: 'requisition:read:own_office', // Allow users to print their own slips
@@ -10,6 +11,10 @@ createAuthenticatedPage({
 function initializeSaiPage(user) {
     const saiContainer = document.getElementById('sai-container');
     const printButton = document.getElementById('print-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const exitPreviewBtn = document.getElementById('exit-preview-btn');
+    let currentRequisition = null;
 
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
 
@@ -28,6 +33,7 @@ function initializeSaiPage(user) {
                 ? `requisitions/${requisitionId}`
                 : `requisitions/my-office/${requisitionId}`;
             const requisition = await fetchWithAuth(endpoint);
+            currentRequisition = requisition;
             renderSAI(requisition);
         } catch (error) {
             console.error('Failed to fetch SAI data:', error);
@@ -113,9 +119,29 @@ function initializeSaiPage(user) {
         `;
     }
 
-    printButton.addEventListener('click', () => {
-        window.print();
-    });
+    function handleExportPDF() {
+        if (!currentRequisition) return;
+        const fileName = `SAI-${currentRequisition.saiNumber || currentRequisition.risNumber || 'report'}.pdf`;
+        exportToPDF({
+            reportElementId: 'report-output',
+            fileName: fileName,
+            buttonElement: exportPdfBtn,
+            orientation: 'portrait',
+            format: 'a4'
+        });
+    }
+
+    function handleTogglePreview() {
+        togglePreviewMode({
+            orientation: 'portrait',
+            exitButtonId: 'exit-preview-btn'
+        });
+    }
+
+    printButton.addEventListener('click', () => window.print());
+    exportPdfBtn.addEventListener('click', handleExportPDF);
+    previewBtn.addEventListener('click', handleTogglePreview);
+    exitPreviewBtn.addEventListener('click', handleTogglePreview);
 
     fetchAndRenderSAI();
 }
