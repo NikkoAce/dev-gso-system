@@ -67,6 +67,12 @@ function initializeSignatoriesPage(user) {
             defaultName: 'GSO',
             defaultTitle: 'General Services Officer'
         },
+        {
+            key: 'ptr_approved_by',
+            label: 'PTR - Approved By',
+            defaultName: '________________________',
+            defaultTitle: 'Head of Agency/Entity or his/her Authorized Representative'
+        },
     ];
 
     // --- RENDERING ---

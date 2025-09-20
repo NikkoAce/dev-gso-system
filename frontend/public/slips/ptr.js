@@ -1,5 +1,6 @@
 // FILE: frontend/public/ptr.js
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
+import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
@@ -20,7 +21,7 @@ function initializePtrPage(user) {
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
 
     // Check for reprint data first, then for new transfer data
-    function renderPTR() {
+    async function renderPTR() {
         let ptrData = null;
         const reprintDataString = localStorage.getItem('ptrToReprint');
         const transferDataString = localStorage.getItem('transferData');
@@ -40,6 +41,20 @@ function initializePtrPage(user) {
             ptrContainer.innerHTML = `<p class="text-center text-red-500">No transfer data found. Please initiate a transfer from the Asset Registry.</p>`;
             return;
         }
+
+        // --- FETCH SIGNATORIES ---
+        let settingsMap = {};
+        try {
+            const settings = await fetchWithAuth('signatories');
+            settingsMap = settings.reduce((acc, setting) => {
+                acc[setting.key] = setting.value;
+                return acc;
+            }, {});
+        } catch (error) {
+            console.warn('Could not load signatory settings, using defaults.', error);
+        }
+        const approvedBy = settingsMap.ptr_approved_by || { name: '________________________', title: 'Head of Agency/Entity or his/her Authorized Representative' };
+
         currentPtrData = ptrData; // Store for export
         const { from, to, assets, date, ptrNumber } = ptrData;
         ptrContainer.innerHTML = ''; // Clear previous content
@@ -146,8 +161,8 @@ function initializePtrPage(user) {
                         <div>
                             <p>Approved by:</p>
                             <div class="mt-12 text-center">
-                                <p class="font-bold uppercase border-b border-black">&nbsp;</p>
-                                <p>Signature over Printed Name of Head of Agency/Entity or his/her Authorized Representative</p>
+                                <p class="font-bold uppercase border-b border-black">${approvedBy.name}</p>
+                                <p>${approvedBy.title}</p>
                             </div>
                         </div>
                         <div>
