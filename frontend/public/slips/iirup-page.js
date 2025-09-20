@@ -1,10 +1,12 @@
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 createAuthenticatedPage({
     permission: 'slip:generate',
     pageInitializer: (user) => {
+        let currentSlipData = null;
         const config = {
             slipType: 'IIRUP',
             slipTitle: 'Inventory and Inspection Report of Unserviceable Property',
@@ -169,6 +171,33 @@ createAuthenticatedPage({
 
         customInitializeSlipPage(config, user);
 
+        // --- EXPORT AND PREVIEW LOGIC ---
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const exitPreviewBtn = document.querySelector('#exit-preview-btn') || document.createElement('button'); // Fallback
+
+        function handleExportPDF() {
+            if (!currentSlipData) return;
+            const fileName = `IIRUP-${currentSlipData?.iirupNumber || 'report'}.pdf`;
+            exportToPDF({
+                reportElementId: 'form-container',
+                fileName: fileName,
+                buttonElement: exportPdfBtn,
+                orientation: 'landscape',
+                format: 'legal'
+            });
+        }
+
+        function handleTogglePreview() {
+            togglePreviewMode({
+                orientation: 'landscape',
+                exitButtonId: 'exit-preview-btn'
+            });
+        }
+
+        if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleExportPDF);
+        if (previewBtn) previewBtn.addEventListener('click', handleTogglePreview);
+        if (exitPreviewBtn) exitPreviewBtn.addEventListener('click', handleTogglePreview);
     },
     pageName: 'IIRUP Slip'
 });

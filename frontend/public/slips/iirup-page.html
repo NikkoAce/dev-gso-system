@@ -8,6 +8,9 @@
     <link rel="icon" href="../LGU-DAET-LOGO.png" type="image/png">
     <link href="../css/output.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/print.css" media="print">
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script type="module" src="/js/auth.js" defer></script>
 </head>
@@ -114,6 +117,7 @@
             </main>
         </div>
     </div>
+    <button id="exit-preview-btn" class="btn btn-error hidden non-printable"><i data-lucide="x"></i> Exit Preview</button>
     <script src="../js/layout.js"></script>
     <script type="module" src="./iirup-page.js"></script>
 </body>
