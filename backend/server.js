@@ -72,6 +72,7 @@ app.use('/api/immovable-assets', require('./routes/immovableAssetRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/appendix68', require('./routes/appendix68Routes'));
 app.use('/api/admin', require('./routes/adminRoutes')); 
+app.use('/api/signatories', require('./routes/signatoriesRoutes'));
 app.use('/api/receiving-reports', require('./routes/receivingReportRoutes'));
 
 

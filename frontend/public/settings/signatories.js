@@ -10,7 +10,7 @@ createAuthenticatedPage({
 
 function initializeSignatoriesPage(user) {
     const { showToast } = createUIManager();
-    const API_ENDPOINT = 'settings/signatories';
+    const API_ENDPOINT = 'signatories';
 
     // --- DOM ELEMENTS ---
     const form = document.getElementById('signatories-form');
