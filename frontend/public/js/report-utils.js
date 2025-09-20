@@ -124,24 +124,49 @@ export async function exportToPDF(options) {
  * @param {string} options.exitButtonId - The ID of the button used to exit preview mode.
  */
 export function togglePreviewMode(options) {
-    const { orientation, exitButtonId } = options;
+    const { orientation, exitButtonId, reportElementId } = options;
     const exitButton = document.getElementById(exitButtonId);
-    const mainElement = document.querySelector('main');
-    const mainWrapper = mainElement ? mainElement.parentElement : null; // The div with 'overflow-hidden'
     const isPreviewing = document.body.classList.contains('print-preview-mode');
+
+    // Use a closure to store the original position of the previewed element
+    if (!window.gsoPreviewState) {
+        window.gsoPreviewState = {
+            originalParent: null,
+            originalNextSibling: null,
+            previewedElement: null,
+        };
+    }
 
     if (isPreviewing) {
         // Exit preview mode
         document.body.classList.remove('print-preview-mode', 'preview-portrait', 'preview-landscape');
         if (exitButton) exitButton.classList.add('hidden');
-        // Restore overflow to the main content area
-        if (mainElement) mainElement.classList.add('overflow-x-hidden', 'overflow-y-auto');
-        if (mainWrapper) mainWrapper.classList.add('overflow-hidden');
+
+        // Move the element back to its original position
+        const { previewedElement, originalParent, originalNextSibling } = window.gsoPreviewState;
+        if (previewedElement && originalParent) {
+            originalParent.insertBefore(previewedElement, originalNextSibling);
+        }
+        
+        // Reset state
+        window.gsoPreviewState = {};
+
     } else {
         // Enter preview mode
-        // Remove overflow from the main content area to prevent the preview from being clipped
-        if (mainElement) mainElement.classList.remove('overflow-x-hidden', 'overflow-y-auto');
-        if (mainWrapper) mainWrapper.classList.remove('overflow-hidden');
+        const elementToPreview = document.getElementById(reportElementId);
+        if (!elementToPreview) {
+            console.error(`Preview failed: element with ID "${reportElementId}" not found.`);
+            return;
+        }
+
+        // Save original position and the element itself
+        window.gsoPreviewState.originalParent = elementToPreview.parentElement;
+        window.gsoPreviewState.originalNextSibling = elementToPreview.nextSibling;
+        window.gsoPreviewState.previewedElement = elementToPreview;
+
+        // Move element to be a direct child of the body to escape clipping contexts
+        document.body.appendChild(elementToPreview);
+
         document.body.classList.add('print-preview-mode', `preview-${orientation}`);
         if (exitButton) exitButton.classList.remove('hidden');
     }
