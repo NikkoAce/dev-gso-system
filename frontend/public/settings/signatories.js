@@ -64,12 +64,24 @@ function initializeSignatoriesPage(user) {
     ];
 
     // --- RENDERING ---
-    function renderForm(settings) {
+    function renderForm(settings, employees) {
         container.innerHTML = '';
         SIGNATORY_CONFIG.forEach(config => {
             const setting = settings.find(s => s.key === config.key) || {};
             const name = setting.value?.name || config.defaultName;
             const title = setting.value?.title || config.defaultTitle;
+
+            const employeeOptions = employees.map(emp => 
+                `<option value="${emp.name}" ${name === emp.name ? 'selected' : ''}>${emp.name}</option>`
+            ).join('');
+
+            const nameSelectHTML = `
+                <select id="${config.key}_name" class="select select-bordered w-full font-normal">
+                    <option value="">-- Select Employee --</option>
+                    <option value="________________________" ${name === '________________________' ? 'selected' : ''}>-- Leave Blank --</option>
+                    ${employeeOptions}
+                </select>
+            `;
 
             const fieldset = document.createElement('fieldset');
             fieldset.className = 'border p-4 rounded-lg';
@@ -78,7 +90,7 @@ function initializeSignatoriesPage(user) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label class="form-control">
                         <div class="label"><span class="label-text">Printed Name</span></div>
-                        <input type="text" id="${config.key}_name" value="${name}" class="input input-bordered w-full">
+                        ${nameSelectHTML}
                     </label>
                     <label class="form-control">
                         <div class="label"><span class="label-text">Designation / Title</span></div>
@@ -87,14 +99,28 @@ function initializeSignatoriesPage(user) {
                 </div>
             `;
             container.appendChild(fieldset);
+
+            const nameSelect = document.getElementById(`${config.key}_name`);
+            const titleInput = document.getElementById(`${config.key}_title`);
+            nameSelect.addEventListener('change', () => {
+                const selectedEmployee = employees.find(emp => emp.name === nameSelect.value);
+                if (selectedEmployee) {
+                    titleInput.value = selectedEmployee.designation;
+                } else if (nameSelect.value === '________________________') {
+                    titleInput.value = config.defaultTitle;
+                }
+            });
         });
     }
 
     // --- DATA HANDLING ---
     async function loadSignatories() {
         try {
-            const settings = await fetchWithAuth(API_ENDPOINT);
-            renderForm(settings);
+            const [settings, employees] = await Promise.all([
+                fetchWithAuth(API_ENDPOINT),
+                fetchWithAuth('employees') // Fetch all employees for the dropdown
+            ]);
+            renderForm(settings, employees);
         } catch (error) {
             showToast(`Error loading settings: ${error.message}`, 'error');
             container.innerHTML = `<p class="text-error text-center">Could not load signatory settings.</p>`;
