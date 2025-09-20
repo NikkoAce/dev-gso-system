@@ -33,9 +33,6 @@ createAuthenticatedPage({
             },
             populateFormFn: (slipData) => {
                 currentSlipData = slipData;
-                // The slip number is part of the footer in IIRUP, but we can add it here if needed.
-                // For now, we'll rely on the title.
-                document.getElementById('signatory-1-name').textContent = slipData.user?.name || user.name;
 
                 const formContainer = document.getElementById(config.domIds.formContainer);
 
@@ -131,6 +128,14 @@ createAuthenticatedPage({
                             Page ${i + 1} of ${totalPages}
                         </div>
                     `;
+
+                    // If it's the last page, populate the unique footer fields.
+                    if (isLastPage) {
+                        const signatoryNameEl = pageDiv.querySelector('#signatory-1-name');
+                        if (signatoryNameEl) {
+                            signatoryNameEl.textContent = slipData.user?.name || user.name;
+                        }
+                    }
                     formContainer.appendChild(pageDiv);
                 }
             },

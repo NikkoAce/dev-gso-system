@@ -83,6 +83,20 @@ createAuthenticatedPage({
                         </div>
                     ` : '<div class="h-36"></div>'; // Placeholder to keep spacing consistent
 
+                    const headerInputsHTML = isFirstPage ? `
+                        <label class="form-control">
+                            <div class="label py-0"><span class="label-text">Place of Storage</span></div>
+                            <input type="text" id="place-of-storage" class="input input-bordered input-sm w-full" value="${slipData.placeOfStorage || 'GSO Warehouse'}">
+                        </label>
+                        <label class="form-control">
+                            <div class="label py-0"><span class="label-text">Date</span></div>
+                            <input type="date" id="issued-date" class="input input-bordered input-sm w-full" value="${slipDate}">
+                        </label>
+                    ` : `
+                        <div>Place of Storage: <span class="font-semibold underline">${slipData.placeOfStorage || 'GSO Warehouse'}</span></div>
+                        <div>Date: <span class="font-semibold underline">${slipDate}</span></div>
+                    `;
+
                     const pageDiv = document.createElement('div');
                     pageDiv.className = isLastPage ? 'printable-page' : 'printable-page page-break-after';
 
@@ -95,14 +109,7 @@ createAuthenticatedPage({
                         <div class="grid grid-cols-2 gap-x-4 text-sm mb-4 items-end">
                             <span>LGU: <span class="font-semibold underline">LGU of Daet</span></span>
                             <span>Fund: <span class="font-semibold underline">General Fund</span></span>
-                            <label class="form-control">
-                                <div class="label py-0"><span class="label-text">Place of Storage</span></div>
-                                <input type="text" id="place-of-storage" class="input input-bordered input-sm w-full" value="${slipData.placeOfStorage || 'GSO Warehouse'}" ${!isFirstPage ? 'disabled' : ''}>
-                            </label>
-                            <label class="form-control">
-                                <div class="label py-0"><span class="label-text">Date</span></div>
-                                <input type="date" id="issued-date" class="input input-bordered input-sm w-full" value="${slipDate}" ${!isFirstPage ? 'disabled' : ''}>
-                            </label>
+                            ${headerInputsHTML}
                         </div>
                         <table class="w-full text-xs border-collapse border border-black mt-4">
                             <thead>
