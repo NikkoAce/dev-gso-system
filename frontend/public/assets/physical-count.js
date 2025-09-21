@@ -33,8 +33,7 @@ function initializePhysicalCountPage(user) {
     const scannerCtx = scannerCanvas.getContext('2d');
     const closeScannerBtn = document.getElementById('close-scanner-btn');
     const continuousScanToggle = document.getElementById('continuous-scan-toggle');
-    const presenceIndicatorContainer = document.getElementById('presence-indicator-container');
-    const exportResultsBtn = document.getElementById('export-results-btn');
+    const presenceIndicatorContainer = document.getElementById('presence-indicator-container'); 
 
     let videoStream = null;
     let currentSummary = {};
