@@ -92,11 +92,7 @@ export function createSettingsPage(config) {
     function updateSortIndicators() {
         tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
             th.querySelector('i[data-lucide]')?.remove();
-            if (th.dataset.sortKey === sortKey) {
-                th.insertAdjacentHTML('beforeend', `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`);
-            }
         });
-        lucide.createIcons();
     }
 
     // --- FORM STATE & MODAL LOGIC ---

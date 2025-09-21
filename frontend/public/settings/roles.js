@@ -148,15 +148,8 @@ function updateSortIndicators() {
     const tableHeader = document.querySelector('#role-list').parentElement.querySelector('thead');
     const headers = tableHeader.querySelectorAll('th[data-sort-key]');
     headers.forEach(th => {
-        const existingIcon = th.querySelector('i[data-lucide]');
-        if (existingIcon) existingIcon.remove();
-
-        if (th.dataset.sortKey === sortKey) {
-            const iconHTML = `<i data-lucide="${sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}" class="inline-block ml-1 h-4 w-4"></i>`;
-            th.insertAdjacentHTML('beforeend', iconHTML);
-        }
+        th.querySelector('i[data-lucide]')?.remove();
     });
-    lucide.createIcons();
 }
 
 function setupEventListeners() {
