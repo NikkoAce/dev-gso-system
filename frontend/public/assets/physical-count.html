@@ -54,16 +54,27 @@
             </header>
             <main class="flex-1 overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h1 class="text-3xl font-bold text-gray-800">Annual Physical Count</h1>
-                        <div class="flex gap-2">
-                            <button id="scan-asset-btn" class="btn btn-secondary"><i data-lucide="camera"></i> Scan Asset</button>
-                            <button id="export-results-btn" class="btn btn-accent">
-                                <i data-lucide="download"></i> Export Results
-                            </button>
-                            <button id="save-count-btn" class="btn btn-primary">
-                                <i data-lucide="save"></i> Save Physical Count
-                            </button>
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <h1 class="text-3xl font-bold text-gray-800 self-start md:self-center">Annual Physical Count</h1>
+                        <div class="flex gap-2 w-full md:w-auto mt-4 md:mt-0 justify-around md:justify-end">
+                            <div class="tooltip tooltip-bottom" data-tip="Scan Asset">
+                                <button id="scan-asset-btn" class="btn btn-ghost text-secondary">
+                                    <i data-lucide="camera"></i>
+                                    <span class="hidden md:inline ml-2">Scan Asset</span>
+                                </button>
+                            </div>
+                            <div class="tooltip tooltip-bottom" data-tip="Export Results">
+                                <button id="export-results-btn" class="btn btn-ghost text-accent">
+                                    <i data-lucide="download"></i>
+                                    <span class="hidden md:inline ml-2">Export Results</span>
+                                </button>
+                            </div>
+                            <div class="tooltip tooltip-bottom" data-tip="Save Physical Count">
+                                <button id="save-count-btn" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    <span class="hidden md:inline ml-2">Save Physical Count</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
