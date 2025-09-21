@@ -145,6 +145,7 @@ function initializeQrLabelsPage(user) {
 
         const printContainer = document.getElementById('print-container');
         const labelGrid = document.createElement('div');
+        labelGrid.classList.add('printable-area'); // Add class for print styles
         labelGrid.className = 'label-grid-print';
 
         assetsToPrint.forEach(asset => {

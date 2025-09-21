@@ -2,13 +2,13 @@
 body { font-family: 'Inter', sans-serif; }
 @media print {
     /* A simpler, more robust approach to printing */
-    body > *:not(.printable-area):not(#print-container) {
+    body > *:not(.printable-area) {
         display: none !important;
     }
     .non-printable {
         display: none !important;
     }
-    .printable-area, #print-container {
+    .printable-area {
         display: block !important;
     }
 
