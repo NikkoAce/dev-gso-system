@@ -43,19 +43,19 @@
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-4xl mx-auto space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h1 class="text-3xl font-bold text-gray-800">Manage Offices</h1>
-                        <button id="add-new-btn" class="btn btn-primary">
-                            <i data-lucide="plus"></i> Add New Office
-                        </button>
-                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800">Manage Offices</h1>
 
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <h2 class="text-2xl font-bold text-gray-800">Existing Offices</h2>
-                        <label class="input input-bordered input-sm flex items-center gap-2 w-full sm:w-auto sm:max-w-xs">
-                            <i data-lucide="search" class="h-4 w-4 opacity-70"></i>
-                            <input type="text" id="search-input" class="grow" placeholder="Search offices..." />
-                        </label>
+                        <div class="flex items-center gap-2">
+                            <label class="input input-bordered input-sm flex items-center gap-2 w-full sm:w-auto sm:max-w-xs">
+                                <i data-lucide="search" class="h-4 w-4 opacity-70"></i>
+                                <input type="text" id="search-input" class="grow" placeholder="Search offices..." />
+                            </label>
+                            <button id="add-new-btn" class="btn btn-primary btn-sm">
+                                <i data-lucide="plus"></i> Add Office
+                            </button>
+                        </div>
                     </div>
 
                     <div class="card bg-base-100 border">
