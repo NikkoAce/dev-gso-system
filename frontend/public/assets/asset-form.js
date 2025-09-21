@@ -1,6 +1,6 @@
 // FILE: frontend/public/assets/asset-form.js
 import { fetchWithAuth } from '../js/api.js';
-import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow } from '../js/ui.js';
+import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow, showConfirmationModal } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
@@ -362,7 +362,7 @@ function initializeForm(user) {
         const attachmentKey = deleteButton.dataset.key;
         if (!assetId || !attachmentKey) return;
 
-        if (confirm('Are you sure you want to permanently delete this file?')) {
+        showConfirmationModal('Delete Attachment', 'Are you sure you want to permanently delete this file?', async () => {
             try {
                 await fetchWithAuth(`${API_ENDPOINT}/${assetId}/attachments/${encodeURIComponent(attachmentKey)}`, { method: 'DELETE' });
                 showToast('Attachment deleted successfully.', 'success');
@@ -370,7 +370,7 @@ function initializeForm(user) {
             } catch (error) {
                 showToast(`Error deleting attachment: ${error.message}`, 'error');
             }
-        }
+        });
     }
 
     // --- EVENT LISTENERS ---
@@ -510,7 +510,7 @@ function initializeForm(user) {
         const removeBtn = e.target.closest('.remove-repair-btn');
         if (removeBtn) {
             const repairId = removeBtn.dataset.repairId;
-            if (confirm('Are you sure you want to delete this repair record?')) {
+            showConfirmationModal('Delete Repair Record', 'Are you sure you want to delete this repair record?', async () => {
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${assetId}/repairs/${repairId}`, {
                         method: 'DELETE'
@@ -520,7 +520,7 @@ function initializeForm(user) {
                 } catch (error) {
                     showToast(`Error deleting repair: ${error.message}`, 'error');
                 }
-            }
+            });
         }
     });
 

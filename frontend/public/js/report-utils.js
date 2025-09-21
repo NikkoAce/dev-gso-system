@@ -1,4 +1,5 @@
 // FILE: frontend/public/js/report-utils.js
+import { createUIManager } from './ui.js';
 
 /**
  * A reusable function to export a given HTML element to a PDF document.
@@ -20,12 +21,13 @@ export async function exportToPDF(options) {
         format = 'legal'
     } = options;
 
+    const { showToast } = createUIManager();
     const { jsPDF } = window.jspdf;
     const reportElement = document.getElementById(reportElementId);
 
     if (!reportElement) {
         console.error(`Export failed: Element with ID "${reportElementId}" not found.`);
-        alert(`Export failed: Report element not found.`);
+        showToast(`Export failed: Report element not found.`, 'error');
         return;
     }
 
@@ -109,7 +111,7 @@ export async function exportToPDF(options) {
 
     } catch (err) {
         console.error("Error exporting to PDF:", err);
-        alert("An error occurred while exporting to PDF.");
+        showToast("An error occurred while exporting to PDF.", 'error');
     } finally {
         buttonElement.disabled = false;
         buttonElement.innerHTML = originalButtonContent;
