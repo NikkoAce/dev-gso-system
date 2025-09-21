@@ -224,6 +224,13 @@
         .asset-registry-mobile-layout td[data-label="Date Created"]::before { content: attr(data-label); @apply block font-semibold text-base-content/70; }
 
         /* Card Footer */
-        .asset-registry-mobile-layout td[data-label="Actions"] { order: 9; @apply w-full flex justify-end items-center bg-base-200 border-t border-base-300/50; }
+        .asset-registry-mobile-layout td[data-label="Actions"] {
+            order: 9;
+            @apply w-full flex justify-between items-center bg-base-200 border-t border-base-300/50;
+        }
+        .asset-registry-mobile-layout td[data-label="Actions"]::before {
+            content: attr(data-label);
+            @apply block font-semibold text-sm;
+        }
     }
 }
