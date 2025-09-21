@@ -169,8 +169,12 @@
                     <div class="w-64 h-64 border-4 border-dashed border-green-500 rounded-lg opacity-75"></div>
                 </div>
             </div>
-            <div class="modal-action">
-                <button id="close-scanner-btn" class="btn">Close</button>
+            <div class="modal-action justify-between items-center">
+                <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" id="continuous-scan-toggle" class="checkbox checkbox-sm" />
+                    <span class="label-text">Continuous Scan</span>
+                </label>
+                <button id="close-scanner-btn" class="btn">Stop & Close</button>
             </div>
         </div>
     </dialog>

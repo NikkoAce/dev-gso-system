@@ -32,6 +32,7 @@ function initializePhysicalCountPage(user) {
     const scannerCanvas = document.getElementById('scanner-canvas');
     const scannerCtx = scannerCanvas.getContext('2d');
     const closeScannerBtn = document.getElementById('close-scanner-btn');
+    const continuousScanToggle = document.getElementById('continuous-scan-toggle');
 
     let videoStream = null;
     let currentSummary = {};
@@ -377,7 +378,8 @@ function initializePhysicalCountPage(user) {
             const imageData = scannerCtx.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
 
-            if (code) {
+            // Only process a new code if the video is not paused (i.e., not in the middle of handling a previous scan)
+            if (code && !scannerVideo.paused) {
                 handleScannedCode(code.data);
             }
         }
@@ -387,46 +389,53 @@ function initializePhysicalCountPage(user) {
     }
 
     async function handleScannedCode(propertyNumber) {
-        stopScanner(); // Stop scanning immediately after a code is found
+        const isContinuous = continuousScanToggle.checked;
+
+        if (isContinuous) {
+            scannerVideo.pause();
+        } else {
+            stopScanner();
+        }
+
         const row = tableBody.querySelector(`tr[data-property-number="${propertyNumber}"]`);
 
         if (!row) {
-            // Asset not on the page, let's find out where it is.
+            playFeedbackSound(false);
+            showScannerFeedback('Not Found', 'error');
             try {
-                // This assumes a new backend endpoint exists to fetch an asset by its property number.
                 const asset = await fetchWithAuth(`physical-count/by-property-number/${propertyNumber}`);
                 if (asset && asset.custodian && asset.custodian.office) {
                     showToast(`Asset ${propertyNumber} belongs to ${asset.custodian.office}. Please switch to that office to verify.`, 'error');
                 } else {
-                    // Asset exists but has no office? Unlikely but good to handle.
                     showToast(`Asset ${propertyNumber} found, but has no assigned office.`, 'warning');
                 }
             } catch (error) {
-                // If the fetch fails with a 404, it means the asset doesn't exist at all.
                 showToast(`Asset with Property No. ${propertyNumber} does not exist in the system.`, 'error');
-            } finally {
-                // Stop further execution since the asset is not on this page.
-                return;
             }
+            if (isContinuous) {
+                setTimeout(() => scannerVideo.play(), 700); // Resume after feedback
+            }
+            return;
         }
 
         const checkbox = row.querySelector('.verify-checkbox');
         if (checkbox && !checkbox.checked) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            oscillator.connect(audioContext.destination);
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.1);
-
+            playFeedbackSound(true);
+            showScannerFeedback('Verified!', 'success');
             checkbox.checked = true;
             await handleVerificationChange(checkbox);
             updateVerifyAllCheckboxState();
+        } else if (checkbox && checkbox.checked) {
+            playFeedbackSound(false);
+            showScannerFeedback('Already Verified', 'warning');
         }
 
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        showToast(`Asset ${propertyNumber} located and verified.`, 'success');
+        if (isContinuous) {
+            setTimeout(() => scannerVideo.play(), 700); // Resume after feedback
+        } else {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast(`Asset ${propertyNumber} located and verified.`, 'success');
+        }
     }
 
     // --- SOCKET.IO LOGIC ---
