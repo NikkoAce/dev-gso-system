@@ -1,15 +1,23 @@
 /* FILE: frontend/public/style.css (New Shared CSS) */
 body { font-family: 'Inter', sans-serif; }
 @media print {
-    /* A simpler, more robust approach to printing */
-    body > *:not(.printable-area) {
-        display: none !important;
+    /* A robust method to isolate printable content */
+    /* 1. Hide everything by default */
+    body * {
+        visibility: hidden;
     }
-    .non-printable {
-        display: none !important;
+    /* 2. Make the printable area and all its children visible */
+    .printable-area, .printable-area * {
+        visibility: visible;
     }
+    /* 3. Position the printable area to take up the whole page */
     .printable-area {
-        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .page-break-after {
