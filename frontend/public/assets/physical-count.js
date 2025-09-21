@@ -542,11 +542,12 @@ function initializePhysicalCountPage(user) {
         });
 
         socket.on('user-joined', (data) => {
-            if (data.id !== socket.id) { // Don't show a toast for yourself
+            // Only add other users to the presence list and show a toast for them.
+            if (data.id !== socket.id) {
                 activeUsersInRoom.set(data.id, data);
                 renderPresenceIndicators();
+                showToast(`${data.name} has joined this physical count.`, 'info');
             }
-            showToast(`${data.name} has joined this physical count.`, 'info');
         });
 
         socket.on('user-left', (data) => {
@@ -690,9 +691,6 @@ function initializePhysicalCountPage(user) {
     [searchInput, officeFilter, verificationFilter].forEach(el => {
         el.addEventListener('input', () => {
             if (el.id === 'office-filter') {
-                if (currentOfficeRoom) {
-                    socket.emit('leave-room', currentOfficeRoom);
-                }
                 const newOffice = officeFilter.value;
                 if (newOffice) {
                     currentOfficeRoom = `office:${newOffice}`;

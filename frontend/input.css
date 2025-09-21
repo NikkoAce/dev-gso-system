@@ -318,8 +318,8 @@
     }
     .flash-update {
         transition: background-color 0.5s ease-out;
-        /* DaisyUI warning color with 20% opacity */
-        background-color: oklch(var(--wa) / 0.2) !important;
+        /* Use info color (blue) to distinguish from unverified (warning) */
+        background-color: oklch(var(--in) / 0.2) !important;
     }
 
     /* --- NEW: Indicator for unsaved changes on a table row --- */
