@@ -161,7 +161,6 @@ function initializeQrLabelsPage(user) {
             qrImg.src = qr.createDataURL(4, 0); // cell size 4, margin 0
             qrImg.alt = `QR Code for ${asset.propertyNumber}`;
             qrImg.className = 'qr-code-img';
-            const qrImgTag = qrImg.outerHTML;
 
             const acquisitionDateFormatted = asset.acquisitionDate ?
                 new Date(asset.acquisitionDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
@@ -176,8 +175,8 @@ function initializeQrLabelsPage(user) {
             labelDiv.innerHTML = `
                 <div class="grid grid-cols-[40%_60%] h-full">
                     <!-- Left column: Full QR -->
-                    <div class="flex items-center justify-center p-1">
-                        ${qrImgTag}
+                    <div class="qr-container flex items-center justify-center p-1">
+                        <!-- QR image will be appended here by JS -->
                     </div>
                     
                     <!-- Right column: Details with watermark -->
@@ -199,6 +198,9 @@ function initializeQrLabelsPage(user) {
                     </div>
                 </div>
             `;
+            // Append the actual image element object to its container. This is more reliable for printing.
+            labelDiv.querySelector('.qr-container').appendChild(qrImg);
+
             labelGrid.appendChild(labelDiv);
         });
 
