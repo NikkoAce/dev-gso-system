@@ -370,6 +370,64 @@ function initializePhysicalCountPage(user) {
         lucide.createIcons();
     }
 
+    // --- NEW SCANNER LOGIC WITH CONTINUOUS MODE ---
+
+    function playFeedbackSound(isSuccess = true) {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (isSuccess) {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            } else {
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+            }
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {
+            console.warn("Could not play feedback sound.", e);
+        }
+    }
+
+    function showScannerFeedback(message, type = 'success') {
+        const scannerContainer = document.getElementById('scanner-container');
+        if (!scannerContainer) return;
+
+        const existingFeedback = scannerContainer.querySelector('.scanner-feedback-overlay');
+        if (existingFeedback) existingFeedback.remove();
+
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `scanner-feedback-overlay absolute inset-0 flex items-center justify-center text-white font-bold text-2xl bg-black bg-opacity-50`;
+        feedbackDiv.textContent = message;
+
+        let borderColorClass = 'border-green-500';
+        if (type === 'error') borderColorClass = 'border-red-500';
+        else if (type === 'warning') borderColorClass = 'border-yellow-500';
+
+        const borderDiv = scannerContainer.querySelector('.border-dashed');
+        if (borderDiv) {
+            borderDiv.classList.remove('border-green-500', 'border-red-500', 'border-yellow-500');
+            borderDiv.classList.add(borderColorClass);
+        }
+        scannerContainer.appendChild(feedbackDiv);
+
+        setTimeout(() => {
+            feedbackDiv.remove();
+            if (borderDiv) {
+                borderDiv.classList.remove(borderColorClass);
+                borderDiv.classList.add('border-green-500'); // Reset to default
+            }
+        }, 700);
+    }
+
     function tick() {
         if (videoStream && scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
             scannerCanvas.height = scannerVideo.videoHeight;
