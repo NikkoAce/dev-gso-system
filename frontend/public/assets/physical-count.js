@@ -724,7 +724,36 @@ function initializePhysicalCountPage(user) {
         }
     }
 
-    // --- EVENT LISTENERS ---
+      // --- EVENT LISTENERS ---
+    [searchInput, officeFilter, verificationFilter].forEach(el => {
+        el.addEventListener('input', () => {
+            if (el.id === 'office-filter') {
+                const newOffice = officeFilter.value;
+                if (newOffice) {
+                    currentOfficeRoom = `office:${newOffice}`;
+                    socket.emit('join-room', currentOfficeRoom);
+                } else {
+                    currentOfficeRoom = '';
+                }
+                activeUsersInRoom.clear(); // Clear presence when changing rooms
+                renderPresenceIndicators();
+            }
+            currentPage = 1;
+            loadAssets();
+        });
+    });
+
+    paginationControls.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) { currentPage--; loadAssets(); }
+        else if (target.id === 'next-page-btn' && currentPage < totalPages) { currentPage++; loadAssets(); }
+        else if (target.classList.contains('page-btn')) { const page = parseInt(target.dataset.page, 10); if (page !== currentPage) { currentPage = page; loadAssets(); }
+        }
+    });
+
+    
     tableBody.addEventListener('input', (e) => {
         const target = e.target;
         // When any of these inputs change, mark the row as "dirty" and trigger autosave

@@ -149,7 +149,7 @@ function initializeQrLabelsPage(user) {
 
         assetsToPrint.forEach(asset => {
             const labelDiv = document.createElement('div');
-            labelDiv.className = 'label-print text-center p-2';
+            labelDiv.className = 'label-print text-center p-2 printable-page';
 
             // Generate QR
             const qr = qrcode(0, 'M');
