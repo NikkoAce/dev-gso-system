@@ -321,4 +321,20 @@
         /* DaisyUI warning color with 20% opacity */
         background-color: oklch(var(--wa) / 0.2) !important;
     }
+
+    /* --- NEW: Indicator for unsaved changes on a table row --- */
+    .row-dirty > td:first-child {
+        position: relative;
+    }
+    .row-dirty > td:first-child::before {
+        content: '';
+        position: absolute;
+        left: 6px; /* Position the dot inside the cell padding */
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background-color: oklch(var(--wa)); /* DaisyUI 'warning' color */
+    }
 }

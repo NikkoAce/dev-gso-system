@@ -33,11 +33,13 @@ function initializePhysicalCountPage(user) {
     const scannerCtx = scannerCanvas.getContext('2d');
     const closeScannerBtn = document.getElementById('close-scanner-btn');
     const continuousScanToggle = document.getElementById('continuous-scan-toggle');
+    const presenceIndicatorContainer = document.getElementById('presence-indicator-container');
 
     let videoStream = null;
     let currentSummary = {};
     let socket;
     let currentOfficeRoom = '';
+    let activeUsersInRoom = new Map();
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
@@ -57,6 +59,29 @@ function initializePhysicalCountPage(user) {
             console.error('Failed to initialize page:', error);
             tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
         }
+    }
+
+    function renderPresenceIndicators() {
+        if (!presenceIndicatorContainer) return;
+
+        if (activeUsersInRoom.size === 0) {
+            presenceIndicatorContainer.classList.add('hidden');
+            return;
+        }
+
+        presenceIndicatorContainer.classList.remove('hidden');
+        let html = '<span class="hidden lg:inline">Also here:</span>';
+        for (const [id, user] of activeUsersInRoom.entries()) {
+            const initial = user.name.charAt(0).toUpperCase();
+            html += `
+                <div class="tooltip tooltip-bottom" data-tip="${user.name}">
+                    <div class="avatar placeholder">
+                        <div class="bg-neutral-focus text-neutral-content rounded-full w-6 h-6 text-xs"><span>${initial}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+        presenceIndicatorContainer.innerHTML = html;
     }
     
     function renderSummaryDashboard(summary) {
@@ -507,12 +532,26 @@ function initializePhysicalCountPage(user) {
             }
         });
 
-        // --- NEW: Listen for other users joining/leaving the room ---
+        // --- Listen for other users joining/leaving the room ---
+        socket.on('room-status', (data) => {
+            activeUsersInRoom.clear();
+            data.users.forEach(user => {
+                activeUsersInRoom.set(user.id, user);
+            });
+            renderPresenceIndicators();
+        });
+
         socket.on('user-joined', (data) => {
+            if (data.id !== socket.id) { // Don't show a toast for yourself
+                activeUsersInRoom.set(data.id, data);
+                renderPresenceIndicators();
+            }
             showToast(`${data.name} has joined this physical count.`, 'info');
         });
 
         socket.on('user-left', (data) => {
+            activeUsersInRoom.delete(data.id);
+            renderPresenceIndicators();
             showToast(`${data.name} has left this physical count.`, 'warning');
         });
 
@@ -661,6 +700,8 @@ function initializePhysicalCountPage(user) {
                 } else {
                     currentOfficeRoom = '';
                 }
+                activeUsersInRoom.clear(); // Clear presence when changing rooms
+                renderPresenceIndicators();
             }
             currentPage = 1;
             loadAssets();
@@ -747,6 +788,10 @@ function initializePhysicalCountPage(user) {
             });
 
             showToast('Physical count data saved successfully!', 'success');
+            // Clear the "dirty" indicators from all rows after a successful save
+            const dirtyRows = document.querySelectorAll('#physical-count-table-body .row-dirty');
+            dirtyRows.forEach(row => row.classList.remove('row-dirty'));
+
             await loadAssets(); // Re-fetch current page data
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
@@ -754,6 +799,15 @@ function initializePhysicalCountPage(user) {
     });
 
     // --- INITIALIZATION ---
+    // Add a warning before leaving the page if there are unsaved changes.
+    window.addEventListener('beforeunload', (e) => {
+        const hasUnsavedChanges = !!document.querySelector('#physical-count-table-body .row-dirty');
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        }
+    });
+
     initializePage();
     
 }
