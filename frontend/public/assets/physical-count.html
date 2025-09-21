@@ -130,10 +130,16 @@
                                     <th class="w-96">Status / Condition</th>
                                     <th class="w-56">Remarks</th>
                                     <th class="w-48 text-center">
-                                        <label class="flex flex-col items-center gap-1 cursor-pointer">
-                                            <input type="checkbox" id="verify-all-checkbox" class="checkbox checkbox-sm" />
-                                            <span class="text-xs font-normal">All</span>
-                                        </label>
+                                        <div class="flex items-center justify-center gap-4">
+                                            <label class="flex flex-col items-center gap-1 cursor-pointer">
+                                                <input type="checkbox" id="verify-all-checkbox" class="checkbox checkbox-sm" />
+                                                <span class="text-xs font-normal">All</span>
+                                            </label>
+                                            <button id="verify-visible-btn" class="btn btn-ghost btn-xs" title="Verify all items currently visible on this page">
+                                                <i data-lucide="check-check"></i>
+                                                <span class="text-xs font-normal">Visible</span>
+                                            </button>
+                                        </div>
                                     </th>
                                 </tr>
                             </thead>

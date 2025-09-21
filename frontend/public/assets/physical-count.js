@@ -24,6 +24,7 @@ function initializePhysicalCountPage(user) {
     const summaryDashboard = document.getElementById('summary-dashboard');
     const tableBody = document.getElementById('physical-count-table-body');
     const verifyAllCheckbox = document.getElementById('verify-all-checkbox');
+    const verifyVisibleBtn = document.getElementById('verify-visible-btn');
     const scanAssetBtn = document.getElementById('scan-asset-btn');
     const exportResultsBtn = document.getElementById('export-results-btn');
     const scannerModal = document.getElementById('scanner-modal');
@@ -273,6 +274,43 @@ function initializePhysicalCountPage(user) {
             verifyAllCheckbox.checked = false;
             verifyAllCheckbox.indeterminate = true;
         }
+    }
+
+    async function handleVerifyVisible() {
+        const itemRows = tableBody.querySelectorAll('tr[data-asset-id]');
+        if (itemRows.length === 0) {
+            showToast('No items visible to verify.', 'info');
+            return;
+        }
+
+        verifyVisibleBtn.disabled = true;
+        verifyVisibleBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span>`;
+
+        const checkboxesToVerify = Array.from(itemRows)
+            .map(row => row.querySelector('.verify-checkbox'))
+            .filter(checkbox => checkbox && !checkbox.checked);
+
+        if (checkboxesToVerify.length === 0) {
+            showToast('All visible items are already verified.', 'success');
+        } else {
+            const verificationPromises = checkboxesToVerify.map(checkbox => {
+                checkbox.checked = true;
+                return handleVerificationChange(checkbox);
+            });
+
+            try {
+                await Promise.all(verificationPromises);
+                showToast(`${checkboxesToVerify.length} item(s) verified.`, 'success');
+            } catch (error) {
+                showToast('An error occurred while verifying items.', 'error');
+            }
+        }
+
+        // Reset button state regardless of outcome
+        verifyVisibleBtn.disabled = false;
+        verifyVisibleBtn.innerHTML = `<i data-lucide="check-check"></i><span class="text-xs font-normal">Visible</span>`;
+        lucide.createIcons({ nodes: [verifyVisibleBtn.querySelector('i')] });
+        updateVerifyAllCheckboxState(); // Update the main checkbox state after all are done
     }
 
     async function handleVerificationChange(checkbox) {
@@ -557,6 +595,8 @@ function initializePhysicalCountPage(user) {
             updateVerifyAllCheckboxState();
         }
     });
+
+    verifyVisibleBtn.addEventListener('click', handleVerifyVisible);
 
     verifyAllCheckbox.addEventListener('change', async (e) => {
         const isChecked = e.target.checked;
