@@ -70,7 +70,7 @@ function initializePhysicalCountPage(user) {
         }
 
         presenceIndicatorContainer.classList.remove('hidden');
-        let html = '<span class="hidden lg:inline">Also here:</span>';
+        let html = '<span>Also here:</span>';
         for (const [id, user] of activeUsersInRoom.entries()) {
             const initial = user.name.charAt(0).toUpperCase();
             html += `

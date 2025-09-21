@@ -54,14 +54,14 @@
             </header>
             <main class="flex-1 overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between md:items-center">
-                        <div class="flex items-center gap-4 self-start md:self-center">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                        <div class="self-start md:self-center">
                             <h1 class="text-3xl font-bold text-gray-800">Annual Physical Count</h1>
-                            <div id="presence-indicator-container" class="hidden md:flex items-center gap-2 text-xs text-base-content/70">
+                            <div id="presence-indicator-container" class="hidden flex items-center gap-2 text-xs text-base-content/70 mt-2">
                                 <!-- JS will populate this with user avatars -->
                             </div>
                         </div>
-                        <div class="flex gap-2 w-full md:w-auto mt-4 md:mt-0 justify-around md:justify-end">
+                        <div class="flex gap-2 w-full md:w-auto justify-around md:justify-end self-end md:self-center">
                             <div class="tooltip tooltip-bottom" data-tip="Scan Asset">
                                 <button id="scan-asset-btn" class="btn btn-ghost text-secondary">
                                     <i data-lucide="camera"></i>
