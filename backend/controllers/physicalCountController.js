@@ -117,9 +117,41 @@ const getAssetByPropertyNumber = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc    Update a single asset's status, condition, and remarks during physical count
+ * @route   PUT /api/physical-count/:id
+ * @access  Private (Requires 'asset:update' permission)
+ */
+const updateSingleAssetPhysicalCount = asyncHandler(async (req, res) => {
+    const { status, condition, remarks } = req.body;
+    const asset = await Asset.findById(req.params.id);
+
+    if (!asset) {
+        res.status(404);
+        throw new Error('Asset not found');
+    }
+
+    asset.status = status;
+    asset.condition = condition;
+    asset.remarks = remarks;
+    asset._user = req.user;
+    asset._historyEvent = 'Physical Count';
+
+    const updatedAsset = await asset.save();
+    const io = getIo();
+
+    if (updatedAsset.custodian && updatedAsset.custodian.office) {
+        const room = `office:${updatedAsset.custodian.office}`;
+        io.to(room).emit('asset-updated', updatedAsset.toObject());
+    }
+
+    res.status(200).json(updatedAsset);
+});
+
 module.exports = {
     updatePhysicalCount,
     verifyAssetForPhysicalCount,
     exportPhysicalCountResults,
-    getAssetByPropertyNumber
+    getAssetByPropertyNumber,
+    updateSingleAssetPhysicalCount
 };

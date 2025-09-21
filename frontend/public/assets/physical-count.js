@@ -34,12 +34,15 @@ function initializePhysicalCountPage(user) {
     const closeScannerBtn = document.getElementById('close-scanner-btn');
     const continuousScanToggle = document.getElementById('continuous-scan-toggle');
     const presenceIndicatorContainer = document.getElementById('presence-indicator-container');
+    const exportResultsBtn = document.getElementById('export-results-btn');
 
     let videoStream = null;
     let currentSummary = {};
     let socket;
     let currentOfficeRoom = '';
     let activeUsersInRoom = new Map();
+    // NEW: For debouncing autosave
+    const debounceTimers = new Map();
 
     // --- DATA FETCHING & RENDERING ---
     async function initializePage() {
@@ -361,6 +364,41 @@ function initializePhysicalCountPage(user) {
             checkbox.checked = !isVerified; // Revert checkbox on API error
         } finally {
             checkbox.disabled = false;
+        }
+    }
+
+    async function handleRowUpdate(assetId) {
+        const row = tableBody.querySelector(`tr[data-asset-id="${assetId}"]`);
+        if (!row) return;
+
+        const status = row.querySelector('.status-input').value;
+        const condition = row.querySelector('.condition-input').value;
+        const remarks = row.querySelector('.remarks-input').value;
+
+        const verifiedCell = row.querySelector('[data-label="Verified"]');
+        const originalContent = verifiedCell.innerHTML;
+        
+        // Show saving indicator in the 'Verified' cell as it's a good spot for feedback
+        const savingIndicator = `<div class="flex justify-center items-center h-full"><span class="loading loading-spinner loading-xs"></span></div>`;
+        verifiedCell.innerHTML = savingIndicator;
+
+        try {
+            // This new endpoint will handle saving a single asset's physical count data
+            await fetchWithAuth(`physical-count/${assetId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ status, condition, remarks })
+            });
+
+            // The socket 'asset-updated' event will handle the UI update.
+            // We just show a temporary success state here.
+            verifiedCell.innerHTML = `<div class="flex justify-center items-center h-full"><i data-lucide="check" class="text-success"></i></div>`;
+            lucide.createIcons();
+            row.classList.remove('row-dirty');
+
+            setTimeout(() => { verifiedCell.innerHTML = originalContent; }, 2000);
+        } catch (error) {
+            showToast(`Failed to save changes for asset.`, 'error');
+            verifiedCell.innerHTML = originalContent; // Restore on error
         }
     }
 
@@ -688,44 +726,25 @@ function initializePhysicalCountPage(user) {
     }
 
     // --- EVENT LISTENERS ---
-    [searchInput, officeFilter, verificationFilter].forEach(el => {
-        el.addEventListener('input', () => {
-            if (el.id === 'office-filter') {
-                const newOffice = officeFilter.value;
-                if (newOffice) {
-                    currentOfficeRoom = `office:${newOffice}`;
-                    socket.emit('join-room', currentOfficeRoom);
-                } else {
-                    currentOfficeRoom = '';
-                }
-                activeUsersInRoom.clear(); // Clear presence when changing rooms
-                renderPresenceIndicators();
-            }
-            currentPage = 1;
-            loadAssets();
-        });
-    });
-
-    paginationControls.addEventListener('click', (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-
-        if (target.id === 'prev-page-btn' && currentPage > 1) {
-            currentPage--;
-            loadAssets();
-        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
-            currentPage++;
-            loadAssets();
-        } else if (target.classList.contains('page-btn')) {
-            const page = parseInt(target.dataset.page, 10);
-            if (page !== currentPage) {
-                currentPage = page;
-                loadAssets();
+    tableBody.addEventListener('input', (e) => {
+        const target = e.target;
+        // When any of these inputs change, mark the row as "dirty" and trigger autosave
+        if (target.classList.contains('status-input') ||
+            target.classList.contains('condition-input') ||
+            target.classList.contains('remarks-input')) {
+            
+            const row = target.closest('tr[data-asset-id]');
+            if (row) {
+                row.classList.add('row-dirty');
+                const assetId = row.dataset.assetId;
+                clearTimeout(debounceTimers.get(assetId));
+                const timer = setTimeout(() => handleRowUpdate(assetId), 1500); // Autosave after 1.5s
+                debounceTimers.set(assetId, timer);
             }
         }
     });
 
-    tableBody.addEventListener('change', async(e) => {
+    tableBody.addEventListener('change', async (e) => {
         if (e.target.classList.contains('verify-checkbox')) {
             await handleVerificationChange(e.target);
             updateVerifyAllCheckboxState();
@@ -756,45 +775,6 @@ function initializePhysicalCountPage(user) {
     scanAssetBtn.addEventListener('click', startScanner);
     closeScannerBtn.addEventListener('click', stopScanner);
     exportResultsBtn.addEventListener('click', exportResults);
-
-    document.getElementById('save-count-btn').addEventListener('click', async () => {
-        const updates = [];
-        const rows = document.querySelectorAll('#physical-count-table-body tr');
-        
-        rows.forEach(row => {
-            if(row.dataset.assetId) {
-                const id = row.dataset.assetId;
-                const status = row.querySelector('.status-input').value;
-                const condition = row.querySelector('.condition-input').value;
-                const remarks = row.querySelector('.remarks-input').value;
-                updates.push({ id, status, condition, remarks });
-            }
-        });
-
-        if (updates.length === 0) {
-            showToast('No assets to update.', 'warning');
-            return;
-        }
-
-        try {
-            await fetchWithAuth('physical-count', {
-                method: 'PUT',
-                body: JSON.stringify({
-                    updates: updates,
-                    user: { name: user.name }
-                })
-            });
-
-            showToast('Physical count data saved successfully!', 'success');
-            // Clear the "dirty" indicators from all rows after a successful save
-            const dirtyRows = document.querySelectorAll('#physical-count-table-body .row-dirty');
-            dirtyRows.forEach(row => row.classList.remove('row-dirty'));
-
-            await loadAssets(); // Re-fetch current page data
-        } catch (error) {
-            showToast(`Error: ${error.message}`, 'error');
-        }
-    });
 
     // --- INITIALIZATION ---
     // Add a warning before leaving the page if there are unsaved changes.

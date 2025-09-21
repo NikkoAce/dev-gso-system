@@ -21,4 +21,7 @@ router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), export
 // Route for getting an asset by its property number (used by the scanner)
 router.get('/by-property-number/:propertyNumber', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetByPropertyNumber);
 
+// NEW: Route for updating a single asset's details during physical count (autosave)
+router.put('/:id', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), updateSingleAssetPhysicalCount);
+
 module.exports = router;
