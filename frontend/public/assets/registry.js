@@ -763,15 +763,19 @@ function initializeRegistryPage(user) {
                                     ${asset.status}
                                  </span>`;
 
+            const secondaryDetailsHTML = `
+                <div data-label="Category">${asset.category}</div>
+                <div data-label="Custodian">${custodianDisplay}</div>
+                <div data-label="Date Acquired">${new Date(asset.acquisitionDate).toLocaleDateString()}</div>
+                <div data-label="Status">${statusBadge}</div>
+                <div data-label="Date Created">${new Date(asset.createdAt).toLocaleDateString()}</div>
+            `;
+
             tr.innerHTML = `
                 <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isSelected ? 'checked' : ''}></td>
                 <td data-label="Property No."><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
                 <td data-label="Description">${fullDescription}</td>
-                <td data-label="Category">${asset.category}</td>
-                <td data-label="Custodian">${custodianDisplay}</td>
-                <td data-label="Date Acquired">${new Date(asset.acquisitionDate).toLocaleDateString()}</td>
-                <td data-label="Status">${statusBadge}</td>
-                <td data-label="Date Created">${new Date(asset.createdAt).toLocaleDateString()}</td>
+                <td data-label="Details">${secondaryDetailsHTML}</td>
                 <td class="text-center non-printable">
                     ${dropdownActions}
                 </td>
