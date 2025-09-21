@@ -9,6 +9,10 @@ createAuthenticatedPage({
             apiEndpoint: 'categories',
             entityName: 'Category',
             entityNamePlural: 'Categories',
+            addNewBtnId: 'add-new-btn', // NEW
+            modal: { // NEW
+                id: 'settings-modal'
+            },
             list: {
                 containerId: 'category-list',
                 searchKeys: ['name', 'subMajorGroup', 'glAccount'],

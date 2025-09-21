@@ -9,6 +9,10 @@ createAuthenticatedPage({
             apiEndpoint: 'employees',
             entityName: 'Employee',
             entityNamePlural: 'Employees',
+            addNewBtnId: 'add-new-btn',
+            modal: {
+                id: 'settings-modal'
+            },
             list: {
                 containerId: 'employee-list',
                 searchKeys: ['name', 'designation'],

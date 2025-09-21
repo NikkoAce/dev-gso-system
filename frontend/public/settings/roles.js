@@ -21,6 +21,8 @@ const permissionsContainer = document.getElementById('permissions-container');
 const submitBtn = document.getElementById('submit-role-btn');
 const cancelBtn = document.getElementById('cancel-edit-btn');
 const roleList = document.getElementById('role-list');
+const addNewBtn = document.getElementById('add-new-btn');
+const modal = document.getElementById('settings-modal');
 const searchInput = document.getElementById('search-input');
 
 createAuthenticatedPage({
@@ -117,8 +119,9 @@ function updateSortIndicators() {
 }
 
 function setupEventListeners() {
+    addNewBtn.addEventListener('click', openModalForCreate);
     form.addEventListener('submit', handleSave);
-    cancelBtn.addEventListener('click', resetForm);
+    cancelBtn.addEventListener('click', closeModal);
     searchInput.addEventListener('input', () => {
         currentPage = 1;
         loadRoles();
@@ -154,7 +157,7 @@ function setupEventListeners() {
         const editBtn = e.target.closest('.edit-btn');
         if (editBtn) {
             const role = currentPageRoles.find(r => r._id === editBtn.dataset.id);
-            populateFormForEdit(role);
+            openModalForEdit(role);
         }
 
         const deleteBtn = e.target.closest('.delete-btn');
@@ -165,23 +168,29 @@ function setupEventListeners() {
     });
 }
 
-function resetForm() {
+function openModalForCreate() {
     form.reset();
     roleIdInput.value = '';
     formTitle.textContent = 'Add New Role';
     submitBtn.textContent = 'Add Role';
-    cancelBtn.classList.add('hidden');
     renderPermissionsCheckboxes(allPermissions); // Reset checkboxes
+    modal.showModal();
 }
 
-function populateFormForEdit(role) {
+function openModalForEdit(role) {
+    form.reset();
     roleIdInput.value = role._id;
     roleNameInput.value = role.name;
     formTitle.textContent = `Edit Role: ${role.name}`;
     submitBtn.textContent = 'Save Changes';
-    cancelBtn.classList.remove('hidden');
     renderPermissionsCheckboxes(allPermissions, role.permissions);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    modal.showModal();
+}
+
+function closeModal() {
+    form.reset();
+    roleIdInput.value = '';
+    modal.close();
 }
 
 async function handleSave(e) {
@@ -205,7 +214,7 @@ async function handleSave(e) {
     try {
         await fetchWithAuth(endpoint, { method, body: JSON.stringify(body) });
         showToast(`Role ${roleId ? 'updated' : 'created'} successfully!`, 'success');
-        resetForm();
+        closeModal();
         await loadRoles();
     } catch (error) {
         showToast(`Error: ${error.message}`, 'error');
@@ -223,7 +232,7 @@ function handleDelete(role) {
             try {
                 await fetchWithAuth(`roles/${role._id}`, { method: 'DELETE' });
                 showToast('Role deleted successfully.', 'success');
-                resetForm();
+                closeModal();
                 await loadRoles();
             } catch (error) {
                 showToast(`Error: ${error.message}`, 'error');

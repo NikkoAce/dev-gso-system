@@ -9,6 +9,10 @@ createAuthenticatedPage({
             apiEndpoint: 'offices',
             entityName: 'Office',
             entityNamePlural: 'Offices',
+            addNewBtnId: 'add-new-btn',
+            modal: {
+                id: 'settings-modal'
+            },
             list: {
                 containerId: 'office-list',
                 searchKeys: ['name', 'code'],

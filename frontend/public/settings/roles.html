@@ -28,39 +28,20 @@
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
-                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Form Section -->
-                    <div class="lg:col-span-1">
-                        <form id="role-form" class="card bg-base-100 border sticky top-6">
-                            <div class="card-body">
-                                <h2 id="role-form-title" class="card-title mb-4">Add New Role</h2>
-                                <input type="hidden" id="role-id">
-                                <label class="form-control">
-                                    <div class="label"><span class="label-text">Role Name</span></div>
-                                    <input type="text" id="role-name" placeholder="e.g., Auditor" class="input input-bordered w-full" required>
-                                </label>
-                                <div class="form-control mt-4">
-                                    <label class="label"><span class="label-text">Permissions</span></label>
-                                    <div id="permissions-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg bg-base-200 max-h-96 overflow-y-auto">
-                                        <!-- Permissions checkboxes will be populated by JS -->
-                                    </div>
-                                </div>
-                                <div class="card-actions justify-end mt-6">
-                                    <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
-                                    <button type="submit" id="submit-role-btn" class="btn btn-primary">Add Role</button>
-                                </div>
-                            </div>
-                        </form>
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-3xl font-bold text-gray-800">Role Management</h1>
+                        <button id="add-new-btn" class="btn btn-primary">
+                            <i data-lucide="plus"></i> Add New Role
+                        </button>
                     </div>
 
-                    <!-- List Section -->
-                    <div class="lg:col-span-2">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">Existing Roles</h2>
-                            <label class="form-control w-full sm:w-auto">
-                                <input type="text" id="search-input" placeholder="Search roles..." class="input input-bordered input-sm w-full sm:max-w-xs">
-                            </label>
-                        </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Existing Roles</h2>
+                        <label class="form-control w-full sm:w-auto">
+                            <input type="text" id="search-input" placeholder="Search roles..." class="input input-bordered input-sm w-full sm:max-w-xs">
+                        </label>
+                    </div>
                     <div class="card bg-base-100 border">
                         <div class="md:overflow-x-auto md:h-auto">
                             <table class="table table-zebra w-full responsive-table">
@@ -88,6 +69,32 @@
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast toast-top toast-end"></div>
+
+    <!-- Add/Edit Modal -->
+    <dialog id="settings-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-3xl">
+            <form id="role-form">
+                <h3 id="role-form-title" class="font-bold text-lg">Add New Role</h3>
+                <input type="hidden" id="role-id">
+                <div class="py-4 space-y-4">
+                    <label class="form-control">
+                        <div class="label"><span class="label-text">Role Name</span></div>
+                        <input type="text" id="role-name" placeholder="e.g., Auditor" class="input input-bordered w-full" required>
+                    </label>
+                    <div class="form-control mt-4">
+                        <label class="label"><span class="label-text">Permissions</span></label>
+                        <div id="permissions-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg bg-base-200 max-h-96 overflow-y-auto">
+                            <!-- Permissions checkboxes will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-action">
+                    <button type="button" id="cancel-edit-btn" class="btn">Cancel</button>
+                    <button type="submit" id="submit-role-btn" class="btn btn-primary">Add Role</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
 
     <!-- Reusable Confirmation Modal -->
     <dialog id="confirmation-modal" class="modal">

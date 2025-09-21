@@ -4,7 +4,7 @@ import { createUIManager } from './ui.js';
 
 /**
  * Creates a generic settings page with CRUD functionality.
- * @param {object} config - The configuration object for the specific settings page.
+ * @param {object} config - The configuration object for the specific settings page using a modal form.
  */
 export function createSettingsPage(config) {
     // State
@@ -22,6 +22,10 @@ export function createSettingsPage(config) {
     const tableHeader = listContainer.parentElement.querySelector('thead');
     const paginationControls = document.getElementById('pagination-controls');
     const searchInput = document.getElementById('search-input');
+    
+    // --- NEW: Modal and Form elements ---
+    const addNewBtn = document.getElementById(config.addNewBtnId);
+    const modal = document.getElementById(config.modal.id);
     const form = document.getElementById(config.form.id);
     const idInput = document.getElementById(config.form.idInput);
     const formTitle = document.getElementById(config.form.titleId);
@@ -81,26 +85,30 @@ export function createSettingsPage(config) {
         lucide.createIcons();
     }
 
-    // --- FORM STATE ---
-    function resetForm() {
+    // --- FORM STATE & MODAL LOGIC ---
+    function openModalForCreate() {
         form.reset();
         idInput.value = '';
         formTitle.textContent = `Add New ${config.entityName}`;
         submitBtn.textContent = `Add ${config.entityName}`;
-        cancelBtn.classList.add('hidden');
+        modal.showModal();
     }
 
-    function populateFormForEdit(item) {
+    function openModalForEdit(item) {
         if (item) {
+            form.reset();
             idInput.value = item._id;
             config.form.fields.forEach(field => {
                 document.getElementById(field.id).value = item[field.key] || '';
             });
             formTitle.textContent = `Edit ${config.entityName}`;
             submitBtn.textContent = 'Save Changes';
-            cancelBtn.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            modal.showModal();
         }
+    }
+
+    function closeModal() {
+        modal.close();
     }
 
     // --- EVENT LISTENERS ---
@@ -133,7 +141,7 @@ export function createSettingsPage(config) {
 
         try {
             await fetchWithAuth(endpoint, { method, body: JSON.stringify(body) });
-            resetForm();
+            closeModal();
             showToast(`${config.entityName} ${itemId ? 'updated' : 'created'} successfully!`, 'success');
             await loadItems();
         } catch (error) {
@@ -153,7 +161,6 @@ export function createSettingsPage(config) {
                 try {
                     await fetchWithAuth(`${config.apiEndpoint}/${item._id}`, { method: 'DELETE' });
                     showToast(`${config.entityName} deleted successfully.`, 'success');
-                    resetForm();
                     await loadItems();
                 } catch (error) {
                     showToast(`Error: ${error.message}`, 'error');
@@ -163,8 +170,9 @@ export function createSettingsPage(config) {
     }
 
     function setupEventListeners() {
+        addNewBtn.addEventListener('click', openModalForCreate);
         form.addEventListener('submit', handleSave);
-        cancelBtn.addEventListener('click', resetForm);
+        cancelBtn.addEventListener('click', closeModal);
         searchInput.addEventListener('input', () => { currentPage = 1; loadItems(); });
 
         paginationControls.addEventListener('click', (e) => {
@@ -193,7 +201,7 @@ export function createSettingsPage(config) {
             const editBtn = e.target.closest('.edit-btn');
             if (editBtn) {
                 const item = currentPageItems.find(i => i._id === editBtn.dataset.id);
-                if (item) populateFormForEdit(item);
+                if (item) openModalForEdit(item);
             }
             const deleteBtn = e.target.closest('.delete-btn');
             if (deleteBtn) {

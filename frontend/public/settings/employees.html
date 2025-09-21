@@ -43,27 +43,11 @@
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-10">
                 <div class="max-w-4xl mx-auto space-y-6">
-                    <h1 class="text-3xl font-bold text-gray-800">Manage Employees</h1>
-
-                    <div class="card bg-base-100 border">
-                        <form id="add-employee-form" class="card-body">
-                            <h2 id="employee-form-title" class="card-title mb-4">Add New Employee</h2>
-                            <input type="hidden" id="employee-id">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <label class="md:col-span-2 form-control">
-                                    <div class="label"><span class="label-text">Full Name</span></div>
-                                    <input type="text" id="new-employee-name" placeholder="e.g., Juan Dela Cruz" class="input input-bordered w-full" required>
-                                </label>
-                                <label class="form-control">
-                                    <div class="label"><span class="label-text">Designation</span></div>
-                                    <input type="text" id="new-employee-designation" placeholder="e.g., Municipal Mayor" class="input input-bordered w-full" required>
-                                </label>
-                            </div>
-                            <div class="card-actions justify-end">
-                                <button type="button" id="cancel-edit-btn" class="btn btn-ghost hidden">Cancel</button>
-                                <button type="submit" id="submit-employee-btn" class="btn btn-primary">Add Employee</button>
-                            </div>
-                        </form>
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-3xl font-bold text-gray-800">Manage Employees</h1>
+                        <button id="add-new-btn" class="btn btn-primary">
+                            <i data-lucide="plus"></i> Add New Employee
+                        </button>
                     </div>
 
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -98,6 +82,32 @@
     </div>
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast toast-top toast-end"></div>
+
+    <!-- Add/Edit Modal -->
+    <dialog id="settings-modal" class="modal">
+        <div class="modal-box">
+            <form id="add-employee-form">
+                <h3 id="employee-form-title" class="font-bold text-lg">Add New Employee</h3>
+                <input type="hidden" id="employee-id">
+                <div class="py-4 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <label class="md:col-span-2 form-control">
+                            <div class="label"><span class="label-text">Full Name</span></div>
+                            <input type="text" id="new-employee-name" placeholder="e.g., Juan Dela Cruz" class="input input-bordered w-full" required>
+                        </label>
+                        <label class="form-control">
+                            <div class="label"><span class="label-text">Designation</span></div>
+                            <input type="text" id="new-employee-designation" placeholder="e.g., Municipal Mayor" class="input input-bordered w-full" required>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-action">
+                    <button type="button" id="cancel-edit-btn" class="btn">Cancel</button>
+                    <button type="submit" id="submit-employee-btn" class="btn btn-primary">Add Employee</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
 
     <!-- Reusable Confirmation Modal -->
     <dialog id="confirmation-modal" class="modal">
