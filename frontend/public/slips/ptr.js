@@ -349,7 +349,11 @@ function initializePtrPage(user) {
 
     // --- EVENT LISTENERS ---
     saveButton.addEventListener('click', handleSaveAndPrint);
-    reprintButton.addEventListener('click', () => window.print());
+    reprintButton.addEventListener('click', () => {
+        // Blur active element to ensure dropdowns close before printing.
+        if (document.activeElement) document.activeElement.blur();
+        window.print();
+    });
     exportPdfBtn.addEventListener('click', () => {
         const fileName = `PTR-${currentPtrData?.ptrNumber || 'report'}.pdf`;
         exportToPDF({ reportElementId: 'report-output', fileName, buttonElement: exportPdfBtn, orientation: 'portrait', format: 'a4' });
