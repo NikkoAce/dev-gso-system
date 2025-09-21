@@ -173,50 +173,67 @@
         .asset-registry-mobile-layout tr {
             @apply mb-4 border border-base-300 rounded-lg block overflow-hidden;
             /* Use grid to structure the card */
+            display: flex;
+            flex-wrap: wrap;
         }
         .asset-registry-mobile-layout td {
-            @apply block p-3 border-b border-base-300/50;
+            @apply block border-0 p-3; /* Reset default responsive table styles */
+        }
+        .asset-registry-mobile-layout td::before {
+            @apply hidden; /* Hide all labels by default */
         }
 
         /* --- Card Structure --- */
         .asset-registry-mobile-layout td[data-label="Select"] {
-            @apply flex items-center justify-between bg-base-200;
+            order: 1;
+            @apply w-full flex items-center justify-between bg-base-200 border-b border-base-300/50;
         }
         .asset-registry-mobile-layout td[data-label="Select"]::before {
             content: "Select Asset";
-            @apply font-semibold text-sm;
+            @apply block font-semibold text-sm;
         }
 
-        /* --- Card Body: Use a grid for secondary details --- */
+        /* --- Card Body --- */
+        /* Row 1: Property No & Status */
+        .asset-registry-mobile-layout td[data-label="Property No."] {
+            order: 2;
+            @apply w-2/3 font-bold;
+        }
+        .asset-registry-mobile-layout td[data-label="Status"] {
+            order: 3;
+            @apply w-1/3 flex justify-end items-center;
+        }
+
+        /* Row 2: Description */
+        .asset-registry-mobile-layout td[data-label="Description"] {
+            order: 4;
+            @apply w-full pt-0 border-t border-base-300/50;
+        }
+
+        /* Row 3: Category & Custodian */
         .asset-registry-mobile-layout td[data-label="Category"],
-        .asset-registry-mobile-layout td[data-label="Custodian"],
-        .asset-registry-mobile-layout td[data-label="Date Acquired"],
-        .asset-registry-mobile-layout td[data-label="Status"],
-        .asset-registry-mobile-layout td[data-label="Date Created"] {
-            @apply grid grid-cols-2 items-center;
+        .asset-registry-mobile-layout td[data-label="Custodian"] {
+            order: 5;
+            @apply w-1/2 text-sm text-base-content/70 border-t border-base-300/50;
         }
-        .asset-registry-mobile-layout td[data-label="Category"]::before,
-        .asset-registry-mobile-layout td[data-label="Custodian"]::before,
+        .asset-registry-mobile-layout td[data-label="Custodian"] {
+            order: 6;
+            @apply text-right;
+        }
+
+        /* Row 4: Dates with labels */
+        .asset-registry-mobile-layout td[data-label="Date Acquired"] { order: 7; @apply w-1/2 text-xs border-t border-base-300/50; }
+        .asset-registry-mobile-layout td[data-label="Date Created"] { order: 8; @apply w-1/2 text-xs text-right border-t border-base-300/50; }
         .asset-registry-mobile-layout td[data-label="Date Acquired"]::before,
-        .asset-registry-mobile-layout td[data-label="Status"]::before,
         .asset-registry-mobile-layout td[data-label="Date Created"]::before {
-            @apply col-span-1 font-semibold text-xs text-base-content/70 mb-0;
-        }
-        .asset-registry-mobile-layout td[data-label="Category"] > *:not(br),
-        .asset-registry-mobile-layout td[data-label="Custodian"] > *:not(br),
-        .asset-registry-mobile-layout td[data-label="Date Acquired"] > *:not(br),
-        .asset-registry-mobile-layout td[data-label="Status"] > *:not(br),
-        .asset-registry-mobile-layout td[data-label="Date Created"] > *:not(br) {
-            @apply col-span-1 text-right;
+            content: attr(data-label);
+            @apply block font-semibold text-base-content/70;
         }
 
         /* Card Footer */
         .asset-registry-mobile-layout td[data-label="Actions"] {
-            @apply flex justify-between items-center bg-base-200;
-        }
-        .asset-registry-mobile-layout td[data-label="Actions"]::before {
-            content: "Actions";
-            @apply font-semibold text-sm;
+            order: 9;
+            @apply w-full flex justify-end items-center bg-base-200 border-t border-base-300/50;
         }
     }
 }
