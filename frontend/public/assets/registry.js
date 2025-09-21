@@ -81,6 +81,15 @@ function initializeRegistryPage(user) {
         selectionCount: document.getElementById('selection-count'),
         selectionTotalValue: document.getElementById('selection-total-value'),
         clearSelectionBtn: document.getElementById('clear-selection-btn'),
+        // NEW Mobile Action Bar elements
+        mobileActionBar: document.getElementById('mobile-action-bar'),
+        mobileClearSelectionBtn: document.getElementById('mobile-clear-selection-btn'),
+        mobileGenerateParBtn: document.getElementById('mobile-generate-par-selected'),
+        mobileGenerateIcsBtn: document.getElementById('mobile-generate-ics-selected'),
+        mobileTransferSelectedBtn: document.getElementById('mobile-transfer-selected-btn'),
+        mobileTransferTooltipWrapper: document.getElementById('mobile-transfer-tooltip-wrapper'),
+        mobileGenerateIIRUPBtn: document.getElementById('mobile-generate-iirup-btn'),
+        mobileGenerateAppendix68Btn: document.getElementById('mobile-generate-appendix68-btn'),
     };
 
     // --- MODULE: UI MANAGER ---
@@ -330,68 +339,101 @@ function initializeRegistryPage(user) {
             }
         },
 
-    handleTableChange(e) { // For checkbox clicks
-        const checkbox = e.target.closest('.asset-checkbox');
-        if (checkbox) {
-            const assetId = checkbox.dataset.id;
-            const asset = state.currentPageAssets.find(a => a._id === assetId);
-            if (checkbox.checked && asset) {
-                state.selectedAssets.set(assetId, asset);
-            } else {
-                state.selectedAssets.delete(assetId);
+        handleTableChange(e) { // For checkbox clicks
+            const checkbox = e.target.closest('.asset-checkbox');
+            if (checkbox) {
+                const assetId = checkbox.dataset.id;
+                const asset = state.currentPageAssets.find(a => a._id === assetId);
+                if (checkbox.checked && asset) {
+                    state.selectedAssets.set(assetId, asset);
+                } else {
+                    state.selectedAssets.delete(assetId);
+                }
+                this.updateSelectionState();
             }
-            this.updateSelectionState();
-        }
 
-        if (e.target.id === 'select-all-assets') {
-            this.handleSelectAll(e.target.checked);
-            this.updateSelectionState();
-        }
+            if (e.target.id === 'select-all-assets') {
+                this.handleSelectAll(e.target.checked);
+                this.updateSelectionState();
+            }
         },
 
         updateSelectionState() {
-        const selectedAssetsArray = Array.from(state.selectedAssets.values());
+            const selectedAssetsArray = Array.from(state.selectedAssets.values());
+            const selectionCount = selectedAssetsArray.length;
 
-        // Update select-all checkbox state based on current page's assets
-        const selectionCount = selectedAssetsArray.length;
+            // Update summary bar and desktop clear button
+            const totalValue = selectedAssetsArray.reduce((sum, asset) => sum + (asset.acquisitionCost || 0), 0);
+            DOM.selectionSummaryBar.classList.toggle('hidden', selectionCount === 0);
+            DOM.clearSelectionBtn.classList.toggle('hidden', selectionCount === 0);
+            if (selectionCount > 0) {
+                DOM.selectionCount.textContent = selectionCount;
+                DOM.selectionTotalValue.textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalValue);
+            }
 
-        // NEW: Update summary bar
-        const totalValue = selectedAssetsArray.reduce((sum, asset) => sum + (asset.acquisitionCost || 0), 0);
-        DOM.selectionSummaryBar.classList.toggle('hidden', selectionCount === 0);
-        DOM.clearSelectionBtn.classList.toggle('hidden', selectionCount === 0);
-        if (selectionCount > 0) {
-            DOM.selectionCount.textContent = selectionCount;
-            DOM.selectionTotalValue.textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalValue);
-        }
+            // NEW: Toggle mobile action bar
+            DOM.mobileActionBar?.classList.toggle('hidden', selectionCount === 0);
 
-        const allCheckboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
-        const selectedOnPageCount = Array.from(allCheckboxesOnPage).filter(cb => state.selectedAssets.has(cb.dataset.id)).length;
+            // Update select-all checkbox state
+            const allCheckboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
+            const selectedOnPageCount = Array.from(allCheckboxesOnPage).filter(cb => state.selectedAssets.has(cb.dataset.id)).length;
 
-        if (allCheckboxesOnPage.length > 0) {
-            if (selectedOnPageCount === allCheckboxesOnPage.length) {
-                DOM.selectAllCheckbox.checked = true;
-                DOM.selectAllCheckbox.indeterminate = false;
-            } else if (selectedOnPageCount > 0) {
-                DOM.selectAllCheckbox.checked = false;
-                DOM.selectAllCheckbox.indeterminate = true;
+            if (allCheckboxesOnPage.length > 0) {
+                if (selectedOnPageCount === allCheckboxesOnPage.length) {
+                    DOM.selectAllCheckbox.checked = true;
+                    DOM.selectAllCheckbox.indeterminate = false;
+                } else if (selectedOnPageCount > 0) {
+                    DOM.selectAllCheckbox.checked = false;
+                    DOM.selectAllCheckbox.indeterminate = true;
+                } else {
+                    DOM.selectAllCheckbox.checked = false;
+                    DOM.selectAllCheckbox.indeterminate = false;
+                }
             } else {
                 DOM.selectAllCheckbox.checked = false;
                 DOM.selectAllCheckbox.indeterminate = false;
             }
-        } else {
-            DOM.selectAllCheckbox.checked = false;
-            DOM.selectAllCheckbox.indeterminate = false;
-        }
 
-            // Pass the full asset objects to the UI manager
-        uiManager.updateSlipButtonVisibility(selectedAssetsArray, {
-                generateParBtn: DOM.generateParBtn,
-                generateIcsBtn: DOM.generateIcsBtn,
-                transferSelectedBtn: DOM.transferSelectedBtn,
-                transferTooltipWrapper: DOM.transferTooltipWrapper,
-                generateAppendix68Btn: DOM.generateAppendix68Btn,
-                generateIIRUPBtn: DOM.generateIIRUPBtn
-            });
+            // --- Button Visibility Logic ---
+            if (selectionCount === 0) {
+                // Hide all buttons if nothing is selected
+                [DOM.generateParBtn, DOM.generateIcsBtn, DOM.transferSelectedBtn, DOM.generateAppendix68Btn, DOM.generateIIRUPBtn,
+                 DOM.mobileGenerateParBtn, DOM.mobileGenerateIcsBtn, DOM.mobileTransferSelectedBtn, DOM.mobileGenerateAppendix68Btn, DOM.mobileGenerateIIRUPBtn]
+                .forEach(btn => btn?.classList.add('hidden'));
+                return;
+            }
+
+            const firstAsset = selectedAssetsArray[0];
+            const firstCustodian = firstAsset.custodian;
+            const allHaveSameCustodian = firstCustodian && selectedAssetsArray.every(asset =>
+                asset.custodian && asset.custodian.name === firstCustodian.name && asset.custodian.office === firstCustodian.office
+            );
+
+            const PAR_THRESHOLD = 50000;
+            const allAreForPAR = selectedAssetsArray.every(asset => asset.acquisitionCost >= PAR_THRESHOLD);
+            const allAreForICS = selectedAssetsArray.every(asset => asset.acquisitionCost < PAR_THRESHOLD);
+            const anyAreCandidatesForWaste = selectedAssetsArray.some(asset => ['In Storage', 'For Repair'].includes(asset.status));
+            const anyAreForIIRUP = selectedAssetsArray.some(asset => asset.status === 'Waste');
+
+            // --- Desktop Buttons ---
+            DOM.generateParBtn.classList.toggle('hidden', !allAreForPAR);
+            DOM.generateIcsBtn.classList.toggle('hidden', !allAreForICS);
+            DOM.transferSelectedBtn.classList.remove('hidden');
+            DOM.transferTooltipWrapper.classList.toggle('tooltip', !allHaveSameCustodian);
+            DOM.transferTooltipWrapper.dataset.tip = allHaveSameCustodian ? '' : 'Select assets with the same custodian to transfer.';
+            DOM.transferSelectedBtn.disabled = !allHaveSameCustodian;
+            DOM.generateAppendix68Btn.classList.toggle('hidden', !anyAreCandidatesForWaste);
+            DOM.generateIIRUPBtn.classList.toggle('hidden', !anyAreForIIRUP);
+
+            // --- Mobile Buttons ---
+            DOM.mobileGenerateParBtn?.classList.toggle('hidden', !allAreForPAR);
+            DOM.mobileGenerateIcsBtn?.classList.toggle('hidden', !allAreForICS);
+            DOM.mobileTransferSelectedBtn?.classList.remove('hidden');
+            DOM.mobileTransferTooltipWrapper.classList.toggle('tooltip', !allHaveSameCustodian);
+            DOM.mobileTransferTooltipWrapper.dataset.tip = allHaveSameCustodian ? 'Transfer' : 'Select assets with the same custodian.';
+            DOM.mobileTransferSelectedBtn.disabled = !allHaveSameCustodian;
+            DOM.mobileGenerateAppendix68Btn?.classList.toggle('hidden', !anyAreCandidatesForWaste);
+            DOM.mobileGenerateIIRUPBtn?.classList.toggle('hidden', !anyAreForIIRUP);
         },
 
         handleSelectAll(isChecked) {
@@ -601,6 +643,13 @@ function initializeRegistryPage(user) {
             DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(Array.from(state.selectedAssets.keys())));
             // Transfer Modal Listeners
             DOM.clearSelectionBtn?.addEventListener('click', () => this.clearSelection());
+            // NEW Mobile Listeners
+            DOM.mobileClearSelectionBtn?.addEventListener('click', () => this.clearSelection());
+            DOM.mobileGenerateParBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('PAR'));
+            DOM.mobileGenerateIcsBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
+            DOM.mobileTransferSelectedBtn?.addEventListener('click', () => openTransferModal(Array.from(state.selectedAssets.keys())));
+            DOM.mobileGenerateIIRUPBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('IIRUP'));
+            DOM.mobileGenerateAppendix68Btn?.addEventListener('click', openAppendix68Modal);
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
             // Appendix 68 Modal Listeners
