@@ -1,33 +1,25 @@
 /* FILE: frontend/public/style.css (New Shared CSS) */
 body { font-family: 'Inter', sans-serif; }
 @media print {
-    .non-printable { display: none !important; }
-    #print-container { display: block !important; }
-
-    /* Reset layout for printing */
-    body, html {
-        height: auto;
-        background-color: white !important; /* Ensure background is white */
-    }
-    
-    /* Remove overflow restrictions from parent containers that prevent page breaks */
-    body > .flex, 
-    body > .flex > .flex-1 {
-        display: block !important;
-        height: auto !important;
-        overflow: visible !important;
+    /* 1. Hide everything by default */
+    body * {
+        visibility: hidden;
     }
 
-    main {
-        overflow: visible !important;
-        padding: 0 !important;
+    /* 2. Make only the printable containers and their children visible */
+    #print-container, #print-container *,
+    .printable-area, .printable-area * {
+        visibility: visible;
     }
 
-    .printable-area {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
+    /* 3. Position the printable container to take up the whole page */
+    #print-container, .printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
         margin: 0 !important;
+        padding: 0 !important;
     }
 
     .page-break-after {

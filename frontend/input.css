@@ -310,19 +310,6 @@
     }
 }
 
-/* --- NEW: Print-specific styles --- */
-@media print {
-    .non-printable {
-        display: none !important;
-    }
-    #print-container {
-        display: block !important;
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
-}
-
     /* --- NEW: Flash effect for real-time updates --- */
     .flash-success {
         transition: background-color 0.5s ease-out;
