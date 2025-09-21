@@ -662,6 +662,16 @@ function initializeRegistryPage(user) {
             return;
         }
     
+        // ADDED: Status and Icon maps for better visual cues
+        const statusMap = {
+            'In Use': 'badge-success', 'In Storage': 'badge-info', 'For Repair': 'badge-warning',
+            'Missing': 'badge-error', 'Waste': 'badge-error', 'Disposed': 'badge-ghost',
+        };
+        const statusIconMap = {
+            'In Use': 'check-circle', 'In Storage': 'archive', 'For Repair': 'wrench',
+            'Missing': 'alert-triangle', 'Waste': 'trash-2', 'Disposed': 'x-circle',
+        };
+
         const canUpdate = user.permissions.includes('asset:update');
         const canDelete = user.permissions.includes('asset:delete');
     
@@ -671,6 +681,11 @@ function initializeRegistryPage(user) {
             if (isSelected) {
                 tr.classList.add('bg-blue-50', 'hover:bg-blue-100');
             }
+
+            // ADDED: Assigned slip indicator
+            const isAssigned = asset.assignedPAR || asset.assignedICS;
+            const assignedTo = isAssigned ? (asset.assignedPAR || asset.assignedICS) : '';
+            const assignedIndicator = isAssigned ? `<span class="text-xs text-blue-600 block font-normal">Assigned: ${assignedTo}</span>` : '';
     
             const propertyCardLink = `<li><a href="../slips/movable-property-card.html?id=${asset._id}"><i data-lucide="book-user"></i>View Property Card</a></li>`;
             const ledgerCardLink = `<li><a href="../slips/movable-ledger-card.html?id=${asset._id}"><i data-lucide="book-open-check"></i>View Ledger Card</a></li>`;
@@ -693,14 +708,43 @@ function initializeRegistryPage(user) {
                 </div>
             `;
 
+            // ADDED: Collapsible specifications for a cleaner look
+            let fullDescription = `<div class="font-medium text-gray-900">${asset.description}</div>`;
+            if (asset.specifications && asset.specifications.length > 0) {
+                const specsHtml = asset.specifications.map(spec => `<li><span class="font-semibold">${spec.key}:</span> ${spec.value}</li>`).join('');
+                fullDescription += `
+                    <div class="collapse collapse-arrow bg-base-200/50 mt-2 rounded-md text-xs">
+                        <input type="checkbox" class="min-h-0" /> 
+                        <div class="collapse-title min-h-0 py-1 px-3 font-medium">View Specifications</div>
+                        <div class="collapse-content px-3"><ul class="mt-1 space-y-1 list-disc list-inside">${specsHtml}</ul></div>
+                    </div>
+                `;
+            }
+
+            // ADDED: Custodian with office for more context
+            let custodianDisplay = 'N/A';
+            if (asset.custodian && asset.custodian.name) {
+                custodianDisplay = `
+                    <div>${asset.custodian.name}</div>
+                    <div class="text-xs opacity-70">${asset.custodian.office || ''}</div>
+                `;
+            }
+
+            // ADDED: Status badge with icon for better visual distinction
+            const icon = statusIconMap[asset.status] || 'help-circle';
+            const statusBadge = `<span class="badge ${statusMap[asset.status] || 'badge-ghost'} badge-sm w-full gap-2">
+                                    <i data-lucide="${icon}" class="h-3 w-3"></i>
+                                    ${asset.status}
+                                 </span>`;
+
             tr.innerHTML = `
                 <td class="non-printable"><input type="checkbox" class="asset-checkbox checkbox checkbox-sm" data-id="${asset._id}" ${isSelected ? 'checked' : ''}></td>
-                <td data-label="Property No.">${asset.propertyNumber}</td>
-                <td data-label="Description">${asset.description}</td>
+                <td data-label="Property No."><div class="font-mono">${asset.propertyNumber}</div>${assignedIndicator}</td>
+                <td data-label="Description">${fullDescription}</td>
                 <td data-label="Category">${asset.category}</td>
-                <td data-label="Custodian">${asset.custodian?.name || 'N/A'}</td>
+                <td data-label="Custodian">${custodianDisplay}</td>
                 <td data-label="Date Acquired">${new Date(asset.acquisitionDate).toLocaleDateString()}</td>
-                <td data-label="Status"><span class="badge badge-ghost badge-sm">${asset.status}</span></td>
+                <td data-label="Status">${statusBadge}</td>
                 <td data-label="Date Created">${new Date(asset.createdAt).toLocaleDateString()}</td>
                 <td class="text-center non-printable">
                     ${dropdownActions}
