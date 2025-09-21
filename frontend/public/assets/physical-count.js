@@ -166,7 +166,10 @@ function initializePhysicalCountPage(user) {
             }
 
             const verifiedCheckboxHTML = `
-                <input type="checkbox" class="verify-checkbox checkbox checkbox-success checkbox-sm" ${isVerified ? 'checked' : ''}>
+                <div class="flex flex-col items-end">
+                    <input type="checkbox" class="verify-checkbox checkbox checkbox-success checkbox-sm" ${isVerified ? 'checked' : ''}>
+                    ${verificationDetailsHTML}
+                </div>
             `;
 
             tr.innerHTML = `
@@ -180,7 +183,6 @@ function initializePhysicalCountPage(user) {
                 </td>
                 <td data-label="Verified" class="text-center align-middle">
                     ${verifiedCheckboxHTML}
-                    ${verificationDetailsHTML}
                 </td>
             `;
             tableBody.appendChild(tr);
