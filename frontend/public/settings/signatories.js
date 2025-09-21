@@ -143,16 +143,19 @@ function initializeSignatoriesPage(user) {
                 `;
                 cardBody.appendChild(fieldset);
 
-                const nameSelect = document.getElementById(`${config.key}_name`);
-                const titleInput = document.getElementById(`${config.key}_title`);
-                nameSelect.addEventListener('change', () => {
-                    const selectedEmployee = employees.find(emp => emp.name === nameSelect.value);
-                    if (selectedEmployee) {
-                        titleInput.value = selectedEmployee.designation;
-                    } else {
-                        titleInput.value = config.defaultTitle;
-                    }
-                });
+                // Find elements within the newly created fieldset, not the global document
+                const nameSelect = fieldset.querySelector(`#${config.key}_name`);
+                const titleInput = fieldset.querySelector(`#${config.key}_title`);
+                if (nameSelect && titleInput) {
+                    nameSelect.addEventListener('change', () => {
+                        const selectedEmployee = employees.find(emp => emp.name === nameSelect.value);
+                        if (selectedEmployee) {
+                            titleInput.value = selectedEmployee.designation;
+                        } else {
+                            titleInput.value = config.defaultTitle;
+                        }
+                    });
+                }
             });
 
             groupCard.appendChild(cardBody);

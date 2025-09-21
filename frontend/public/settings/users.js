@@ -145,6 +145,35 @@ function updateSortIndicators() {
     lucide.createIcons();
 }
 
+/**
+ * Renders the permissions checkboxes, disabling and checking the ones inherited from a role.
+ * @param {string} selectedRoleName - The name of the currently selected role.
+ * @param {string[]} [currentUserPermissions=[]] - The user's current specific permissions.
+ */
+function renderPermissionsForRole(selectedRoleName, currentUserPermissions = []) {
+    const permissionsContainer = document.getElementById('edit-permissions-container');
+    const selectedRole = metadata.roles.find(r => r.name === selectedRoleName);
+    const rolePermissions = selectedRole ? selectedRole.permissions : [];
+
+    permissionsContainer.innerHTML = metadata.permissions.map(permission => {
+        const isFromRole = rolePermissions.includes(permission);
+        // A permission is checked if it's from the role OR it's an additional permission the user has.
+        const isChecked = isFromRole || currentUserPermissions.includes(permission);
+        
+        // If the permission comes from the role, it should be disabled to show it's inherited.
+        const isDisabled = isFromRole;
+
+        return `
+            <label class="label cursor-pointer justify-start gap-2 ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}">
+                <input type="checkbox" class="checkbox checkbox-sm" value="${permission}" 
+                       ${isChecked ? 'checked' : ''}
+                       ${isDisabled ? 'disabled' : ''}>
+                <span class="label-text">${permission}</span>
+            </label>
+        `;
+    }).join('');
+}
+
 function openEditModal(user) {
     const modal = document.getElementById('edit-user-modal');
     document.getElementById('modal-title').textContent = `Edit User: ${user.name}`;
@@ -156,16 +185,8 @@ function openEditModal(user) {
         `<option value="${role.name}" ${user.role === role.name ? 'selected' : ''}>${role.name}</option>`
     ).join('');
 
-    // Populate permissions checkboxes
-    const permissionsContainer = document.getElementById('edit-permissions-container');
-    permissionsContainer.innerHTML = metadata.permissions.map(permission => `
-        <label class="label cursor-pointer justify-start gap-2">
-            <input type="checkbox" class="checkbox checkbox-sm" value="${permission}" 
-                   ${user.permissions.includes(permission) ? 'checked' : ''}>
-            <span class="label-text">${permission}</span>
-        </label>
-    `).join('');
-
+    // Populate permissions checkboxes based on the user's current role and permissions
+    renderPermissionsForRole(user.role, user.permissions);
     modal.showModal();
 }
 
@@ -178,11 +199,10 @@ function handleRoleChange() {
     const selectedRoleName = roleSelect.value;
     const selectedRole = metadata.roles.find(r => r.name === selectedRoleName);
 
-    if (selectedRole) {
-        document.querySelectorAll('#edit-permissions-container input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = selectedRole.permissions.includes(checkbox.value);
-        });
-    }
+    const rolePermissions = selectedRole ? selectedRole.permissions : [];
+    // When role changes, preview the permissions of THAT role.
+    // Any extra permissions are cleared, and the user can re-add them if needed.
+    renderPermissionsForRole(selectedRoleName, rolePermissions);
 }
 
 async function handleSaveChanges(event) {
