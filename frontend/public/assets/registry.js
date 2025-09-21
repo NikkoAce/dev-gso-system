@@ -44,10 +44,6 @@ function initializeRegistryPage(user) {
         tableBody: document.getElementById('asset-table-body'),
         selectAllCheckbox: document.getElementById('select-all-assets'),
         tableHeader: document.querySelector('#asset-table-body').parentElement.querySelector('thead'),
-        generateParBtn: document.getElementById('generate-par-selected'),
-        generateIcsBtn: document.getElementById('generate-ics-selected'),
-        transferSelectedBtn: document.getElementById('transfer-selected-btn'),
-        transferTooltipWrapper: document.getElementById('transfer-tooltip-wrapper'),
         addAssetBtn: document.getElementById('add-asset-btn'), // NEW
         exportCsvBtn: document.getElementById('export-csv-btn'),
         // Modal elements
@@ -60,8 +56,6 @@ function initializeRegistryPage(user) {
         cancelTransferBtn: document.getElementById('cancel-transfer-modal-btn'),
         transferModalDate: document.getElementById('transfer-modal-date'),
         bulkTransferAssetListContainer: document.getElementById('bulk-transfer-asset-list-container'),
-        generateAppendix68Btn: document.getElementById('generate-appendix68-btn'),
-        generateIIRUPBtn: document.getElementById('generate-iirup-btn'),
         appendix68Modal: document.getElementById('appendix68-modal'),
         appendix68AssetListContainer: document.getElementById('appendix68-asset-list-container'),
         confirmAppendix68Btn: document.getElementById('confirm-appendix68-modal-btn'),
@@ -80,7 +74,14 @@ function initializeRegistryPage(user) {
         selectionSummaryBar: document.getElementById('selection-summary-bar'),
         selectionCount: document.getElementById('selection-count'),
         selectionTotalValue: document.getElementById('selection-total-value'),
-        clearSelectionBtn: document.getElementById('clear-selection-btn'),
+        // Action Bar elements
+        actionBarGeneratePar: document.getElementById('action-bar-generate-par'),
+        actionBarGenerateIcs: document.getElementById('action-bar-generate-ics'),
+        actionBarTransfer: document.getElementById('action-bar-transfer'),
+        actionBarTransferTooltipWrapper: document.getElementById('action-bar-transfer-tooltip-wrapper'),
+        actionBarGenerateIIRUP: document.getElementById('action-bar-generate-iirup'),
+        actionBarGenerateAppendix68: document.getElementById('action-bar-generate-appendix68'),
+        actionBarClearSelection: document.getElementById('action-bar-clear-selection'),
     };
 
     // --- MODULE: UI MANAGER ---
@@ -355,13 +356,10 @@ function initializeRegistryPage(user) {
         // Update select-all checkbox state based on current page's assets
         const selectionCount = selectedAssetsArray.length;
 
-        // NEW: Update summary bar
-        const totalValue = selectedAssetsArray.reduce((sum, asset) => sum + (asset.acquisitionCost || 0), 0);
+        // Update summary bar visibility and count
         DOM.selectionSummaryBar.classList.toggle('hidden', selectionCount === 0);
-        DOM.clearSelectionBtn.classList.toggle('hidden', selectionCount === 0);
         if (selectionCount > 0) {
             DOM.selectionCount.textContent = selectionCount;
-            DOM.selectionTotalValue.textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalValue);
         }
 
         const allCheckboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
@@ -385,12 +383,12 @@ function initializeRegistryPage(user) {
 
             // Pass the full asset objects to the UI manager
         uiManager.updateSlipButtonVisibility(selectedAssetsArray, {
-                generateParBtn: DOM.generateParBtn,
-                generateIcsBtn: DOM.generateIcsBtn,
-                transferSelectedBtn: DOM.transferSelectedBtn,
-                transferTooltipWrapper: DOM.transferTooltipWrapper,
-                generateAppendix68Btn: DOM.generateAppendix68Btn,
-                generateIIRUPBtn: DOM.generateIIRUPBtn
+                generateParBtn: DOM.actionBarGeneratePar,
+                generateIcsBtn: DOM.actionBarGenerateIcs,
+                transferSelectedBtn: DOM.actionBarTransfer,
+                transferTooltipWrapper: DOM.actionBarTransferTooltipWrapper,
+                generateAppendix68Btn: DOM.actionBarGenerateAppendix68,
+                generateIIRUPBtn: DOM.actionBarGenerateIIRUP
             });
         },
 
@@ -594,17 +592,19 @@ function initializeRegistryPage(user) {
             DOM.tableBody?.parentElement.addEventListener('change', e => this.handleTableChange(e)); // Listen on table for checkbox changes
             DOM.tableBody?.addEventListener('click', e => this.handleTableClick(e)); // For edit, delete, etc.
             DOM.tableHeader?.addEventListener('click', (e) => this.handleSort(e));
-            DOM.generateParBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('PAR'));
-            DOM.generateIcsBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
-            DOM.generateIIRUPBtn?.addEventListener('click', () => slipManager.prepareForSlipGeneration('IIRUP'));
+            // Action Bar Listeners
+            DOM.actionBarGeneratePar?.addEventListener('click', () => slipManager.prepareForSlipGeneration('PAR'));
+            DOM.actionBarGenerateIcs?.addEventListener('click', () => slipManager.prepareForSlipGeneration('ICS'));
+            DOM.actionBarTransfer?.addEventListener('click', () => openTransferModal(Array.from(state.selectedAssets.keys())));
+            DOM.actionBarGenerateIIRUP?.addEventListener('click', () => slipManager.prepareForSlipGeneration('IIRUP'));
+            DOM.actionBarGenerateAppendix68?.addEventListener('click', openAppendix68Modal);
+            DOM.actionBarClearSelection?.addEventListener('click', () => this.clearSelection());
+            // Other Listeners
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
-            DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(Array.from(state.selectedAssets.keys())));
             // Transfer Modal Listeners
-            DOM.clearSelectionBtn?.addEventListener('click', () => this.clearSelection());
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
             // Appendix 68 Modal Listeners
-            DOM.generateAppendix68Btn?.addEventListener('click', openAppendix68Modal);
             DOM.confirmAppendix68Btn?.addEventListener('click', () => this.handleConfirmAppendix68());
             DOM.cancelAppendix68Btn?.addEventListener('click', closeAppendix68Modal);
             // Import Modal Listeners
