@@ -225,4 +225,61 @@
             @apply block font-semibold text-sm;
         }
     }
+
+    /* --- NEW: Custom Card Layout for Physical Count on Mobile --- */
+    @media screen and (max-width: 767px) {
+        .physical-count-mobile-layout {
+            @apply block;
+        }
+        .physical-count-mobile-layout thead {
+            @apply hidden;
+        }
+        .physical-count-mobile-layout tbody,
+        .physical-count-mobile-layout tr {
+            @apply block w-full;
+        }
+        /* The TR becomes the card */
+        .physical-count-mobile-layout tr {
+            @apply mb-4 border border-base-300 rounded-lg block overflow-visible;
+        }
+        /* Override zebra-striping for mobile card view */
+        .physical-count-mobile-layout tr:nth-child(2n) {
+            --tw-bg-opacity: 1;
+            background-color: oklch(var(--b1) / var(--tw-bg-opacity));
+        }
+        .physical-count-mobile-layout td {
+            @apply block p-3 border-b border-base-300/50;
+        }
+        .physical-count-mobile-layout td:last-child {
+            @apply border-b-0;
+        }
+
+        /* Card Header */
+        .physical-count-mobile-layout td[data-label="Property No."] { @apply font-bold; }
+        .physical-count-mobile-layout td[data-label="Description"] { @apply pt-0 text-sm; }
+        .physical-count-mobile-layout td[data-label="Custodian"] { @apply pt-0 text-xs text-base-content/70; }
+
+        /* Card Body (Form Inputs) */
+        .physical-count-mobile-layout td[data-label="Status"],
+        .physical-count-mobile-layout td[data-label="Condition"],
+        .physical-count-mobile-layout td[data-label="Remarks"] {
+            @apply flex flex-col items-start;
+        }
+        /* Re-create the label using the data-label attribute */
+        .physical-count-mobile-layout td[data-label="Status"]::before,
+        .physical-count-mobile-layout td[data-label="Condition"]::before,
+        .physical-count-mobile-layout td[data-label="Remarks"]::before {
+            content: attr(data-label);
+            @apply block font-semibold text-sm mb-1;
+        }
+
+        /* Card Footer (Verification) */
+        .physical-count-mobile-layout td[data-label="Verified"] {
+            @apply flex items-center justify-between bg-base-200;
+        }
+        .physical-count-mobile-layout td[data-label="Verified"]::before {
+            content: attr(data-label);
+            @apply font-semibold text-sm;
+        }
+    }
 }

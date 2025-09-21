@@ -191,19 +191,30 @@ function initializePhysicalCountPage(user) {
 
     async function loadAssets() {
         setLoading(true, tableBody, { colSpan: 7 });
+        const office = officeFilter.value;
+
         // Set loading state for dashboard
-        summaryDashboard.innerHTML = `
-            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
-            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
-            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
-            <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
-        `;
+        if (office) {
+            summaryDashboard.innerHTML = `
+                <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+                <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+                <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+                <div class="card bg-base-100 border p-4 animate-pulse col-span-1 sm:col-span-2 lg:col-span-1"><div class="h-6 bg-gray-200 rounded w-3/4"></div><div class="h-10 bg-gray-200 rounded mt-2 w-1/2"></div></div>
+            `;
+        } else {
+            summaryDashboard.innerHTML = `
+                <div class="card bg-base-100 border p-4 col-span-full text-center text-base-content/70">
+                    Please select an office to view the physical count summary.
+                </div>
+            `;
+        }
+
         try {
             const params = new URLSearchParams({
                 page: currentPage,
                 limit: itemsPerPage,
                 search: searchInput.value,
-                office: officeFilter.value,
+                office: office,
                 verified: verificationFilter.value,
                 physicalCount: true, // Tell backend to only get relevant assets
             });
@@ -219,9 +230,18 @@ function initializePhysicalCountPage(user) {
                 limit: itemsPerPage
             };
             totalPages = pagination.totalPages; // Update total pages from the response
-            renderTable(assets, pagination); // This line was missing
-            currentSummary = data.summaryStats || {}; // Store the summary
-            renderSummaryDashboard(currentSummary);
+            renderTable(assets, pagination);
+
+            if (office && data.summaryStats) {
+                currentSummary = data.summaryStats;
+                renderSummaryDashboard(currentSummary);
+            } else if (office) {
+                summaryDashboard.innerHTML = `
+                    <div class="card bg-base-100 border p-4 col-span-full text-center text-base-content/70">
+                        No assets found for the selected office.
+                    </div>
+                `;
+            }
         } catch (error) {
             console.error('Failed to load assets:', error);
             tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
