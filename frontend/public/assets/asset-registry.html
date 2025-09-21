@@ -40,18 +40,7 @@
                 <h1 class="text-xl font-bold">LGU GSO System</h1>
                 <button id="mobile-menu-button"><i data-lucide="menu"></i></button>
             </header>
-            <main class="flex-1 overflow-y-auto p-6 md:p-10 relative">
-                <!-- Mobile Action Bar -->
-                <div id="mobile-action-bar" class="md:hidden hidden sticky top-0 bg-base-200/95 backdrop-blur-sm p-2 shadow-lg z-20 -mx-6 -mt-6 mb-4 md:-mt-10 rounded-b-lg">
-                    <div class="flex justify-around items-center text-xs">
-                        <div class="tooltip" data-tip="Clear Selection"><button id="mobile-clear-selection-btn" class="btn btn-ghost btn-sm flex-col h-auto p-1"><i data-lucide="x-circle"></i><span class="text-xs">Clear</span></button></div>
-                        <div class="tooltip" data-tip="Generate PAR"><button id="mobile-generate-par-selected" class="btn btn-ghost btn-sm text-success flex-col h-auto p-1"><i data-lucide="file-check-2"></i><span class="text-xs">PAR</span></button></div>
-                        <div class="tooltip" data-tip="Generate ICS"><button id="mobile-generate-ics-selected" class="btn btn-ghost btn-sm text-info flex-col h-auto p-1"><i data-lucide="file-spreadsheet"></i><span class="text-xs">ICS</span></button></div>
-                        <div id="mobile-transfer-tooltip-wrapper" class="tooltip" data-tip="Transfer"><button id="mobile-transfer-selected-btn" class="btn btn-ghost btn-sm text-warning flex-col h-auto p-1"><i data-lucide="arrow-right-left"></i><span class="text-xs">Transfer</span></button></div>
-                        <div class="tooltip" data-tip="Generate IIRUP"><button id="mobile-generate-iirup-btn" class="btn btn-ghost btn-sm text-accent flex-col h-auto p-1"><i data-lucide="wrench"></i><span class="text-xs">IIRUP</span></button></div>
-                        <div class="tooltip" data-tip="Generate Appendix 68"><button id="mobile-generate-appendix68-btn" class="btn btn-ghost btn-sm text-error flex-col h-auto p-1"><i data-lucide="file-x"></i><span class="text-xs">Waste</span></button></div>
-                    </div>
-                </div>
+            <main class="flex-1 overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
                     <!-- Header and Filters Card -->
                     <div class="card bg-base-100 border non-printable">
@@ -62,7 +51,7 @@
                                     <h1 class="text-3xl font-bold text-gray-800">Asset Registry</h1>
                                     <button id="toggle-filters-btn" class="btn btn-ghost btn-sm" title="Toggle Filters"><i data-lucide="sliders-horizontal"></i></button>
                                 </div>
-                                <div class="hidden md:flex items-center gap-2 flex-wrap justify-start md:justify-end w-full md:w-auto">
+                                <div class="flex items-center gap-2 flex-wrap justify-start md:justify-end w-full md:w-auto">
                                     <button id="clear-selection-btn" class="btn btn-ghost btn-sm hidden">
                                         <i data-lucide="x-circle"></i> Clear Selection
                                     </button>
