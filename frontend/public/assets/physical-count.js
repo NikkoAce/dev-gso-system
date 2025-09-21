@@ -14,7 +14,7 @@ function initializePhysicalCountPage(user) {
     let currentPage = 1;
     let totalPages = 1;
     const itemsPerPage = 20;
-    const { populateFilters, setLoading, showToast, renderPagination } = createUIManager();
+    const { populateFilters, setLoading, showToast, renderPagination, showConfirmationModal } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const searchInput = document.getElementById('search-input');
@@ -753,22 +753,50 @@ function initializePhysicalCountPage(user) {
 
     verifyVisibleBtn.addEventListener('click', handleVerifyVisible);
 
-    verifyAllCheckbox.addEventListener('change', async (e) => {
-        const isChecked = e.target.checked;
+    verifyAllCheckbox.addEventListener('click', async (e) => {
+        const checkbox = e.target;
+        // The state it will be after the click completes
+        const isChecking = checkbox.checked;
+
+        // If the user is trying to UNCHECK it, and there are items to uncheck
+        if (!isChecking) {
+            const allRowCheckboxes = Array.from(tableBody.querySelectorAll('.verify-checkbox'));
+            const checkedCheckboxes = allRowCheckboxes.filter(cb => cb.checked);
+
+            if (checkedCheckboxes.length > 0) {
+                // Prevent the default action of unchecking the box immediately
+                e.preventDefault();
+
+                showConfirmationModal(
+                    'Un-verify All Items',
+                    `Are you sure you want to un-verify all ${checkedCheckboxes.length} visible items on this page?`,
+                    async () => {
+                        // User confirmed. Now we manually uncheck the box and proceed.
+                        checkbox.checked = false;
+                        checkbox.disabled = true;
+                        const promises = checkedCheckboxes.map(cb => {
+                            cb.checked = false;
+                            return handleVerificationChange(cb);
+                        });
+                        await Promise.all(promises);
+                        checkbox.disabled = false;
+                        updateVerifyAllCheckboxState();
+                    }
+                );
+                // If the user cancels, nothing happens, the checkbox remains checked because we prevented the default action.
+                return;
+            }
+        }
+
+        // This part runs if the user is CHECKING the box, or if they are unchecking when nothing is selected.
         const allRowCheckboxes = Array.from(tableBody.querySelectorAll('.verify-checkbox'));
-
-        verifyAllCheckbox.disabled = true;
-
-        const promises = allRowCheckboxes
-            .filter(checkbox => checkbox.checked !== isChecked)
-            .map(checkbox => {
-                checkbox.checked = isChecked;
-                return handleVerificationChange(checkbox);
-            });
-
+        checkbox.disabled = true;
+        const promises = allRowCheckboxes.filter(cb => cb.checked !== isChecking).map(cb => {
+            cb.checked = isChecking;
+            return handleVerificationChange(cb);
+        });
         await Promise.all(promises);
-
-        verifyAllCheckbox.disabled = false;
+        checkbox.disabled = false;
         updateVerifyAllCheckboxState();
     });
 
