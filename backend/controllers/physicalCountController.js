@@ -99,4 +99,27 @@ const exportPhysicalCountResults = asyncHandler((req, res) => {
     cursor.on('error', (error) => { console.error('Error streaming physical count export:', error); res.end(); });
 });
 
-module.exports = { updatePhysicalCount, verifyAssetForPhysicalCount, exportPhysicalCountResults };
+/**
+ * @desc    Get a single asset by its property number
+ * @route   GET /api/physical-count/by-property-number/:propertyNumber
+ * @access  Private (Requires 'asset:read' permission)
+ */
+const getAssetByPropertyNumber = asyncHandler(async (req, res) => {
+    const { propertyNumber } = req.params;
+    // Find one asset by its unique property number.
+    const asset = await Asset.findOne({ propertyNumber: propertyNumber }).lean();
+
+    if (asset) {
+        res.json(asset);
+    } else {
+        res.status(404);
+        throw new Error('Asset not found with the specified property number.');
+    }
+});
+
+module.exports = {
+    updatePhysicalCount,
+    verifyAssetForPhysicalCount,
+    exportPhysicalCountResults,
+    getAssetByPropertyNumber
+};

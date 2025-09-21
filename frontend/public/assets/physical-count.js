@@ -349,8 +349,23 @@ function initializePhysicalCountPage(user) {
         const row = tableBody.querySelector(`tr[data-property-number="${propertyNumber}"]`);
 
         if (!row) {
-            showToast(`Asset ${propertyNumber} not found on this page.`, 'warning');
-            return;
+            // Asset not on the page, let's find out where it is.
+            try {
+                // This assumes a new backend endpoint exists to fetch an asset by its property number.
+                const asset = await fetchWithAuth(`physical-count/by-property-number/${propertyNumber}`);
+                if (asset && asset.custodian && asset.custodian.office) {
+                    showToast(`Asset ${propertyNumber} belongs to ${asset.custodian.office}. Please switch to that office to verify.`, 'error');
+                } else {
+                    // Asset exists but has no office? Unlikely but good to handle.
+                    showToast(`Asset ${propertyNumber} found, but has no assigned office.`, 'warning');
+                }
+            } catch (error) {
+                // If the fetch fails with a 404, it means the asset doesn't exist at all.
+                showToast(`Asset with Property No. ${propertyNumber} does not exist in the system.`, 'error');
+            } finally {
+                // Stop further execution since the asset is not on this page.
+                return;
+            }
         }
 
         const checkbox = row.querySelector('.verify-checkbox');

@@ -5,7 +5,8 @@ const PERMISSIONS = require('../config/permissions.js');
 const {
     updatePhysicalCount,
     verifyAssetForPhysicalCount,
-    exportPhysicalCountResults
+    exportPhysicalCountResults,
+    getAssetByPropertyNumber
 } = require('../controllers/physicalCountController.js');
 
 // Route for submitting bulk updates from the physical count page
@@ -16,5 +17,8 @@ router.put('/:id/verify', protect, checkPermission(PERMISSIONS.ASSET_UPDATE), ve
 
 // Route for exporting physical count results for a specific office
 router.get('/export', protect, checkPermission(PERMISSIONS.ASSET_EXPORT), exportPhysicalCountResults);
+
+// Route for getting an asset by its property number (used by the scanner)
+router.get('/by-property-number/:propertyNumber', protect, checkPermission(PERMISSIONS.ASSET_READ), getAssetByPropertyNumber);
 
 module.exports = router;

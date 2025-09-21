@@ -14,7 +14,8 @@ const {
     createBulkAssets,
     getMyOfficeAssets,
     addRepairRecord,
-    deleteRepairRecord
+    deleteRepairRecord,
+    getAssetByPropertyNumber
 } = require('../controllers/assetController.js');
 const { exportAssetsToCsv } = require('../controllers/assetImportExportController.js');
 
