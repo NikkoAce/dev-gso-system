@@ -73,7 +73,7 @@ function initializeRegistryPage(user) {
         downloadTemplateBtn: document.getElementById('download-template-btn'),
         selectionSummaryBar: document.getElementById('selection-summary-bar'),
         selectionCount: document.getElementById('selection-count'),
-        // Action Bar elements
+        selectionTotalValue: document.getElementById('selection-total-value'),
         actionBarGeneratePar: document.getElementById('action-bar-generate-par'),
         actionBarGenerateIcs: document.getElementById('action-bar-generate-ics'),
         actionBarTransfer: document.getElementById('action-bar-transfer'),
@@ -355,10 +355,12 @@ function initializeRegistryPage(user) {
         // Update select-all checkbox state based on current page's assets
         const selectionCount = selectedAssetsArray.length;
 
-        // Update summary bar visibility and count
+        // Update summary bar
+        const totalValue = selectedAssetsArray.reduce((sum, asset) => sum + (asset.acquisitionCost || 0), 0);
         DOM.selectionSummaryBar.classList.toggle('hidden', selectionCount === 0);
         if (selectionCount > 0) {
             DOM.selectionCount.textContent = selectionCount;
+            DOM.selectionTotalValue.textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalValue);
         }
 
         const allCheckboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');

@@ -51,9 +51,14 @@
                                     <h1 class="text-3xl font-bold text-gray-800">Asset Registry</h1>
                                     <button id="toggle-filters-btn" class="btn btn-ghost btn-sm" title="Toggle Filters"><i data-lucide="sliders-horizontal"></i></button>
                                 </div>
-                                <div class="flex items-center gap-2 flex-wrap justify-start md:justify-end w-full md:w-auto">
-                                    <a href="./asset-form.html" id="add-asset-btn" class="btn btn-primary">
-                                        <i data-lucide="plus"></i> Add New Asset
+                                <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto self-end md:self-center">
+                                    <div class="flex items-center gap-2">
+                                        <button id="import-csv-btn" class="btn btn-sm btn-ghost flex-1 md:flex-none tooltip" data-tip="Import from CSV"><i data-lucide="upload" class="text-info"></i> <span class="hidden md:inline ml-1">Import</span></button>
+                                        <button id="export-csv-btn" class="btn btn-sm btn-ghost flex-1 md:flex-none tooltip" data-tip="Export to CSV"><i data-lucide="download" class="text-success"></i> <span class="hidden md:inline ml-1">Export</span></button>
+                                        <button id="reset-filters-btn" class="btn btn-sm btn-ghost flex-1 md:flex-none tooltip" data-tip="Reset Filters"><i data-lucide="rotate-cw"></i> <span class="hidden md:inline ml-1">Reset</span></button>
+                                    </div>
+                                    <a href="./asset-form.html" id="add-asset-btn" class="btn btn-primary w-full md:w-auto">
+                                        <i data-lucide="plus"></i> Add Asset
                                     </a>
                                 </div>
                             </div>
@@ -142,12 +147,6 @@
                                     </select>
                                 </label>
                             </div>
-                            <!-- Action Buttons Bar -->
-                            <div class="flex flex-wrap justify-start md:justify-end gap-2 mt-4 pt-4 border-t">
-                                <button id="import-csv-btn" class="btn btn-sm btn-ghost"><i data-lucide="upload" class="text-info"></i> Import from CSV</button>
-                                <button id="export-csv-btn" class="btn btn-sm btn-ghost"><i data-lucide="download" class="text-success"></i> Export to CSV</button>
-                                <button id="reset-filters-btn" class="btn btn-sm btn-ghost"><i data-lucide="rotate-cw"></i> Reset Filters</button>
-                            </div>
                         </div>
                     </div>
 
@@ -183,6 +182,10 @@
                                 <span id="selection-count" class="font-bold">0</span> selected
                             </div>
                             <div class="h-6 w-px bg-base-content/20"></div>
+                            <div class="text-sm font-semibold px-2">
+                                Total: <span id="selection-total-value" class="font-bold">₱0.00</span>
+                            </div>
+                            <div class="h-6 w-px bg-base-content/20"></div>
                             <div class="flex items-center gap-1">
                                 <div class="tooltip" data-tip="Generate PAR"><button id="action-bar-generate-par" class="btn btn-ghost btn-sm btn-square text-success hidden"><i data-lucide="file-check-2"></i></button></div>
                                 <div class="tooltip" data-tip="Generate ICS"><button id="action-bar-generate-ics" class="btn btn-ghost btn-sm btn-square text-info hidden"><i data-lucide="file-spreadsheet"></i></button></div>
@@ -192,7 +195,7 @@
                             </div>
                             <div class="h-6 w-px bg-base-content/20"></div>
                             <div class="tooltip" data-tip="Clear Selection">
-                                <button id="action-bar-clear-selection" class="btn btn-ghost btn-sm btn-square"><i data-lucide="x-circle"></i></button>
+                                <button id="action-bar-clear-selection" class="btn btn-ghost btn-sm btn-square"><i data-lucide="trash-2"></i></button>
                             </div>
                         </div>
                     </div>
