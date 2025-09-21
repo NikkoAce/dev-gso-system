@@ -295,10 +295,12 @@ createAuthenticatedPage({
         function handleTogglePreview() {
             // Blur active element to ensure dropdowns close before previewing.
             if (document.activeElement) document.activeElement.blur();
-            togglePreviewMode({
-                orientation: 'portrait',
-                exitButtonId: 'exit-preview-btn'
-            });
+            setTimeout(() => {
+                togglePreviewMode({
+                    orientation: 'portrait',
+                    exitButtonId: 'exit-preview-btn'
+                });
+            }, 50);
         }
 
         exportPdfBtn.addEventListener('click', handleExportPDF);

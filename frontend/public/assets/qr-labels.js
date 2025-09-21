@@ -144,6 +144,7 @@ function initializeQrLabelsPage(user) {
         }
 
         const printContainer = document.getElementById('print-container');
+        printContainer.classList.remove('hidden'); // Make the container visible for printing
         const labelGrid = document.createElement('div');
         // Add both classes. 'printable-area' is for print visibility, 'label-grid-print' is for styling.
         labelGrid.className = 'printable-area label-grid-print';
@@ -218,6 +219,7 @@ function initializeQrLabelsPage(user) {
 
         if (totalImages === 0) {
             window.print();
+            printContainer.classList.add('hidden'); // Hide it again after printing
             return;
         }
 
@@ -225,13 +227,19 @@ function initializeQrLabelsPage(user) {
             img.onload = () => {
                 loadedImages++;
                 if (loadedImages === totalImages) {
-                    setTimeout(() => window.print(), 100); // small delay for rendering
+                    setTimeout(() => {
+                        window.print();
+                        printContainer.classList.add('hidden'); // Hide it again after printing
+                    }, 100); // small delay for rendering
                 }
             };
             img.onerror = () => {
                 loadedImages++;
                 if (loadedImages === totalImages) {
-                    setTimeout(() => window.print(), 100);
+                    setTimeout(() => {
+                        window.print();
+                        printContainer.classList.add('hidden'); // Hide it again after printing
+                    }, 100);
                 }
             };
         });

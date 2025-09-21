@@ -347,10 +347,12 @@ createAuthenticatedPage({
 
         function handleTogglePreview() {
             if (document.activeElement) document.activeElement.blur();
-            togglePreviewMode({
-                orientation: 'portrait',
-                exitButtonId: 'exit-preview-btn'
-            });
+            setTimeout(() => {
+                togglePreviewMode({
+                    orientation: 'portrait',
+                    exitButtonId: 'exit-preview-btn'
+                });
+            }, 50);
         }
 
         if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleExportPDF);

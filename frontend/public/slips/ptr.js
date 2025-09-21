@@ -356,9 +356,11 @@ function initializePtrPage(user) {
     });
     previewBtn.addEventListener('click', () => {
         if (document.activeElement) document.activeElement.blur();
-        togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' });
+        setTimeout(() => {
+            togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' });
+        }, 50);
     });
-    exitPreviewBtn.addEventListener('click', () => togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' }));
+    exitPreviewBtn.addEventListener('click', () => togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' })); // No delay needed for exit
 
     // --- INITIALIZATION ---
     initializePage();
