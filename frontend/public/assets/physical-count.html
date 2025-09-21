@@ -54,18 +54,7 @@
             </header>
             <main class="flex-1 overflow-y-auto p-6 md:p-10">
                 <div class="space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h1 class="text-3xl font-bold text-gray-800">Annual Physical Count</h1>
-                        <div class="flex gap-2">
-                            <button id="scan-asset-btn" class="btn btn-secondary"><i data-lucide="camera"></i> Scan Asset</button>
-                            <button id="export-results-btn" class="btn btn-accent">
-                                <i data-lucide="download"></i> Export Results
-                            </button>
-                            <button id="save-count-btn" class="btn btn-primary">
-                                <i data-lucide="save"></i> Save Physical Count
-                            </button>
-                        </div>
-                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800">Annual Physical Count</h1>
 
                     <!-- Summary Dashboard -->
                     <div id="summary-dashboard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -137,6 +126,15 @@
                     <div id="pagination-controls" class="flex justify-between items-center non-printable">
                         <!-- JS will populate this -->
                     </div>
+                </div>
+            </main>
+            <!-- Bottom Action Bar -->
+            <div id="physical-count-action-bar" class="hidden fixed bottom-4 bg-base-300/95 backdrop-blur-sm p-2 shadow-lg z-20 rounded-box w-auto mx-auto left-1/2 -translate-x-1/2">
+                <div class="flex items-center gap-2">
+                    <button id="scan-asset-btn" class="btn btn-secondary btn-sm"><i data-lucide="camera"></i> Scan Asset</button>
+                    <button id="export-results-btn" class="btn btn-accent btn-sm"><i data-lucide="download"></i> Export Results</button>
+                    <div class="h-6 w-px bg-base-content/20"></div>
+                    <button id="save-count-btn" class="btn btn-primary btn-sm"><i data-lucide="save"></i> Save Count</button>
                 </div>
             </main>
         </div>
