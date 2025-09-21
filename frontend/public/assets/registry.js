@@ -20,7 +20,7 @@ function initializeRegistryPage(user) {
         assetsToTransfer: [], // To hold asset objects for the transfer modal
         selectedAssets: new Map(), // Use a Map to persist selection across pages. Key: assetId, Value: asset object
         currentPage: 1,
-        assetsPerPage: 20,
+        assetsPerPage: 50,
         sortKey: 'createdAt',
         sortDirection: 'desc',
         totalPages: 1,
