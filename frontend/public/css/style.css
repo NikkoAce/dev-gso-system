@@ -1,25 +1,15 @@
 /* FILE: frontend/public/style.css (New Shared CSS) */
 body { font-family: 'Inter', sans-serif; }
 @media print {
-    /* 1. Hide everything by default */
-    body * {
-        visibility: hidden;
+    /* A simpler, more robust approach to printing */
+    body > *:not(.printable-area):not(#print-container) {
+        display: none !important;
     }
-
-    /* 2. Make only the printable containers and their children visible */
-    #print-container, #print-container *,
-    .printable-area, .printable-area * {
-        visibility: visible;
+    .non-printable {
+        display: none !important;
     }
-
-    /* 3. Position the printable container to take up the whole page */
-    #print-container, .printable-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0 !important;
-        padding: 0 !important;
+    .printable-area, #print-container {
+        display: block !important;
     }
 
     .page-break-after {
@@ -64,6 +54,11 @@ body.print-preview-mode .printable-area {
     overflow: auto;
     padding: 2rem;
     background-color: transparent;
+}
+/* NEW: Remove border and shadow from the main container in preview mode */
+body.print-preview-mode .printable-area {
+    border: none !important;
+    box-shadow: none !important;
 }
 
 body.print-preview-mode .printable-page {
