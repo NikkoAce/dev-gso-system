@@ -564,7 +564,7 @@ function initializePhysicalCountPage(user) {
             row.classList.add('flash-success');
             setTimeout(() => {
                 row.classList.remove('flash-success');
-            }, 1000); // Flash for 1 second
+            }, 2000); // Flash for 2 seconds
 
             const checkbox = row.querySelector('.verify-checkbox');
             const wasVerified = checkbox.checked;
@@ -607,7 +607,7 @@ function initializePhysicalCountPage(user) {
             row.classList.add('flash-update');
             setTimeout(() => {
                 row.classList.remove('flash-update');
-            }, 1000);
+            }, 2000);
 
             const statusInput = row.querySelector('.status-input');
             const oldStatus = statusInput.value;
