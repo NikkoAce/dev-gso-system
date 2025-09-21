@@ -31,7 +31,6 @@ function initializePhysicalCountPage(user) {
     const scannerCanvas = document.getElementById('scanner-canvas');
     const scannerCtx = scannerCanvas.getContext('2d');
     const closeScannerBtn = document.getElementById('close-scanner-btn');
-    const actionBar = document.getElementById('physical-count-action-bar');
 
     let videoStream = null;
     let currentSummary = {};
@@ -39,19 +38,11 @@ function initializePhysicalCountPage(user) {
     let currentOfficeRoom = '';
 
     // --- DATA FETCHING & RENDERING ---
-    function updateActionBarVisibility() {
-        if (actionBar) {
-            const officeSelected = !!officeFilter.value;
-            actionBar.classList.toggle('hidden', !officeSelected);
-        }
-    }
-
     async function initializePage() {
         try {
             const offices = await fetchWithAuth('offices');
             populateFilters({ offices }, { officeFilter });
             await loadAssets();
-            updateActionBarVisibility(); // Set initial state
 
             // Initialize Socket.IO connection
             socket = io(API_ROOT_URL, {
@@ -516,7 +507,6 @@ function initializePhysicalCountPage(user) {
                 } else {
                     currentOfficeRoom = '';
                 }
-                updateActionBarVisibility();
             }
             currentPage = 1;
             loadAssets();
