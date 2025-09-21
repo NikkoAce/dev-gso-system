@@ -1,10 +1,12 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
+import { createUIManager } from '../js/ui.js';
 
 createAuthenticatedPage({
     permission: 'slip:generate',
     pageInitializer: (user) => {
+        const { showToast } = createUIManager();
         let currentSlipData = null;
 
         const config = {
@@ -302,16 +304,16 @@ createAuthenticatedPage({
                         };
 
                         if (!dataToSave.date) {
-                            alert('Please select a date for the report.'); return;
+                            showToast('Please select a date for the report.', 'warning'); return;
                         }
 
                         try {
                             const savedSlip = await fetchWithAuth(config.apiEndpoint, { method: 'POST', body: JSON.stringify(dataToSave) });
-                            alert(`${config.slipType} saved successfully!`);
+                            showToast(`${config.slipType} saved successfully!`, 'success');
                             localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
                             window.print();
                             window.location.href = config.backUrls.create;
-                        } catch (error) { alert(`Error: ${error.message}`); }
+                        } catch (error) { showToast(`Error: ${error.message}`, 'error'); }
                     });
                 } else {
                     formContainer.innerHTML = `<p class="text-center text-red-500">No assets selected. Please go back to the <a href="${config.backUrls.create}" class="text-blue-600 hover:underline">Asset Registry</a>.</p>`;

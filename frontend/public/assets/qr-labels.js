@@ -33,7 +33,7 @@ function initializeQrLabelsPage(user) {
     let totalPages = 1;
     const assetsPerPage = 20;
     let selectedAssetIds = new Set();
-    const { populateFilters, setLoading, renderPagination } = createUIManager();
+    const { populateFilters, setLoading, renderPagination, showToast } = createUIManager();
 
     // --- UTILITY FUNCTIONS ---
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-CA') : 'N/A';
@@ -115,7 +115,7 @@ function initializeQrLabelsPage(user) {
 
    async function handlePrint() {
         if (selectedAssetIds.size === 0) {
-            alert('Please select at least one asset to print.');
+            showToast('Please select at least one asset to print.', 'warning');
             return;
         }
 
@@ -136,7 +136,7 @@ function initializeQrLabelsPage(user) {
             }
 
         } catch (error) {
-            alert(`Error fetching asset details for printing: ${error.message}`);
+            showToast(`Error fetching asset details: ${error.message}`, 'error');
             printBtn.disabled = false;
             printBtn.innerHTML = originalButtonContent;
             lucide.createIcons();

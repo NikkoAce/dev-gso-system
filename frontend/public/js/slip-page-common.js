@@ -1,5 +1,6 @@
 // FILE: frontend/public/js/slip-page-common.js
 import { fetchWithAuth } from './api.js';
+import { createUIManager } from './ui.js';
 
 // --- UTILITY FUNCTIONS ---
 export const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -7,6 +8,7 @@ export const formatDate = (dateString) => dateString ? new Date(dateString).toLo
 
 // --- SHARED INITIALIZATION LOGIC ---
 export function initializeSlipPage(config, currentUser) {
+    const { showToast } = createUIManager();
     let currentSlipData = {};
 
     function initializePage() {
@@ -41,7 +43,7 @@ export function initializeSlipPage(config, currentUser) {
                 if (config.checkFundSource) {
                     const allSameFundSource = selectedAssets.every(asset => asset.fundSource === firstAsset.fundSource);
                     if (!allSameFundSource) {
-                        alert(`Error: All selected assets must have the same Fund Source to be included on a single ${config.slipType}.`);
+                        showToast(`Error: All selected assets must have the same Fund Source to be included on a single ${config.slipType}.`, 'error');
                         window.location.href = config.backUrls.create;
                         return;
                     }
@@ -97,11 +99,11 @@ export function initializeSlipPage(config, currentUser) {
                     body: JSON.stringify(currentSlipData)
                 });
 
-                alert(`${config.slipType} saved successfully!`);
+                showToast(`${config.slipType} saved successfully!`, 'success');
                 window.print();
                 window.location.href = config.backUrls.create;
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showToast(`Error: ${error.message}`, 'error');
             }
         });
     }

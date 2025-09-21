@@ -1,11 +1,13 @@
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { createUIManager } from '../js/ui.js';
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 
 createAuthenticatedPage({
     permission: 'slip:generate',
     pageInitializer: (user) => {
+        const { showToast } = createUIManager();
         let currentSlipData = null;
         const config = {
             slipType: 'IIRUP',
@@ -252,12 +254,12 @@ createAuthenticatedPage({
                     try {
                         const dataToSave = { assetIds: selectedAssets.map(a => a._id) };
                         const savedSlip = await fetchWithAuth(config.apiEndpoint, { method: 'POST', body: JSON.stringify(dataToSave) });
-                        alert(`${config.slipType} saved successfully!`);
+                        showToast(`${config.slipType} saved successfully!`, 'success');
                         localStorage.setItem(config.localStorageKeys.reprint, JSON.stringify(savedSlip));
                         window.print();
                         window.location.href = config.backUrls.create;
                     } catch (error) {
-                        alert(`Error: ${error.message}`);
+                        showToast(`Error: ${error.message}`, 'error');
                     }
                 });
             }

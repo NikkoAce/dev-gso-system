@@ -1,5 +1,6 @@
 // FILE: frontend/public/dashboard/dashboard.js
 import { fetchWithAuth } from '../js/api.js';
+import { createUIManager } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 let viewOptions = {}; // NEW: To hold view-specific options like grouping
@@ -137,6 +138,7 @@ function populateCustomizeModal() {
 }
 
 function initializeDashboard(user) {
+    const { showToast } = createUIManager();
     const charts = {}; // To hold chart instances for updates
 
     const formatCurrency = (value) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value || 0);
@@ -935,7 +937,7 @@ const htmlLegendPlugin = {
                 exitEditMode();
             } catch (error) {
                 console.error("Failed to save layout:", error);
-                alert("Could not save your layout changes. Please try again.");
+                showToast("Could not save your layout changes. Please try again.", 'error');
             }
         };
 
@@ -951,7 +953,7 @@ const htmlLegendPlugin = {
                 if (modal) modal.close();
             } catch (error) {
                 console.error("Failed to save visibility settings:", error);
-                alert("Could not save your widget visibility changes. Please try again.");
+                showToast("Could not save your widget visibility changes. Please try again.", 'error');
             }
         };
 

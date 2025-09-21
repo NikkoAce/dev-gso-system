@@ -1,5 +1,6 @@
 // FILE: frontend/public/requisition.js
 import { fetchWithAuth } from '../js/api.js';
+import { createUIManager } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
@@ -13,6 +14,7 @@ function initializeRequisitionPage(user) {
     const REQ_API_ENDPOINT = 'requisitions';
     let allStockItems = [];
     let requestedItems = [];
+    const { showToast, showConfirmationModal } = createUIManager();
 
     // DOM Cache
     const form = document.getElementById('requisition-form');
@@ -79,24 +81,24 @@ function initializeRequisitionPage(user) {
         const quantity = parseInt(itemQuantityInput.value, 10);
 
         if (!selectedId || !quantity || quantity < 1) {
-            alert('Please select an item and enter a valid quantity.');
+            showToast('Please select an item and enter a valid quantity.', 'warning');
             return;
         }
 
         const stockItem = allStockItems.find(item => item._id === selectedId);
         if (!stockItem) {
-            alert('Selected item not found.');
+            showToast('Selected item not found.', 'error');
             return;
         }
 
         if (quantity > stockItem.quantity) {
-            alert(`Cannot request more than the available stock (${stockItem.quantity}).`);
+            showToast(`Cannot request more than the available stock (${stockItem.quantity}).`, 'warning');
             return;
         }
 
         const existingItem = requestedItems.find(item => item.stockItem === selectedId);
         if (existingItem) {
-            alert('This item is already in your request list. You can remove it and add it again with a new quantity.');
+            showToast('This item is already in your request list.', 'info');
             return;
         }
 
@@ -127,11 +129,11 @@ function initializeRequisitionPage(user) {
         const purpose = purposeInput.value.trim();
 
         if (!purpose) {
-            return alert('Please enter a purpose for the requisition.');
+            return showToast('Please enter a purpose for the requisition.', 'warning');
         }
 
         if (requestedItems.length === 0) {
-            return alert('Please add at least one item to the request.');
+            return showToast('Please add at least one item to the request.', 'warning');
         }
 
         submitBtn.disabled = true;
@@ -149,10 +151,13 @@ function initializeRequisitionPage(user) {
                 body: JSON.stringify(payload)
             });
 
-            // After successful submission, ask the user if they want to print the official form.
-            if (confirm('Requisition submitted successfully! Do you want to print the Supplies Availability Inquiry (SAI) form?')) {
-                window.open(`../slips/sai-page.html?id=${savedRequisition._id}`, '_blank');
-            }
+            showConfirmationModal(
+                'Requisition Submitted',
+                'Requisition submitted successfully! Do you want to print the Supplies Availability Inquiry (SAI) form?',
+                () => {
+                    window.open(`../slips/sai-page.html?id=${savedRequisition._id}`, '_blank');
+                }
+            );
 
             // Reset the form for the next requisition.
             form.reset();
@@ -160,7 +165,7 @@ function initializeRequisitionPage(user) {
             renderRequestedItems();
             requestingOfficeInput.value = user.office;
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Requisition';

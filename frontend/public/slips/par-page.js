@@ -1,12 +1,14 @@
 // FILE: frontend/public/par-page.js
 import { initializeSlipPage, formatCurrency, formatDate } from '../js/slip-page-common.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createUIManager } from '../js/ui.js';
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
     permission: ['slip:generate', 'slip:read'],
     pageInitializer: (user) => {
+        const { showToast } = createUIManager();
         let currentParData = null; // Variable to hold slip data for export
 
         // The populateParForm function is passed as a callback to the shared initializer.

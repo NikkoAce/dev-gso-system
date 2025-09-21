@@ -1,5 +1,6 @@
 // FILE: frontend/public/my-requisitions.js
 import { fetchWithAuth } from '../js/api.js';
+import { createUIManager } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
@@ -11,6 +12,7 @@ createAuthenticatedPage({
 function initializeMyRequisitionsPage(user) {
     const API_ENDPOINT = 'requisitions/my-office';
     const requisitionsList = document.getElementById('my-requisitions-list');
+    const { showToast, showConfirmationModal } = createUIManager();
 
     const statusMap = {
         'Pending': 'badge-warning',
@@ -81,19 +83,22 @@ function initializeMyRequisitionsPage(user) {
         const receiveBtn = e.target.closest('.receive-btn');
         if (receiveBtn) {
             const requisitionId = receiveBtn.dataset.id;
-            if (confirm('Are you sure you have received all items for this requisition? This action cannot be undone.')) {
-                try {
-                    receiveBtn.disabled = true;
-                    receiveBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span>`;
-                    await fetchWithAuth(`requisitions/my-office/${requisitionId}/receive`, { method: 'PUT' });
-                    await fetchAndRenderMyRequisitions(); // Refresh the list to show the new status
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                    receiveBtn.disabled = false;
-                    receiveBtn.innerHTML = `<i data-lucide="package-check" class="h-4 w-4"></i> Receive`;
-                    lucide.createIcons();
-                }
-            }
+            showConfirmationModal(
+                'Confirm Receipt',
+                'Are you sure you have received all items for this requisition? This action cannot be undone.',
+                async () => {
+                    try {
+                        receiveBtn.disabled = true;
+                        receiveBtn.innerHTML = `<span class="loading loading-spinner loading-xs"></span>`;
+                        await fetchWithAuth(`requisitions/my-office/${requisitionId}/receive`, { method: 'PUT' });
+                        await fetchAndRenderMyRequisitions(); // Refresh the list to show the new status
+                    } catch (error) {
+                        showToast(`Error: ${error.message}`, 'error');
+                        receiveBtn.disabled = false;
+                        receiveBtn.innerHTML = `<i data-lucide="package-check" class="h-4 w-4"></i> Receive`;
+                        lucide.createIcons();
+                    }
+                });
         }
     });
 }

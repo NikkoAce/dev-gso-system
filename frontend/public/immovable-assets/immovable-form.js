@@ -1,6 +1,6 @@
 // FILE: frontend/public/immovable-assets/immovable-form.js
 import { fetchWithAuth } from '../js/api.js';
-import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow } from '../js/ui.js';
+import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow, showConfirmationModal } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 import { area as turfArea, length as turfLength } from 'https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/+esm';
 
@@ -652,7 +652,7 @@ function initializeForm(user) {
         const attachmentKey = deleteButton.dataset.key;
         if (!assetId || !attachmentKey) return;
 
-        if (confirm('Are you sure you want to permanently delete this file?')) {
+        showConfirmationModal('Delete Attachment', 'Are you sure you want to permanently delete this file?', async () => {
             try {
                 await fetchWithAuth(`${API_ENDPOINT}/${assetId}/attachments/${encodeURIComponent(attachmentKey)}`, { method: 'DELETE' });
                 showToast('Attachment deleted successfully.', 'success');
@@ -660,7 +660,7 @@ function initializeForm(user) {
             } catch (error) {
                 showToast(`Error deleting attachment: ${error.message}`, 'error');
             }
-        }
+        });
     }
     // --- INITIALIZATION ---
     if (isEditMode) {
@@ -778,7 +778,7 @@ function initializeForm(user) {
         const removeBtn = e.target.closest('.remove-improvement-btn');
         if (removeBtn) {
             const improvementId = removeBtn.dataset.improvementId;
-            if (confirm('Are you sure you want to delete this improvement record?')) {
+            showConfirmationModal('Delete Improvement', 'Are you sure you want to delete this improvement record?', async () => {
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${assetId}/improvements/${improvementId}`, {
                         method: 'DELETE'
@@ -788,7 +788,7 @@ function initializeForm(user) {
                 } catch (error) {
                     showToast(`Error deleting improvement: ${error.message}`, 'error');
                 }
-            }
+            });
         }
     });
 
@@ -823,7 +823,7 @@ function initializeForm(user) {
         const removeBtn = e.target.closest('.remove-repair-btn');
         if (removeBtn) {
             const repairId = removeBtn.dataset.repairId;
-            if (confirm('Are you sure you want to delete this repair record?')) {
+            showConfirmationModal('Delete Repair Record', 'Are you sure you want to delete this repair record?', async () => {
                 try {
                     await fetchWithAuth(`${API_ENDPOINT}/${assetId}/repairs/${repairId}`, {
                         method: 'DELETE'
@@ -833,7 +833,7 @@ function initializeForm(user) {
                 } catch (error) {
                     showToast(`Error deleting repair: ${error.message}`, 'error');
                 }
-            }
+            });
         }
     });
 }

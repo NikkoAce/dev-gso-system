@@ -24,7 +24,7 @@ function initializeInventoryPage(user) {
     let searchTimeout;
 
     // NEW: UI Manager
-    const { renderPagination, setLoading } = createUIManager();
+    const { renderPagination, setLoading, showToast, showConfirmationModal } = createUIManager();
 
     // DOM Cache
     const itemList = document.getElementById('stock-item-list');
@@ -183,13 +183,13 @@ function initializeInventoryPage(user) {
         const unitCost = parseFloat(unitCostInput.value);
 
         if (!stockItemId || !quantity || quantity < 1 || unitCost < 0) {
-            alert('Please select an item and enter a valid quantity and unit cost.');
+            showToast('Please select an item and enter a valid quantity and unit cost.', 'warning');
             return;
         }
 
         const stockItem = allStockItems.find(i => i._id === stockItemId);
         if (receivedItems.some(i => i.stockItem === stockItemId)) {
-            alert('This item is already in the report. You can remove it and add it again with a new quantity.');
+            showToast('This item is already in the report. You can remove it and add it again.', 'info');
             return;
         }
 
@@ -253,7 +253,7 @@ function initializeInventoryPage(user) {
             resetForm();
             await loadItems();
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         }
     });
 
@@ -269,14 +269,17 @@ function initializeInventoryPage(user) {
         const deleteBtn = e.target.closest('.delete-item-btn');
         if (deleteBtn) {
             const id = deleteBtn.dataset.id;
-            if (confirm('Are you sure you want to delete this stock item?')) {
-                try {
-                    await fetchWithAuth(`${API_ENDPOINT}/${id}`, { method: 'DELETE' });
-                    await loadItems();
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                }
-            }
+            showConfirmationModal(
+                'Delete Stock Item',
+                'Are you sure you want to delete this stock item?',
+                async () => {
+                    try {
+                        await fetchWithAuth(`${API_ENDPOINT}/${id}`, { method: 'DELETE' });
+                        await loadItems();
+                    } catch (error) {
+                        showToast(`Error: ${error.message}`, 'error');
+                    }
+                });
         }
     });
 
@@ -323,7 +326,7 @@ function initializeInventoryPage(user) {
     receiveStockForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (receivedItems.length === 0) {
-            alert('Please add at least one item to the report.');
+            showToast('Please add at least one item to the report.', 'warning');
             return;
         }
 
@@ -340,10 +343,10 @@ function initializeInventoryPage(user) {
                 body: JSON.stringify(payload)
             });
             closeReceiveModal();
-            alert('Stock received and inventory updated successfully!');
+            showToast('Stock received and inventory updated successfully!', 'success');
             await loadItems();
         } catch (error) {
-            alert(`Error submitting report: ${error.message}`);
+            showToast(`Error submitting report: ${error.message}`, 'error');
         }
     });
 

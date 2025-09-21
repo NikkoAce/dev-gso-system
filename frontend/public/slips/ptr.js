@@ -1,6 +1,7 @@
 // FILE: frontend/public/ptr.js
 import { exportToPDF, togglePreviewMode } from '../js/report-utils.js';
 import { fetchWithAuth } from '../js/api.js';
+import { createUIManager } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
@@ -19,6 +20,7 @@ function initializePtrPage(user) {
     const exportPdfBtn = document.getElementById('export-pdf-btn');
     const previewBtn = document.getElementById('preview-btn');
     const exitPreviewBtn = document.getElementById('exit-preview-btn');
+    const { showToast } = createUIManager();
 
     // --- STATE ---
     let currentPtrData = null;
@@ -317,7 +319,7 @@ function initializePtrPage(user) {
 
     async function handleSaveAndPrint() {
         if (!dataForSave) {
-            alert('No data available to save.');
+            showToast('No data available to save.', 'warning');
             return;
         }
         // Ensure the date is up-to-date from the input field
@@ -325,7 +327,7 @@ function initializePtrPage(user) {
         if (dateInput) dataForSave.transferDate = dateInput.value;
 
         if (!dataForSave.transferDate) {
-            alert('Please select a transfer date.');
+            showToast('Please select a transfer date.', 'warning');
             return;
         }
 
@@ -334,14 +336,14 @@ function initializePtrPage(user) {
                 method: 'POST',
                 body: JSON.stringify(dataForSave)
             });
-            alert('Property Transfer Report saved successfully!');
+            showToast('Property Transfer Report saved successfully!', 'success');
             // Store the response for reprinting, then print
             localStorage.setItem('ptrToReprint', JSON.stringify(savedPTR.ptr));
             window.print();
             // Redirect back to the registry after printing
             window.location.href = '../assets/asset-registry.html';
         } catch (error) {
-            alert(`Error saving PTR: ${error.message}`);
+            showToast(`Error saving PTR: ${error.message}`, 'error');
         }
     }
 

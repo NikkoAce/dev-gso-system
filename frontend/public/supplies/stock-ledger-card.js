@@ -1,5 +1,6 @@
 import { fetchWithAuth } from '../js/api.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
+import { createUIManager } from '../js/ui.js';
 
 createAuthenticatedPage({
     permission: 'stock:manage',
@@ -8,6 +9,7 @@ createAuthenticatedPage({
 });
 
 function initializeLedgerPage(user) {
+    const { showToast } = createUIManager();
     // DOM Cache
     const loadingState = document.getElementById('loading-state');
     const errorState = document.getElementById('error-state');
@@ -35,7 +37,7 @@ function initializeLedgerPage(user) {
             showContent();
         } catch (error) {
             console.error('Failed to load stock ledger:', error);
-            showError(error.message);
+            showToast(`Error loading ledger: ${error.message}`, 'error');
         }
     }
 

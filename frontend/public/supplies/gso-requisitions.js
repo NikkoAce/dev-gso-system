@@ -22,7 +22,7 @@ function initializeGsoRequisitionsPage(user) {
     let searchTimeout;
 
     // UI Manager
-    const { renderPagination, setLoading } = createUIManager();
+    const { renderPagination, setLoading, showToast } = createUIManager();
 
     // DOM Cache
     const requisitionsList = document.getElementById('requisitions-list');
@@ -123,7 +123,7 @@ function initializeGsoRequisitionsPage(user) {
             renderModalContent(requisition);
             modal.showModal();
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
         }
     }
 
@@ -284,7 +284,7 @@ function initializeGsoRequisitionsPage(user) {
             closeModal();
             await loadRequisitions();
         } catch (error) {
-            alert(`Error: ${error.message}`);
+            showToast(`Error: ${error.message}`, 'error');
             button.disabled = false;
             if (confirmBtn) button.textContent = 'Confirm Availability';
             else button.textContent = newStatus === 'Issued' ? 'Issue Items & Approve' : 'Reject';
