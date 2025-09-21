@@ -82,7 +82,13 @@
                         <input type="text" id="role-name" placeholder="e.g., Auditor" class="input input-bordered w-full" required>
                     </label>
                     <div class="form-control mt-4">
-                        <label class="label"><span class="label-text">Permissions</span></label>
+                        <div class="flex justify-between items-center">
+                            <label class="label"><span class="label-text">Permissions</span></label>
+                            <div class="flex gap-2">
+                                <button type="button" id="select-all-permissions" class="btn btn-xs btn-ghost">Select All</button>
+                                <button type="button" id="deselect-all-permissions" class="btn btn-xs btn-ghost">Deselect All</button>
+                            </div>
+                        </div>
                         <div id="permissions-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 border rounded-lg bg-base-200 max-h-96 overflow-y-auto">
                             <!-- Permissions checkboxes will be populated by JS -->
                         </div>
