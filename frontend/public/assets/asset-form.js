@@ -386,6 +386,30 @@ function initializeForm(user) {
         }
     });
 
+    propertyNumberInput.addEventListener('input', (e) => {
+        const input = e.target;
+        // This logic handles auto-hyphenation for the property number format YYYY-MM-GGG-OO-SSSS
+        let value = input.value.replace(/[^0-9]/g, ''); // Remove all non-digit characters
+        let maskedValue = '';
+
+        if (value.length > 0) {
+            maskedValue = value.substring(0, 4);
+            if (value.length > 4) {
+                maskedValue += '-' + value.substring(4, 6);
+            }
+            if (value.length > 6) {
+                maskedValue += '-' + value.substring(6, 9);
+            }
+            if (value.length > 9) {
+                maskedValue += '-' + value.substring(9, 11);
+            }
+            if (value.length > 11) {
+                maskedValue += '-' + value.substring(11, 15);
+            }
+        }
+        input.value = maskedValue;
+    });
+
     custodianNameInput.addEventListener('input', (e) => {
         const selectedEmployee = employeesData.find(emp => emp.name === e.target.value);
         custodianDesignationInput.value = selectedEmployee ? selectedEmployee.designation : '';

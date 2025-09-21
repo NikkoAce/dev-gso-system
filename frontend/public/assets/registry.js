@@ -77,6 +77,10 @@ function initializeRegistryPage(user) {
         importSummaryMessage: document.getElementById('import-summary-message'),
         importErrorList: document.getElementById('import-error-list'),
         downloadTemplateBtn: document.getElementById('download-template-btn'),
+        selectionSummaryBar: document.getElementById('selection-summary-bar'),
+        selectionCount: document.getElementById('selection-count'),
+        selectionTotalValue: document.getElementById('selection-total-value'),
+        clearSelectionBtn: document.getElementById('clear-selection-btn'),
     };
 
     // --- MODULE: UI MANAGER ---
@@ -349,6 +353,17 @@ function initializeRegistryPage(user) {
         const selectedAssetsArray = Array.from(state.selectedAssets.values());
 
         // Update select-all checkbox state based on current page's assets
+        const selectionCount = selectedAssetsArray.length;
+
+        // NEW: Update summary bar
+        const totalValue = selectedAssetsArray.reduce((sum, asset) => sum + (asset.acquisitionCost || 0), 0);
+        DOM.selectionSummaryBar.classList.toggle('hidden', selectionCount === 0);
+        DOM.clearSelectionBtn.classList.toggle('hidden', selectionCount === 0);
+        if (selectionCount > 0) {
+            DOM.selectionCount.textContent = selectionCount;
+            DOM.selectionTotalValue.textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalValue);
+        }
+
         const allCheckboxesOnPage = DOM.tableBody.querySelectorAll('.asset-checkbox:not(:disabled)');
         const selectedOnPageCount = Array.from(allCheckboxesOnPage).filter(cb => state.selectedAssets.has(cb.dataset.id)).length;
 
@@ -395,6 +410,16 @@ function initializeRegistryPage(user) {
             }
             });
         },
+
+        clearSelection() {
+            state.selectedAssets.clear();
+            // Re-render the table to remove highlights and update checkbox states visually.
+            // This is cleaner than manually manipulating row styles.
+            renderAssetTable(state.currentPageAssets);
+            // Update the UI state (hide buttons, summary bar, and update select-all checkbox).
+            this.updateSelectionState();
+        },
+
 
         async handleConfirmTransfer() {
             const newOffice = DOM.transferOfficeSelect.value;
@@ -575,6 +600,7 @@ function initializeRegistryPage(user) {
             DOM.exportCsvBtn?.addEventListener('click', () => exportManager.exportToCsv());
             DOM.transferSelectedBtn?.addEventListener('click', () => openTransferModal(Array.from(state.selectedAssets.keys())));
             // Transfer Modal Listeners
+            DOM.clearSelectionBtn?.addEventListener('click', () => this.clearSelection());
             DOM.confirmTransferBtn?.addEventListener('click', () => this.handleConfirmTransfer());
             DOM.cancelTransferBtn?.addEventListener('click', () => DOM.transferModal.close());
             // Appendix 68 Modal Listeners
