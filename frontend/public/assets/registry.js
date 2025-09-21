@@ -73,7 +73,6 @@ function initializeRegistryPage(user) {
         downloadTemplateBtn: document.getElementById('download-template-btn'),
         selectionSummaryBar: document.getElementById('selection-summary-bar'),
         selectionCount: document.getElementById('selection-count'),
-        selectionTotalValue: document.getElementById('selection-total-value'),
         // Action Bar elements
         actionBarGeneratePar: document.getElementById('action-bar-generate-par'),
         actionBarGenerateIcs: document.getElementById('action-bar-generate-ics'),

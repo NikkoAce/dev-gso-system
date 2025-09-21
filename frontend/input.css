@@ -205,17 +205,9 @@
         /* Row 2: Description */
         .asset-registry-mobile-layout td[data-label="Description"] { order: 4; @apply w-full pt-0 border-t border-base-300/50 text-left; }
 
-        /* Row 3: Category (full width, no label) */
-        .asset-registry-mobile-layout td[data-label="Category"] {
-            order: 5;
-            @apply w-full text-sm text-base-content/70 border-t border-base-300/50 text-left;
-        }
-
-        /* Row 4: Custodian (full width, no label) */
-        .asset-registry-mobile-layout td[data-label="Custodian"] {
-            order: 6;
-            @apply w-full text-sm text-base-content/70 border-t border-base-300/50 text-left;
-        }
+        /* Row 3: Category & Custodian */
+        .asset-registry-mobile-layout td[data-label="Category"] { order: 5; @apply w-1/2 text-sm text-base-content/70 border-t border-base-300/50 text-left; }
+        .asset-registry-mobile-layout td[data-label="Custodian"] { order: 6; @apply w-1/2 text-sm text-base-content/70 border-t border-base-300/50 text-left; }
 
         /* Row 4: Dates with labels */
         .asset-registry-mobile-layout td[data-label="Date Acquired"] { order: 7; @apply w-1/2 text-xs border-t border-base-300/50 text-left; }
