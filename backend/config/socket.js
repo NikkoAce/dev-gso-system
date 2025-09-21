@@ -48,15 +48,14 @@ const initSocket = (socketIoInstance) => {
                 // Notify others in the old room that this user has left.
                 socket.to(previousRoom).emit('user-left', { name: socket.user.name, id: socket.id });
                 console.log(`Socket ${socket.id} left room: ${previousRoom}`);
-        }
-
-        // --- NEW: Get list of users already in the room ---
-        const usersInRoom = [];
-        for (const [id, info] of connectedUsers.entries()) {
-            // Find users in the target room, excluding the user who just joined.
-            if (info.room === roomName && id !== socket.id) {
-                usersInRoom.push({ name: info.user.name, id: id });
             }
+
+            // Get list of users already in the room before we add the new one
+            const usersInRoom = [];
+            for (const [id, info] of connectedUsers.entries()) {
+                if (info.room === roomName && id !== socket.id) {
+                    usersInRoom.push({ name: info.user.name, id: id });
+                }
             }
 
             // Join the new room.
@@ -65,8 +64,8 @@ const initSocket = (socketIoInstance) => {
             connectedUsers.set(socket.id, { user: socket.user, room: roomName });
             console.log(`Socket ${socket.id} joined room: ${roomName}`);
 
-        // --- NEW: Send the list of current occupants back to the joining user ---
-        socket.emit('room-status', { users: usersInRoom });
+            // Send the list of current occupants back to the joining user
+            socket.emit('room-status', { users: usersInRoom });
 
             // Notify others in the new room that this user has joined.
             socket.to(roomName).emit('user-joined', { name: socket.user.name, id: socket.id });
