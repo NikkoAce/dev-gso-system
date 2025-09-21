@@ -24,6 +24,38 @@ const roleList = document.getElementById('role-list');
 const addNewBtn = document.getElementById('add-new-btn');
 const modal = document.getElementById('settings-modal');
 const searchInput = document.getElementById('search-input');
+const selectAllBtn = document.getElementById('select-all-permissions');
+const deselectAllBtn = document.getElementById('deselect-all-permissions');
+
+const PERMISSION_DESCRIPTIONS = {
+    'dashboard:view': 'Can view the main dashboard.',
+    'asset:read': 'Can view all movable assets in the registry.',
+    'asset:read:own_office': 'Can view assets assigned to their own office (for portal users).',
+    'asset:create': 'Can create new movable assets.',
+    'asset:update': 'Can edit existing movable assets.',
+    'asset:delete': 'Can delete movable assets.',
+    'asset:transfer': 'Can initiate and process asset transfers.',
+    'immovable:read': 'Can view all immovable assets.',
+    'immovable:create': 'Can create new immovable assets.',
+    'immovable:update': 'Can edit existing immovable assets.',
+    'immovable:delete': 'Can delete immovable assets.',
+    'stock:read': 'Can view the supplies inventory.',
+    'stock:manage': 'Can add new stock items and update quantities.',
+    'requisition:create': 'Can create new supply requisitions (for portal users).',
+    'requisition:read:own_office': 'Can view their own office\'s requisitions.',
+    'requisition:read:all': 'Can view all supply requisitions from all offices.',
+    'requisition:process': 'Can approve, issue, or reject supply requisitions.',
+    'slip:generate': 'Can generate official slips like PAR, ICS, etc.',
+    'slip:read': 'Can view the history of all generated slips.',
+    'report:generate': 'Can generate system-wide reports (RPCPPE, Depreciation, etc.).',
+    'settings:read': 'Can view settings pages.',
+    'settings:manage': 'Can add, edit, and delete settings (Categories, Offices, Employees, Signatories).',
+    'user:read': 'Can view the list of users and their roles.',
+    'user:manage': 'Can assign roles and permissions to users.',
+    'admin:data:read': 'Can view the data management page and run health checks.',
+    'admin:data:migrate': 'Can run data migration scripts.',
+    'admin:database:export': 'Can export a full database backup.'
+};
 
 createAuthenticatedPage({
     permission: 'user:manage',
@@ -75,13 +107,22 @@ async function loadRoles() {
 }
 
 function renderPermissionsCheckboxes(permissions, checkedPermissions = []) {
-    permissionsContainer.innerHTML = permissions.map(permission => `
-        <label class="label cursor-pointer justify-start gap-2">
-            <input type="checkbox" class="checkbox checkbox-sm" value="${permission}" 
-                   ${checkedPermissions.includes(permission) ? 'checked' : ''}>
-            <span class="label-text text-xs">${permission}</span>
-        </label>
-    `).join('');
+    permissionsContainer.innerHTML = permissions.map(permission => {
+        const description = PERMISSION_DESCRIPTIONS[permission] || 'No description available.';
+        return `
+            <div class="flex items-center justify-between">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input type="checkbox" class="checkbox checkbox-sm permission-checkbox" value="${permission}" 
+                           ${checkedPermissions.includes(permission) ? 'checked' : ''}>
+                    <span class="label-text text-xs">${permission}</span>
+                </label>
+                <div class="tooltip tooltip-left" data-tip="${description}">
+                    <i data-lucide="help-circle" class="h-4 w-4 text-gray-400"></i>
+                </div>
+            </div>
+        `;
+    }).join('');
+    lucide.createIcons();
 }
 
 function renderRolesTable(roles) {
@@ -125,6 +166,14 @@ function setupEventListeners() {
     searchInput.addEventListener('input', () => {
         currentPage = 1;
         loadRoles();
+    });
+
+    selectAllBtn.addEventListener('click', () => {
+        permissionsContainer.querySelectorAll('.permission-checkbox').forEach(cb => cb.checked = true);
+    });
+
+    deselectAllBtn.addEventListener('click', () => {
+        permissionsContainer.querySelectorAll('.permission-checkbox').forEach(cb => cb.checked = false);
     });
 
     const paginationControls = document.getElementById('pagination-controls');

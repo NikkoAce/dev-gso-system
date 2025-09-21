@@ -22,6 +22,20 @@ export function createSettingsPage(config) {
     const tableHeader = listContainer.parentElement.querySelector('thead');
     const paginationControls = document.getElementById('pagination-controls');
     const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        const searchContainer = searchInput.parentElement;
+        searchContainer.classList.add('relative');
+
+        const clearSearchBtn = document.createElement('button');
+        clearSearchBtn.type = 'button';
+        clearSearchBtn.className = 'btn btn-ghost btn-xs btn-circle absolute inset-y-0 right-0 my-auto hidden';
+        clearSearchBtn.innerHTML = `<i data-lucide="x" class="h-4 w-4"></i>`;
+        clearSearchBtn.title = 'Clear search';
+        searchInput.classList.add('pr-8'); // Add padding to avoid text going under the button
+        searchContainer.appendChild(clearSearchBtn);
+        lucide.createIcons({ nodes: [clearSearchBtn.querySelector('i')] });
+        clearSearchBtn.classList.toggle('hidden', searchInput.value === '');
+    }
     
     // --- NEW: Modal and Form elements ---
     const addNewBtn = document.getElementById(config.addNewBtnId);
@@ -173,7 +187,22 @@ export function createSettingsPage(config) {
         addNewBtn.addEventListener('click', openModalForCreate);
         form.addEventListener('submit', handleSave);
         cancelBtn.addEventListener('click', closeModal);
-        searchInput.addEventListener('input', () => { currentPage = 1; loadItems(); });
+
+        if (searchInput) {
+            const clearSearchBtn = searchInput.parentElement.querySelector('button');
+            searchInput.addEventListener('input', () => {
+                clearSearchBtn.classList.toggle('hidden', searchInput.value === '');
+                currentPage = 1;
+                loadItems();
+            });
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+                currentPage = 1;
+                loadItems();
+                searchInput.focus();
+            });
+        }
 
         paginationControls.addEventListener('click', (e) => {
             const target = e.target.closest('button');

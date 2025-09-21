@@ -112,18 +112,19 @@ function initializeSignatoriesPage(user) {
                 const name = setting.value?.name || config.defaultName;
                 const title = setting.value?.title || config.defaultTitle;
 
+                // Datalist options only need a value
                 const employeeOptions = employees.map(emp => {
                     const escapedName = emp.name.replace(/"/g, '&quot;');
-                    const isSelected = name === emp.name ? 'selected' : '';
-                    return `<option value="${escapedName}" ${isSelected}>${emp.name}</option>`;
+                    return `<option value="${escapedName}"></option>`;
                 }).join('');
 
-                const nameSelectHTML = `
-                    <select id="${config.key}_name" class="select select-bordered w-full font-normal">
-                        <option value="">-- Select Employee --</option>
-                        <option value="________________________" ${name === '________________________' ? 'selected' : ''}>-- Leave Blank --</option>
+                const datalistId = `${config.key}_name_list`;
+                const nameInputHTML = `
+                    <input type="text" id="${config.key}_name" list="${datalistId}" value="${name}" class="input input-bordered w-full font-normal" placeholder="Type or select employee...">
+                    <datalist id="${datalistId}">
+                        <option value="________________________">-- Leave Blank --</option>
                         ${employeeOptions}
-                    </select>
+                    </datalist>
                 `;
 
                 const fieldset = document.createElement('fieldset');
@@ -133,7 +134,7 @@ function initializeSignatoriesPage(user) {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <label class="form-control">
                             <div class="label"><span class="label-text">Printed Name</span></div>
-                            ${nameSelectHTML}
+                            ${nameInputHTML}
                         </label>
                         <label class="form-control">
                             <div class="label"><span class="label-text">Designation / Title</span></div>
@@ -144,15 +145,17 @@ function initializeSignatoriesPage(user) {
                 cardBody.appendChild(fieldset);
 
                 // Find elements within the newly created fieldset, not the global document
-                const nameSelect = fieldset.querySelector(`#${config.key}_name`);
+                const nameInput = fieldset.querySelector(`#${config.key}_name`);
                 const titleInput = fieldset.querySelector(`#${config.key}_title`);
-                if (nameSelect && titleInput) {
-                    nameSelect.addEventListener('change', () => {
-                        const selectedEmployee = employees.find(emp => emp.name === nameSelect.value);
+                if (nameInput && titleInput) {
+                    nameInput.addEventListener('input', () => {
+                        const selectedEmployee = employees.find(emp => emp.name === nameInput.value);
                         if (selectedEmployee) {
                             titleInput.value = selectedEmployee.designation;
-                        } else {
+                        } else if (nameInput.value === '________________________' || nameInput.value === '') {
                             titleInput.value = config.defaultTitle;
+                        } else {
+                            // If user types a name not in the list, do nothing to the title.
                         }
                     });
                 }
