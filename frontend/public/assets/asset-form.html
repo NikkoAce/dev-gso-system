@@ -40,28 +40,21 @@
                     <div id="details-panel">
                         <form id="asset-form" class="space-y-6">
                            
-                           <!-- Bulk Creation Card -->
-                            <div id="bulk-create-card" class="card bg-base-100 border">
-                                <div class="card-body">
-                                    <div class="form-control">
-                                        <label class="label cursor-pointer justify-start gap-4">
-                                            <input type="checkbox" id="bulk-create-toggle" class="checkbox" />
-                                            <span class="label-text font-semibold">Create Multiple Assets</span>
-                                        </label>
-                                        <div id="bulk-create-fields" class="hidden form-control">
-                                            <label class="form-control">
-                                                <div class="label"><span class="label-text">Quantity</span></div>
-                                                <input type="number" id="bulk-quantity" min="1" value="1" class="input input-bordered">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                           
                             <!-- Core Details Card -->
                             <div class="card bg-base-100 border">
                                 <div class="card-body">
-                                    <h2 class="card-title">Core Details</h2>
+                                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+                                        <h2 class="card-title">Core Details</h2>
+                                        <div id="bulk-create-card" class="form-control">
+                                            <label class="label cursor-pointer justify-start gap-4">
+                                                <input type="checkbox" id="bulk-create-toggle" class="checkbox checkbox-sm" />
+                                                <span class="label-text font-semibold">Create Multiple Assets</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="bulk-create-fields" class="hidden form-control mb-4">
+                                        <label class="form-control max-w-xs"><div class="label"><span class="label-text">Quantity to Create</span></div><input type="number" id="bulk-quantity" min="1" value="1" class="input input-bordered"></label>
+                                    </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <label class="form-control md:col-span-2">
                                             <div class="label"><span class="label-text">Description</span></div>
