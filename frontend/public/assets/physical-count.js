@@ -147,14 +147,14 @@ function initializePhysicalCountPage(user) {
             ];
 
             const conditionSelectHTML = `
-                <select class="condition-input select select-bordered select-sm w-full font-normal">
+                <select class="condition-input select select-bordered select-sm flex-1 font-normal">
                     <option value="">Select...</option>
                     ${conditionOptions.map(opt => `<option value="${opt}" ${asset.condition === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
             `;
 
             const statusSelectHTML = `
-                <select class="status-input select select-bordered select-sm w-full font-normal">
+                <select class="status-input select select-bordered select-sm flex-1 font-normal">
                     ${statusOptions.map(opt => `<option value="${opt}" ${asset.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
             `;
