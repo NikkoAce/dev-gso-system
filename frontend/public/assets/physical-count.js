@@ -507,6 +507,15 @@ function initializePhysicalCountPage(user) {
             }
         });
 
+        // --- NEW: Listen for other users joining/leaving the room ---
+        socket.on('user-joined', (data) => {
+            showToast(`${data.name} has joined this physical count.`, 'info');
+        });
+
+        socket.on('user-left', (data) => {
+            showToast(`${data.name} has left this physical count.`, 'warning');
+        });
+
         socket.on('asset-verified', (updatedAsset) => {
             const row = tableBody.querySelector(`tr[data-asset-id="${updatedAsset._id}"]`);
             if (!row) return; // Asset not on current page
