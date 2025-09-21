@@ -218,12 +218,12 @@
         }
         .asset-registry-mobile-layout td[data-label="Custodian"] {
             order: 6;
-            @apply text-right;
+            @apply text-left;
         }
 
         /* Row 4: Dates with labels */
         .asset-registry-mobile-layout td[data-label="Date Acquired"] { order: 7; @apply w-1/2 text-xs border-t border-base-300/50; }
-        .asset-registry-mobile-layout td[data-label="Date Created"] { order: 8; @apply w-1/2 text-xs text-right border-t border-base-300/50; }
+        .asset-registry-mobile-layout td[data-label="Date Created"] { order: 8; @apply w-1/2 text-xs text-left border-t border-base-300/50; }
         .asset-registry-mobile-layout td[data-label="Date Acquired"]::before,
         .asset-registry-mobile-layout td[data-label="Date Created"]::before {
             content: attr(data-label);
