@@ -34,23 +34,13 @@
         color-adjust: exact;
     }
     .label-print img {
-        display: block;
-        max-width: 100%;
-        height: auto;
+        display: block; /* Ensure images are block-level */
     }
-
-    .label-print .relative img {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-}
-
-.label-print .qr-code img,
-.label-print img[alt="QR Code"] {
-    width: 100% !important;
-    height: auto !important;
-    max-width: 60mm !important; /* keeps it proportional */
-}
-
+    .qr-code-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Fit QR code within its container */
+    }
 }
     </style>
      <script type="module" src="/js/auth.js" defer></script>

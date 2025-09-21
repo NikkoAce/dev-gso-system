@@ -156,7 +156,9 @@ function initializeQrLabelsPage(user) {
             const qr = qrcode(0, 'M');
             qr.addData(asset.propertyNumber);
             qr.make();
-            const qrImgTag = qr.createImgTag(4, 4);
+            // Use createDataURL for more control over the img tag
+            const qrDataURL = qr.createDataURL(4, 0); // cell size 4, margin 0
+            const qrImgTag = `<img src="${qrDataURL}" alt="QR Code for ${asset.propertyNumber}" class="qr-code-img">`;
 
             const acquisitionDateFormatted = asset.acquisitionDate ?
                 new Date(asset.acquisitionDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';

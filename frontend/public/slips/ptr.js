@@ -354,7 +354,10 @@ function initializePtrPage(user) {
         const fileName = `PTR-${currentPtrData?.ptrNumber || 'report'}.pdf`;
         exportToPDF({ reportElementId: 'report-output', fileName, buttonElement: exportPdfBtn, orientation: 'portrait', format: 'a4' });
     });
-    previewBtn.addEventListener('click', () => togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' }));
+    previewBtn.addEventListener('click', () => {
+        if (document.activeElement) document.activeElement.blur();
+        togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' });
+    });
     exitPreviewBtn.addEventListener('click', () => togglePreviewMode({ orientation: 'portrait', exitButtonId: 'exit-preview-btn' }));
 
     // --- INITIALIZATION ---

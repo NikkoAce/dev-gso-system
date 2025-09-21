@@ -293,6 +293,8 @@ createAuthenticatedPage({
         }
 
         function handleTogglePreview() {
+            // Blur active element to ensure dropdowns close before previewing.
+            if (document.activeElement) document.activeElement.blur();
             togglePreviewMode({
                 orientation: 'portrait',
                 exitButtonId: 'exit-preview-btn'

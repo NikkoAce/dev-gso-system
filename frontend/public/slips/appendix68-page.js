@@ -346,6 +346,7 @@ createAuthenticatedPage({
         }
 
         function handleTogglePreview() {
+            if (document.activeElement) document.activeElement.blur();
             togglePreviewMode({
                 orientation: 'portrait',
                 exitButtonId: 'exit-preview-btn'
