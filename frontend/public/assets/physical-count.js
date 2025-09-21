@@ -173,8 +173,8 @@ function initializePhysicalCountPage(user) {
                 <td data-label="Property No." class="font-medium">${asset.propertyNumber}</td>
                 <td data-label="Description">${fullDescription}</td>
                 <td data-label="Custodian">${custodianDisplay}</td>
-                <td data-label="Status / Condition">
-                    <div class="flex flex-col md:flex-row gap-2">
+                <td data-label="Status / Condition"> 
+                    <div class="flex flex-row gap-2">
                         ${statusSelectHTML}
                         ${conditionSelectHTML}
                     </div>
