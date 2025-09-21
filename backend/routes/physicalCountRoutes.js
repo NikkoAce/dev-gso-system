@@ -6,7 +6,8 @@ const {
     updatePhysicalCount,
     verifyAssetForPhysicalCount,
     exportPhysicalCountResults,
-    getAssetByPropertyNumber
+    getAssetByPropertyNumber,
+    updateSingleAssetPhysicalCount
 } = require('../controllers/physicalCountController.js');
 
 // Route for submitting bulk updates from the physical count page
