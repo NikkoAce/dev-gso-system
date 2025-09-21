@@ -260,14 +260,12 @@
         .physical-count-mobile-layout td[data-label="Custodian"] { @apply pt-0 text-xs text-base-content/70; }
 
         /* Card Body (Form Inputs) */
-        .physical-count-mobile-layout td[data-label="Status"],
-        .physical-count-mobile-layout td[data-label="Condition"],
+        .physical-count-mobile-layout td[data-label="Status / Condition"],
         .physical-count-mobile-layout td[data-label="Remarks"] {
             @apply flex flex-col items-start;
         }
         /* Re-create the label using the data-label attribute */
-        .physical-count-mobile-layout td[data-label="Status"]::before,
-        .physical-count-mobile-layout td[data-label="Condition"]::before,
+        .physical-count-mobile-layout td[data-label="Status / Condition"]::before,
         .physical-count-mobile-layout td[data-label="Remarks"]::before {
             content: attr(data-label);
             @apply block font-semibold text-sm mb-1;

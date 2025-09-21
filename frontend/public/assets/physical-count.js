@@ -53,7 +53,7 @@ function initializePhysicalCountPage(user) {
         } catch (error)
         {
             console.error('Failed to initialize page:', error);
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading data.</td></tr>`;
         }
     }
     
@@ -94,7 +94,7 @@ function initializePhysicalCountPage(user) {
     function renderTable(assets, pagination) {
         tableBody.innerHTML = '';
         if (assets.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No assets found.</td></tr>`;
             renderPagination(paginationControls, { currentPage: 1, totalPages: 0, totalDocs: 0, itemsPerPage });
             return;
         }
@@ -173,8 +173,12 @@ function initializePhysicalCountPage(user) {
                 <td data-label="Property No." class="font-medium">${asset.propertyNumber}</td>
                 <td data-label="Description">${fullDescription}</td>
                 <td data-label="Custodian">${custodianDisplay}</td>
-                <td data-label="Status">${statusSelectHTML}</td>
-                <td data-label="Condition">${conditionSelectHTML}</td>
+                <td data-label="Status / Condition">
+                    <div class="flex flex-col md:flex-row gap-2">
+                        ${statusSelectHTML}
+                        ${conditionSelectHTML}
+                    </div>
+                </td>
                 <td data-label="Remarks">
                     <input type="text" class="remarks-input input input-bordered input-sm w-full" value="${asset.remarks || ''}">
                 </td>
@@ -190,7 +194,7 @@ function initializePhysicalCountPage(user) {
     }
 
     async function loadAssets() {
-        setLoading(true, tableBody, { colSpan: 7 });
+        setLoading(true, tableBody, { colSpan: 6 });
         const office = officeFilter.value;
 
         // Set loading state for dashboard
@@ -244,7 +248,7 @@ function initializePhysicalCountPage(user) {
             }
         } catch (error) {
             console.error('Failed to load assets:', error);
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Error loading assets: ${error.message}</td></tr>`;
             summaryDashboard.innerHTML = ''; // Clear dashboard on error
         }
     }
