@@ -1,6 +1,6 @@
 // FILE: frontend/public/assets/asset-form.js
 import { fetchWithAuth } from '../js/api.js';
-import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow, showConfirmationModal } from '../js/ui.js';
+import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 
 createAuthenticatedPage({
@@ -12,7 +12,7 @@ createAuthenticatedPage({
 
 function initializeForm(user) {
     const API_ENDPOINT = 'assets';
-    const { showToast } = createUIManager();
+    const { showToast, showConfirmationModal } = createUIManager();
 
     // --- STATE ---
     const urlParams = new URLSearchParams(window.location.search);

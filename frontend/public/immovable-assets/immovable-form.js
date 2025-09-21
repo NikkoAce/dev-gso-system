@@ -1,6 +1,6 @@
 // FILE: frontend/public/immovable-assets/immovable-form.js
 import { fetchWithAuth } from '../js/api.js';
-import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow, showConfirmationModal } from '../js/ui.js';
+import { createUIManager, formatNumberOnInput, renderHistory, renderAttachments, renderNewAttachmentRow, renderRepairRow } from '../js/ui.js';
 import { createAuthenticatedPage } from '../js/page-loader.js';
 import { area as turfArea, length as turfLength } from 'https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/+esm';
 
@@ -13,7 +13,7 @@ createAuthenticatedPage({
 
 function initializeForm(user) {
     const API_ENDPOINT = 'immovable-assets';
-    const { showToast } = createUIManager();
+    const { showToast, showConfirmationModal } = createUIManager();
 
     // --- STATE ---
     const urlParams = new URLSearchParams(window.location.search);
