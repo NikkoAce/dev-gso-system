@@ -173,50 +173,50 @@
         .asset-registry-mobile-layout tr {
             @apply mb-4 border border-base-300 rounded-lg block overflow-hidden;
             /* Use grid to structure the card */
-            display: grid;
-            grid-template-columns: auto 1fr; /* Checkbox | Main Content */
-            grid-template-rows: auto 1fr auto; /* Header | Body | Footer */
-            gap: 0;
         }
         .asset-registry-mobile-layout td {
-            @apply block border-0 p-0; /* Reset default responsive table styles */
-        }
-        .asset-registry-mobile-layout td::before {
-            @apply hidden; /* Hide the default data-label pseudo-element */
+            @apply block p-3 border-b border-base-300/50;
         }
 
         /* --- Card Structure --- */
         .asset-registry-mobile-layout td[data-label="Select"] {
-            grid-column: 1 / 2;
-            grid-row: 1 / 2;
-            @apply flex items-center justify-center p-3 bg-base-200;
+            @apply flex items-center justify-between bg-base-200;
         }
-        .asset-registry-mobile-layout td[data-label="Property No."],
-        .asset-registry-mobile-layout td[data-label="Description"] {
-            grid-column: 2 / 3;
-            grid-row: 1 / 2;
-            @apply p-3 bg-base-200;
+        .asset-registry-mobile-layout td[data-label="Select"]::before {
+            content: "Select Asset";
+            @apply font-semibold text-sm;
         }
-        .asset-registry-mobile-layout td[data-label="Description"] { @apply pt-0; }
 
-        /* Card Body - 2 column grid */
-        .asset-registry-mobile-layout td:not([data-label="Select"]):not([data-label="Property No."]):not([data-label="Description"]):not([data-label="Actions"]) {
-            grid-column: 1 / 3;
-            grid-row: 2 / 3;
-            @apply p-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-base-300;
+        /* --- Card Body: Use a grid for secondary details --- */
+        .asset-registry-mobile-layout td[data-label="Category"],
+        .asset-registry-mobile-layout td[data-label="Custodian"],
+        .asset-registry-mobile-layout td[data-label="Date Acquired"],
+        .asset-registry-mobile-layout td[data-label="Status"],
+        .asset-registry-mobile-layout td[data-label="Date Created"] {
+            @apply grid grid-cols-2 items-center;
         }
-        .asset-registry-mobile-layout td:not([data-label="Select"]):not([data-label="Property No."]):not([data-label="Description"]):not([data-label="Actions"])::before {
-            @apply contents; /* Let the grid handle layout, not the pseudo-element */
+        .asset-registry-mobile-layout td[data-label="Category"]::before,
+        .asset-registry-mobile-layout td[data-label="Custodian"]::before,
+        .asset-registry-mobile-layout td[data-label="Date Acquired"]::before,
+        .asset-registry-mobile-layout td[data-label="Status"]::before,
+        .asset-registry-mobile-layout td[data-label="Date Created"]::before {
+            @apply col-span-1 font-semibold text-xs text-base-content/70 mb-0;
         }
-        .asset-registry-mobile-layout td:not([data-label="Select"]):not([data-label="Property No."]):not([data-label="Description"]):not([data-label="Actions"]) > * {
-            @apply col-span-1; /* Each direct child takes a column */
+        .asset-registry-mobile-layout td[data-label="Category"] > *:not(br),
+        .asset-registry-mobile-layout td[data-label="Custodian"] > *:not(br),
+        .asset-registry-mobile-layout td[data-label="Date Acquired"] > *:not(br),
+        .asset-registry-mobile-layout td[data-label="Status"] > *:not(br),
+        .asset-registry-mobile-layout td[data-label="Date Created"] > *:not(br) {
+            @apply col-span-1 text-right;
         }
 
         /* Card Footer */
         .asset-registry-mobile-layout td[data-label="Actions"] {
-            grid-column: 1 / 3;
-            grid-row: 3 / 4;
-            @apply p-2 border-t border-base-300 bg-base-200/50 flex justify-end;
+            @apply flex justify-between items-center bg-base-200;
+        }
+        .asset-registry-mobile-layout td[data-label="Actions"]::before {
+            content: "Actions";
+            @apply font-semibold text-sm;
         }
     }
 }
