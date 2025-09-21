@@ -511,6 +511,12 @@ function initializePhysicalCountPage(user) {
             const row = tableBody.querySelector(`tr[data-asset-id="${updatedAsset._id}"]`);
             if (!row) return; // Asset not on current page
 
+            // --- ADD FLASH EFFECT ---
+            row.classList.add('flash-success');
+            setTimeout(() => {
+                row.classList.remove('flash-success');
+            }, 1000); // Flash for 1 second
+
             const checkbox = row.querySelector('.verify-checkbox');
             const wasVerified = checkbox.checked;
             const isNowVerified = updatedAsset.physicalCountDetails.verified;
@@ -548,13 +554,28 @@ function initializePhysicalCountPage(user) {
             const row = tableBody.querySelector(`tr[data-asset-id="${updatedAsset._id}"]`);
             if (!row) return;
 
-            // Update status, condition, and remarks
-            row.querySelector('.status-input').value = updatedAsset.status;
+            // --- ADD FLASH EFFECT ---
+            row.classList.add('flash-update');
+            setTimeout(() => {
+                row.classList.remove('flash-update');
+            }, 1000);
+
+            const statusInput = row.querySelector('.status-input');
+            const oldStatus = statusInput.value;
+            const newStatus = updatedAsset.status;
+
+            // Update summary dashboard if status changed
+            if (oldStatus !== newStatus) {
+                if (oldStatus === 'Missing') currentSummary.missingCount--;
+                if (oldStatus === 'For Repair') currentSummary.forRepairCount--;
+                if (newStatus === 'Missing') currentSummary.missingCount++;
+                if (newStatus === 'For Repair') currentSummary.forRepairCount++;
+                renderSummaryDashboard(currentSummary);
+            }
+
+            statusInput.value = newStatus;
             row.querySelector('.condition-input').value = updatedAsset.condition || '';
             row.querySelector('.remarks-input').value = updatedAsset.remarks || '';
-            
-            // Reload assets to get fresh summary data, as this is more complex to track
-            loadAssets();
         });
 
         socket.on('connect_error', (err) => {
