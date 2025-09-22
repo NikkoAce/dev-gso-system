@@ -136,5 +136,14 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
     // Step 3: Generate and send back the GSO-specific token
     // The gsoUserRecord now has the most up-to-date permissions.
     const gsoToken = generateGsoToken(gsoUserRecord);
-    res.status(200).json({ token: gsoToken });
+    // Send back the token AND the user object to prevent an extra API call on the frontend.
+    res.status(200).json({
+        token: gsoToken,
+        user: {
+            name: gsoUserRecord.name,
+            office: gsoUserRecord.office,
+            role: gsoUserRecord.role,
+            permissions: gsoUserRecord.permissions
+        }
+    });
 });
