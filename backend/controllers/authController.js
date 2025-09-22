@@ -1,4 +1,3 @@
-const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // GSO's internal User model
 const Role = require('../models/Role'); // Import the Role model
@@ -35,36 +34,34 @@ const generateGsoToken = (gsoUserRecord) => {
  * @access  Public (initially, then verified by LGU Portal)
  */
 exports.ssoLogin = asyncHandler(async (req, res) => {
-    const { token: portalToken } = req.body;
+    // The frontend now sends 'ssoToken' based on our previous changes.
+    const { ssoToken: portalToken } = req.body;
 
     if (!portalToken) {
         res.status(400);
-        throw new Error('No portal token provided.');
+        throw new Error('No SSO token provided.');
     }
 
     let lguUser;
     try {
-        // Step 1: Verify the external token by calling the Portal's /me endpoint
-        // Add a timeout to prevent the request from hanging indefinitely if the portal is slow to respond.
-        const response = await axios.get(`${LGU_PORTAL_API_URL}/users/me`, {
-            headers: { 'Authorization': `Bearer ${portalToken}` },
-            timeout: 15000 // 15 seconds
-        });
-        lguUser = response.data;
-    } catch (error) {
-        if (error.code === 'ECONNABORTED') {
-            console.error('LGU Portal API timed out.');
-            res.status(504); // Gateway Timeout
-            throw new Error('The authentication service is not responding. Please try again in a few moments.');
+        // Step 1: Verify the temporary SSO token directly using the shared JWT secret.
+        // This is much faster and more secure than making a separate API call.
+        const decoded = jwt.verify(portalToken, process.env.JWT_SECRET);
+
+        // The payload from the portal token is nested under a 'user' property.
+        lguUser = decoded.user;
+
+        if (!lguUser || !lguUser.id) {
+            throw new Error('Invalid SSO token payload.');
         }
-        console.error('Error verifying portal token with LGU Portal:', error.response ? error.response.data : error.message);
+    } catch (error) {
+        console.error('SSO Login Error:', error.message);
         res.status(401);
-        const errorMessage = error.response?.data?.message || 'Invalid or expired portal token. Please log in again through the LGU Portal.';
-        throw new Error(errorMessage);
+        throw new Error('Not authorized. The single sign-on link may have expired or is invalid.');
     }
 
     // Step 2: Find or Create the user in the GSO system.
-    let gsoUserRecord = await User.findOne({ externalId: lguUser._id });
+    let gsoUserRecord = await User.findOne({ externalId: lguUser.id });
 
     if (gsoUserRecord) {
         // --- USER EXISTS ---
@@ -128,7 +125,7 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
 
         // Create the new user with the role's permissions.
         gsoUserRecord = await User.create({
-            externalId: lguUser._id,
+            externalId: lguUser.id,
             name: lguUser.name,
             office: lguUser.office,
             role: targetGsoRoleName,

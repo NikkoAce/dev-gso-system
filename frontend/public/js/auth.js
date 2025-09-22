@@ -26,7 +26,7 @@ export function gsoLogout() {
  */
 export async function getCurrentUser() {
     const urlParams = new URLSearchParams(window.location.search);
-    const portalToken = urlParams.get('token');
+    const portalToken = urlParams.get('sso_token'); // Changed from 'token' to 'sso_token'
     let gsoToken;
 
     // If a portal token exists in the URL, it's a new login attempt from the portal.
@@ -36,7 +36,7 @@ export async function getCurrentUser() {
             const response = await fetch(`${API_ROOT_URL}/api/auth/sso-login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: portalToken })
+                body: JSON.stringify({ ssoToken: portalToken }) // Changed from 'token' to 'ssoToken'
             });
             const data = await response.json();
             if (!response.ok) {
