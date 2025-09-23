@@ -65,21 +65,38 @@ exports.ssoLogin = asyncHandler(async (req, res) => {
 
     if (gsoUserRecord) {
         // --- USER EXISTS ---
-        // Sync basic details from the portal.
+        // Always sync basic details from the portal.
         gsoUserRecord.name = lguUser.name;
         gsoUserRecord.office = lguUser.office;
 
-        // IMPORTANT FIX: Re-sync permissions from the user's assigned role.
-        // This ensures that any changes made in Role Management are applied on the next login.
-        const userRole = await Role.findOne({ name: gsoUserRecord.role });
-        if (userRole) {
-            // If the user's role is "GSO Admin", grant them ALL available permissions.
-            if (userRole.name === 'GSO Admin') {
-                gsoUserRecord.permissions = Object.values(PERMISSIONS);
-            } else {
-                // For other roles, use the permissions defined in the database for that role.
-                gsoUserRecord.permissions = userRole.permissions;
+        // IMPORTANT: Do not downgrade a GSO Admin. Their role is managed within the GSO system.
+        // For all other users, we resync their role and permissions from the portal to ensure consistency.
+        if (gsoUserRecord.role !== 'GSO Admin') {
+            let targetGsoRoleName;
+            let permissionsForRole;
+
+            // Determine role and permissions based on the incoming portal role
+            if (lguUser.role === 'Department Head') {
+                targetGsoRoleName = 'Department Head';
+                permissionsForRole = [
+                    PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                    PERMISSIONS.STOCK_READ,
+                    PERMISSIONS.REQUISITION_CREATE,
+                    PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+                    PERMISSIONS.ASSET_EXPORT,
+                ];
+            } else { // Default for 'Employee', 'ICTO Staff', 'ICTO Head', etc.
+                targetGsoRoleName = 'Employee';
+                permissionsForRole = [
+                    PERMISSIONS.ASSET_READ_OWN_OFFICE,
+                    PERMISSIONS.STOCK_READ,
+                    PERMISSIONS.REQUISITION_CREATE,
+                    PERMISSIONS.REQUISITION_READ_OWN_OFFICE,
+                ];
             }
+            // Update the role and permissions to reflect the portal's source of truth.
+            gsoUserRecord.role = targetGsoRoleName;
+            gsoUserRecord.permissions = permissionsForRole;
         }
 
         await gsoUserRecord.save();
