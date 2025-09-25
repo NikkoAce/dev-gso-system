@@ -21,21 +21,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const url = new URL(fullUrl);
-            const portalToken = url.searchParams.get('token');
+            const portalToken = url.searchParams.get('sso_token'); // Align with auth.js
 
             if (!portalToken) {
-                messageContainer.innerHTML = `<div class="alert alert-error">No 'token' found in the provided URL.</div>`;
+                messageContainer.innerHTML = `<div class="alert alert-error">No 'sso_token' found in the provided URL.</div>`;
                 return;
             }
 
-            messageContainer.innerHTML = `<div class="alert alert-info">Found token. Attempting to log in...</div>`;
+            messageContainer.innerHTML = `<div class="alert alert-info">Found SSO token. Attempting to log in...</div>`;
             getTokenBtn.classList.add('loading');
             getTokenBtn.disabled = true;
 
             const response = await fetch(`${API_ROOT_URL}/api/auth/sso-login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: portalToken })
+                body: JSON.stringify({ ssoToken: portalToken }) // Align with auth.js
             });
 
             const data = await response.json();
