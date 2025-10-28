@@ -117,25 +117,50 @@ function initializePtrPage(user) {
         const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without it
         const FINAL_PAGE_CAPACITY = 6; // Fewer items for the large signatory block
 
-        const pages = []; // This will hold our arrays of assets for each page.
-        let remainingAssets = [...assets]; // Create a mutable copy of the assets array.
+        const pages = [];
 
         if (assets.length === 0) {
-            // If there are no assets, we still need one empty page to render the form.
             pages.push([]);
         } else if (assets.length <= SINGLE_PAGE_CAPACITY) {
-            // If all assets fit on one page (with header and footer), just use that.
             pages.push(assets);
         } else {
-            // This is the main logic for multi-page reports.
-            while (remainingAssets.length > 0) {
-                const isFirstPage = pages.length === 0;
-                const isFinalPage = remainingAssets.length <= FINAL_PAGE_CAPACITY;
-                
-                const capacity = isFirstPage ? FIRST_PAGE_CAPACITY : 
-                                 isFinalPage ? FINAL_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-                
-                pages.push(remainingAssets.splice(0, capacity));
+            // Step 1: Work backwards to determine which assets belong on the final page.
+            const assetsForFinalPage = [];
+            let splitIndex = assets.length;
+
+            for (let i = assets.length - 1; i >= 0; i--) {
+                if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
+                    assetsForFinalPage.unshift(assets[i]);
+                    splitIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            // Step 2: Chunk the remaining assets for the first and intermediate pages.
+            const assetsForDistribution = assets.slice(0, splitIndex);
+            if (assetsForDistribution.length > 0) {
+                let currentPageAssets = [];
+                let isFirstPageOfBlock = true;
+
+                assetsForDistribution.forEach(asset => {
+                    const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+                    if (currentPageAssets.length >= capacity) {
+                        pages.push(currentPageAssets);
+                        currentPageAssets = [];
+                        isFirstPageOfBlock = false;
+                    }
+                    currentPageAssets.push(asset);
+                });
+
+                if (currentPageAssets.length > 0) {
+                    pages.push(currentPageAssets);
+                }
+            }
+
+            // Step 3: Add the final page's assets.
+            if (assetsForFinalPage.length > 0) {
+                pages.push(assetsForFinalPage);
             }
         }
 
