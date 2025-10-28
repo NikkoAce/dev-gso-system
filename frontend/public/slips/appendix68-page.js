@@ -45,6 +45,7 @@ createAuthenticatedPage({
                     console.warn('Could not load signatory settings, using defaults.', error);
                 }
 
+                const certifiedCorrectBy = settingsMap.a68_certified_correct_by || { name: '', title: 'Supply and/or Property Custodian' };
                 const disposalApprovedBy = settingsMap.a68_disposal_approved_by || { name: '' };
                 const certifiedByInspector = settingsMap.a68_certified_by_inspector || { name: '' };
                 const witnessToDisposal = settingsMap.a68_witness_to_disposal || { name: '' };
@@ -206,7 +207,9 @@ createAuthenticatedPage({
                     if (isLastPage) {
                         const footer = pageDiv.querySelector('footer');
                         if (footer) {
-                            footer.querySelector('#signatory-1-name').textContent = slipData.user?.name || user.name;
+                            // Use the new editable input for "Certified Correct"
+                            footer.querySelector('#certified-correct-by').value = slipData.certifiedCorrectBy || certifiedCorrectBy.name || slipData.user?.name || user.name;
+                            footer.querySelector('#certified-correct-by-title').textContent = certifiedCorrectBy.title;
                             footer.querySelector('#disposal-approved-by').value = slipData.disposalApprovedBy || disposalApprovedBy.name;
                             footer.querySelector('#certified-by-inspector').value = slipData.certifiedByInspector || certifiedByInspector.name;
                             footer.querySelector('#witness-to-disposal').value = slipData.witnessToDisposal || witnessToDisposal.name;
@@ -272,6 +275,7 @@ createAuthenticatedPage({
                             date: document.getElementById('issued-date').value,
                             placeOfStorage: document.getElementById('place-of-storage').value,
                             // New fields
+                            certifiedCorrectBy: document.getElementById('certified-correct-by').value,
                             disposalApprovedBy: document.getElementById('disposal-approved-by').value,
                             certifiedByInspector: document.getElementById('certified-by-inspector').value,
                             witnessToDisposal: document.getElementById('witness-to-disposal').value,

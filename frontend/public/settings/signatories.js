@@ -69,6 +69,12 @@ function initializeSignatoriesPage(user) {
                     defaultTitle: 'Inspection Officer'
                 },
                 {
+                    key: 'a68_certified_correct_by',
+                    label: 'Appendix 68 - Certified Correct By (Custodian)',
+                    defaultName: '',
+                    defaultTitle: 'Supply and/or Property Custodian'
+                },
+                {
                     key: 'a68_disposal_approved_by',
                     label: 'Appendix 68 - Disposal Approved By',
                     defaultName: '',
