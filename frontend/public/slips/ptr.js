@@ -117,28 +117,25 @@ function initializePtrPage(user) {
         const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without it
         const FINAL_PAGE_CAPACITY = 6; // Fewer items for the large signatory block
 
-        const pages = [];
-        let remainingAssets = [...assets];
+        const pages = []; // This will hold our arrays of assets for each page.
+        let remainingAssets = [...assets]; // Create a mutable copy of the assets array.
 
         if (assets.length === 0) {
-            // No assets, create one empty page
+            // If there are no assets, we still need one empty page to render the form.
             pages.push([]);
         } else if (assets.length <= SINGLE_PAGE_CAPACITY) {
-            // All assets fit on a single page
+            // If all assets fit on one page (with header and footer), just use that.
             pages.push(assets);
         } else {
-            // Multi-page logic
-            // First Page
-            pages.push(remainingAssets.splice(0, FIRST_PAGE_CAPACITY));
-
-            // Intermediate Pages
-            while (remainingAssets.length > FINAL_PAGE_CAPACITY) {
-                pages.push(remainingAssets.splice(0, INTERMEDIATE_PAGE_CAPACITY));
-            }
-
-            // Final Page
-            if (remainingAssets.length > 0) {
-                pages.push(remainingAssets);
+            // This is the main logic for multi-page reports.
+            while (remainingAssets.length > 0) {
+                const isFirstPage = pages.length === 0;
+                const isFinalPage = remainingAssets.length <= FINAL_PAGE_CAPACITY;
+                
+                const capacity = isFirstPage ? FIRST_PAGE_CAPACITY : 
+                                 isFinalPage ? FINAL_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
+                
+                pages.push(remainingAssets.splice(0, capacity));
             }
         }
 
