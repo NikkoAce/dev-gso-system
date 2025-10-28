@@ -116,53 +116,32 @@ function initializePtrPage(user) {
         const FIRST_PAGE_CAPACITY = 12; // Smaller capacity due to large header
         const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without it
         const FINAL_PAGE_CAPACITY = 6; // Fewer items for the large signatory block
+
         const pages = [];
+        let remainingAssets = [...assets];
 
-        if (assets.length > 0) {
-            if (assets.length <= SINGLE_PAGE_CAPACITY) {
-                pages.push(assets);
-            } else {
-                // Step 1: Work backwards to determine which assets belong on the final page.
-                const assetsForFinalPage = [];
-                let splitIndex = assets.length;
-                
-                for (let i = assets.length - 1; i >= 0; i--) {
-                    if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
-                        assetsForFinalPage.unshift(assets[i]);
-                        splitIndex = i;
-                    } else {
-                        break;
-                    }
-                }
-                
-                // Step 2: Chunk the remaining assets for the first and intermediate pages.
-                const assetsForDistribution = assets.slice(0, splitIndex);
-                if (assetsForDistribution.length > 0) {
-                    let currentPageAssets = [];
-                    let isFirstPageOfBlock = true;
+        if (assets.length === 0) {
+            // No assets, create one empty page
+            pages.push([]);
+        } else if (assets.length <= SINGLE_PAGE_CAPACITY) {
+            // All assets fit on a single page
+            pages.push(assets);
+        } else {
+            // Multi-page logic
+            // First Page
+            pages.push(remainingAssets.splice(0, FIRST_PAGE_CAPACITY));
 
-                    assetsForDistribution.forEach(asset => {
-                        const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-                        if (currentPageAssets.length >= capacity) {
-                            pages.push(currentPageAssets);
-                            currentPageAssets = [];
-                            isFirstPageOfBlock = false;
-                        }
-                        currentPageAssets.push(asset);
-                    });
+            // Intermediate Pages
+            while (remainingAssets.length > FINAL_PAGE_CAPACITY) {
+                pages.push(remainingAssets.splice(0, INTERMEDIATE_PAGE_CAPACITY));
+            }
 
-                    if (currentPageAssets.length > 0) {
-                        pages.push(currentPageAssets);
-                    }
-                }
-
-                // Step 3: Add the final page's assets.
-                if (assetsForFinalPage.length > 0) {
-                    pages.push(assetsForFinalPage);
-                }
+            // Final Page
+            if (remainingAssets.length > 0) {
+                pages.push(remainingAssets);
             }
         }
-        if (pages.length === 0) pages.push([]); // Ensure at least one page is rendered
+
         const totalPages = pages.length;
 
         for (let i = 0; i < totalPages; i++) {
