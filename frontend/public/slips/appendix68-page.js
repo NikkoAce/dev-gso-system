@@ -66,47 +66,28 @@ createAuthenticatedPage({
                 const INTERMEDIATE_PAGE_CAPACITY = 25; // More items on pages without the footer
                 const SINGLE_PAGE_CAPACITY = 5; // Smallest capacity for a page with both header and footer
                 const pages = [];
+                let remainingAssets = [...assets];
 
-                if (assets.length > 0) {
-                    if (assets.length <= SINGLE_PAGE_CAPACITY) {
-                        pages.push(assets);
-                    } else {
-                        // Step 1: Work backwards to determine which assets belong on the final page.
-                        const assetsForFinalPage = [];
-                        let splitIndex = assets.length;
+                if (assets.length === 0) {
+                    // If there are no assets, we still need one empty page to render the form.
+                    pages.push([]);
+                } else if (assets.length <= SINGLE_PAGE_CAPACITY) {
+                    // If all assets fit on one page (with header and footer), just use that.
+                    pages.push(assets);
+                } else {
+                    // This is the main logic for multi-page reports.
+                    // First, take the items for the first page.
+                    pages.push(remainingAssets.splice(0, FIRST_PAGE_CAPACITY));
 
-                        for (let i = assets.length - 1; i >= 0; i--) {
-                            if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
-                                assetsForFinalPage.unshift(assets[i]);
-                                splitIndex = i;
-                            } else {
-                                break;
-                            }
-                        }
+                    // Then, create intermediate pages as long as there are enough items left
+                    // to fill an intermediate page AND leave enough for a final page.
+                    while (remainingAssets.length > FINAL_PAGE_CAPACITY) {
+                        pages.push(remainingAssets.splice(0, INTERMEDIATE_PAGE_CAPACITY));
+                    }
 
-                        // Step 2: Chunk the remaining assets for the intermediate pages.
-                        const assetsForDistribution = assets.slice(0, splitIndex);
-                        if (assetsForDistribution.length > 0) {
-                            let currentPageAssets = [];
-                            let isFirstPageOfBlock = true;
-                            assetsForDistribution.forEach(asset => {
-                                const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-                                if (currentPageAssets.length >= capacity) {
-                                    pages.push(currentPageAssets);
-                                    currentPageAssets = [];
-                                    isFirstPageOfBlock = false;
-                                }
-                                currentPageAssets.push(asset);
-                            });
-                            if (currentPageAssets.length > 0) {
-                                pages.push(currentPageAssets);
-                            }
-                        }
-
-                        // Step 3: Add the final page's assets.
-                        if (assetsForFinalPage.length > 0) {
-                            pages.push(assetsForFinalPage);
-                        }
+                    // Whatever is left becomes the final page.
+                    if (remainingAssets.length > 0) {
+                        pages.push(remainingAssets);
                     }
                 }
 
