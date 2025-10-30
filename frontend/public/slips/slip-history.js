@@ -282,9 +282,17 @@ function initializeSlipHistoryPage(user) {
             const slipType = cancelButton.dataset.type;
             const slip = allSlips.find(s => s._id === slipId);
 
+            // --- DEBUGGING LOGS ---
+            console.log('--- Cancel Slip Debug ---');
+            console.log('1. Click detected on a cancel button.');
+            console.log('2. Slip ID from button:', slipId);
+            console.log('3. Slip Type from button:', slipType);
+            console.log('4. Searching for slip in "allSlips" array. Found:', slip);
+
             // --- FIX: Add a check to ensure the slip was found ---
             if (!slip) {
                 showToast('Could not find slip details. Please refresh and try again.', 'error');
+                console.error('5. ERROR: Slip object not found in local state. Aborting.');
                 return;
             }
 
@@ -292,11 +300,15 @@ function initializeSlipHistoryPage(user) {
             // This prevents an error if the generic 'number' property is undefined.
             const slipNumber = slipType === 'PAR' ? slip.parNumber : slip.icsNumber;
 
+            console.log('5. Extracted slip number:', slipNumber);
+
             if (!slipNumber) {
                 showToast('Could not determine the slip number. Please refresh.', 'error');
+                console.error('6. ERROR: Slip number is undefined or null. Aborting.');
                 return;
             }
 
+            console.log('6. All checks passed. Attempting to show confirmation modal...');
             showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slipNumber}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
                 try {
                     const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
