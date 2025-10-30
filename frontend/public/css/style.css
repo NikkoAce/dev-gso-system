@@ -17,11 +17,38 @@ body { font-family: 'Inter', sans-serif; }
         top: 0;
         width: 100%;
         margin: 0 !important;
-        padding: 0 !important;
+        padding: 1cm !important; /* Use 1cm padding for better print margins */
+        box-shadow: none !important;
+        border: none !important;
     }
 
     .page-break-after {
         page-break-after: always;
+    }
+
+    /* --- Optional but recommended improvements for table printing --- */
+    table {
+        page-break-inside: auto; /* Allow tables to break across pages */
+    }
+    tr {
+        page-break-inside: avoid; /* Avoid breaking a single row across pages */
+    }
+    thead {
+        display: table-header-group; /* Repeat table headers on each new page */
+    }
+
+    /* Force property card details into a single column for better wrapping */
+    #asset-details-container .grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    }
+    #asset-details-container .md\:col-span-2 {
+        grid-column: span 1 / span 1 !important;
+    }
+
+    /* Utility to force long words to wrap in print view */
+    .print-break-words {
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
     }
 }
 
