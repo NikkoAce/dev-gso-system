@@ -288,11 +288,19 @@ function initializeSlipHistoryPage(user) {
                 return;
             }
 
-            showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slip.number}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
+            // --- FIX: Use the correct number property based on the slip type ---
+            // This prevents an error if the generic 'number' property is undefined.
+            const slipNumber = slipType === 'PAR' ? slip.parNumber : slip.icsNumber;
+
+            if (!slipNumber) {
+                showToast('Could not determine the slip number. Please refresh.', 'error');
+                return;
+            }
+
+            showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slipNumber}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
                 try {
                     const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
                     showToast(result.message, 'success');
-
                     // --- IMPROVED VISUAL FEEDBACK ---
                     // Instead of a full re-render, directly update the specific row.
                     const row = tableBody.querySelector(`tr[data-slip-id="${slipId}"]`);
