@@ -25,5 +25,6 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-# Define the command to run your app
-CMD ["npm", "start"]
+# Define the command to run your app.
+# This will first run the database migration, and if it succeeds, it will start the server.
+CMD ["sh", "-c", "npm run db:migrate && npm start"]
