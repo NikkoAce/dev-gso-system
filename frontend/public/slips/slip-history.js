@@ -79,7 +79,7 @@ function initializeSlipHistoryPage(user) {
             const rowClass = isCancelled ? 'opacity-60 bg-gray-50' : '';
 
             rowsHTML += `
-                <tr class="${rowClass}">
+                <tr class="${rowClass}" data-slip-id="${slip._id}">
                     <td data-label="Slip No." class="font-medium">${slip.number}${cancelledBadge}</td>
                     <td data-label="Type"><span class="badge ${typeBadgeClass} badge-sm">${slip.slipType}</span> </td>
                     <td data-label="Custodian">${custodianDisplay}</td>
@@ -249,17 +249,20 @@ function initializeSlipHistoryPage(user) {
     });
     
     paginationControls.addEventListener('click', (e) => {
-        if (e.target && e.target.id === 'prev-page-btn') {
-            if (currentPage > 1) {
-                currentPage--;
-                applyFiltersAndRender();
-            }
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        const originalPage = currentPage;
+
+        if (target.id === 'prev-page-btn' && currentPage > 1) {
+            currentPage--;
+        } else if (target.id === 'next-page-btn' && currentPage < totalPages) {
+            currentPage++;
+        } else if (target.classList.contains('page-btn')) {
+            currentPage = parseInt(target.dataset.page, 10);
         }
-        if (e.target && e.target.id === 'next-page-btn') {
-            if (currentPage < totalPages) {
-                currentPage++;
-                applyFiltersAndRender();
-            }
+        if (originalPage !== currentPage) {
+            applyFiltersAndRender();
         }
     });
 
@@ -281,11 +284,21 @@ function initializeSlipHistoryPage(user) {
                 try {
                     const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
                     showToast(result.message, 'success');
+                    
                     // Update the local state to immediately reflect the change
                     const cancelledSlip = allSlips.find(s => s._id === slipId);
                     if (cancelledSlip) cancelledSlip.status = 'Cancelled';
-                    // Re-render the current view from the updated local data
-                    applyFiltersAndRender();
+
+                    // --- IMPROVED VISUAL FEEDBACK ---
+                    // Instead of a full re-render, directly update the specific row.
+                    const row = tableBody.querySelector(`tr[data-slip-id="${slipId}"]`);
+                    if (row) {
+                        row.classList.add('opacity-60', 'bg-gray-50', 'transition-all', 'duration-500');
+                        row.querySelector('[data-label="Slip No."]').innerHTML += '<span class="badge badge-error badge-sm ml-2">Cancelled</span>';
+                        
+                        // Remove the cancel button as it's no longer needed
+                        cancelButton.remove();
+                    }
                 } catch (error) {
                     showToast(`Error: ${error.message}`, 'error');
                 }
