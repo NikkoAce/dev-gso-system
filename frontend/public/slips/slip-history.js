@@ -70,7 +70,8 @@ function initializeSlipHistoryPage(user) {
             const typeBadgeClass = slip.slipType === 'PAR' ? 'badge-success' :
                                    slip.slipType === 'ICS' ? 'badge-info' : 'badge-warning';
 
-            const isCancelled = slip.status === 'Cancelled';
+            // Treat slips without a status property as 'Active' for backward compatibility
+            const isCancelled = slip.status === 'Cancelled'; 
             const cancelledBadge = isCancelled ? '<span class="badge badge-error badge-sm ml-2">Cancelled</span>' : '';
 
             let actionButtons = '';
@@ -95,7 +96,8 @@ function initializeSlipHistoryPage(user) {
             }
 
             // Add Cancel button for PAR/ICS that are not already cancelled
-            if (['PAR', 'ICS'].includes(slip.slipType) && !isCancelled) {
+            // Treat undefined status as 'Active'
+            if (['PAR', 'ICS'].includes(slip.slipType) && slip.status !== 'Cancelled') {
                 actionButtons += `<button class="cancel-slip-btn btn btn-ghost btn-xs text-error" data-id="${slip._id}" data-type="${slip.slipType}" title="Cancel Slip"><i data-lucide="file-x-2" class="h-4 w-4"></i></button>`;
             }
 
@@ -279,15 +281,6 @@ function initializeSlipHistoryPage(user) {
             const slipId = cancelButton.dataset.id;
             const slipType = cancelButton.dataset.type;
             const slip = allSlips.find(s => s._id === slipId);
-
-              console.log('Found slip to cancel:', slip); 
-
-            if (slip.status === 'Cancelled') {
-                // --- DEBUGGING STEP 2 ---
-                console.log('Slip is already marked as Cancelled in local state. Aborting.');
-                return;
-            }
-
 
             showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slip.number}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
                 try {
