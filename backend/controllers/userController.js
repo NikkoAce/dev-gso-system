@@ -54,12 +54,21 @@ const getUsers = asyncHandler(async (req, res) => {
  * @access  Private/Admin (Requires 'user:manage' permission)
  */
 const updateUser = asyncHandler(async (req, res) => {
-    const { role, permissions } = req.body;
+    const { role: roleName, permissions } = req.body;
 
     const user = await User.findById(req.params.id);
 
     if (user) {
-        user.role = role ?? user.role;
+        // If the role is being changed, fetch the permissions for that role
+        // and apply them to the user, overwriting any individual permissions.
+        if (roleName && roleName !== user.role) {
+            const roleData = await Role.findOne({ name: roleName });
+            if (roleData) {
+                user.permissions = roleData.permissions;
+            }
+        }
+
+        user.role = roleName ?? user.role;
         user.permissions = permissions ?? user.permissions;
 
         const updatedUser = await user.save();
