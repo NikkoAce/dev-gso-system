@@ -133,6 +133,8 @@ function initializePtrPage(user) {
             
             // Then, create intermediate pages as long as there are enough items left
             // to fill an intermediate page AND leave enough for a final page.
+            // to potentially need another intermediate page. If what's left fits on a final
+            // page, the loop will stop.
             while (remainingAssets.length > FINAL_PAGE_CAPACITY) {
                 pages.push(remainingAssets.splice(0, INTERMEDIATE_PAGE_CAPACITY));
             }

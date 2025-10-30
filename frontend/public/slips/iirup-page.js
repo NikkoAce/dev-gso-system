@@ -67,50 +67,27 @@ createAuthenticatedPage({
                 const INTERMEDIATE_PAGE_CAPACITY = 15; // More items on pages without the footer
                 const pages = [];
 
-                if (assets.length > 0) {
-                    if (assets.length <= SINGLE_PAGE_CAPACITY) {
-                        pages.push(assets);
-                    } else {
-                        // Step 1: Work backwards to determine which assets belong on the final page.
-                        const assetsForFinalPage = [];
-                        let splitIndex = assets.length;
+                let remainingAssets = [...assets];
 
-                        for (let i = assets.length - 1; i >= 0; i--) {
-                            if (assetsForFinalPage.length < FINAL_PAGE_CAPACITY) {
-                                assetsForFinalPage.unshift(assets[i]);
-                                splitIndex = i;
-                            } else {
-                                break;
-                            }
-                        }
+                if (assets.length === 0) {
+                    pages.push([]);
+                } else if (assets.length <= SINGLE_PAGE_CAPACITY) {
+                    pages.push(assets);
+                } else {
+                    // Step 1: Fill the first page
+                    pages.push(remainingAssets.splice(0, FIRST_PAGE_CAPACITY));
 
-                        // Step 2: Chunk the remaining assets for the intermediate pages.
-                        const assetsForDistribution = assets.slice(0, splitIndex);
-                        if (assetsForDistribution.length > 0) {
-                            let currentPageAssets = [];
-                            let isFirstPageOfBlock = true;
-                            assetsForDistribution.forEach(asset => {
-                                const capacity = isFirstPageOfBlock ? FIRST_PAGE_CAPACITY : INTERMEDIATE_PAGE_CAPACITY;
-                                if (currentPageAssets.length >= capacity) {
-                                    pages.push(currentPageAssets);
-                                    currentPageAssets = [];
-                                    isFirstPageOfBlock = false;
-                                }
-                                currentPageAssets.push(asset);
-                            });
-                            if (currentPageAssets.length > 0) {
-                                pages.push(currentPageAssets);
-                            }
-                        }
+                    // Step 2: Fill intermediate pages, leaving enough for the final page
+                    while (remainingAssets.length > FINAL_PAGE_CAPACITY) {
+                        pages.push(remainingAssets.splice(0, INTERMEDIATE_PAGE_CAPACITY));
+                    }
 
-                        // Step 3: Add the final page's assets.
-                        if (assetsForFinalPage.length > 0) {
-                            pages.push(assetsForFinalPage);
-                        }
+                    // Step 3: Add the final page with whatever is left
+                    if (remainingAssets.length > 0) {
+                        pages.push(remainingAssets);
                     }
                 }
 
-                if (pages.length === 0) pages.push([]); // Ensure at least one page is rendered
                 const totalPages = pages.length;
 
                 for (let i = 0; i < totalPages; i++) {
