@@ -47,6 +47,7 @@ const PERMISSION_DESCRIPTIONS = {
     'requisition:process': 'Can approve, issue, or reject supply requisitions.',
     'slip:generate': 'Can generate official slips like PAR, ICS, etc.',
     'slip:read': 'Can view the history of all generated slips.',
+    'slip:manage': 'Can cancel slips (e.g., PAR, ICS) to release assigned assets.',
     'report:generate': 'Can generate system-wide reports (RPCPPE, Depreciation, etc.).',
     'settings:read': 'Can view settings pages.',
     'settings:manage': 'Can add, edit, and delete settings (Categories, Offices, Employees, Signatories).',
