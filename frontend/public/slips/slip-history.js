@@ -281,7 +281,11 @@ function initializeSlipHistoryPage(user) {
                 try {
                     const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
                     showToast(result.message, 'success');
-                    loadInitialSlips(); // Reload all slips to reflect the change
+                    // Update the local state to immediately reflect the change
+                    const cancelledSlip = allSlips.find(s => s._id === slipId);
+                    if (cancelledSlip) cancelledSlip.status = 'Cancelled';
+                    // Re-render the current view from the updated local data
+                    applyFiltersAndRender();
                 } catch (error) {
                     showToast(`Error: ${error.message}`, 'error');
                 }

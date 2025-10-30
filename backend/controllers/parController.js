@@ -9,6 +9,21 @@ const createPAR = async (req, res) => {
         return res.status(400).json({ message: 'PAR must contain at least one asset.' });
     }
 
+    // --- VALIDATION: Check if any assets are already assigned ---
+    const assetObjectIds = assets.map(id => new mongoose.Types.ObjectId(id));
+    const alreadyAssigned = await Asset.find({
+        _id: { $in: assetObjectIds },
+        $or: [
+            { assignedPAR: { $exists: true, $ne: null, $ne: '' } },
+            { assignedICS: { $exists: true, $ne: null, $ne: '' } }
+        ]
+    }).select('propertyNumber assignedPAR assignedICS');
+
+    if (alreadyAssigned.length > 0) {
+        const assignedDetails = alreadyAssigned.map(a => `${a.propertyNumber} (assigned to ${a.assignedPAR || a.assignedICS})`).join(', ');
+        return res.status(400).json({ message: `Cannot create PAR. The following assets are already assigned: ${assignedDetails}` });
+    }
+
     try {
         const par = new PAR({
             parNumber,
@@ -28,7 +43,6 @@ const createPAR = async (req, res) => {
         };
 
         // Update all associated assets
-        const assetObjectIds = assets.map(id => new mongoose.Types.ObjectId(id));
         await Asset.updateMany(
             { _id: { $in: assetObjectIds } },
             { $set: { assignedPAR: parNumber, status: 'In Use' }, $push: { history: historyEntry } }

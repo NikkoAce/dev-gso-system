@@ -16,6 +16,11 @@ const PARSchema = new mongoose.Schema({
     }],
     issuedDate: { type: Date, required: true },
     receivedDate: { type: Date, required: true },
+    status: {
+        type: String,
+        enum: ['Active', 'Cancelled'],
+        default: 'Active'
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('PAR', PARSchema);
