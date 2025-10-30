@@ -1,10 +1,13 @@
 const asyncHandler = require('express-async-handler');
 const PAR = require('../models/PAR');
 const ICS = require('../models/ICS');
+const Asset = require('../models/Asset');
 const PTR = require('../models/PTR');
 const Appendix68 = require('../models/Appendix68');
 const IIRUP = require('../models/IIRUP');
 const Requisition = require('../models/Requisition');
+const mongoose = require('mongoose');
+
 
 const getSlips = asyncHandler(async (req, res) => {
     // Since this is an admin-only page, we fetch all slips.
@@ -105,4 +108,65 @@ const getSlipById = asyncHandler(async (req, res) => {
     res.status(200).json({ ...slipData, slipType, number: slipNumber });
 });
 
-module.exports = { getSlips, getSlipById };
+/**
+ * @desc    Cancel a PAR or ICS slip, releasing its assets.
+ * @route   PUT /api/slips/:id/cancel
+ * @access  Private
+ */
+const cancelSlip = asyncHandler(async (req, res) => {
+    const slipId = req.params.id;
+    const { slipType } = req.body;
+    const user = req.user;
+
+    if (!slipType || !['PAR', 'ICS'].includes(slipType)) {
+        res.status(400);
+        throw new Error('Invalid or unsupported slip type for cancellation.');
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        let slip;
+        let slipModel;
+        let numberField;
+        let updateField;
+
+        if (slipType === 'PAR') {
+            slipModel = PAR;
+            numberField = 'parNumber';
+            updateField = 'assignedPAR';
+        } else { // ICS
+            slipModel = ICS;
+            numberField = 'icsNumber';
+            updateField = 'assignedICS';
+        }
+
+        slip = await slipModel.findById(slipId).session(session);
+        if (!slip) {
+            throw new Error('Slip not found.');
+        }
+
+        // Update the slip status
+        slip.status = 'Cancelled';
+        await slip.save({ session });
+
+        // Un-assign assets
+        const historyEntry = { event: 'Assignment Cancelled', details: `Assignment via ${slipType} #${slip[numberField]} was cancelled.`, user: user.name };
+        await Asset.updateMany(
+            { _id: { $in: slip.assets } },
+            { $set: { [updateField]: null }, $push: { history: historyEntry } },
+            { session }
+        );
+
+        await session.commitTransaction();
+        res.status(200).json({ message: `${slipType} #${slip[numberField]} has been cancelled and its assets released.` });
+    } catch (error) {
+        await session.abortTransaction();
+        res.status(400).json({ message: error.message });
+    } finally {
+        session.endSession();
+    }
+});
+
+module.exports = { getSlips, getSlipById, cancelSlip };

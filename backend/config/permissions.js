@@ -18,6 +18,7 @@ const PERMISSIONS = Object.freeze({
     // Slips
     SLIP_GENERATE: 'slip:generate',
     SLIP_READ: 'slip:read',
+    SLIP_MANAGE: 'slip:manage',
     // Supplies & Requisitions
     STOCK_READ: 'stock:read',
     STOCK_MANAGE: 'stock:manage',

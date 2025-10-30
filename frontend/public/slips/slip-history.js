@@ -14,8 +14,8 @@ function initializeSlipHistoryPage(user) {
     let allSlips = []; // Master list of all slips fetched from the server
     let currentPage = 1;
     let totalPages = 1;
-    const itemsPerPage = 20;
-    const { renderPagination } = createUIManager();
+    const itemsPerPage = 20; // Corrected from 50 to 20
+    const { renderPagination, showToast, showConfirmationModal } = createUIManager();
 
     // --- DOM ELEMENTS ---
     const slipTypeFilter = document.getElementById('slip-type-filter');
@@ -68,14 +68,20 @@ function initializeSlipHistoryPage(user) {
             }
             
             const typeBadgeClass = slip.slipType === 'PAR' ? 'badge-success' :
-                                   slip.slipType === 'ICS' ? 'badge-info' :
-                                   'badge-warning'; // For PTR
+                                   slip.slipType === 'ICS' ? 'badge-info' : 'badge-warning';
+
+            const isCancelled = slip.status === 'Cancelled';
+            const cancelledBadge = isCancelled ? '<span class="badge badge-error badge-sm ml-2">Cancelled</span>' : '';
+
             let actionButtons = '';
 
+            // Add a class to the row if it's cancelled
+            const rowClass = isCancelled ? 'opacity-60 bg-gray-50' : '';
+
             rowsHTML += `
-                <tr>
-                    <td data-label="Slip No." class="font-medium">${slip.number}</td>
-                    <td data-label="Type"><span class="badge ${typeBadgeClass} badge-sm">${slip.slipType}</span></td>
+                <tr class="${rowClass}">
+                    <td data-label="Slip No." class="font-medium">${slip.number}${cancelledBadge}</td>
+                    <td data-label="Type"><span class="badge ${typeBadgeClass} badge-sm">${slip.slipType}</span> </td>
                     <td data-label="Custodian">${custodianDisplay}</td>
                     <td data-label="Items">${slip.assets.length}</td>
                     <td data-label="Date">${formatDate(slip.issuedDate)}</td>
@@ -83,9 +89,14 @@ function initializeSlipHistoryPage(user) {
                         <div class="flex justify-center items-center gap-1">`;
 
             if (slip.slipType === 'RIS') {
-                actionButtons = `<a href="../slips/ris-page.html?id=${slip._id}" target="_blank" class="btn btn-ghost btn-xs" title="Reprint RIS"><i data-lucide="printer" class="h-4 w-4"></i></a>`;
+                actionButtons += `<a href="../slips/ris-page.html?id=${slip._id}" target="_blank" class="btn btn-ghost btn-xs" title="Reprint RIS"><i data-lucide="printer" class="h-4 w-4"></i></a>`;
             } else {
-                actionButtons = `<button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>`;
+                actionButtons += `<button class="reprint-btn btn btn-ghost btn-xs" data-id="${slip._id}" data-type="${slip.slipType}" title="Reprint Slip"><i data-lucide="printer" class="h-4 w-4"></i></button>`;
+            }
+
+            // Add Cancel button for PAR/ICS that are not already cancelled
+            if (['PAR', 'ICS'].includes(slip.slipType) && !isCancelled) {
+                actionButtons += `<button class="cancel-slip-btn btn btn-ghost btn-xs text-error" data-id="${slip._id}" data-type="${slip.slipType}" title="Cancel Slip"><i data-lucide="file-x-2" class="h-4 w-4"></i></button>`;
             }
 
             rowsHTML += `<button class="view-slip-btn btn btn-ghost btn-xs" data-id="${slip._id}" title="View Details"><i data-lucide="eye" class="h-4 w-4"></i></button>
@@ -257,6 +268,24 @@ function initializeSlipHistoryPage(user) {
         if (viewButton) {
             const slipId = viewButton.dataset.id;
             showSlipDetails(slipId);
+            return;
+        }
+
+        const cancelButton = e.target.closest('.cancel-slip-btn');
+        if (cancelButton) {
+            const slipId = cancelButton.dataset.id;
+            const slipType = cancelButton.dataset.type;
+            const slip = allSlips.find(s => s._id === slipId);
+
+            showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slip.number}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
+                try {
+                    const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
+                    showToast(result.message, 'success');
+                    loadInitialSlips(); // Reload all slips to reflect the change
+                } catch (error) {
+                    showToast(`Error: ${error.message}`, 'error');
+                }
+            });
             return;
         }
 
