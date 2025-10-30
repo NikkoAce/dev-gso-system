@@ -14,8 +14,8 @@ const createPAR = async (req, res) => {
     const alreadyAssigned = await Asset.find({
         _id: { $in: assetObjectIds },
         $or: [
-            { assignedPAR: { $ne: null, $ne: '' } },
-            { assignedICS: { $ne: null, $ne: '' } }
+            { assignedPAR: { $exists: true, $ne: null, $ne: '' } },
+            { assignedICS: { $exists: true, $ne: null, $ne: '' } }
         ]
     }).select('propertyNumber assignedPAR assignedICS');
 
