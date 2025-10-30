@@ -282,6 +282,12 @@ function initializeSlipHistoryPage(user) {
             const slipType = cancelButton.dataset.type;
             const slip = allSlips.find(s => s._id === slipId);
 
+            // --- FIX: Add a check to ensure the slip was found ---
+            if (!slip) {
+                showToast('Could not find slip details. Please refresh and try again.', 'error');
+                return;
+            }
+
             showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slip.number}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
                 try {
                     const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
