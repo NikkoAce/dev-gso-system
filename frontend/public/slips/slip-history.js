@@ -280,14 +280,19 @@ function initializeSlipHistoryPage(user) {
             const slipType = cancelButton.dataset.type;
             const slip = allSlips.find(s => s._id === slipId);
 
+              console.log('Found slip to cancel:', slip); 
+
+            if (slip.status === 'Cancelled') {
+                // --- DEBUGGING STEP 2 ---
+                console.log('Slip is already marked as Cancelled in local state. Aborting.');
+                return;
+            }
+
+
             showConfirmationModal('Cancel Slip', `Are you sure you want to cancel ${slipType} #${slip.number}? This will release all assets assigned to it. This action cannot be undone.`, async () => {
                 try {
                     const result = await fetchWithAuth(`slips/${slipId}/cancel`, { method: 'PUT', body: JSON.stringify({ slipType }) });
                     showToast(result.message, 'success');
-                    
-                    // Update the local state to immediately reflect the change
-                    const cancelledSlip = allSlips.find(s => s._id === slipId);
-                    if (cancelledSlip) cancelledSlip.status = 'Cancelled';
 
                     // --- IMPROVED VISUAL FEEDBACK ---
                     // Instead of a full re-render, directly update the specific row.
